@@ -59,13 +59,12 @@ export function useGmailConnection() {
   };
 
   const disconnect = async () => {
-    if (!connection || !currentWorkspace || !user) return;
+    if (!connection || !currentWorkspace) return;
     await supabase.functions.invoke("gmail-auth", {
       body: {
         action: "disconnect",
         connectionId: connection.id,
         workspaceId: currentWorkspace.id,
-        userId: user.id,
       },
     });
     setConnection(null);
