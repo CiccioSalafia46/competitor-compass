@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,6 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already authenticated
   if (!loading && user) {
     return <Navigate to="/redirect" replace />;
   }
@@ -99,7 +98,17 @@ export default function Auth() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  {!isSignUp && (
+                    <Link
+                      to="/forgot-password"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -114,7 +123,7 @@ export default function Auth() {
                 {isLoading ? "Loading..." : isSignUp ? "Create account" : "Sign in"}
               </Button>
             </form>
-            <div className="mt-4 text-center space-y-2">
+            <div className="mt-4 text-center">
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
@@ -122,7 +131,6 @@ export default function Auth() {
               >
                 {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
               </button>
-              {/* TODO: Implement password reset flow with /reset-password page */}
             </div>
           </CardContent>
         </Card>

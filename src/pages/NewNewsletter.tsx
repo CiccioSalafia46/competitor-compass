@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoles } from "@/hooks/useRoles";
+import { useUsage } from "@/hooks/useUsage";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,9 @@ type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 export default function NewNewsletter() {
   const { currentWorkspace } = useWorkspace();
   const { user } = useAuth();
+  const { canAnalyze } = useRoles();
+  const { isAtLimit, trackUsage } = useUsage();
+  const { log } = useAuditLog();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
@@ -41,6 +47,11 @@ export default function NewNewsletter() {
   const handleSubmit = async (analyze: boolean) => {
     if (!currentWorkspace || !user || !content.trim()) return;
 
+    if (isAtLimit("newsletters_this_month")) {
+      toast({ title: "Limit reached", description: "You've reached your newsletter limit for this month. Upgrade your plan to continue.", variant: "destructive" });
+      return;
+    }
+
     setIsSubmitting(true);
     if (analyze) setIsAnalyzing(true);
 
@@ -60,6 +71,9 @@ export default function NewNewsletter() {
         .single();
 
       if (error) throw error;
+
+      await trackUsage("newsletter_imported");
+      await log("created", "newsletter_entry", entry.id, { subject: entry.subject });
 
       if (analyze && entry) {
         // Create analysis record and trigger edge function

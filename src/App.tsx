@@ -7,6 +7,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
@@ -16,6 +18,8 @@ import NewsletterDetail from "./pages/NewsletterDetail";
 import Competitors from "./pages/Competitors";
 import AnalysisView from "./pages/AnalysisView";
 import SettingsPage from "./pages/Settings";
+import TeamManagement from "./pages/TeamManagement";
+import UsageDashboard from "./pages/UsageDashboard";
 import AuthRedirect from "./components/AuthRedirect";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +36,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/redirect" element={<AuthRedirect />} />
               <Route element={<AppLayout />}>
@@ -42,6 +48,8 @@ const App = () => (
                 <Route path="/competitors" element={<Competitors />} />
                 <Route path="/analyses/:id" element={<AnalysisView />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/settings/team" element={<TeamManagement />} />
+                <Route path="/settings/usage" element={<UsageDashboard />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

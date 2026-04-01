@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useRoles } from "@/hooks/useRoles";
+import { useUsage } from "@/hooks/useUsage";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +34,9 @@ type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 
 export default function Competitors() {
   const { currentWorkspace } = useWorkspace();
+  const { canManageCompetitors } = useRoles();
+  const { isAtLimit, trackUsage } = useUsage();
+  const { log } = useAuditLog();
   const { toast } = useToast();
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,15 +65,21 @@ export default function Competitors() {
 
   const handleCreate = async () => {
     if (!currentWorkspace || !name.trim()) return;
+    if (isAtLimit("competitors")) {
+      toast({ title: "Limit reached", description: "Upgrade your plan to track more competitors.", variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("competitors").insert({
+      const { data, error } = await supabase.from("competitors").insert({
         workspace_id: currentWorkspace.id,
         name: name.trim(),
         website: website.trim() || null,
         description: description.trim() || null,
-      });
+      }).select().single();
       if (error) throw error;
+      await trackUsage("competitor_added");
+      await log("created", "competitor", data.id, { name: data.name });
       toast({ title: "Competitor added" });
       setName("");
       setWebsite("");
@@ -87,6 +99,7 @@ export default function Competitors() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      await log("deleted", "competitor", deleteTarget.id, { name: deleteTarget.name });
       setCompetitors((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       toast({ title: "Competitor removed" });
     }
