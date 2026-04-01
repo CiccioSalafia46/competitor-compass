@@ -67,7 +67,7 @@ export default function Analytics() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Analytics</h1>
-          <p className="page-description">Competitive activity trends from observed platform data</p>
+          <p className="page-description">Competitor activity trends and campaign intelligence</p>
         </div>
       </div>
 
