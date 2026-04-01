@@ -12,6 +12,7 @@ import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Newsletters from "./pages/Newsletters";
 import NewNewsletter from "./pages/NewNewsletter";
+import NewsletterDetail from "./pages/NewsletterDetail";
 import Competitors from "./pages/Competitors";
 import AnalysisView from "./pages/AnalysisView";
 import SettingsPage from "./pages/Settings";
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/newsletters" element={<Newsletters />} />
                 <Route path="/newsletters/new" element={<NewNewsletter />} />
+                <Route path="/newsletters/:id" element={<NewsletterDetail />} />
                 <Route path="/competitors" element={<Competitors />} />
                 <Route path="/analyses/:id" element={<AnalysisView />} />
                 <Route path="/settings" element={<SettingsPage />} />

@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, useCallback } from "react";
+import { useState, useEffect, createContext, useContext, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/integrations/supabase/types";
@@ -21,12 +21,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
 
   const fetchWorkspaces = useCallback(async () => {
     if (!user) {
       setWorkspaces([]);
       setCurrentWorkspace(null);
       setLoading(false);
+      initializedRef.current = false;
       return;
     }
     setLoading(true);
@@ -41,12 +43,19 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setWorkspaces(data || []);
-    if (data && data.length > 0 && !currentWorkspace) {
+    const fetchedWorkspaces = data || [];
+    setWorkspaces(fetchedWorkspaces);
+
+    // Only auto-select on first load, not on refetches
+    if (!initializedRef.current && fetchedWorkspaces.length > 0) {
       const saved = localStorage.getItem("current_workspace_id");
-      const found = saved ? data.find((w) => w.id === saved) : null;
-      setCurrentWorkspace(found || data[0]);
+      const found = saved ? fetchedWorkspaces.find((w) => w.id === saved) : null;
+      setCurrentWorkspace(found || fetchedWorkspaces[0]);
+      initializedRef.current = true;
+    } else if (fetchedWorkspaces.length === 0) {
+      setCurrentWorkspace(null);
     }
+
     setLoading(false);
   }, [user]);
 
@@ -72,6 +81,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
     setWorkspaces((prev) => [...prev, data]);
     setCurrentWorkspace(data);
+    initializedRef.current = true;
     return data;
   };
 

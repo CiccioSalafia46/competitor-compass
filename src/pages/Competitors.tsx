@@ -6,7 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Users, Globe, Trash2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -19,6 +35,7 @@ export default function Competitors() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Competitor | null>(null);
   const [name, setName] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
@@ -52,7 +69,9 @@ export default function Competitors() {
       });
       if (error) throw error;
       toast({ title: "Competitor added" });
-      setName(""); setWebsite(""); setDescription("");
+      setName("");
+      setWebsite("");
+      setDescription("");
       setDialogOpen(false);
       fetchCompetitors();
     } catch (err: any) {
@@ -62,14 +81,16 @@ export default function Competitors() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("competitors").delete().eq("id", id);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const { error } = await supabase.from("competitors").delete().eq("id", deleteTarget.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setCompetitors((prev) => prev.filter((c) => c.id !== id));
+      setCompetitors((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       toast({ title: "Competitor removed" });
     }
+    setDeleteTarget(null);
   };
 
   if (loading) {
@@ -151,8 +172,9 @@ export default function Competitors() {
                     )}
                   </div>
                   <button
-                    onClick={() => handleDelete(c.id)}
+                    onClick={() => setDeleteTarget(c)}
                     className="text-muted-foreground/0 group-hover:text-muted-foreground hover:text-destructive transition-colors p-1"
+                    aria-label={`Delete ${c.name}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -162,6 +184,25 @@ export default function Competitors() {
           ))}
         </div>
       )}
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete competitor</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove <strong>{deleteTarget?.name}</strong>? This won't delete
+              associated newsletters or analyses, but they will no longer be linked to this competitor.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

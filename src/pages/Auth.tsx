@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,14 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already authenticated
+  if (!loading && user) {
+    return <Navigate to="/redirect" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,11 +31,11 @@ export default function Auth() {
         await signUp(email, password, displayName);
         toast({
           title: "Account created",
-          description: "Check your email to verify your account, or sign in if auto-confirm is enabled.",
+          description: "Check your email to verify your account.",
         });
       } else {
         await signIn(email, password);
-        navigate("/dashboard");
+        navigate("/redirect");
       }
     } catch (err: any) {
       toast({
@@ -42,6 +47,14 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -101,7 +114,7 @@ export default function Auth() {
                 {isLoading ? "Loading..." : isSignUp ? "Create account" : "Sign in"}
               </Button>
             </form>
-            <div className="mt-4 text-center">
+            <div className="mt-4 text-center space-y-2">
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
@@ -109,6 +122,7 @@ export default function Auth() {
               >
                 {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
               </button>
+              {/* TODO: Implement password reset flow with /reset-password page */}
             </div>
           </CardContent>
         </Card>
