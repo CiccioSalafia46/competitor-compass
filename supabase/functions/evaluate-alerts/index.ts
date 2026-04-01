@@ -164,7 +164,7 @@ serve(async (req) => {
       }
     }
 
-    // Deduplicate by title+rule combo
+    // Deduplicate by title+rule combo (in-batch)
     const seen = new Set<string>();
     const dedupedAlerts = triggeredAlerts.filter(a => {
       const key = `${a.alert_rule_id}-${a.title}`;
@@ -173,9 +173,22 @@ serve(async (req) => {
       return true;
     });
 
+    // Deduplicate against existing alerts from last 24h to prevent re-triggering
+    const finalAlerts: any[] = [];
+    for (const a of dedupedAlerts) {
+      const { count } = await supabase
+        .from("alerts")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .eq("alert_rule_id", a.alert_rule_id)
+        .eq("title", a.title)
+        .gte("created_at", since);
+      if ((count || 0) === 0) finalAlerts.push(a);
+    }
+
     // Insert alerts
-    if (dedupedAlerts.length > 0) {
-      const { error } = await supabase.from("alerts").insert(dedupedAlerts);
+    if (finalAlerts.length > 0) {
+      const { error } = await supabase.from("alerts").insert(finalAlerts);
       if (error) log("Insert error", { error: error.message });
     }
 
