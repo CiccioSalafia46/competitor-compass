@@ -73,8 +73,7 @@ serve(async (req) => {
       });
 
       if (!tokenResp.ok) {
-        const errText = await tokenResp.text();
-        console.error("Token exchange failed:", tokenResp.status, errText);
+        console.error("Token exchange failed:", tokenResp.status);
         return Response.redirect(`${stateData.redirectUrl}?gmail_error=token_exchange_failed`, 302);
       }
 
