@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
+import { SystemHealthPanel } from "@/components/SystemHealthPanel";
 
 type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 type InboxItem = Database["public"]["Tables"]["newsletter_inbox"]["Row"];
