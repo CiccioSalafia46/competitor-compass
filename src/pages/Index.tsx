@@ -488,9 +488,9 @@ export default function Index() {
 
       {/* ─── FAQ ─── */}
       <section id="faq" className="bg-accent/20 border-y">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-          <div className="text-center mb-14">
-            <Badge variant="outline" className="mb-4 text-[10px] font-normal">FAQ</Badge>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+          <div className="text-center mb-10">
+            <Badge variant="outline" className="mb-3 text-[10px] font-normal">FAQ</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               Common questions
             </h2>
