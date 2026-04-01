@@ -216,8 +216,8 @@ export default function Index() {
       </section>
 
       {/* ─── Platform Features ─── */}
-      <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-        <div className="text-center mb-16">
+      <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+        <div className="text-center mb-12">
           <Badge variant="outline" className="mb-4 text-[10px] font-normal">Platform</Badge>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             Everything you need to outsmart the competition
