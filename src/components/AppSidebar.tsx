@@ -32,6 +32,7 @@ export const AppSidebar = memo(function AppSidebar() {
   const { signOut } = useAuth();
   const { currentWorkspace, workspaces, setCurrentWorkspace } = useWorkspace();
   const { isAdmin, isAnalyst, roles } = useRoles();
+  const { tier } = useSubscription();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
