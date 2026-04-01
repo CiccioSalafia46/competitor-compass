@@ -103,7 +103,7 @@ function OnboardingContent() {
               <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
                 <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
-              <span className="text-sm font-semibold text-foreground">Newsletter Intel</span>
+              <span className="text-sm font-semibold text-foreground">Tracklyze</span>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/dashboard")}>
               Skip setup →
