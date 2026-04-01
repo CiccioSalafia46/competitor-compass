@@ -59,12 +59,12 @@ export const AppSidebar = memo(function AppSidebar() {
 
   const intelligenceNav = useMemo(
     () => [
-      { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst },
+      { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? "Premium" : undefined },
       { label: "Insights", icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
       { label: "Analytics", icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
       { label: "Alerts", icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
     ],
-    [isAnalyst]
+    [isAnalyst, tier]
   );
 
   const adminNav = useMemo(
