@@ -41,8 +41,8 @@ export default function Newsletters() {
     <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Newsletters</h1>
-          <p className="text-sm text-muted-foreground mt-1">Collected competitor newsletters</p>
+          <h1 className="text-2xl font-semibold text-foreground">Data Sources</h1>
+          <p className="text-sm text-muted-foreground mt-1">Collected competitor communications</p>
         </div>
         <Button onClick={() => navigate("/newsletters/new")} className="gap-2">
           <Plus className="h-4 w-4" />
