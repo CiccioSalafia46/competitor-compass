@@ -42,6 +42,12 @@ export default function MetaAdsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [fetchSearch, setFetchSearch] = useState("");
   const { toast } = useToast();
+  const debouncedSearch = useDebounce(searchInput, 300);
+
+  // Sync debounced search to filters
+  useEffect(() => {
+    setFilters((f) => ({ ...f, search: debouncedSearch || undefined }));
+  }, [debouncedSearch]);
 
   // Fetch competitors
   useEffect(() => {
