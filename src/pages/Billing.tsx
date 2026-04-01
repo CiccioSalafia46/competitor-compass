@@ -212,7 +212,7 @@ export default function Billing() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: "Competitors", used: usage.competitors, limit: limits.competitors, key: "competitors" as const },
-              { label: "Newsletters", used: usage.newsletters_this_month, limit: limits.newsletters_per_month, key: "newsletters_this_month" as const },
+              { label: "Data Imports", used: usage.newsletters_this_month, limit: limits.newsletters_per_month, key: "newsletters_this_month" as const },
               { label: "AI Analyses", used: usage.analyses_this_month, limit: limits.analyses_per_month, key: "analyses_this_month" as const },
               { label: "Team Seats", used: usage.seats_used, limit: limits.seats, key: "seats_used" as const },
             ].map((m) => {
