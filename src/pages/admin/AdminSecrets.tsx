@@ -27,7 +27,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function HealthIcon({ ok }: { ok: boolean | null }) {
-  if (ok === null) return <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))]" />;
+  if (ok === null) return <AlertTriangle className="h-4 w-4 text-warning" />;
   return ok ? <CheckCircle className="h-4 w-4 text-primary" /> : <XCircle className="h-4 w-4 text-destructive" />;
 }
 
