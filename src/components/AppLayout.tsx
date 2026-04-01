@@ -38,6 +38,9 @@ export default function AppLayout() {
           <SidebarInset className="flex-1">
             <main className="flex-1 overflow-auto scrollbar-thin">
               <ErrorBoundary>
+                <div className="px-4 pt-3 sm:px-6 lg:px-8">
+                  <EmailVerificationBanner />
+                </div>
                 <Outlet />
               </ErrorBoundary>
             </main>
