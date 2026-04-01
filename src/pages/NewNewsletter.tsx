@@ -47,6 +47,11 @@ export default function NewNewsletter() {
   const handleSubmit = async (analyze: boolean) => {
     if (!currentWorkspace || !user || !content.trim()) return;
 
+    if (isAtLimit("newsletters_this_month")) {
+      toast({ title: "Limit reached", description: "You've reached your newsletter limit for this month. Upgrade your plan to continue.", variant: "destructive" });
+      return;
+    }
+
     setIsSubmitting(true);
     if (analyze) setIsAnalyzing(true);
 
