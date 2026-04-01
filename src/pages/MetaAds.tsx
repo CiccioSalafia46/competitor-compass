@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useMetaAds, useMetaAdAnalysis } from "@/hooks/useMetaAds";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/integrations/supabase/client";
