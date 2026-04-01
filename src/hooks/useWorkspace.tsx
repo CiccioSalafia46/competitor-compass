@@ -73,9 +73,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error("Not authenticated");
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     const { data, error } = await supabase
-      .from("workspaces")
-      .insert({ name, slug: `${slug}-${Date.now()}`, owner_id: user.id })
-      .select()
+      .rpc("create_workspace", { _name: name, _slug: `${slug}-${Date.now()}` })
       .single();
 
     if (error) throw error;
