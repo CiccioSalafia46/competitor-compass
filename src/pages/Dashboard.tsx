@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useAlerts } from "@/hooks/useAlerts";
 import { useInsights } from "@/hooks/useInsights";
@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 
 type Analysis = Database["public"]["Tables"]["analyses"]["Row"];
 
@@ -106,6 +107,9 @@ export default function Dashboard() {
           <p className="page-description">Competitive intelligence overview</p>
         </div>
       </div>
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
 
       {/* KPI Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
