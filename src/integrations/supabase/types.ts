@@ -119,6 +119,7 @@ export type Database = {
           domains: string[] | null
           id: string
           is_monitored: boolean
+          meta_page_ids: string[] | null
           name: string
           tags: string[] | null
           updated_at: string
@@ -131,6 +132,7 @@ export type Database = {
           domains?: string[] | null
           id?: string
           is_monitored?: boolean
+          meta_page_ids?: string[] | null
           name: string
           tags?: string[] | null
           updated_at?: string
@@ -143,6 +145,7 @@ export type Database = {
           domains?: string[] | null
           id?: string
           is_monitored?: boolean
+          meta_page_ids?: string[] | null
           name?: string
           tags?: string[] | null
           updated_at?: string
@@ -243,6 +246,195 @@ export type Database = {
             columns: ["gmail_connection_id"]
             isOneToOne: true
             referencedRelation: "gmail_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ad_analyses: {
+        Row: {
+          audience_clues: string[] | null
+          confidence_scores: Json | null
+          created_at: string
+          creative_pattern: string | null
+          funnel_intent: string | null
+          id: string
+          message_angle: string | null
+          meta_ad_id: string
+          model_used: string | null
+          offer_angle: string | null
+          overall_confidence: number | null
+          product_category: string | null
+          promo_language: string | null
+          raw_analysis: Json | null
+          strategy_takeaways: string[] | null
+          urgency_style: string | null
+          workspace_id: string
+        }
+        Insert: {
+          audience_clues?: string[] | null
+          confidence_scores?: Json | null
+          created_at?: string
+          creative_pattern?: string | null
+          funnel_intent?: string | null
+          id?: string
+          message_angle?: string | null
+          meta_ad_id: string
+          model_used?: string | null
+          offer_angle?: string | null
+          overall_confidence?: number | null
+          product_category?: string | null
+          promo_language?: string | null
+          raw_analysis?: Json | null
+          strategy_takeaways?: string[] | null
+          urgency_style?: string | null
+          workspace_id: string
+        }
+        Update: {
+          audience_clues?: string[] | null
+          confidence_scores?: Json | null
+          created_at?: string
+          creative_pattern?: string | null
+          funnel_intent?: string | null
+          id?: string
+          message_angle?: string | null
+          meta_ad_id?: string
+          model_used?: string | null
+          offer_angle?: string | null
+          overall_confidence?: number | null
+          product_category?: string | null
+          promo_language?: string | null
+          raw_analysis?: Json | null
+          strategy_takeaways?: string[] | null
+          urgency_style?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_analyses_meta_ad_id_fkey"
+            columns: ["meta_ad_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ad_analyses_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ads: {
+        Row: {
+          ad_creative_bodies: string[] | null
+          ad_creative_link_captions: string[] | null
+          ad_creative_link_descriptions: string[] | null
+          ad_creative_link_titles: string[] | null
+          ad_delivery_start_time: string | null
+          ad_delivery_stop_time: string | null
+          ad_snapshot_url: string | null
+          competitor_id: string | null
+          created_at: string
+          cta_type: string | null
+          currency: string | null
+          estimated_audience_size: Json | null
+          first_seen_at: string | null
+          id: string
+          impressions_range: Json | null
+          is_active: boolean | null
+          languages: string[] | null
+          last_seen_at: string | null
+          media_type: string | null
+          media_url: string | null
+          meta_ad_id: string | null
+          page_id: string | null
+          page_name: string | null
+          platforms: string[] | null
+          publisher_platforms: string[] | null
+          raw_data: Json | null
+          spend_range: Json | null
+          thumbnail_url: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          ad_creative_bodies?: string[] | null
+          ad_creative_link_captions?: string[] | null
+          ad_creative_link_descriptions?: string[] | null
+          ad_creative_link_titles?: string[] | null
+          ad_delivery_start_time?: string | null
+          ad_delivery_stop_time?: string | null
+          ad_snapshot_url?: string | null
+          competitor_id?: string | null
+          created_at?: string
+          cta_type?: string | null
+          currency?: string | null
+          estimated_audience_size?: Json | null
+          first_seen_at?: string | null
+          id?: string
+          impressions_range?: Json | null
+          is_active?: boolean | null
+          languages?: string[] | null
+          last_seen_at?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          meta_ad_id?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          platforms?: string[] | null
+          publisher_platforms?: string[] | null
+          raw_data?: Json | null
+          spend_range?: Json | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          ad_creative_bodies?: string[] | null
+          ad_creative_link_captions?: string[] | null
+          ad_creative_link_descriptions?: string[] | null
+          ad_creative_link_titles?: string[] | null
+          ad_delivery_start_time?: string | null
+          ad_delivery_stop_time?: string | null
+          ad_snapshot_url?: string | null
+          competitor_id?: string | null
+          created_at?: string
+          cta_type?: string | null
+          currency?: string | null
+          estimated_audience_size?: Json | null
+          first_seen_at?: string | null
+          id?: string
+          impressions_range?: Json | null
+          is_active?: boolean | null
+          languages?: string[] | null
+          last_seen_at?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          meta_ad_id?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          platforms?: string[] | null
+          publisher_platforms?: string[] | null
+          raw_data?: Json | null
+          spend_range?: Json | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ads_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ads_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
