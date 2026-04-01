@@ -52,6 +52,7 @@ const AdminWorkspaces = lazy(() => import("./pages/admin/AdminWorkspaces"));
 const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
 const AdminIntegrations = lazy(() => import("./pages/admin/AdminIntegrations"));
 const AdminIssues = lazy(() => import("./pages/admin/AdminIssues"));
+const AdminSecrets = lazy(() => import("./pages/admin/AdminSecrets"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -122,6 +123,7 @@ const App = () => (
                     <Route path="logs" element={<AdminLogs />} />
                     <Route path="integrations" element={<AdminIntegrations />} />
                     <Route path="issues" element={<AdminIssues />} />
+                    <Route path="secrets" element={<AdminSecrets />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>

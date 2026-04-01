@@ -367,6 +367,206 @@ serve(async (req) => {
         });
       }
 
+      case "integration_health": {
+        // Check which secrets are configured (never return values, only status)
+        const secretNames = [
+          "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
+          "STRIPE_SECRET_KEY",
+          "LOVABLE_API_KEY",
+          "SUPABASE_SERVICE_ROLE_KEY",
+        ];
+        const secretStatus: Record<string, { configured: boolean; masked: string }> = {};
+        for (const name of secretNames) {
+          const val = Deno.env.get(name);
+          secretStatus[name] = {
+            configured: !!val && val.length > 0,
+            masked: val ? `${"•".repeat(Math.min(val.length, 20))}${val.slice(-4)}` : "—",
+          };
+        }
+
+        // Gmail health
+        const { count: totalGmail } = await supabaseAdmin
+          .from("gmail_connections")
+          .select("id", { count: "exact", head: true });
+        const { count: gmailErrors } = await supabaseAdmin
+          .from("gmail_connections")
+          .select("id", { count: "exact", head: true })
+          .not("sync_error", "is", null);
+
+        // Token health: check if tokens exist and if any are expired
+        const { data: tokenData } = await supabaseAdmin
+          .from("gmail_tokens")
+          .select("id, token_expires_at")
+          .limit(100);
+        const now = new Date();
+        const expiredTokens = (tokenData || []).filter(
+          (t: any) => new Date(t.token_expires_at) < now
+        ).length;
+
+        // Analysis health
+        const { count: failedAnalyses } = await supabaseAdmin
+          .from("analyses")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "failed");
+        const { count: totalAnalyses } = await supabaseAdmin
+          .from("analyses")
+          .select("id", { count: "exact", head: true });
+
+        // Feature flags
+        const { data: flags } = await supabaseAdmin
+          .from("feature_flags")
+          .select("*")
+          .order("category", { ascending: true });
+
+        // Build integration registry
+        const integrations = [
+          {
+            id: "google_oauth",
+            name: "Google OAuth / Gmail",
+            category: "integrations",
+            envStatus: secretStatus["GOOGLE_CLIENT_ID"]?.configured && secretStatus["GOOGLE_CLIENT_SECRET"]?.configured
+              ? "configured" : "missing",
+            productionReady: secretStatus["GOOGLE_CLIENT_ID"]?.configured && secretStatus["GOOGLE_CLIENT_SECRET"]?.configured,
+            health: {
+              totalConnections: totalGmail || 0,
+              errorConnections: gmailErrors || 0,
+              expiredTokens,
+              totalTokens: tokenData?.length || 0,
+            },
+            secrets: [
+              { name: "GOOGLE_CLIENT_ID", ...secretStatus["GOOGLE_CLIENT_ID"] },
+              { name: "GOOGLE_CLIENT_SECRET", ...secretStatus["GOOGLE_CLIENT_SECRET"] },
+            ],
+            notes: "Requires Google Cloud Console verification for production. OAuth redirect must point to gmail-auth edge function.",
+          },
+          {
+            id: "stripe",
+            name: "Stripe Billing",
+            category: "billing",
+            envStatus: secretStatus["STRIPE_SECRET_KEY"]?.configured ? "configured" : "missing",
+            productionReady: secretStatus["STRIPE_SECRET_KEY"]?.configured
+              && secretStatus["STRIPE_SECRET_KEY"]?.masked?.includes("live") || false,
+            health: {},
+            secrets: [
+              { name: "STRIPE_SECRET_KEY", ...secretStatus["STRIPE_SECRET_KEY"] },
+            ],
+            notes: "Check if key starts with sk_live_ for production. Test keys start with sk_test_.",
+          },
+          {
+            id: "ai_provider",
+            name: "AI Provider (Lovable AI)",
+            category: "intelligence",
+            envStatus: secretStatus["LOVABLE_API_KEY"]?.configured ? "configured" : "missing",
+            productionReady: secretStatus["LOVABLE_API_KEY"]?.configured,
+            health: {
+              totalAnalyses: totalAnalyses || 0,
+              failedAnalyses: failedAnalyses || 0,
+            },
+            secrets: [
+              { name: "LOVABLE_API_KEY", ...secretStatus["LOVABLE_API_KEY"] },
+            ],
+            notes: "Managed by Lovable platform. No rotation needed.",
+          },
+          {
+            id: "supabase_service",
+            name: "Backend Service Role",
+            category: "infrastructure",
+            envStatus: secretStatus["SUPABASE_SERVICE_ROLE_KEY"]?.configured ? "configured" : "missing",
+            productionReady: secretStatus["SUPABASE_SERVICE_ROLE_KEY"]?.configured,
+            health: {},
+            secrets: [
+              { name: "SUPABASE_SERVICE_ROLE_KEY", ...secretStatus["SUPABASE_SERVICE_ROLE_KEY"] },
+            ],
+            notes: "Auto-provisioned. Never expose client-side.",
+          },
+        ];
+
+        return json({ integrations, flags: flags || [], secretStatus });
+      }
+
+      case "test_integration": {
+        const { integration_id } = body;
+        if (!integration_id) return json({ error: "integration_id required" }, 400);
+
+        const results: { test: string; status: "pass" | "fail" | "warn"; message: string }[] = [];
+
+        if (integration_id === "google_oauth") {
+          const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
+          const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
+          results.push({
+            test: "Client ID configured",
+            status: clientId ? "pass" : "fail",
+            message: clientId ? "Present" : "GOOGLE_CLIENT_ID is missing",
+          });
+          results.push({
+            test: "Client Secret configured",
+            status: clientSecret ? "pass" : "fail",
+            message: clientSecret ? "Present" : "GOOGLE_CLIENT_SECRET is missing",
+          });
+          // Check for active connections
+          const { count } = await supabaseAdmin
+            .from("gmail_connections")
+            .select("id", { count: "exact", head: true });
+          results.push({
+            test: "Active connections",
+            status: (count || 0) > 0 ? "pass" : "warn",
+            message: `${count || 0} connections found`,
+          });
+        } else if (integration_id === "stripe") {
+          const key = Deno.env.get("STRIPE_SECRET_KEY");
+          results.push({
+            test: "Secret Key configured",
+            status: key ? "pass" : "fail",
+            message: key ? "Present" : "STRIPE_SECRET_KEY is missing",
+          });
+          if (key) {
+            results.push({
+              test: "Environment mode",
+              status: key.startsWith("sk_live_") ? "pass" : "warn",
+              message: key.startsWith("sk_live_") ? "Production (live) key" : "Test/sandbox key detected",
+            });
+          }
+        } else if (integration_id === "ai_provider") {
+          const key = Deno.env.get("LOVABLE_API_KEY");
+          results.push({
+            test: "API Key configured",
+            status: key ? "pass" : "fail",
+            message: key ? "Present" : "LOVABLE_API_KEY is missing",
+          });
+          const { count: total } = await supabaseAdmin
+            .from("analyses")
+            .select("id", { count: "exact", head: true });
+          const { count: failed } = await supabaseAdmin
+            .from("analyses")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "failed");
+          const failRate = total && total > 0 ? ((failed || 0) / total * 100).toFixed(1) : "0";
+          results.push({
+            test: "Analysis success rate",
+            status: Number(failRate) < 10 ? "pass" : Number(failRate) < 30 ? "warn" : "fail",
+            message: `${failRate}% failure rate (${failed || 0}/${total || 0})`,
+          });
+        }
+
+        await auditLog("admin.test_integration", "integration", integration_id);
+        return json({ results });
+      }
+
+      case "toggle_flag": {
+        const { flag_key, enabled } = body;
+        if (!flag_key || typeof enabled !== "boolean") return json({ error: "flag_key and enabled required" }, 400);
+
+        const { error: updateErr } = await supabaseAdmin
+          .from("feature_flags")
+          .update({ enabled, updated_by: adminUserId, updated_at: new Date().toISOString() })
+          .eq("key", flag_key);
+
+        if (updateErr) return json({ error: updateErr.message }, 500);
+
+        await auditLog("admin.toggle_flag", "feature_flag", flag_key, { enabled });
+        return json({ success: true });
+      }
+
       default:
         return json({ error: "Unknown action" }, 400);
     }
