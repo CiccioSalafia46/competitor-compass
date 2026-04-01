@@ -84,9 +84,9 @@ export default function NewsletterInbox() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Newsletter Inbox</h1>
+          <h1 className="page-title">Competitor Inbox</h1>
           <p className="page-description">
-            {showDemo ? "Demo mode — connect Gmail to import real newsletters" : `${totalCount} newsletters`}
+            {showDemo ? "Demo mode — connect Gmail to import real competitor data" : `${totalCount} items tracked`}
           </p>
         </div>
         <div className="flex gap-2">
