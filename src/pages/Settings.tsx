@@ -68,8 +68,8 @@ export default function SettingsPage() {
               <span className="text-foreground">{currentWorkspace.name}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">ID</span>
-              <span className="text-foreground font-mono text-xs">{currentWorkspace.id}</span>
+              <span className="text-muted-foreground">Slug</span>
+              <span className="text-foreground font-mono text-xs">{currentWorkspace.slug}</span>
             </div>
             {isAdmin && (
               <>

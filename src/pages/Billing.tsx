@@ -30,8 +30,8 @@ const PLAN_FEATURES: Record<PlanTier, string[]> = {
 
 const PLAN_PRICES: Record<PlanTier, string> = {
   free: "$0",
-  starter: "$49",
-  premium: "$149",
+  starter: "$29",
+  premium: "$99",
 };
 
 export default function Billing() {
