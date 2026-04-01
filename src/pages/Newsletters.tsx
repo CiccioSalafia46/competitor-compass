@@ -60,7 +60,7 @@ export default function Newsletters() {
             </p>
             <Button onClick={() => navigate("/newsletters/new")} className="mt-4 gap-2">
               <Plus className="h-4 w-4" />
-              Add newsletter
+              Import data
             </Button>
           </CardContent>
         </Card>

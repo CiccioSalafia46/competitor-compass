@@ -169,9 +169,9 @@ export default function NewsletterInbox() {
         <Card className="border">
           <CardContent className="py-16 text-center">
             <InboxIcon className="h-8 w-8 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-foreground">No newsletters found</p>
+            <p className="text-sm font-medium text-foreground">No competitor activity found</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {isConnected ? "Try syncing or adjusting your filters" : "Connect Gmail to start importing"}
+              {isConnected ? "Try syncing or adjusting your filters" : "Connect Gmail to start importing competitor data"}
             </p>
           </CardContent>
         </Card>

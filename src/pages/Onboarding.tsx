@@ -580,7 +580,7 @@ function InsightsStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: 
 
       <div className="grid gap-3 mb-6 text-left max-w-sm mx-auto">
         {[
-          { icon: Lightbulb, label: "AI insights generated from newsletter patterns" },
+          { icon: Lightbulb, label: "AI insights generated from competitor patterns" },
           { icon: BarChart3, label: "Analytics dashboards updated in real-time" },
           { icon: Users, label: "Competitor activity tracked continuously" },
         ].map((item) => (

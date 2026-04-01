@@ -171,7 +171,7 @@ export default function Analytics() {
         )}
 
         {data.campaignTypes.length > 0 && (
-          <ChartCard title="Campaign Types" description="Extracted classification">
+          <ChartCard title="Campaign Types" description="AI classification">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

@@ -136,8 +136,8 @@ export default function NewNewsletter() {
 
       <Card className="shadow-card border">
         <CardHeader className="pb-4">
-          <CardTitle className="text-base">Newsletter Content</CardTitle>
-          <CardDescription>Paste the newsletter email content below</CardDescription>
+          <CardTitle className="text-base">Competitor Content</CardTitle>
+          <CardDescription>Paste the competitor email or campaign content below</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
