@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import UpgradePrompt from "@/components/UpgradePrompt";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
 import { useUsage } from "@/hooks/useUsage";
@@ -154,11 +155,21 @@ export default function Competitors() {
       </div>
 
       {competitors.length === 0 ? (
-        <Card className="shadow-raised border">
-          <CardContent className="py-12 text-center">
-            <Users className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-sm font-medium text-foreground">No competitors tracked yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Add the companies you want to monitor</p>
+        <Card className="border-dashed border-2 bg-accent/20">
+          <CardContent className="py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mx-auto mb-4">
+              <Users className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-base font-semibold text-foreground mb-1">Start tracking competitors</h2>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-1">
+              Add the companies you want to monitor. We'll track their newsletters, ads, and messaging.
+            </p>
+            <p className="text-xs text-muted-foreground/70 mb-5">
+              You'll get AI-powered insights about their strategy automatically.
+            </p>
+            <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4" /> Add your first competitor
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -198,7 +209,12 @@ export default function Competitors() {
         </div>
       )}
 
-      {/* Delete confirmation */}
+      {/* Upgrade prompt when near/at limit */}
+      {isAtLimit("competitors") && (
+        <UpgradePrompt reason="competitor_limit" variant="inline" />
+      )}
+
+
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

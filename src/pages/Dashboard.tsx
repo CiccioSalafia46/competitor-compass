@@ -3,7 +3,9 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useAlerts } from "@/hooks/useAlerts";
 import { useInsights } from "@/hooks/useInsights";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
+import { useUsage } from "@/hooks/useUsage";
 import { supabase } from "@/integrations/supabase/client";
+import UpgradePrompt from "@/components/UpgradePrompt";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,7 @@ export default function Dashboard() {
   const { alerts, unreadCount } = useAlerts();
   const { insights } = useInsights();
   const { isConnected: gmailConnected } = useGmailConnection();
+  const { isAtLimit } = useUsage();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({
@@ -359,6 +362,17 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* ─── Upgrade nudge for free users near limits ─── */}
+      {(isAtLimit("competitors") || isAtLimit("newsletters_this_month") || isAtLimit("analyses_this_month")) && (
+        <UpgradePrompt
+          reason={
+            isAtLimit("competitors") ? "competitor_limit" :
+            isAtLimit("newsletters_this_month") ? "newsletter_limit" : "analysis_limit"
+          }
+          variant="inline"
+        />
       )}
 
       {/* ─── System Health ─── */}
