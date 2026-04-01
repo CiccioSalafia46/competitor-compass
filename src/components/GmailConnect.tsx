@@ -57,6 +57,7 @@ export default function GmailConnect() {
   }, []);
 
   const handleConnect = async () => {
+    if (!requireVerification("connect Gmail")) return;
     setConnecting(true);
     try {
       await connect();
