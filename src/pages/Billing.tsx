@@ -124,8 +124,8 @@ const PLAN_PRICES: Record<PlanTier, { amount: string; period: string; annual?: s
 
 /** Feature comparison rows for the comparison table */
 const COMPARISON_ROWS: { label: string; free: string; starter: string; premium: string; category: string }[] = [
-  { category: "Data", label: "Newsletters/month", free: "200", starter: "2,000", premium: "20,000" },
-  { category: "Data", label: "Newsletter import", free: "Manual", starter: "Gmail auto-sync", premium: "Gmail + priority" },
+  { category: "Data", label: "Data imports/month", free: "200", starter: "2,000", premium: "20,000" },
+  { category: "Data", label: "Import method", free: "Manual", starter: "Gmail auto-sync", premium: "Gmail + priority" },
   { category: "Intelligence", label: "AI analyses/month", free: "50", starter: "500", premium: "5,000" },
   { category: "Intelligence", label: "Strategic insights", free: "—", starter: "✓", premium: "Advanced" },
   { category: "Intelligence", label: "Trend detection", free: "—", starter: "—", premium: "✓" },
