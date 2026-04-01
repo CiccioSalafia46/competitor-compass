@@ -523,7 +523,7 @@ export default function Index() {
       {/* ─── Final CTA ─── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-primary/[0.04] to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-24 sm:py-32 text-center relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center relative">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-4">
             Start tracking your competitors the smart way
           </h2>
