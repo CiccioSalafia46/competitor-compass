@@ -54,7 +54,7 @@ const PLAN_VALUE_BUCKETS: Record<PlanTier, {
       {
         name: "Data Access",
         icon: Newspaper,
-        features: ["2,000 newsletters/mo", "Gmail auto-import", "Full history"],
+        features: ["2,000 data imports/mo", "Gmail auto-import", "Full history"],
       },
       {
         name: "Intelligence",
