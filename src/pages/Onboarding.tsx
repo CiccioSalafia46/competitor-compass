@@ -527,7 +527,7 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
           {
             icon: Mail,
             title: "Gmail sync",
-            desc: "If you connected Gmail, newsletters will appear automatically in your inbox",
+            desc: "If you connected Gmail, competitor communications will appear automatically in your inbox",
             action: () => { onComplete(); },
             label: "Continue",
             disabled: false,
