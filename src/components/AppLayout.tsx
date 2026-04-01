@@ -80,6 +80,7 @@ const TopBar = memo(function TopBar() {
     <header className="h-12 flex items-center justify-between border-b bg-card px-3 shrink-0">
       <SidebarTrigger className="h-8 w-8" />
       <div className="flex items-center gap-1">
+        <DarkModeToggle />
         <Button
           variant="ghost"
           size="icon"
