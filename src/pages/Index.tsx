@@ -347,7 +347,7 @@ export default function Index() {
         </div>
 
         {/* Secondary features grid */}
-        <div className="mt-20 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { icon: LineChart, title: "Analytics Dashboard", desc: "Visualize campaign frequency, promotion patterns, and competitor strategy shifts over time." },
             { icon: Users, title: "Team Collaboration", desc: "Invite your team with Admin, Analyst, or Viewer roles. Full audit trail on every action." },
