@@ -364,6 +364,17 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ─── Upgrade nudge for free users near limits ─── */}
+      {(isAtLimit("competitors") || isAtLimit("newsletters_this_month") || isAtLimit("analyses_this_month")) && (
+        <UpgradePrompt
+          reason={
+            isAtLimit("competitors") ? "competitor_limit" :
+            isAtLimit("newsletters_this_month") ? "newsletter_limit" : "analysis_limit"
+          }
+          variant="inline"
+        />
+      )}
+
       {/* ─── System Health ─── */}
       <SystemHealthPanel />
 
