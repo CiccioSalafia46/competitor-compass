@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
@@ -8,8 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
-import { User, Building2, CreditCard, Shield } from "lucide-react";
+import { User, Building2, CreditCard, Shield, Download, Moon, Sun } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { exportToCSV } from "@/lib/export-csv";
+import { toast } from "sonner";
 import GmailConnect from "@/components/GmailConnect";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 export default function SettingsPage() {
   const { user } = useAuth();
