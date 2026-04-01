@@ -113,7 +113,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/newsletters/new")}>
-            <Plus className="h-3 w-3" /> Add newsletter
+            <Plus className="h-3 w-3" /> Import data
           </Button>
           <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/insights")}>
             <Sparkles className="h-3 w-3" /> Generate insights
