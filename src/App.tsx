@@ -15,6 +15,8 @@ import Dashboard from "./pages/Dashboard";
 import Newsletters from "./pages/Newsletters";
 import NewNewsletter from "./pages/NewNewsletter";
 import NewsletterDetail from "./pages/NewsletterDetail";
+import NewsletterInbox from "./pages/NewsletterInbox";
+import NewsletterReader from "./pages/NewsletterReader";
 import Competitors from "./pages/Competitors";
 import AnalysisView from "./pages/AnalysisView";
 import SettingsPage from "./pages/Settings";
@@ -42,6 +44,8 @@ const App = () => (
               <Route path="/redirect" element={<AuthRedirect />} />
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/inbox" element={<NewsletterInbox />} />
+                <Route path="/inbox/:id" element={<NewsletterReader />} />
                 <Route path="/newsletters" element={<Newsletters />} />
                 <Route path="/newsletters/new" element={<NewNewsletter />} />
                 <Route path="/newsletters/:id" element={<NewsletterDetail />} />

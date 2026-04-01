@@ -36,6 +36,7 @@ export function AppSidebar() {
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
+    { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
     { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
     { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
     { label: "Usage", icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
