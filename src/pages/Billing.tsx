@@ -85,7 +85,7 @@ const PLAN_VALUE_BUCKETS: Record<PlanTier, {
       {
         name: "Data Access",
         icon: Newspaper,
-        features: ["20,000 newsletters/mo", "Priority processing", "Unlimited history"],
+        features: ["20,000 data imports/mo", "Priority processing", "Unlimited history"],
       },
       {
         name: "Intelligence",
