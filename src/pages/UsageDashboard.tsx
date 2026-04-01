@@ -107,7 +107,7 @@ export default function UsageDashboard() {
                     className={cn(
                       "h-2",
                       atLimit && "[&>div]:bg-destructive",
-                      near && !atLimit && "[&>div]:bg-amber-500"
+                      near && !atLimit && "[&>div]:bg-[hsl(var(--warning))]"
                     )}
                   />
                 )}
