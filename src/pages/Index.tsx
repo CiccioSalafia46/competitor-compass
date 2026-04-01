@@ -583,8 +583,8 @@ export default function Index() {
           <div className="border-t mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-[11px] text-muted-foreground">© {new Date().getFullYear()} Tracklyze. All rights reserved.</p>
             <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-              <span>Privacy Policy</span>
-              <span>Terms of Service</span>
+              <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+              <a href="/terms" className="hover:text-foreground transition-colors">Terms of Service</a>
             </div>
           </div>
         </div>
