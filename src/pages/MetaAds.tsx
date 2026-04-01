@@ -321,7 +321,7 @@ export default function MetaAdsPage() {
                 <p className="text-lg font-medium text-foreground">{selectedAdData.page_name}</p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {selectedAdData.is_active ? (
-                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0 text-xs">Active</Badge>
+                    <Badge className="bg-primary/10 text-primary border-0 text-xs">Active</Badge>
                   ) : (
                     <Badge variant="secondary" className="text-xs">Inactive</Badge>
                   )}
