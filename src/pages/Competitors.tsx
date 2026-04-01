@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useRoles } from "@/hooks/useRoles";
+import { useUsage } from "@/hooks/useUsage";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
