@@ -125,7 +125,7 @@ export default function Dashboard() {
                   >
                     <div>
                       <p className="text-sm font-medium capitalize">
-                        {analysis.analysis_type.replaceAll("_", " ")}
+                        {analysis.analysis_type.replace(/_/g, " ")}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {analysis.completed_at ? new Date(analysis.completed_at).toLocaleDateString() : "—"}

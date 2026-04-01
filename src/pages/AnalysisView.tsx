@@ -104,7 +104,7 @@ export default function AnalysisView() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground capitalize">
-            {analysis.analysis_type.replaceAll("_", " ")} Analysis
+            {analysis.analysis_type.replace(/_/g, " ")} Analysis
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge variant={

@@ -155,7 +155,7 @@ export default function NewsletterDetail() {
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium capitalize">
-                      {a.analysis_type.replaceAll("_", " ")}
+                      {a.analysis_type.replace(/_/g, " ")}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {a.completed_at ? new Date(a.completed_at).toLocaleDateString() : "In progress"}
