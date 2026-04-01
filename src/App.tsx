@@ -55,6 +55,8 @@ const App = () => (
                 <Route path="/newsletters/new" element={<NewNewsletter />} />
                 <Route path="/newsletters/:id" element={<NewsletterDetail />} />
                 <Route path="/competitors" element={<Competitors />} />
+                <Route path="/meta-ads" element={<MetaAds />} />
+                <Route path="/meta-ads/compare" element={<MetaAdsCompare />} />
                 <Route path="/analyses/:id" element={<AnalysisView />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/settings/team" element={<TeamManagement />} />
