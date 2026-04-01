@@ -120,7 +120,7 @@ export default function AdminSecrets() {
                     {integration.productionReady ? (
                       <Badge variant="outline" className="text-[10px] border-primary text-primary">Prod Ready</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-500">Dev/Test</Badge>
+                      <Badge variant="outline" className="text-[10px] border-[hsl(var(--warning))] text-[hsl(var(--warning))]">Dev/Test</Badge>
                     )}
                   </div>
                 </div>
