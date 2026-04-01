@@ -225,7 +225,7 @@ export default function Index() {
               price="$0"
               period="forever"
               desc="For individuals exploring competitor intelligence"
-              features={["1 workspace", "3 competitors", "50 newsletters/mo", "Basic AI analysis", "Email alerts"]}
+              features={["1 workspace", "3 competitors", "200 newsletters/mo", "50 AI analyses/mo", "Basic email alerts"]}
               cta={ctaLabel}
               onCta={() => navigate(cta)}
             />
@@ -233,8 +233,8 @@ export default function Index() {
               name="Starter"
               price="$29"
               period="/month"
-              desc="For small teams starting competitive monitoring"
-              features={["1 workspace", "10 competitors", "500 newsletters/mo", "Full AI analysis", "Meta Ads tracking", "Custom alert rules", "Team collaboration (3 seats)"]}
+              desc="For teams actively monitoring competitors"
+              features={["10 competitors", "2,000 newsletters/mo", "500 AI analyses/mo", "Full AI extraction", "Custom alert rules", "Gmail auto-sync", "3 team seats"]}
               cta={ctaLabel}
               onCta={() => navigate(cta)}
               highlighted
@@ -243,12 +243,13 @@ export default function Index() {
               name="Premium"
               price="$99"
               period="/month"
-              desc="For teams that need comprehensive intelligence"
-              features={["Unlimited workspaces", "Unlimited competitors", "Unlimited newsletters", "Priority AI processing", "Advanced analytics", "API access", "Unlimited team seats", "Priority support"]}
+              desc="Full strategic intelligence platform"
+              features={["Unlimited competitors", "20,000 newsletters/mo", "5,000 AI analyses/mo", "Advanced AI insights", "Meta Ads Intelligence ✦", "Slack/webhook alerts", "10 team seats", "Priority support"]}
               cta={ctaLabel}
               onCta={() => navigate(cta)}
             />
           </div>
+          <p className="text-center text-[10px] text-muted-foreground mt-4">✦ Meta Ads Intelligence — coming soon to Premium plan</p>
         </div>
       </section>
 

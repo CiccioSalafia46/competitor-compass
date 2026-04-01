@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +32,7 @@ export const AppSidebar = memo(function AppSidebar() {
   const { signOut } = useAuth();
   const { currentWorkspace, workspaces, setCurrentWorkspace } = useWorkspace();
   const { isAdmin, isAnalyst, roles } = useRoles();
+  const { tier } = useSubscription();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
@@ -57,12 +59,12 @@ export const AppSidebar = memo(function AppSidebar() {
 
   const intelligenceNav = useMemo(
     () => [
-      { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst },
+      { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? "Premium" : undefined },
       { label: "Insights", icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
       { label: "Analytics", icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
       { label: "Alerts", icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
     ],
-    [isAnalyst]
+    [isAnalyst, tier]
   );
 
   const adminNav = useMemo(
@@ -76,7 +78,7 @@ export const AppSidebar = memo(function AppSidebar() {
   );
 
   const renderNavGroup = useCallback(
-    (items: typeof coreNav, label: string) => {
+    (items: { label: string; icon: any; path: string; matchPrefix: string; show: boolean; badge?: string }[], label: string) => {
       const filtered = items.filter((i) => i.show);
       if (filtered.length === 0) return null;
       return (
@@ -104,7 +106,16 @@ export const AppSidebar = memo(function AppSidebar() {
                       )}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.label}</span>}
+                      {!collapsed && (
+                        <span className="flex-1 flex items-center justify-between">
+                          {item.label}
+                          {item.badge && (
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 font-normal ml-1">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
