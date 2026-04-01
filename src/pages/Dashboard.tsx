@@ -274,7 +274,7 @@ export default function Dashboard() {
             <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium flex items-center gap-1.5">
                 <Activity className="h-3.5 w-3.5" />
-                Recent Newsletters
+                Recent Competitor Activity
                 <MetricBadge label="Observed" />
               </CardTitle>
               <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => navigate("/inbox")}>
