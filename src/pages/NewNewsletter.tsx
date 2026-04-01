@@ -72,6 +72,9 @@ export default function NewNewsletter() {
 
       if (error) throw error;
 
+      await trackUsage("newsletter_imported");
+      await log("created", "newsletter_entry", entry.id, { subject: entry.subject });
+
       if (analyze && entry) {
         // Create analysis record and trigger edge function
         const { data: analysis, error: analysisError } = await supabase
