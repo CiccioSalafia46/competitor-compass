@@ -54,9 +54,9 @@ export default function Newsletters() {
         <Card className="shadow-raised border">
           <CardContent className="py-12 text-center">
             <Newspaper className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-sm font-medium text-foreground">No newsletters yet</p>
+            <p className="text-sm font-medium text-foreground">No data imported yet</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Add your first competitor newsletter to start gathering intel
+              Import your first competitor communication to start gathering intel
             </p>
             <Button onClick={() => navigate("/newsletters/new")} className="mt-4 gap-2">
               <Plus className="h-4 w-4" />
