@@ -132,7 +132,7 @@ const COMPARISON_ROWS: { label: string; free: string; starter: string; premium: 
   { category: "Monitoring", label: "Competitors", free: "3", starter: "10", premium: "Unlimited" },
   { category: "Monitoring", label: "Custom alerts", free: "—", starter: "✓", premium: "✓" },
   { category: "Monitoring", label: "Slack/webhooks", free: "—", starter: "—", premium: "✓" },
-  { category: "Ads", label: "Meta Ads Intelligence", free: "—", starter: "—", premium: "Coming soon" },
+  { category: "Ads", label: "Ad Intelligence", free: "—", starter: "—", premium: "Coming soon" },
   { category: "Team", label: "User seats", free: "1", starter: "3", premium: "10" },
   { category: "Team", label: "Role-based access", free: "—", starter: "✓", premium: "✓" },
   { category: "Reports", label: "Scheduled reports", free: "—", starter: "Weekly", premium: "Branded + daily" },
