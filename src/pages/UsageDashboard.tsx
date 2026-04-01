@@ -71,8 +71,8 @@ export default function UsageDashboard() {
 
       {/* Near-limit warning */}
       {metrics.some((m) => nearLimit(m.key)) && (
-        <div className="flex items-start gap-2 rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5 p-3">
-          <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))] shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3">
+          <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-foreground">Approaching plan limits</p>
             <p className="text-xs text-muted-foreground">
