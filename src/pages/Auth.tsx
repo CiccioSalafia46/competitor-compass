@@ -68,7 +68,7 @@ export default function Auth() {
           <CardHeader className="pb-4 space-y-1">
             <CardTitle className="text-base">{isSignUp ? "Create account" : "Sign in"}</CardTitle>
             <CardDescription className="text-xs">
-              {isSignUp ? "Start tracking competitor newsletters" : "Welcome back"}
+              {isSignUp ? "Start monitoring your competitors" : "Welcome back"}
             </CardDescription>
           </CardHeader>
           <CardContent>
