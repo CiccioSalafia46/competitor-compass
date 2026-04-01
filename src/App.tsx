@@ -27,6 +27,9 @@ import AuthRedirect from "./components/AuthRedirect";
 import Billing from "./pages/Billing";
 import MetaAds from "./pages/MetaAds";
 import MetaAdsCompare from "./pages/MetaAdsCompare";
+import Insights from "./pages/Insights";
+import Analytics from "./pages/Analytics";
+import Alerts from "./pages/Alerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +60,9 @@ const App = () => (
                 <Route path="/competitors" element={<Competitors />} />
                 <Route path="/meta-ads" element={<MetaAds />} />
                 <Route path="/meta-ads/compare" element={<MetaAdsCompare />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/alerts" element={<Alerts />} />
                 <Route path="/analyses/:id" element={<AnalysisView />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/settings/team" element={<TeamManagement />} />
