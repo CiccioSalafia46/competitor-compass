@@ -27,7 +27,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function HealthIcon({ ok }: { ok: boolean | null }) {
-  if (ok === null) return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+  if (ok === null) return <AlertTriangle className="h-4 w-4 text-warning" />;
   return ok ? <CheckCircle className="h-4 w-4 text-primary" /> : <XCircle className="h-4 w-4 text-destructive" />;
 }
 
@@ -120,7 +120,7 @@ export default function AdminSecrets() {
                     {integration.productionReady ? (
                       <Badge variant="outline" className="text-[10px] border-primary text-primary">Prod Ready</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-500">Dev/Test</Badge>
+                      <Badge variant="outline" className="text-[10px] border-warning text-warning">Dev/Test</Badge>
                     )}
                   </div>
                 </div>
@@ -205,7 +205,7 @@ export default function AdminSecrets() {
                           {r.status === "pass" ? (
                             <CheckCircle className="h-3.5 w-3.5 text-primary" />
                           ) : r.status === "warn" ? (
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-warning" />
                           ) : (
                             <XCircle className="h-3.5 w-3.5 text-destructive" />
                           )}

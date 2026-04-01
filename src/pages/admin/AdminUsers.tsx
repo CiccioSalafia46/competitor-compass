@@ -187,7 +187,7 @@ export default function AdminUsers() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 text-xs gap-1 text-amber-600"
+                          className="h-7 text-xs gap-1 text-warning"
                           disabled={acting}
                           onClick={() => setConfirmAction({ type: "ban", user })}
                         >

@@ -15,13 +15,19 @@ export function useAdminCheck() {
       return;
     }
     (async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .limit(1);
-      setIsAdmin((data?.length ?? 0) > 0);
+      try {
+        // Check if user has admin role in ANY workspace — sufficient for platform admin
+        const { data } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .limit(1);
+        setIsAdmin((data?.length ?? 0) > 0);
+      } catch (err) {
+        console.error("Admin check failed:", err);
+        setIsAdmin(false);
+      }
       setLoading(false);
     })();
   }, [user]);

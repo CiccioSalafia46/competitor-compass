@@ -50,7 +50,7 @@ export function useUsage() {
   // Derive from actual subscription state — imported lazily to avoid circular deps
   const [currentPlan, setCurrentPlan] = useState<PlanTier>("free");
 
-  // Sync plan from subscription tier — poll sessionStorage since it's set by SubscriptionProvider
+  // Sync plan from subscription tier stored in sessionStorage by SubscriptionProvider
   useEffect(() => {
     const sync = () => {
       try {
@@ -61,9 +61,15 @@ export function useUsage() {
       } catch {}
     };
     sync();
-    // Re-sync periodically to catch updates from SubscriptionProvider
-    const interval = setInterval(sync, 2000);
-    return () => clearInterval(interval);
+    // Listen for storage events from SubscriptionProvider
+    const handler = () => sync();
+    window.addEventListener("storage", handler);
+    // Also re-sync when component mounts and on a reasonable interval (30s not 2s)
+    const interval = setInterval(sync, 30_000);
+    return () => {
+      window.removeEventListener("storage", handler);
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchUsage = useCallback(async () => {

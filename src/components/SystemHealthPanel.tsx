@@ -126,8 +126,8 @@ export function SystemHealthPanel() {
 
   const statusIcon = (s: Status) => {
     switch (s) {
-      case "healthy": return <CheckCircle className="h-3 w-3 text-emerald-500" />;
-      case "warning": return <Clock className="h-3 w-3 text-amber-500" />;
+      case "healthy": return <CheckCircle className="h-3 w-3 text-success" />;
+      case "warning": return <Clock className="h-3 w-3 text-warning" />;
       case "error": return <XCircle className="h-3 w-3 text-destructive" />;
       case "idle": return <AlertCircle className="h-3 w-3 text-muted-foreground/40" />;
     }
@@ -149,7 +149,7 @@ export function SystemHealthPanel() {
                 <div className={cn(
                   "flex items-center gap-2 rounded-md border p-2 transition-colors",
                   sys.status === "error" && "border-destructive/30 bg-destructive/5",
-                  sys.status === "healthy" && "border-emerald-500/20",
+                  sys.status === "healthy" && "border-success/20",
                 )}>
                   {statusIcon(sys.status)}
                   <div className="min-w-0 flex-1">

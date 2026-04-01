@@ -71,8 +71,8 @@ export default function UsageDashboard() {
 
       {/* Near-limit warning */}
       {metrics.some((m) => nearLimit(m.key)) && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3">
+          <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-foreground">Approaching plan limits</p>
             <p className="text-xs text-muted-foreground">
@@ -107,7 +107,7 @@ export default function UsageDashboard() {
                     className={cn(
                       "h-2",
                       atLimit && "[&>div]:bg-destructive",
-                      near && !atLimit && "[&>div]:bg-amber-500"
+                      near && !atLimit && "[&>div]:bg-warning"
                     )}
                   />
                 )}
@@ -115,7 +115,7 @@ export default function UsageDashboard() {
                   <p className="text-xs text-destructive mt-1">Limit reached — upgrade your plan to continue</p>
                 )}
                 {near && !atLimit && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  <p className="text-xs text-warning mt-1">
                     {percent}% used — approaching limit
                   </p>
                 )}
