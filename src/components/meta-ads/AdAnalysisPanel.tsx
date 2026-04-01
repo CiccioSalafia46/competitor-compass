@@ -10,7 +10,7 @@ interface AdAnalysisPanelProps {
 function ConfidenceBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   const pct = Math.round(value * 100);
-  const color = pct >= 75 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-destructive";
+  const color = pct >= 75 ? "text-[hsl(var(--success))]" : pct >= 50 ? "text-[hsl(var(--warning))]" : "text-destructive";
   return <Badge variant="outline" className={`text-[10px] ${color}`}>{pct}% confidence</Badge>;
 }
 
