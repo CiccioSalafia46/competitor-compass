@@ -76,7 +76,7 @@ export default function Analytics() {
           <CardContent className="py-16 text-center">
             <TrendingUp className="h-8 w-8 mx-auto text-muted-foreground/30 mb-3" />
             <p className="text-sm font-medium">Not enough data yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Import newsletters or track ads to see analytics.</p>
+            <p className="text-xs text-muted-foreground mt-1">Import competitor data or track campaigns to see analytics.</p>
           </CardContent>
         </Card>
       )}
