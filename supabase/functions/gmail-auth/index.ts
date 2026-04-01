@@ -156,10 +156,27 @@ serve(async (req) => {
       const { action } = body;
 
       if (action === "initiate") {
-        const { workspaceId, userId, redirectUrl } = body;
-        if (!workspaceId || !userId) {
+        // Verify the caller is the claimed user
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader?.startsWith("Bearer ")) {
           return new Response(
-            JSON.stringify({ error: "workspaceId and userId are required" }),
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        const { data: callerData, error: callerErr } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+        if (callerErr || !callerData.user) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const { workspaceId, redirectUrl } = body;
+        const userId = callerData.user.id;
+        if (!workspaceId) {
+          return new Response(
+            JSON.stringify({ error: "workspaceId is required" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
