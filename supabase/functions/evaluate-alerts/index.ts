@@ -192,9 +192,9 @@ serve(async (req) => {
       if (error) log("Insert error", { error: error.message });
     }
 
-    log("Done", { triggered: dedupedAlerts.length });
+    log("Done", { triggered: finalAlerts.length });
 
-    return new Response(JSON.stringify({ success: true, alerts: dedupedAlerts }),
+    return new Response(JSON.stringify({ success: true, alerts: finalAlerts }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

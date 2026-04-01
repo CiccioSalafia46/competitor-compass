@@ -32,7 +32,14 @@ export default function Auth() {
         navigate("/redirect");
       }
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
+      const msg = err.message || "Something went wrong";
+      let description = msg;
+      if (msg.includes("password") && (msg.includes("leaked") || msg.includes("breach") || msg.includes("compromised") || msg.includes("HIBP"))) {
+        description = "This password has appeared in a known data breach. Please choose a different, stronger password.";
+      } else if (msg.includes("password") && (msg.includes("weak") || msg.includes("short") || msg.includes("strength"))) {
+        description = "Password is too weak. Use at least 6 characters with a mix of letters and numbers.";
+      }
+      toast({ title: "Error", description, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

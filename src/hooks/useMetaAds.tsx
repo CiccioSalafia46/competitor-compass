@@ -107,7 +107,7 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
     if (!currentWorkspace) return;
     setFetching(true);
     try {
-      const { data, error } = await supabase.functions.invoke("fetch-meta-ads", {
+      const res = await supabase.functions.invoke("fetch-meta-ads", {
         body: {
           workspaceId: currentWorkspace.id,
           competitorId: opts.competitorId,
@@ -115,7 +115,12 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
           searchTerms: opts.searchTerms,
         },
       });
-      if (error) throw error;
+      if (res.error) {
+        const body = res.data;
+        if (body?.error?.includes("Rate limit")) throw new Error(body.error);
+        throw res.error;
+      }
+      const data = res.data;
       await fetchAds();
       return data;
     } finally {
