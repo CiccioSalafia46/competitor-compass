@@ -129,9 +129,9 @@ export default function NewNewsletter() {
         Back
       </button>
 
-      <h1 className="text-2xl font-semibold text-foreground">Add Newsletter</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Import Competitor Data</h1>
       <p className="text-sm text-muted-foreground mt-1 mb-6">
-        Paste newsletter content for competitive intelligence analysis
+        Paste competitor content for AI-powered competitive intelligence analysis
       </p>
 
       <Card className="shadow-card border">
