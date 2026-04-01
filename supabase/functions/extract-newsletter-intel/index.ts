@@ -13,21 +13,36 @@ serve(async (req) => {
   }
 
   try {
-    const { newsletterInboxId } = await req.json();
-
-    if (!newsletterInboxId) {
-      return new Response(
-        JSON.stringify({ error: "newsletterInboxId is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Auth check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(authHeader.replace("Bearer ", ""));
+    if (claimsErr || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const userId = claimsData.claims.sub as string;
+
+    if (!claimsData.claims.email_confirmed_at) {
+      return new Response(JSON.stringify({ error: "Please verify your email before running extractions." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const body = await req.json();
+    const newsletterInboxId = body?.newsletterInboxId;
+    if (!newsletterInboxId || typeof newsletterInboxId !== "string") {
+      return new Response(JSON.stringify({ error: "newsletterInboxId is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Dedup: check if extraction already exists
+    const { data: exists } = await supabase.rpc("check_extraction_exists", { _newsletter_inbox_id: newsletterInboxId });
+    if (exists) {
+      return new Response(JSON.stringify({ error: "This newsletter has already been extracted." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Fetch newsletter
     const { data: newsletter, error: fetchErr } = await supabase
@@ -37,18 +52,23 @@ serve(async (req) => {
       .single();
 
     if (fetchErr || !newsletter) {
-      return new Response(
-        JSON.stringify({ error: "Newsletter not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Newsletter not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Rate limit: 30 extractions per hour
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _user_id: userId,
+      _workspace_id: newsletter.workspace_id,
+      _endpoint: "extract-newsletter",
+      _max_per_hour: 30,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Rate limit reached. You can extract up to 30 newsletters per hour." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const content = newsletter.text_content || newsletter.html_content || "";
     if (content.length < 50) {
-      return new Response(
-        JSON.stringify({ error: "Newsletter content too short for extraction" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Newsletter content too short for extraction" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Get competitor context
@@ -63,6 +83,9 @@ serve(async (req) => {
         competitorContext = `\nCompetitor: ${competitor.name} (${competitor.website || "unknown"})`;
       }
     }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const systemPrompt = `You are a competitive intelligence analyst specializing in newsletter analysis for B2B and B2C companies. 
 Extract structured intelligence from the newsletter content provided.
@@ -107,9 +130,8 @@ ${content.substring(0, 8000)}`;
                   campaign_type: {
                     type: "string",
                     enum: ["promotional", "product_launch", "newsletter", "event", "seasonal", "abandoned_cart", "loyalty", "educational", "announcement", "survey", "other"],
-                    description: "The type of email campaign",
                   },
-                  main_message: { type: "string", description: "The primary message or theme of the newsletter" },
+                  main_message: { type: "string" },
                   offers: {
                     type: "array",
                     items: {
@@ -122,19 +144,15 @@ ${content.substring(0, 8000)}`;
                       required: ["description", "type"],
                     },
                   },
-                  discount_percentage: { type: "number", description: "Primary discount percentage if mentioned" },
-                  coupon_code: { type: "string", description: "Coupon/promo code if mentioned" },
-                  free_shipping: { type: "boolean", description: "Whether free shipping is offered" },
-                  expiry_date: { type: "string", description: "Expiry date of offers if mentioned (ISO format or descriptive)" },
+                  discount_percentage: { type: "number" },
+                  coupon_code: { type: "string" },
+                  free_shipping: { type: "boolean" },
+                  expiry_date: { type: "string" },
                   calls_to_action: {
                     type: "array",
                     items: {
                       type: "object",
-                      properties: {
-                        text: { type: "string" },
-                        url: { type: "string" },
-                        urgency: { type: "string", enum: ["low", "medium", "high"] },
-                      },
+                      properties: { text: { type: "string" }, url: { type: "string" }, urgency: { type: "string", enum: ["low", "medium", "high"] } },
                       required: ["text"],
                     },
                   },
@@ -142,27 +160,16 @@ ${content.substring(0, 8000)}`;
                     type: "array",
                     items: {
                       type: "object",
-                      properties: {
-                        signal: { type: "string" },
-                        type: { type: "string", enum: ["time_limited", "quantity_limited", "exclusive", "seasonal", "other"] },
-                      },
+                      properties: { signal: { type: "string" }, type: { type: "string", enum: ["time_limited", "quantity_limited", "exclusive", "seasonal", "other"] } },
                       required: ["signal", "type"],
                     },
                   },
-                  product_categories: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Product categories mentioned",
-                  },
+                  product_categories: { type: "array", items: { type: "string" } },
                   event_mentions: {
                     type: "array",
                     items: {
                       type: "object",
-                      properties: {
-                        event: { type: "string" },
-                        date: { type: "string" },
-                        type: { type: "string", enum: ["webinar", "conference", "sale", "launch", "holiday", "other"] },
-                      },
+                      properties: { event: { type: "string" }, date: { type: "string" }, type: { type: "string", enum: ["webinar", "conference", "sale", "launch", "holiday", "other"] } },
                       required: ["event", "type"],
                     },
                   },
@@ -170,26 +177,18 @@ ${content.substring(0, 8000)}`;
                     type: "array",
                     items: {
                       type: "object",
-                      properties: {
-                        insight: { type: "string" },
-                        category: { type: "string", enum: ["pricing", "positioning", "messaging", "product", "audience", "channel", "timing", "other"] },
-                        confidence: { type: "number", description: "0.0 to 1.0" },
-                      },
+                      properties: { insight: { type: "string" }, category: { type: "string" }, confidence: { type: "number" } },
                       required: ["insight", "category", "confidence"],
                     },
                   },
                   confidence_scores: {
                     type: "object",
                     properties: {
-                      campaign_type: { type: "number" },
-                      main_message: { type: "number" },
-                      offers: { type: "number" },
-                      discount_percentage: { type: "number" },
-                      coupon_code: { type: "number" },
-                      calls_to_action: { type: "number" },
+                      campaign_type: { type: "number" }, main_message: { type: "number" },
+                      offers: { type: "number" }, discount_percentage: { type: "number" },
+                      coupon_code: { type: "number" }, calls_to_action: { type: "number" },
                       urgency_signals: { type: "number" },
                     },
-                    description: "Confidence score (0.0-1.0) for each extracted field",
                   },
                 },
                 required: ["campaign_type", "main_message", "confidence_scores"],
@@ -204,68 +203,40 @@ ${content.substring(0, 8000)}`;
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI error:", aiResponse.status, errText);
-
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limited. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      if (aiResponse.status === 429) return new Response(JSON.stringify({ error: "AI service rate limited. Please try again later." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiResponse.status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-
-    if (!toolCall) {
-      throw new Error("No tool call in AI response");
-    }
+    if (!toolCall) throw new Error("No tool call in AI response");
 
     let extraction: any;
-    try {
-      extraction = JSON.parse(toolCall.function.arguments);
-    } catch {
-      throw new Error("Invalid JSON in AI response");
-    }
+    try { extraction = JSON.parse(toolCall.function.arguments); } catch { throw new Error("Invalid JSON in AI response"); }
 
-    // Validate required fields
     if (!extraction.campaign_type || !extraction.main_message) {
-      return new Response(
-        JSON.stringify({ error: "Extraction failed: missing required fields" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Extraction failed: missing required fields" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Calculate overall confidence
-    const confidenceValues = Object.values(extraction.confidence_scores || {}).filter(
-      (v): v is number => typeof v === "number"
-    );
-    const overallConfidence = confidenceValues.length > 0
-      ? confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length
-      : 0.5;
+    const confidenceValues = Object.values(extraction.confidence_scores || {}).filter((v): v is number => typeof v === "number");
+    const overallConfidence = confidenceValues.length > 0 ? confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length : 0.5;
 
-    // Save extraction
     const { data: saved, error: saveErr } = await supabase
       .from("newsletter_extractions")
       .insert({
         workspace_id: newsletter.workspace_id,
         newsletter_inbox_id: newsletterInboxId,
         campaign_type: extraction.campaign_type,
-        main_message: extraction.main_message,
+        main_message: String(extraction.main_message).substring(0, 5000),
         offers: extraction.offers || [],
         discount_percentage: extraction.discount_percentage || null,
-        coupon_code: extraction.coupon_code || null,
+        coupon_code: extraction.coupon_code ? String(extraction.coupon_code).substring(0, 100) : null,
         free_shipping: extraction.free_shipping || false,
         expiry_date: extraction.expiry_date || null,
         calls_to_action: extraction.calls_to_action || [],
         urgency_signals: extraction.urgency_signals || [],
-        product_categories: extraction.product_categories || [],
+        product_categories: (extraction.product_categories || []).map(String).slice(0, 20),
         event_mentions: extraction.event_mentions || [],
         strategy_takeaways: extraction.strategy_takeaways || [],
         confidence_scores: extraction.confidence_scores || {},
@@ -280,7 +251,6 @@ ${content.substring(0, 8000)}`;
 
     if (saveErr) throw saveErr;
 
-    // Track usage
     await supabase.from("usage_events").insert({
       workspace_id: newsletter.workspace_id,
       event_type: "extraction_performed",
@@ -288,15 +258,9 @@ ${content.substring(0, 8000)}`;
       metadata: { newsletter_inbox_id: newsletterInboxId },
     });
 
-    return new Response(
-      JSON.stringify({ success: true, extraction: saved }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ success: true, extraction: saved }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("Extraction error:", err);
-    return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "An internal error occurred. Please try again." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

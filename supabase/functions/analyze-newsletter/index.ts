@@ -8,34 +8,59 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { analysisId, newsletterEntryId } = await req.json();
-
-    if (!analysisId || !newsletterEntryId) {
-      return new Response(
-        JSON.stringify({ error: "analysisId and newsletterEntryId are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Auth
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(authHeader.replace("Bearer ", ""));
+    if (claimsErr || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const userId = claimsData.claims.sub as string;
+
+    if (!claimsData.claims.email_confirmed_at) {
+      return new Response(JSON.stringify({ error: "Please verify your email before running analyses." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const body = await req.json();
+    const analysisId = body?.analysisId;
+    const newsletterEntryId = body?.newsletterEntryId;
+
+    if (!analysisId || !newsletterEntryId) {
+      return new Response(JSON.stringify({ error: "analysisId and newsletterEntryId are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Fetch the analysis to get workspace_id for rate limiting
+    const { data: analysisRow } = await supabase.from("analyses").select("workspace_id").eq("id", analysisId).single();
+    const wsId = analysisRow?.workspace_id;
+
+    if (wsId) {
+      // Rate limit: 20 analyses per hour
+      const { data: allowed } = await supabase.rpc("check_rate_limit", {
+        _user_id: userId,
+        _workspace_id: wsId,
+        _endpoint: "analyze-newsletter",
+        _max_per_hour: 20,
+      });
+      if (!allowed) {
+        await supabase.from("analyses").update({ status: "failed", error_message: "Rate limit reached. Try again later." }).eq("id", analysisId);
+        return new Response(JSON.stringify({ error: "Rate limit reached. You can analyze up to 20 newsletters per hour." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
     // Update status to processing
-    await supabase
-      .from("analyses")
-      .update({ status: "processing" })
-      .eq("id", analysisId);
+    await supabase.from("analyses").update({ status: "processing" }).eq("id", analysisId);
 
     // Fetch the newsletter content
     const { data: entry, error: entryError } = await supabase
@@ -45,14 +70,8 @@ serve(async (req) => {
       .single();
 
     if (entryError || !entry) {
-      await supabase
-        .from("analyses")
-        .update({ status: "failed", error_message: "Newsletter entry not found" })
-        .eq("id", analysisId);
-      return new Response(
-        JSON.stringify({ error: "Newsletter entry not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      await supabase.from("analyses").update({ status: "failed", error_message: "Newsletter entry not found" }).eq("id", analysisId);
+      return new Response(JSON.stringify({ error: "Newsletter entry not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Fetch competitor info if available
@@ -111,9 +130,8 @@ Sender: ${entry.sender_email || "Not provided"}
 ${competitorContext}
 
 Newsletter Content:
-${entry.content}`;
+${entry.content.substring(0, 10000)}`;
 
-    // Call Lovable AI Gateway
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -136,70 +154,12 @@ ${entry.content}`;
                 type: "object",
                 properties: {
                   summary: { type: "string" },
-                  positioning: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        observation: { type: "string" },
-                        confidence: { type: "string", enum: ["high", "medium", "low"] },
-                        evidence: { type: "string" },
-                      },
-                      required: ["observation", "confidence", "evidence"],
-                    },
-                  },
-                  messaging: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        theme: { type: "string" },
-                        examples: { type: "array", items: { type: "string" } },
-                        observation: { type: "string" },
-                      },
-                      required: ["theme", "examples", "observation"],
-                    },
-                  },
-                  product_launches: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        product: { type: "string" },
-                        description: { type: "string" },
-                        significance: { type: "string" },
-                      },
-                      required: ["product", "description", "significance"],
-                    },
-                  },
-                  pricing_signals: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        signal: { type: "string" },
-                        detail: { type: "string" },
-                        confidence: { type: "string", enum: ["high", "medium", "low"] },
-                      },
-                      required: ["signal", "detail", "confidence"],
-                    },
-                  },
-                  competitive_moves: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        move: { type: "string" },
-                        impact: { type: "string" },
-                        urgency: { type: "string", enum: ["high", "medium", "low"] },
-                      },
-                      required: ["move", "impact", "urgency"],
-                    },
-                  },
-                  recommendations: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
+                  positioning: { type: "array", items: { type: "object", properties: { observation: { type: "string" }, confidence: { type: "string", enum: ["high", "medium", "low"] }, evidence: { type: "string" } }, required: ["observation", "confidence", "evidence"] } },
+                  messaging: { type: "array", items: { type: "object", properties: { theme: { type: "string" }, examples: { type: "array", items: { type: "string" } }, observation: { type: "string" } }, required: ["theme", "examples", "observation"] } },
+                  product_launches: { type: "array", items: { type: "object", properties: { product: { type: "string" }, description: { type: "string" }, significance: { type: "string" } }, required: ["product", "description", "significance"] } },
+                  pricing_signals: { type: "array", items: { type: "object", properties: { signal: { type: "string" }, detail: { type: "string" }, confidence: { type: "string", enum: ["high", "medium", "low"] } }, required: ["signal", "detail", "confidence"] } },
+                  competitive_moves: { type: "array", items: { type: "object", properties: { move: { type: "string" }, impact: { type: "string" }, urgency: { type: "string", enum: ["high", "medium", "low"] } }, required: ["move", "impact", "urgency"] } },
+                  recommendations: { type: "array", items: { type: "string" } },
                 },
                 required: ["summary"],
               },
@@ -215,48 +175,26 @@ ${entry.content}`;
       console.error("AI Gateway error:", aiResponse.status, errorText);
 
       if (aiResponse.status === 429) {
-        await supabase
-          .from("analyses")
-          .update({ status: "failed", error_message: "Rate limited. Please try again in a moment." })
-          .eq("id", analysisId);
-        return new Response(
-          JSON.stringify({ error: "Rate limited" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        await supabase.from("analyses").update({ status: "failed", error_message: "AI service rate limited. Please try again later." }).eq("id", analysisId);
+        return new Response(JSON.stringify({ error: "Rate limited" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-
       if (aiResponse.status === 402) {
-        await supabase
-          .from("analyses")
-          .update({ status: "failed", error_message: "AI credits exhausted. Please add funds." })
-          .eq("id", analysisId);
-        return new Response(
-          JSON.stringify({ error: "Payment required" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        await supabase.from("analyses").update({ status: "failed", error_message: "AI credits exhausted." }).eq("id", analysisId);
+        return new Response(JSON.stringify({ error: "Payment required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-
       throw new Error(`AI gateway returned ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-
-    if (!toolCall) {
-      throw new Error("No tool call in AI response");
-    }
+    if (!toolCall) throw new Error("No tool call in AI response");
 
     const analysisResult = JSON.parse(toolCall.function.arguments);
 
-    // Determine confidence based on content length and findings
     let overallConfidence = "medium";
-    if (entry.content.length < 200) {
-      overallConfidence = "low";
-    } else if (entry.content.length > 1000 && analysisResult.positioning?.length > 0) {
-      overallConfidence = "high";
-    }
+    if (entry.content.length < 200) overallConfidence = "low";
+    else if (entry.content.length > 1000 && analysisResult.positioning?.length > 0) overallConfidence = "high";
 
-    // Save results
     await supabase
       .from("analyses")
       .update({
@@ -268,35 +206,18 @@ ${entry.content}`;
       })
       .eq("id", analysisId);
 
-    return new Response(
-      JSON.stringify({ success: true, analysisId }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ success: true, analysisId }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("Analysis error:", error);
 
-    // Try to update analysis status
     try {
-      const { analysisId } = await req.clone().json().catch(() => ({}));
-      if (analysisId) {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
-        await supabase
-          .from("analyses")
-          .update({
-            status: "failed",
-            error_message: error instanceof Error ? error.message : "Unknown error",
-          })
-          .eq("id", analysisId);
+      const body = await req.clone().json().catch(() => ({}));
+      if (body.analysisId) {
+        const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+        await supabase.from("analyses").update({ status: "failed", error_message: "An internal error occurred." }).eq("id", body.analysisId);
       }
-    } catch (e) {
-      console.error("Failed to update analysis status:", e);
-    }
+    } catch {}
 
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "An internal error occurred. Please try again." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
