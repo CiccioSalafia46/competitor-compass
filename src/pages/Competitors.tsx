@@ -34,6 +34,9 @@ type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 
 export default function Competitors() {
   const { currentWorkspace } = useWorkspace();
+  const { canManageCompetitors } = useRoles();
+  const { isAtLimit, trackUsage } = useUsage();
+  const { log } = useAuditLog();
   const { toast } = useToast();
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [loading, setLoading] = useState(true);
