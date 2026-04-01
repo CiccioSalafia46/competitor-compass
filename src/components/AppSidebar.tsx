@@ -22,84 +22,100 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { memo, useMemo, useCallback } from "react";
 
-export function AppSidebar() {
+export const AppSidebar = memo(function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { currentWorkspace, workspaces, setCurrentWorkspace } = useWorkspace();
   const { isAdmin, isAnalyst, roles } = useRoles();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut();
     navigate("/auth");
-  };
+  }, [signOut, navigate]);
 
-  const isActive = (matchPrefix: string) =>
-    location.pathname === matchPrefix || location.pathname.startsWith(matchPrefix + "/");
+  const isActive = useCallback(
+    (matchPrefix: string) =>
+      location.pathname === matchPrefix || location.pathname.startsWith(matchPrefix + "/"),
+    [location.pathname]
+  );
 
-  const coreNav = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
-    { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
-    { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
-    { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
-  ];
+  const coreNav = useMemo(
+    () => [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
+      { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
+      { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
+      { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
+    ],
+    [isAnalyst]
+  );
 
-  const intelligenceNav = [
-    { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst },
-    { label: "Insights", icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
-    { label: "Analytics", icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
-    { label: "Alerts", icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
-  ];
+  const intelligenceNav = useMemo(
+    () => [
+      { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst },
+      { label: "Insights", icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
+      { label: "Analytics", icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
+      { label: "Alerts", icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
+    ],
+    [isAnalyst]
+  );
 
-  const adminNav = [
-    { label: "Usage", icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
-    { label: "Team", icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
-    { label: "Billing", icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
-    { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
-  ];
+  const adminNav = useMemo(
+    () => [
+      { label: "Usage", icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
+      { label: "Team", icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
+      { label: "Billing", icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
+      { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
+    ],
+    [isAdmin]
+  );
 
-  const renderNavGroup = (items: typeof coreNav, label: string) => {
-    const filtered = items.filter(i => i.show);
-    if (filtered.length === 0) return null;
-    return (
-      <SidebarGroup>
-        <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">
-          {label}
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {filtered.map((item) => {
-              const active = item.path === "/settings"
-                ? location.pathname === "/settings"
-                : isActive(item.matchPrefix);
-              return (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    isActive={active}
-                    onClick={() => navigate(item.path)}
-                    className={cn(
-                      "gap-2.5 h-8 text-[13px] font-normal transition-colors",
-                      active
-                        ? "bg-accent text-accent-foreground font-medium"
-                        : "text-sidebar-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span>{item.label}</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
-  };
+  const renderNavGroup = useCallback(
+    (items: typeof coreNav, label: string) => {
+      const filtered = items.filter((i) => i.show);
+      if (filtered.length === 0) return null;
+      return (
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">
+            {label}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {filtered.map((item) => {
+                const active =
+                  item.path === "/settings"
+                    ? location.pathname === "/settings"
+                    : isActive(item.matchPrefix);
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      isActive={active}
+                      onClick={() => navigate(item.path)}
+                      className={cn(
+                        "gap-2.5 h-8 text-[13px] font-normal transition-colors",
+                        active
+                          ? "bg-accent text-accent-foreground font-medium"
+                          : "text-sidebar-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span>{item.label}</span>}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      );
+    },
+    [collapsed, location.pathname, isActive, navigate]
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r">
@@ -125,7 +141,9 @@ export function AppSidebar() {
             className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           >
             {workspaces.map((ws) => (
-              <option key={ws.id} value={ws.id}>{ws.name}</option>
+              <option key={ws.id} value={ws.id}>
+                {ws.name}
+              </option>
             ))}
           </select>
         </div>
@@ -176,4 +194,4 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+});
