@@ -127,7 +127,7 @@ export default function Analytics() {
                 <YAxis type="category" dataKey="competitor" tick={{ fontSize: 10 }} width={100} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
-                <Bar dataKey="newsletters" fill="hsl(var(--chart-1))" name="Newsletters" radius={[0, 3, 3, 0]} />
+                <Bar dataKey="newsletters" fill="hsl(var(--chart-1))" name="Campaigns" radius={[0, 3, 3, 0]} />
                 <Bar dataKey="ads" fill="hsl(var(--chart-3))" name="Ads" radius={[0, 3, 3, 0]} />
               </BarChart>
             </ResponsiveContainer>
