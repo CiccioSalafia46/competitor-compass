@@ -537,7 +537,7 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
             title: "Paste competitor content",
             desc: "Manually paste competitor email or campaign content for immediate analysis",
             action: () => navigate("/newsletters/new"),
-            label: "Add newsletter",
+            label: "Import data",
             disabled: false,
           },
         ].map((opt) => (
