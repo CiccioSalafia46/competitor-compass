@@ -21,6 +21,9 @@ type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 export default function NewNewsletter() {
   const { currentWorkspace } = useWorkspace();
   const { user } = useAuth();
+  const { canAnalyze } = useRoles();
+  const { isAtLimit, trackUsage } = useUsage();
+  const { log } = useAuditLog();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
