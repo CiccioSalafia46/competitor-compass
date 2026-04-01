@@ -14,6 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_rules: {
+        Row: {
+          config: Json
+          created_at: string
+          created_by: string
+          delivery_channels: string[]
+          id: string
+          is_active: boolean
+          name: string
+          rule_type: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          created_by: string
+          delivery_channels?: string[]
+          id?: string
+          is_active?: boolean
+          name: string
+          rule_type: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          created_by?: string
+          delivery_channels?: string[]
+          id?: string
+          is_active?: boolean
+          name?: string
+          rule_type?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_rules_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alerts: {
+        Row: {
+          alert_rule_id: string | null
+          category: string
+          competitor_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_dismissed: boolean
+          is_read: boolean
+          metadata: Json | null
+          severity: string
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          alert_rule_id?: string | null
+          category: string
+          competitor_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_dismissed?: boolean
+          is_read?: boolean
+          metadata?: Json | null
+          severity?: string
+          title: string
+          workspace_id: string
+        }
+        Update: {
+          alert_rule_id?: string | null
+          category?: string
+          competitor_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_dismissed?: boolean
+          is_read?: boolean
+          metadata?: Json | null
+          severity?: string
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_alert_rule_id_fkey"
+            columns: ["alert_rule_id"]
+            isOneToOne: false
+            referencedRelation: "alert_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analyses: {
         Row: {
           analysis_type: string
@@ -246,6 +360,65 @@ export type Database = {
             columns: ["gmail_connection_id"]
             isOneToOne: true
             referencedRelation: "gmail_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insights: {
+        Row: {
+          affected_competitors: string[] | null
+          category: string
+          confidence: number | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          recommended_response: string
+          source_type: string
+          strategic_implication: string
+          supporting_evidence: Json | null
+          title: string
+          what_is_happening: string
+          why_it_matters: string
+          workspace_id: string
+        }
+        Insert: {
+          affected_competitors?: string[] | null
+          category: string
+          confidence?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          recommended_response: string
+          source_type?: string
+          strategic_implication: string
+          supporting_evidence?: Json | null
+          title: string
+          what_is_happening: string
+          why_it_matters: string
+          workspace_id: string
+        }
+        Update: {
+          affected_competitors?: string[] | null
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          recommended_response?: string
+          source_type?: string
+          strategic_implication?: string
+          supporting_evidence?: Json | null
+          title?: string
+          what_is_happening?: string
+          why_it_matters?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insights_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
