@@ -518,7 +518,7 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
         </div>
         <h2 className="text-xl font-semibold text-foreground">Import your first data</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Choose how to get competitive data into the platform
+          Choose how to get competitor data into the platform
         </p>
       </div>
 
