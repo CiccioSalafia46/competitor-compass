@@ -27,6 +27,18 @@ serve(async (req) => {
     const { workspaceId } = await req.json();
     if (!workspaceId) throw new Error("workspaceId required");
 
+    // Rate limit: 5 evaluations per hour per user
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _user_id: userData.user.id,
+      _workspace_id: workspaceId,
+      _endpoint: "evaluate-alerts",
+      _max_per_hour: 5,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Rate limit reached. You can evaluate alerts up to 5 times per hour." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Get active rules
     const { data: rules } = await supabase
       .from("alert_rules")
