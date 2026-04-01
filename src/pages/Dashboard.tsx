@@ -108,6 +108,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
+
       {/* KPI Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map((kpi) => (
