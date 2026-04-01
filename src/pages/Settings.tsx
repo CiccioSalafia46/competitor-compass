@@ -199,6 +199,43 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Appearance */}
+      <Card className="shadow-raised border">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Moon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Appearance</CardTitle>
+            </div>
+            <DarkModeToggle />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">Toggle between light and dark mode using the button above.</p>
+        </CardContent>
+      </Card>
+
+      {/* Data Export */}
+      {currentWorkspace && (
+        <Card className="shadow-raised border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Download className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Data Export</CardTitle>
+            </div>
+            <CardDescription>Download your workspace data as CSV</CardDescription>
+          </CardHeader>
+          <CardContent className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport("newsletters")} disabled={exporting}>
+              Export newsletters
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport("insights")} disabled={exporting}>
+              Export insights
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Gmail Integration */}
       <GmailConnect />
     </div>
