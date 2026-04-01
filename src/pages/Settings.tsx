@@ -160,6 +160,9 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Gmail Integration */}
+      <GmailConnect />
     </div>
   );
 }
