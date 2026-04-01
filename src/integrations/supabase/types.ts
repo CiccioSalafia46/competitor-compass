@@ -116,8 +116,11 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          domains: string[] | null
           id: string
+          is_monitored: boolean
           name: string
+          tags: string[] | null
           updated_at: string
           website: string | null
           workspace_id: string
@@ -125,8 +128,11 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          domains?: string[] | null
           id?: string
+          is_monitored?: boolean
           name: string
+          tags?: string[] | null
           updated_at?: string
           website?: string | null
           workspace_id: string
@@ -134,8 +140,11 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          domains?: string[] | null
           id?: string
+          is_monitored?: boolean
           name?: string
+          tags?: string[] | null
           updated_at?: string
           website?: string | null
           workspace_id?: string
@@ -146,6 +155,94 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmail_connections: {
+        Row: {
+          connected_at: string
+          created_at: string
+          email_address: string
+          id: string
+          last_history_id: string | null
+          last_sync_at: string | null
+          sync_error: string | null
+          sync_status: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          connected_at?: string
+          created_at?: string
+          email_address: string
+          id?: string
+          last_history_id?: string | null
+          last_sync_at?: string | null
+          sync_error?: string | null
+          sync_status?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          connected_at?: string
+          created_at?: string
+          email_address?: string
+          id?: string
+          last_history_id?: string | null
+          last_sync_at?: string | null
+          sync_error?: string | null
+          sync_status?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmail_connections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmail_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          gmail_connection_id: string
+          id: string
+          refresh_token: string
+          scopes: string[] | null
+          token_expires_at: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          gmail_connection_id: string
+          id?: string
+          refresh_token: string
+          scopes?: string[] | null
+          token_expires_at: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          gmail_connection_id?: string
+          id?: string
+          refresh_token?: string
+          scopes?: string[] | null
+          token_expires_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmail_tokens_gmail_connection_id_fkey"
+            columns: ["gmail_connection_id"]
+            isOneToOne: true
+            referencedRelation: "gmail_connections"
             referencedColumns: ["id"]
           },
         ]
@@ -197,6 +294,196 @@ export type Database = {
           },
           {
             foreignKeyName: "newsletter_entries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_extractions: {
+        Row: {
+          calls_to_action: Json | null
+          campaign_type: string | null
+          confidence_scores: Json | null
+          coupon_code: string | null
+          created_at: string
+          discount_percentage: number | null
+          event_mentions: Json | null
+          expiry_date: string | null
+          extracted_at: string
+          extraction_method: string | null
+          free_shipping: boolean | null
+          id: string
+          is_valid: boolean
+          main_message: string | null
+          model_used: string | null
+          newsletter_inbox_id: string
+          offers: Json | null
+          overall_confidence: number | null
+          product_categories: string[] | null
+          raw_extraction: Json | null
+          strategy_takeaways: Json | null
+          urgency_signals: Json | null
+          workspace_id: string
+        }
+        Insert: {
+          calls_to_action?: Json | null
+          campaign_type?: string | null
+          confidence_scores?: Json | null
+          coupon_code?: string | null
+          created_at?: string
+          discount_percentage?: number | null
+          event_mentions?: Json | null
+          expiry_date?: string | null
+          extracted_at?: string
+          extraction_method?: string | null
+          free_shipping?: boolean | null
+          id?: string
+          is_valid?: boolean
+          main_message?: string | null
+          model_used?: string | null
+          newsletter_inbox_id: string
+          offers?: Json | null
+          overall_confidence?: number | null
+          product_categories?: string[] | null
+          raw_extraction?: Json | null
+          strategy_takeaways?: Json | null
+          urgency_signals?: Json | null
+          workspace_id: string
+        }
+        Update: {
+          calls_to_action?: Json | null
+          campaign_type?: string | null
+          confidence_scores?: Json | null
+          coupon_code?: string | null
+          created_at?: string
+          discount_percentage?: number | null
+          event_mentions?: Json | null
+          expiry_date?: string | null
+          extracted_at?: string
+          extraction_method?: string | null
+          free_shipping?: boolean | null
+          id?: string
+          is_valid?: boolean
+          main_message?: string | null
+          model_used?: string | null
+          newsletter_inbox_id?: string
+          offers?: Json | null
+          overall_confidence?: number | null
+          product_categories?: string[] | null
+          raw_extraction?: Json | null
+          strategy_takeaways?: Json | null
+          urgency_signals?: Json | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_extractions_newsletter_inbox_id_fkey"
+            columns: ["newsletter_inbox_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_inbox"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_extractions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_inbox: {
+        Row: {
+          classification_method: string | null
+          competitor_id: string | null
+          created_at: string
+          from_email: string | null
+          from_name: string | null
+          gmail_connection_id: string | null
+          gmail_message_id: string | null
+          headers_json: Json | null
+          html_content: string | null
+          id: string
+          imported_at: string
+          is_archived: boolean
+          is_demo: boolean
+          is_newsletter: boolean
+          is_read: boolean
+          is_starred: boolean
+          newsletter_score: number | null
+          received_at: string | null
+          subject: string | null
+          tags: string[] | null
+          text_content: string | null
+          workspace_id: string
+        }
+        Insert: {
+          classification_method?: string | null
+          competitor_id?: string | null
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          gmail_connection_id?: string | null
+          gmail_message_id?: string | null
+          headers_json?: Json | null
+          html_content?: string | null
+          id?: string
+          imported_at?: string
+          is_archived?: boolean
+          is_demo?: boolean
+          is_newsletter?: boolean
+          is_read?: boolean
+          is_starred?: boolean
+          newsletter_score?: number | null
+          received_at?: string | null
+          subject?: string | null
+          tags?: string[] | null
+          text_content?: string | null
+          workspace_id: string
+        }
+        Update: {
+          classification_method?: string | null
+          competitor_id?: string | null
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          gmail_connection_id?: string | null
+          gmail_message_id?: string | null
+          headers_json?: Json | null
+          html_content?: string | null
+          id?: string
+          imported_at?: string
+          is_archived?: boolean
+          is_demo?: boolean
+          is_newsletter?: boolean
+          is_read?: boolean
+          is_starred?: boolean
+          newsletter_score?: number | null
+          received_at?: string | null
+          subject?: string | null
+          tags?: string[] | null
+          text_content?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_inbox_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_inbox_gmail_connection_id_fkey"
+            columns: ["gmail_connection_id"]
+            isOneToOne: false
+            referencedRelation: "gmail_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_inbox_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
