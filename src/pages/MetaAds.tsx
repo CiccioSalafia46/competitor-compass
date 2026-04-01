@@ -143,7 +143,7 @@ export default function MetaAdsPage() {
         <Card className="border">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Active Now</p>
-            <p className="text-2xl font-bold text-emerald-600">{activeAds}</p>
+            <p className="text-2xl font-bold text-primary">{activeAds}</p>
           </CardContent>
         </Card>
         <Card className="border">
