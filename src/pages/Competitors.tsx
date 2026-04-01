@@ -99,6 +99,7 @@ export default function Competitors() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      await log("deleted", "competitor", deleteTarget.id, { name: deleteTarget.name });
       setCompetitors((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       toast({ title: "Competitor removed" });
     }
