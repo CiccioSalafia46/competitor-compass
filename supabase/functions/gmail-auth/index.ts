@@ -73,8 +73,7 @@ serve(async (req) => {
       });
 
       if (!tokenResp.ok) {
-        const errText = await tokenResp.text();
-        console.error("Token exchange failed:", tokenResp.status, errText);
+        console.error("Token exchange failed:", tokenResp.status);
         return Response.redirect(`${stateData.redirectUrl}?gmail_error=token_exchange_failed`, 302);
       }
 
@@ -157,10 +156,27 @@ serve(async (req) => {
       const { action } = body;
 
       if (action === "initiate") {
-        const { workspaceId, userId, redirectUrl } = body;
-        if (!workspaceId || !userId) {
+        // Verify the caller is the claimed user
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader?.startsWith("Bearer ")) {
           return new Response(
-            JSON.stringify({ error: "workspaceId and userId are required" }),
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        const { data: callerData, error: callerErr } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+        if (callerErr || !callerData.user) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const { workspaceId, redirectUrl } = body;
+        const userId = callerData.user.id;
+        if (!workspaceId) {
+          return new Response(
+            JSON.stringify({ error: "workspaceId is required" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -189,7 +205,25 @@ serve(async (req) => {
       }
 
       if (action === "disconnect") {
-        const { connectionId, workspaceId, userId } = body;
+        // Verify the caller is authenticated
+        const disconnectAuthHeader = req.headers.get("Authorization");
+        if (!disconnectAuthHeader?.startsWith("Bearer ")) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        const { data: disconnectUser, error: disconnectErr } = await supabase.auth.getUser(disconnectAuthHeader.replace("Bearer ", ""));
+        if (disconnectErr || !disconnectUser.user) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const { connectionId } = body;
+        const workspaceId = body.workspaceId;
+        const userId = disconnectUser.user.id;
         if (!connectionId) {
           return new Response(
             JSON.stringify({ error: "connectionId is required" }),
