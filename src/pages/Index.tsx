@@ -81,7 +81,7 @@ export default function Index() {
 
         {/* Trust indicators */}
         <div className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-          {["Read-only Gmail access", "No credit card required", "SOC 2 compliant architecture", "Cancel anytime"].map((t) => (
+          {["Read-only Gmail access", "No credit card required", "Data encrypted at rest", "Cancel anytime"].map((t) => (
             <span key={t} className="flex items-center gap-1.5">
               <Check className="h-3 w-3 text-primary" /> {t}
             </span>
