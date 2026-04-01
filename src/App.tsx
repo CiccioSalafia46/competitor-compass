@@ -121,6 +121,7 @@ const App = () => (
                     <Route path="workspaces" element={<AdminWorkspaces />} />
                     <Route path="logs" element={<AdminLogs />} />
                     <Route path="integrations" element={<AdminIntegrations />} />
+                    <Route path="issues" element={<AdminIssues />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
