@@ -141,7 +141,7 @@ export default function Dashboard() {
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mx-auto mb-4">
               <Zap className="h-6 w-6 text-primary" />
             </div>
-            <h2 className="text-base font-semibold text-foreground mb-1">Get started with your intelligence</h2>
+            <h2 className="text-base font-semibold text-foreground mb-1">Get started with competitor intelligence</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
               Connect your data sources and add competitors to unlock automated competitive intelligence.
             </p>
