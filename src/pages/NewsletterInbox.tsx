@@ -15,6 +15,7 @@ import {
   Inbox as InboxIcon, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { DEMO_NEWSLETTERS } from "@/lib/demo-data";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { NewsletterInboxItem } from "@/types/gmail";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
