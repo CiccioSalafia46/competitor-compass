@@ -126,8 +126,8 @@ export function SystemHealthPanel() {
 
   const statusIcon = (s: Status) => {
     switch (s) {
-      case "healthy": return <CheckCircle className="h-3 w-3 text-[hsl(var(--success))]" />;
-      case "warning": return <Clock className="h-3 w-3 text-[hsl(var(--warning))]" />;
+      case "healthy": return <CheckCircle className="h-3 w-3 text-success" />;
+      case "warning": return <Clock className="h-3 w-3 text-warning" />;
       case "error": return <XCircle className="h-3 w-3 text-destructive" />;
       case "idle": return <AlertCircle className="h-3 w-3 text-muted-foreground/40" />;
     }
