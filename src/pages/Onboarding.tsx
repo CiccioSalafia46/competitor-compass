@@ -62,7 +62,7 @@ function OnboardingContent() {
     }
   }, [workspaces.length]);
 
-  const visibleSteps = stepOrder.filter((s) => s !== "done");
+  const visibleSteps = stepOrder.filter((s): s is VisibleStep => s !== "done");
   const stepIndex = visibleSteps.indexOf(activeStep);
   const canGoBack = stepIndex > 0 && activeStep !== "welcome";
 
