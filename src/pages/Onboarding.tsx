@@ -38,7 +38,10 @@ function OnboardingContent() {
       await createWorkspace(workspaceName.trim());
       navigate("/dashboard");
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      const msg = err?.message?.includes("row-level security")
+        ? "Something went wrong creating your workspace. Please try signing out and back in."
+        : err?.message || "Failed to create workspace. Please try again.";
+      toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
       setIsCreating(false);
     }
