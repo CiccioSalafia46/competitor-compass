@@ -118,7 +118,7 @@ export default function Analytics() {
 
       {/* Competitor comparison */}
       {data.competitorActivity.length > 0 && (
-        <ChartCard title="Competitor Activity" description="Newsletters vs ads by competitor">
+        <ChartCard title="Competitor Activity" description="Campaigns vs ads by competitor">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.competitorActivity} layout="vertical" barSize={12}>
