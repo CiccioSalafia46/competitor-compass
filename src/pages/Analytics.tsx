@@ -1,21 +1,31 @@
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { TrendingUp } from "lucide-react";
 
 const COLORS = [
-  "hsl(220, 80%, 50%)", "hsl(142, 72%, 40%)", "hsl(38, 92%, 50%)",
-  "hsl(0, 72%, 51%)", "hsl(280, 60%, 50%)", "hsl(180, 60%, 40%)",
-  "hsl(320, 60%, 50%)", "hsl(60, 70%, 45%)",
+  "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(200, 60%, 50%)",
+  "hsl(140, 50%, 45%)", "hsl(50, 80%, 45%)",
 ];
+
+const chartTooltipStyle = {
+  fontSize: 11,
+  background: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: 6,
+  boxShadow: "var(--shadow-md)",
+};
 
 function ChartCard({ title, children, description }: { title: string; children: React.ReactNode; description?: string }) {
   return (
-    <Card className="border shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
+    <Card className="border">
+      <CardHeader className="pb-1 space-y-0">
+        <CardTitle className="text-xs font-medium text-foreground">{title}</CardTitle>
+        {description && <p className="text-[10px] text-muted-foreground">{description}</p>}
       </CardHeader>
-      <CardContent className="pt-0">{children}</CardContent>
+      <CardContent className="pt-2">{children}</CardContent>
     </Card>
   );
 }
@@ -25,51 +35,64 @@ export default function Analytics() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl">
+        <div className="page-header">
+          <div>
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-3 w-48 mt-2" />
+          </div>
+        </div>
+        <div className="grid lg:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="border"><CardContent className="p-4"><Skeleton className="h-48 w-full" /></CardContent></Card>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="p-6 lg:p-8">
-        <p className="text-muted-foreground">No workspace selected.</p>
+      <div className="p-4 sm:p-6 lg:p-8">
+        <p className="text-sm text-muted-foreground">No workspace selected.</p>
       </div>
     );
   }
 
   const hasNewsletters = data.newslettersByWeek.length > 0;
   const hasAds = data.adsByWeek.length > 0;
-  const hasExtractions = data.categoryDistribution.length > 0;
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-1">Competitive activity trends built from observed platform data</p>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-5 animate-fade-in max-w-7xl">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Analytics</h1>
+          <p className="page-description">Competitive activity trends from observed platform data</p>
+        </div>
       </div>
 
       {!hasNewsletters && !hasAds && (
         <Card className="border">
-          <CardContent className="py-12 text-center">
-            <p className="text-sm text-muted-foreground">Not enough data yet. Import newsletters or track ads to see analytics.</p>
+          <CardContent className="py-16 text-center">
+            <TrendingUp className="h-8 w-8 mx-auto text-muted-foreground/30 mb-3" />
+            <p className="text-sm font-medium">Not enough data yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Import newsletters or track ads to see analytics.</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Row 1: Activity over time */}
+      {/* Activity over time */}
       <div className="grid lg:grid-cols-2 gap-4">
         {hasNewsletters && (
-          <ChartCard title="Newsletter Volume by Week" description="Observed newsletter frequency">
-            <div className="h-64">
+          <ChartCard title="Newsletter Volume" description="Weekly newsletter frequency">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.newslettersByWeek}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="week" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ fontSize: 12, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="count" fill="hsl(220, 80%, 50%)" radius={[3, 3, 0, 0]} name="Newsletters" />
+                <BarChart data={data.newslettersByWeek} barSize={16}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="week" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} />
+                  <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} name="Newsletters" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -77,15 +100,15 @@ export default function Analytics() {
         )}
 
         {hasAds && (
-          <ChartCard title="Ad Volume by Week" description="Observed Meta ad activity">
-            <div className="h-64">
+          <ChartCard title="Ad Volume" description="Weekly Meta ad activity">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.adsByWeek}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="week" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ fontSize: 12, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="count" fill="hsl(142, 72%, 40%)" radius={[3, 3, 0, 0]} name="Ads" />
+                <BarChart data={data.adsByWeek} barSize={16}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="week" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} />
+                  <Bar dataKey="count" fill="hsl(var(--chart-2))" radius={[3, 3, 0, 0]} name="Ads" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -93,38 +116,38 @@ export default function Analytics() {
         )}
       </div>
 
-      {/* Row 2: Competitor activity comparison */}
+      {/* Competitor comparison */}
       {data.competitorActivity.length > 0 && (
-        <ChartCard title="Competitor Activity Comparison" description="Newsletters vs ads by competitor (observed)">
-          <div className="h-72">
+        <ChartCard title="Competitor Activity" description="Newsletters vs ads by competitor">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.competitorActivity} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis type="category" dataKey="competitor" tick={{ fontSize: 10 }} width={100} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ fontSize: 12, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Legend />
-                <Bar dataKey="newsletters" fill="hsl(220, 80%, 50%)" name="Newsletters" radius={[0, 3, 3, 0]} />
-                <Bar dataKey="ads" fill="hsl(38, 92%, 50%)" name="Ads" radius={[0, 3, 3, 0]} />
+              <BarChart data={data.competitorActivity} layout="vertical" barSize={12}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="competitor" tick={{ fontSize: 10 }} width={100} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
+                <Bar dataKey="newsletters" fill="hsl(var(--chart-1))" name="Newsletters" radius={[0, 3, 3, 0]} />
+                <Bar dataKey="ads" fill="hsl(var(--chart-3))" name="Ads" radius={[0, 3, 3, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </ChartCard>
       )}
 
-      {/* Row 3: Distributions */}
+      {/* Distributions */}
       <div className="grid lg:grid-cols-3 gap-4">
         {data.ctaDistribution.length > 0 && (
-          <ChartCard title="CTA Distribution" description="Ad CTA types observed">
-            <div className="h-56">
+          <ChartCard title="CTA Distribution" description="Ad CTA types">
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={data.ctaDistribution} dataKey="count" nameKey="cta" cx="50%" cy="50%" outerRadius={80} label={({ cta, percent }) => `${cta} (${(percent * 100).toFixed(0)}%)`}>
-                    {data.ctaDistribution.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
+                  <Pie data={data.ctaDistribution} dataKey="count" nameKey="cta" cx="50%" cy="50%" outerRadius={70} innerRadius={30}
+                    label={({ cta, percent }) => `${cta} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false} style={{ fontSize: 9 }}>
+                    {data.ctaDistribution.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip contentStyle={chartTooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -133,14 +156,14 @@ export default function Analytics() {
 
         {data.categoryDistribution.length > 0 && (
           <ChartCard title="Product Categories" description="From newsletter extraction">
-            <div className="h-56">
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.categoryDistribution.slice(0, 8)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="category" tick={{ fontSize: 9 }} angle={-30} textAnchor="end" height={60} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ fontSize: 12, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="count" fill="hsl(280, 60%, 50%)" radius={[3, 3, 0, 0]} />
+                <BarChart data={data.categoryDistribution.slice(0, 6)} barSize={14}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="category" tick={{ fontSize: 8 }} angle={-25} textAnchor="end" height={50} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} />
+                  <Bar dataKey="count" fill="hsl(var(--chart-4))" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -148,16 +171,16 @@ export default function Analytics() {
         )}
 
         {data.campaignTypes.length > 0 && (
-          <ChartCard title="Campaign Types" description="Extracted campaign classification">
-            <div className="h-56">
+          <ChartCard title="Campaign Types" description="Extracted classification">
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={data.campaignTypes} dataKey="count" nameKey="type" cx="50%" cy="50%" outerRadius={80} label={({ type, percent }) => `${type} (${(percent * 100).toFixed(0)}%)`}>
-                    {data.campaignTypes.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
+                  <Pie data={data.campaignTypes} dataKey="count" nameKey="type" cx="50%" cy="50%" outerRadius={70} innerRadius={30}
+                    label={({ type, percent }) => `${type} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false} style={{ fontSize: 9 }}>
+                    {data.campaignTypes.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip contentStyle={chartTooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -165,20 +188,20 @@ export default function Analytics() {
         )}
       </div>
 
-      {/* Row 4: Promotion & urgency */}
+      {/* Promo & urgency */}
       <div className="grid lg:grid-cols-2 gap-4">
         {data.promotionFrequency.length > 0 && (
-          <ChartCard title="Promotion Frequency by Competitor" description="How often each competitor runs promos (observed)">
-            <div className="h-64">
+          <ChartCard title="Promotion Frequency" description="How often each competitor runs promos">
+            <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.promotionFrequency}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="competitor" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ fontSize: 12, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Legend />
-                  <Bar dataKey="promos" fill="hsl(0, 72%, 51%)" name="Promo emails" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="total" fill="hsl(220, 80%, 50%)" name="Total emails" radius={[3, 3, 0, 0]} />
+                <BarChart data={data.promotionFrequency} barSize={14}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="competitor" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Bar dataKey="promos" fill="hsl(var(--chart-5))" name="Promos" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="total" fill="hsl(var(--chart-1))" name="Total" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -186,15 +209,15 @@ export default function Analytics() {
         )}
 
         {data.urgencyFrequency.length > 0 && (
-          <ChartCard title="Urgency Signal Types" description="Frequency of urgency tactics observed">
-            <div className="h-64">
+          <ChartCard title="Urgency Signals" description="Frequency of urgency tactics">
+            <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.urgencyFrequency.slice(0, 8)} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis type="category" dataKey="type" tick={{ fontSize: 10 }} width={120} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ fontSize: 12, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="count" fill="hsl(38, 92%, 50%)" radius={[0, 3, 3, 0]} />
+                <BarChart data={data.urgencyFrequency.slice(0, 6)} layout="vertical" barSize={12}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="type" tick={{ fontSize: 9 }} width={100} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} />
+                  <Bar dataKey="count" fill="hsl(var(--chart-3))" radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -202,8 +225,8 @@ export default function Analytics() {
         )}
       </div>
 
-      <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider text-center">
-        All metrics are observed from platform data. No estimates or modeled values.
+      <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wider text-center">
+        All metrics observed from platform data · no estimates
       </p>
     </div>
   );
