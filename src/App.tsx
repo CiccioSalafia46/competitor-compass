@@ -39,6 +39,14 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 
+// Admin pages
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminWorkspaces = lazy(() => import("./pages/admin/AdminWorkspaces"));
+const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
+const AdminIntegrations = lazy(() => import("./pages/admin/AdminIntegrations"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
