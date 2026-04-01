@@ -14,13 +14,250 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analyses: {
+        Row: {
+          analysis_type: string
+          completed_at: string | null
+          confidence: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          model_used: string | null
+          newsletter_entry_id: string
+          result: Json | null
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          analysis_type: string
+          completed_at?: string | null
+          confidence?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          model_used?: string | null
+          newsletter_entry_id: string
+          result?: Json | null
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          analysis_type?: string
+          completed_at?: string | null
+          confidence?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          model_used?: string | null
+          newsletter_entry_id?: string
+          result?: Json | null
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analyses_newsletter_entry_id_fkey"
+            columns: ["newsletter_entry_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analyses_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitors: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          website: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          website?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          website?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitors_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_entries: {
+        Row: {
+          competitor_id: string | null
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          received_at: string | null
+          sender_email: string | null
+          source: string
+          subject: string | null
+          workspace_id: string
+        }
+        Insert: {
+          competitor_id?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          received_at?: string | null
+          sender_email?: string | null
+          source?: string
+          subject?: string | null
+          workspace_id: string
+        }
+        Update: {
+          competitor_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          received_at?: string | null
+          sender_email?: string | null
+          source?: string
+          subject?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_entries_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_entries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      workspace_members: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_workspace_member: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
