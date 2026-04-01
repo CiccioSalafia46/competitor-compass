@@ -115,7 +115,7 @@ export default function UsageDashboard() {
                   <p className="text-xs text-destructive mt-1">Limit reached — upgrade your plan to continue</p>
                 )}
                 {near && !atLimit && (
-                  <p className="text-xs text-[hsl(var(--warning))] mt-1">
+                  <p className="text-xs text-warning mt-1">
                     {percent}% used — approaching limit
                   </p>
                 )}

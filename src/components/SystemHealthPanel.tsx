@@ -149,7 +149,7 @@ export function SystemHealthPanel() {
                 <div className={cn(
                   "flex items-center gap-2 rounded-md border p-2 transition-colors",
                   sys.status === "error" && "border-destructive/30 bg-destructive/5",
-                  sys.status === "healthy" && "border-[hsl(var(--success))]/20",
+                  sys.status === "healthy" && "border-success/20",
                 )}>
                   {statusIcon(sys.status)}
                   <div className="min-w-0 flex-1">

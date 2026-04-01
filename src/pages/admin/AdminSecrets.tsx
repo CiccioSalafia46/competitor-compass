@@ -205,7 +205,7 @@ export default function AdminSecrets() {
                           {r.status === "pass" ? (
                             <CheckCircle className="h-3.5 w-3.5 text-primary" />
                           ) : r.status === "warn" ? (
-                            <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--warning))]" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-warning" />
                           ) : (
                             <XCircle className="h-3.5 w-3.5 text-destructive" />
                           )}

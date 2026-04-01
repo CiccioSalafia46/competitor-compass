@@ -114,7 +114,7 @@ export default function AdminIssues() {
             {failedAnalyses.map((a: any) => (
               <div key={a.id} className="border rounded-lg p-4 space-y-2">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))]" />
+                  <AlertTriangle className="h-4 w-4 text-warning" />
                   <span className="text-sm font-medium">{a.analysis_type}</span>
                   <Badge variant="secondary" className="text-[10px]">{a.status}</Badge>
                 </div>
