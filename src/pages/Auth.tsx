@@ -60,8 +60,8 @@ export default function Auth() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
             <BarChart3 className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-lg font-semibold text-foreground tracking-tight">Newsletter Intel</h1>
-          <p className="text-xs text-muted-foreground">Competitive intelligence from newsletters</p>
+          <h1 className="text-lg font-semibold text-foreground tracking-tight">Tracklyze</h1>
+          <p className="text-xs text-muted-foreground">Competitor intelligence for marketing teams</p>
         </div>
 
         <Card className="border shadow-md">
