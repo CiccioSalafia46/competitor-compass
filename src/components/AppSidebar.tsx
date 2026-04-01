@@ -13,10 +13,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut, Plus, Shield, Gauge, Inbox, Megaphone, Lightbulb, TrendingUp, Bell } from "lucide-react";
+import {
+  BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut,
+  Plus, Shield, Gauge, Inbox, Megaphone, Lightbulb, TrendingUp,
+  Bell, CreditCard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -24,124 +31,145 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { currentWorkspace, workspaces, setCurrentWorkspace } = useWorkspace();
   const { isAdmin, isAnalyst, roles } = useRoles();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
   };
 
-  const isActive = (matchPrefix: string) => {
-    return location.pathname === matchPrefix || location.pathname.startsWith(matchPrefix + "/");
-  };
+  const isActive = (matchPrefix: string) =>
+    location.pathname === matchPrefix || location.pathname.startsWith(matchPrefix + "/");
 
-  const navItems = [
+  const coreNav = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
     { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
     { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
     { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
+  ];
+
+  const intelligenceNav = [
     { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst },
     { label: "Insights", icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
     { label: "Analytics", icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
     { label: "Alerts", icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
+  ];
+
+  const adminNav = [
     { label: "Usage", icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
     { label: "Team", icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
+    { label: "Billing", icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
     { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
   ];
 
-  const primaryRole = roles[0];
+  const renderNavGroup = (items: typeof coreNav, label: string) => {
+    const filtered = items.filter(i => i.show);
+    if (filtered.length === 0) return null;
+    return (
+      <SidebarGroup>
+        <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">
+          {label}
+        </SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {filtered.map((item) => {
+              const active = item.path === "/settings"
+                ? location.pathname === "/settings"
+                : isActive(item.matchPrefix);
+              return (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    isActive={active}
+                    onClick={() => navigate(item.path)}
+                    className={cn(
+                      "gap-2.5 h-8 text-[13px] font-normal transition-colors",
+                      active
+                        ? "bg-accent text-accent-foreground font-medium"
+                        : "text-sidebar-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span>{item.label}</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    );
+  };
 
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-            <BarChart3 className="h-4 w-4 text-primary-foreground" />
+    <Sidebar collapsible="icon" className="border-r">
+      <SidebarHeader className="p-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
+            <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
-          <span className="text-sm font-semibold text-sidebar-foreground">Newsletter Intel</span>
+          {!collapsed && (
+            <span className="text-sm font-semibold text-foreground tracking-tight">Newsletter Intel</span>
+          )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        {currentWorkspace && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs text-muted-foreground">Workspace</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="px-2">
-                <select
-                  value={currentWorkspace.id}
-                  onChange={(e) => {
-                    const ws = workspaces.find((w) => w.id === e.target.value);
-                    if (ws) setCurrentWorkspace(ws);
-                  }}
-                  className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground"
-                >
-                  {workspaces.map((ws) => (
-                    <option key={ws.id} value={ws.id}>{ws.name}</option>
-                  ))}
-                </select>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
+      {!collapsed && currentWorkspace && (
+        <div className="px-3 pb-2">
+          <select
+            value={currentWorkspace.id}
+            onChange={(e) => {
+              const ws = workspaces.find((w) => w.id === e.target.value);
+              if (ws) setCurrentWorkspace(ws);
+            }}
+            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            {workspaces.map((ws) => (
+              <option key={ws.id} value={ws.id}>{ws.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <SidebarContent className="scrollbar-thin">
+        {renderNavGroup(coreNav, "Core")}
+        {renderNavGroup(intelligenceNav, "Intelligence")}
+
+        {isAnalyst && !collapsed && (
+          <div className="px-3 py-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2 text-xs h-7"
+              onClick={() => navigate("/newsletters/new")}
+            >
+              <Plus className="h-3 w-3" />
+              Add newsletter
+            </Button>
+          </div>
         )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs text-muted-foreground">Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.filter((item) => item.show).map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    isActive={
-                      item.path === "/settings"
-                        ? location.pathname === "/settings"
-                        : isActive(item.matchPrefix)
-                    }
-                    onClick={() => navigate(item.path)}
-                    className="gap-2"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {isAnalyst && (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <div className="px-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start gap-2 text-sm"
-                  onClick={() => navigate("/newsletters/new")}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Add newsletter
-                </Button>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        {renderNavGroup(adminNav, "Management")}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-2">
+      <SidebarFooter className="border-t p-2">
         <SidebarMenu>
-          {primaryRole && (
+          {!collapsed && roles[0] && (
             <SidebarMenuItem>
               <div className="px-2 py-1">
-                <Badge variant="outline" className="capitalize text-xs">
-                  {primaryRole}
+                <Badge variant="outline" className="capitalize text-[10px] font-normal">
+                  {roles[0]}
                 </Badge>
               </div>
             </SidebarMenuItem>
           )}
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} className="gap-2 text-muted-foreground">
+            <SidebarMenuButton
+              onClick={handleSignOut}
+              className="gap-2.5 h-8 text-[13px] text-muted-foreground hover:text-foreground"
+            >
               <LogOut className="h-4 w-4" />
-              <span>Sign out</span>
+              {!collapsed && <span>Sign out</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
