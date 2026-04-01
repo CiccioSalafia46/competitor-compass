@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
@@ -8,8 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
-import { User, Building2, CreditCard, Shield } from "lucide-react";
+import { User, Building2, CreditCard, Shield, Download, Moon, Sun } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { exportToCSV } from "@/lib/export-csv";
+import { toast } from "sonner";
 import GmailConnect from "@/components/GmailConnect";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -17,6 +22,39 @@ export default function SettingsPage() {
   const { isAdmin, roles } = useRoles();
   const { usage, currentPlan, limits, getUsagePercent } = useUsage();
   const navigate = useNavigate();
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async (type: "newsletters" | "insights") => {
+    if (!currentWorkspace) return;
+    setExporting(true);
+    try {
+      if (type === "newsletters") {
+        const { data, error } = await supabase
+          .from("newsletter_inbox")
+          .select("from_name, from_email, subject, received_at, is_read, is_starred, tags")
+          .eq("workspace_id", currentWorkspace.id)
+          .eq("is_newsletter", true)
+          .order("received_at", { ascending: false })
+          .limit(5000);
+        if (error) throw error;
+        exportToCSV(data || [], `newsletters-${currentWorkspace.slug}`);
+      } else {
+        const { data, error } = await supabase
+          .from("insights")
+          .select("title, category, what_is_happening, why_it_matters, recommended_response, confidence, created_at")
+          .eq("workspace_id", currentWorkspace.id)
+          .order("created_at", { ascending: false })
+          .limit(5000);
+        if (error) throw error;
+        exportToCSV(data || [], `insights-${currentWorkspace.slug}`);
+      }
+      toast.success(`${type === "newsletters" ? "Newsletters" : "Insights"} exported successfully`);
+    } catch (e: any) {
+      toast.error(e.message || "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="p-6 lg:p-8 max-w-2xl space-y-6 animate-fade-in">
@@ -160,6 +198,43 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Appearance */}
+      <Card className="shadow-raised border">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Moon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Appearance</CardTitle>
+            </div>
+            <DarkModeToggle />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">Toggle between light and dark mode using the button above.</p>
+        </CardContent>
+      </Card>
+
+      {/* Data Export */}
+      {currentWorkspace && (
+        <Card className="shadow-raised border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Download className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Data Export</CardTitle>
+            </div>
+            <CardDescription>Download your workspace data as CSV</CardDescription>
+          </CardHeader>
+          <CardContent className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport("newsletters")} disabled={exporting}>
+              Export newsletters
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport("insights")} disabled={exporting}>
+              Export insights
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Gmail Integration */}
       <GmailConnect />

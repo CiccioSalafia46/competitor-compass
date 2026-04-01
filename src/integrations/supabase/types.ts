@@ -1031,6 +1031,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_workspace_analytics: {
+        Args: { _workspace_id: string }
+        Returns: Json
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
