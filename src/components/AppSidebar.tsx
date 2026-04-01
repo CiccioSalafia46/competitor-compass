@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut, Plus, Shield, Gauge, Inbox, Megaphone } from "lucide-react";
+import { BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut, Plus, Shield, Gauge, Inbox, Megaphone, Lightbulb, TrendingUp, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
