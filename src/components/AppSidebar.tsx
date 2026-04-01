@@ -51,7 +51,7 @@ export const AppSidebar = memo(function AppSidebar() {
     () => [
       { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
       { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
-      { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
+      { label: "Data Sources", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
       { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
     ],
     [isAnalyst]
