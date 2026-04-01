@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import UpgradePrompt from "@/components/UpgradePrompt";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
 import { useUsage } from "@/hooks/useUsage";
