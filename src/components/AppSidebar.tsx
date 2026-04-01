@@ -136,7 +136,7 @@ export const AppSidebar = memo(function AppSidebar() {
             <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="text-sm font-semibold text-foreground tracking-tight">Newsletter Intel</span>
+            <span className="text-sm font-semibold text-foreground tracking-tight">Tracklyze</span>
           )}
         </div>
       </SidebarHeader>
