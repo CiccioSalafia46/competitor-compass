@@ -36,6 +36,8 @@ const Insights = lazy(() => import("./pages/Insights"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Alerts = lazy(() => import("./pages/Alerts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
