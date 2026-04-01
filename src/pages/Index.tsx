@@ -361,4 +361,4 @@ function PricingCard({
       </CardContent>
     </Card>
   );
-});
+}

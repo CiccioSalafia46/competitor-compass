@@ -102,6 +102,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const tier = tierFromProductId(productId);
 
+  // Sync tier to sessionStorage so useUsage can read it without circular deps
+  useEffect(() => {
+    try { sessionStorage.setItem("subscription_tier", tier); } catch {}
+  }, [tier]);
+
   return (
     <SubscriptionContext.Provider
       value={{ subscribed, productId, subscriptionEnd, tier, loading, checkSubscription, checkout, openPortal }}

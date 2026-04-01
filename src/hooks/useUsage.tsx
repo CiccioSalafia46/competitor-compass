@@ -47,8 +47,19 @@ export function useUsage() {
     seats_used: 0,
   });
   const [loading, setLoading] = useState(true);
-  // TODO: derive from Stripe subscription
-  const [currentPlan] = useState<PlanTier>("free");
+  // Derive from actual subscription state — imported lazily to avoid circular deps
+  const [currentPlan, setCurrentPlan] = useState<PlanTier>("free");
+
+  // Sync plan from subscription tier
+  useEffect(() => {
+    try {
+      // Read subscription tier from the SubscriptionProvider context via a DOM-safe approach
+      const stored = sessionStorage.getItem("subscription_tier");
+      if (stored && (stored === "free" || stored === "starter" || stored === "premium")) {
+        setCurrentPlan(stored as PlanTier);
+      }
+    } catch {}
+  }, []);
 
   const fetchUsage = useCallback(async () => {
     if (!user || !currentWorkspace) {
