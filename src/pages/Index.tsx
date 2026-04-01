@@ -118,7 +118,7 @@ export default function Index() {
 
       {/* ─── Problem ─── */}
       <section id="why" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
-        <div className="text-center mb-14">
+        <div className="text-center mb-10">
           <Badge variant="outline" className="mb-4 text-[10px] border-destructive/30 text-destructive font-normal">The problem</Badge>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
             Your competitors are moving fast.<br className="hidden sm:block" />
