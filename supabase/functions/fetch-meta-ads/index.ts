@@ -32,7 +32,8 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
     if (userError || !userData.user) throw new Error("Not authenticated");
-    logStep("User authenticated", { userId: userData.user.id });
+    const userId = userData.user.id;
+    logStep("User authenticated");
 
     const { workspaceId, competitorId, pageId, searchTerms, adType, limit } = await req.json();
     if (!workspaceId) throw new Error("workspaceId is required");
