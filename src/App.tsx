@@ -27,6 +27,9 @@ import AuthRedirect from "./components/AuthRedirect";
 import Billing from "./pages/Billing";
 import MetaAds from "./pages/MetaAds";
 import MetaAdsCompare from "./pages/MetaAdsCompare";
+import Insights from "./pages/Insights";
+import Analytics from "./pages/Analytics";
+import Alerts from "./pages/Alerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
