@@ -14,33 +14,39 @@ export default function Onboarding() {
 }
 
 // Separate component to avoid hook rules issues with early return
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Loader2 } from "lucide-react";
 
 function OnboardingContent() {
   const [workspaceName, setWorkspaceName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const submittingRef = useRef(false);
   const { createWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!workspaceName.trim()) return;
+    if (!workspaceName.trim() || submittingRef.current) return;
+    submittingRef.current = true;
     setIsCreating(true);
     try {
       await createWorkspace(workspaceName.trim());
       navigate("/dashboard");
     } catch (err: any) {
-      const msg = err?.message?.includes("row-level security")
+      submittingRef.current = false;
+      const raw = err?.message || "";
+      const msg = raw.includes("row-level security") || raw.includes("violates")
         ? "Something went wrong creating your workspace. Please try signing out and back in."
-        : err?.message || "Failed to create workspace. Please try again.";
+        : raw.includes("duplicate key")
+        ? "A workspace with that name already exists. Please choose another."
+        : raw || "Failed to create workspace. Please try again.";
       toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
       setIsCreating(false);
