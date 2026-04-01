@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
+import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 export default function GmailConnect() {
   const { connection, loading, syncing, connect, disconnect, sync, isConnected } = useGmailConnection();
   const { isAdmin } = useRoles();
+  const { requireVerification } = useEmailVerification();
   const { toast } = useToast();
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -45,6 +47,7 @@ export default function GmailConnect() {
   }, []);
 
   const handleConnect = async () => {
+    if (!requireVerification("connect Gmail")) return;
     setConnecting(true);
     try {
       await connect();

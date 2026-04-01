@@ -19,13 +19,39 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    // Auth
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-    const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (userError || !userData.user) throw new Error("Not authenticated");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(authHeader.replace("Bearer ", ""));
+    if (claimsErr || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const userId = claimsData.claims.sub as string;
 
-    const { workspaceId, category } = await req.json();
-    if (!workspaceId) throw new Error("workspaceId required");
+    // Email verification check
+    if (!claimsData.claims.email_confirmed_at) {
+      return new Response(JSON.stringify({ error: "Please verify your email before generating insights." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const body = await req.json();
+    const workspaceId = body?.workspaceId;
+    const category = body?.category;
+    if (!workspaceId || typeof workspaceId !== "string") {
+      return new Response(JSON.stringify({ error: "workspaceId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Rate limit: 10 insight generations per hour per user
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _user_id: userId,
+      _workspace_id: workspaceId,
+      _endpoint: "generate-insights",
+      _max_per_hour: 10,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Rate limit reached. You can generate insights up to 10 times per hour." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Gather platform data for context
     const [newsletters, extractions, ads, adAnalyses, competitors] = await Promise.all([
@@ -115,8 +141,10 @@ Return a JSON array of insight objects. Return ONLY valid JSON, no markdown.`;
     });
 
     if (!aiResp.ok) {
-      if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiResp.status === 429) return new Response(JSON.stringify({ error: "AI service rate limited, please try again later." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       if (aiResp.status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const errText = await aiResp.text();
+      log("AI error", { status: aiResp.status, body: errText.substring(0, 200) });
       throw new Error(`AI error: ${aiResp.status}`);
     }
 
@@ -133,20 +161,23 @@ Return a JSON array of insight objects. Return ONLY valid JSON, no markdown.`;
       return new Response(JSON.stringify({ error: "Failed to parse AI response" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Store insights
-    const rows = insights.filter((i: any) => i.confidence >= 0.3).map((i: any) => ({
-      workspace_id: workspaceId,
-      category: i.category,
-      title: i.title,
-      what_is_happening: i.what_is_happening,
-      why_it_matters: i.why_it_matters,
-      strategic_implication: i.strategic_implication,
-      recommended_response: i.recommended_response,
-      confidence: i.confidence,
-      supporting_evidence: i.supporting_evidence || [],
-      affected_competitors: i.affected_competitors || [],
-      source_type: i.source_type || "newsletter",
-    }));
+    // Validate and filter insights
+    const rows = insights
+      .filter((i: any) => i.confidence >= 0.3 && i.title && i.what_is_happening)
+      .slice(0, 10) // Cap at 10 to prevent runaway
+      .map((i: any) => ({
+        workspace_id: workspaceId,
+        category: String(i.category || "general").substring(0, 100),
+        title: String(i.title).substring(0, 500),
+        what_is_happening: String(i.what_is_happening).substring(0, 2000),
+        why_it_matters: String(i.why_it_matters || "").substring(0, 2000),
+        strategic_implication: String(i.strategic_implication || "").substring(0, 2000),
+        recommended_response: String(i.recommended_response || "").substring(0, 2000),
+        confidence: Math.min(1, Math.max(0, Number(i.confidence) || 0.5)),
+        supporting_evidence: Array.isArray(i.supporting_evidence) ? i.supporting_evidence : [],
+        affected_competitors: Array.isArray(i.affected_competitors) ? i.affected_competitors.map(String).slice(0, 20) : [],
+        source_type: ["newsletter", "meta_ad", "cross_channel"].includes(i.source_type) ? i.source_type : "newsletter",
+      }));
 
     if (rows.length > 0) {
       const { error: insertErr } = await supabase.from("insights").insert(rows);
@@ -167,6 +198,6 @@ Return a JSON array of insight objects. Return ONLY valid JSON, no markdown.`;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "An internal error occurred. Please try again." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

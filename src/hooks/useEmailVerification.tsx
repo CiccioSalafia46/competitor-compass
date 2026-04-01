@@ -26,5 +26,18 @@ export function useEmailVerification() {
     }
   };
 
-  return { isVerified, resendVerification, resending };
+  /**
+   * Call before any critical action. Returns true if verified.
+   * If not verified, shows a toast and returns false.
+   */
+  const requireVerification = (actionName = "this action"): boolean => {
+    if (isVerified) return true;
+    toast.error(`Please verify your email to ${actionName}.`, {
+      description: "Check your inbox for the verification link, or resend it from the banner above.",
+      duration: 6000,
+    });
+    return false;
+  };
+
+  return { isVerified, resendVerification, resending, requireVerification };
 }

@@ -883,6 +883,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          called_at: string
+          endpoint: string
+          id: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          called_at?: string
+          endpoint: string
+          id?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          called_at?: string
+          endpoint?: string
+          id?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       usage_events: {
         Row: {
           created_at: string
@@ -1014,6 +1038,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_ad_analysis_exists: {
+        Args: { _meta_ad_id: string }
+        Returns: boolean
+      }
+      check_extraction_exists: {
+        Args: { _newsletter_inbox_id: string }
+        Returns: boolean
+      }
+      check_rate_limit: {
+        Args: {
+          _endpoint: string
+          _max_per_hour?: number
+          _user_id: string
+          _workspace_id: string
+        }
+        Returns: boolean
+      }
       create_workspace: {
         Args: { _name: string; _slug: string }
         Returns: {
