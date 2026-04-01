@@ -129,11 +129,19 @@ export function useAlerts() {
     if (!currentWorkspace) return;
     setEvaluating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("evaluate-alerts", {
+      const res = await supabase.functions.invoke("evaluate-alerts", {
         body: { workspaceId: currentWorkspace.id },
       });
-      if (error) throw error;
-      toast.success(`Evaluated rules: ${data?.alerts?.length || 0} alerts triggered`);
+      if (res.error) {
+        // Check for rate limit from response body
+        const body = res.data;
+        if (body?.error?.includes("Rate limit")) {
+          toast.error(body.error);
+          return;
+        }
+        throw res.error;
+      }
+      toast.success(`Evaluated rules: ${res.data?.alerts?.length || 0} alerts triggered`);
       await fetchAlerts();
     } catch (e: any) {
       toast.error(e.message || "Failed to evaluate alerts");

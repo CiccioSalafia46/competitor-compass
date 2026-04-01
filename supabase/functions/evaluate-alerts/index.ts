@@ -27,6 +27,18 @@ serve(async (req) => {
     const { workspaceId } = await req.json();
     if (!workspaceId) throw new Error("workspaceId required");
 
+    // Rate limit: 5 evaluations per hour per user
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _user_id: userData.user.id,
+      _workspace_id: workspaceId,
+      _endpoint: "evaluate-alerts",
+      _max_per_hour: 5,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Rate limit reached. You can evaluate alerts up to 5 times per hour." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Get active rules
     const { data: rules } = await supabase
       .from("alert_rules")
@@ -152,7 +164,7 @@ serve(async (req) => {
       }
     }
 
-    // Deduplicate by title+rule combo
+    // Deduplicate by title+rule combo (in-batch)
     const seen = new Set<string>();
     const dedupedAlerts = triggeredAlerts.filter(a => {
       const key = `${a.alert_rule_id}-${a.title}`;
@@ -161,15 +173,28 @@ serve(async (req) => {
       return true;
     });
 
+    // Deduplicate against existing alerts from last 24h to prevent re-triggering
+    const finalAlerts: any[] = [];
+    for (const a of dedupedAlerts) {
+      const { count } = await supabase
+        .from("alerts")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .eq("alert_rule_id", a.alert_rule_id)
+        .eq("title", a.title)
+        .gte("created_at", since);
+      if ((count || 0) === 0) finalAlerts.push(a);
+    }
+
     // Insert alerts
-    if (dedupedAlerts.length > 0) {
-      const { error } = await supabase.from("alerts").insert(dedupedAlerts);
+    if (finalAlerts.length > 0) {
+      const { error } = await supabase.from("alerts").insert(finalAlerts);
       if (error) log("Insert error", { error: error.message });
     }
 
-    log("Done", { triggered: dedupedAlerts.length });
+    log("Done", { triggered: finalAlerts.length });
 
-    return new Response(JSON.stringify({ success: true, alerts: dedupedAlerts }),
+    return new Response(JSON.stringify({ success: true, alerts: finalAlerts }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

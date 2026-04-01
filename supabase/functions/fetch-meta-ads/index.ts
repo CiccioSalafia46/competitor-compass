@@ -32,10 +32,25 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
     if (userError || !userData.user) throw new Error("Not authenticated");
-    logStep("User authenticated", { userId: userData.user.id });
+    const userId = userData.user.id;
+    logStep("User authenticated");
 
     const { workspaceId, competitorId, pageId, searchTerms, adType, limit } = await req.json();
     if (!workspaceId) throw new Error("workspaceId is required");
+
+    // Rate limit: 10 fetches per hour per user
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _user_id: userId,
+      _workspace_id: workspaceId,
+      _endpoint: "fetch-meta-ads",
+      _max_per_hour: 10,
+    });
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit reached. You can fetch ads up to 10 times per hour." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const metaToken = Deno.env.get("META_ACCESS_TOKEN");
     if (!metaToken) {
