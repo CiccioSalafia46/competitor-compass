@@ -161,8 +161,8 @@ export default function Competitors() {
               <Users className="h-6 w-6 text-primary" />
             </div>
             <h2 className="text-base font-semibold text-foreground mb-1">Start tracking competitors</h2>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-1">Add the companies you want to monitor.</p>
-              We'll track their campaigns, ads, and messaging.
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-1">
+              Add the companies you want to monitor. We'll track their campaigns, ads, and messaging.
             </p>
             <p className="text-xs text-muted-foreground/70 mb-5">
               You'll get AI-powered insights about their strategy automatically.
