@@ -33,6 +33,7 @@ import {
 export default function GmailConnect() {
   const { connection, loading, syncing, connect, disconnect, sync, isConnected } = useGmailConnection();
   const { isAdmin } = useRoles();
+  const { requireVerification } = useEmailVerification();
   const { toast } = useToast();
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
