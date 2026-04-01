@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useMetaAds, useMetaAdAnalysis } from "@/hooks/useMetaAds";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +42,12 @@ export default function MetaAdsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [fetchSearch, setFetchSearch] = useState("");
   const { toast } = useToast();
+  const debouncedSearch = useDebounce(searchInput, 300);
+
+  // Sync debounced search to filters
+  useEffect(() => {
+    setFilters((f) => ({ ...f, search: debouncedSearch || undefined }));
+  }, [debouncedSearch]);
 
   // Fetch competitors
   useEffect(() => {
@@ -136,7 +143,7 @@ export default function MetaAdsPage() {
         <Card className="border">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Active Now</p>
-            <p className="text-2xl font-bold text-emerald-600">{activeAds}</p>
+            <p className="text-2xl font-bold text-primary">{activeAds}</p>
           </CardContent>
         </Card>
         <Card className="border">
@@ -193,10 +200,7 @@ export default function MetaAdsPage() {
           <Input
             placeholder="Search ad copy…"
             value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-              setFilters((f) => ({ ...f, search: e.target.value || undefined }));
-            }}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-8 h-8 text-sm"
           />
         </div>
@@ -317,7 +321,7 @@ export default function MetaAdsPage() {
                 <p className="text-lg font-medium text-foreground">{selectedAdData.page_name}</p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {selectedAdData.is_active ? (
-                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0 text-xs">Active</Badge>
+                    <Badge className="bg-primary/10 text-primary border-0 text-xs">Active</Badge>
                   ) : (
                     <Badge variant="secondary" className="text-xs">Inactive</Badge>
                   )}

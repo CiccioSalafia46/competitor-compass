@@ -15,6 +15,7 @@ import {
   Inbox as InboxIcon, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { DEMO_NEWSLETTERS } from "@/lib/demo-data";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { NewsletterInboxItem } from "@/types/gmail";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
@@ -37,14 +38,16 @@ export default function NewsletterInbox() {
       .then(({ data }) => setCompetitors(data || []));
   }, [currentWorkspace]);
 
+  const debouncedSearch = useDebounce(search, 300);
+
   const filters = useMemo(
     () => ({
-      search: search || undefined,
+      search: debouncedSearch || undefined,
       competitorId: competitorFilter !== "all" ? competitorFilter : undefined,
       isNewsletter: typeFilter === "newsletters" ? true : typeFilter === "all" ? undefined : false,
       isArchived: typeFilter === "archived" ? true : false,
     }),
-    [search, competitorFilter, typeFilter]
+    [debouncedSearch, competitorFilter, typeFilter]
   );
 
   const { items, loading, page, setPage, totalCount, totalPages, markRead, toggleStar, archive } = useNewsletterInbox(filters);
