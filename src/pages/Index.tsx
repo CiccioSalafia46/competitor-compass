@@ -372,8 +372,8 @@ export default function Index() {
 
       {/* ─── Social Proof ─── */}
       <section className="border-y bg-accent/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-          <div className="text-center mb-14">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+          <div className="text-center mb-10">
             <Badge variant="outline" className="mb-4 text-[10px] font-normal">What teams are saying</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               Built for teams that compete on intelligence
