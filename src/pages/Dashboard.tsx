@@ -335,7 +335,7 @@ export default function Dashboard() {
                 <EmptySection
                   icon={Users}
                   title="No competitors yet"
-                  desc="Add competitors to start tracking their newsletter and ad activity"
+                  desc="Add competitors to start tracking their campaigns and activity"
                   action={{ label: "Add competitor", onClick: () => navigate("/competitors") }}
                 />
               ) : (
