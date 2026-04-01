@@ -126,7 +126,7 @@ export default function Dashboard() {
 
       {/* ─── KPI Strip ─── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        <KpiCard icon={Newspaper} label="Newsletter Inbox" value={stats.inboxItems} href="/inbox" sublabel="Observed" />
+        <KpiCard icon={Newspaper} label="Competitor Inbox" value={stats.inboxItems} href="/inbox" sublabel="Observed" />
         <KpiCard icon={Users} label="Competitors" value={stats.competitors} href="/competitors" sublabel="Tracked" />
         <KpiCard icon={BarChart3} label="Analyses" value={stats.completedAnalyses} href="/analytics" sublabel="Completed" />
         <KpiCard icon={Megaphone} label="Meta Ads" value={stats.metaAds} href="/meta-ads" sublabel={`${stats.activeAds} active`} />
