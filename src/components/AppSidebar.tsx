@@ -73,6 +73,7 @@ export const AppSidebar = memo(function AppSidebar() {
       { label: "Team", icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
       { label: "Billing", icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
       { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
+      { label: "Admin Panel", icon: Shield, path: "/admin", matchPrefix: "/admin", show: isAdmin },
     ],
     [isAdmin]
   );
