@@ -3,28 +3,31 @@ import { useAdminData } from "@/hooks/useAdmin";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function AdminLogs() {
-  const { data, loading, error } = useAdminData("logs");
+  const [page, setPage] = useState(1);
+  const perPage = 50;
+  const { data, loading, error } = useAdminData("logs", { page, perPage });
   const [search, setSearch] = useState("");
 
   const logs = data?.logs || [];
-  const filtered = logs.filter(
-    (l: any) =>
-      l.action?.toLowerCase().includes(search.toLowerCase()) ||
-      l.entity_type?.toLowerCase().includes(search.toLowerCase()) ||
-      l.entity_id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / perPage);
+
+  const filtered = search
+    ? logs.filter(
+        (l: any) =>
+          l.action?.toLowerCase().includes(search.toLowerCase()) ||
+          l.entity_type?.toLowerCase().includes(search.toLowerCase()) ||
+          l.entity_id?.toLowerCase().includes(search.toLowerCase())
+      )
+    : logs;
 
   if (loading) {
     return (
@@ -48,7 +51,7 @@ export default function AdminLogs() {
     <div className="p-6 space-y-4 max-w-7xl">
       <div>
         <h1 className="text-2xl font-bold">Audit Logs</h1>
-        <p className="text-sm text-muted-foreground">Platform-wide activity tracking</p>
+        <p className="text-sm text-muted-foreground">{total} total entries</p>
       </div>
 
       <div className="relative max-w-sm">
@@ -84,7 +87,10 @@ export default function AdminLogs() {
               {filtered.map((log: any) => (
                 <TableRow key={log.id}>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs font-mono">
+                    <Badge
+                      variant={log.action?.startsWith("admin.") ? "default" : "outline"}
+                      className="text-xs font-mono"
+                    >
                       {log.action}
                     </Badge>
                   </TableCell>
@@ -104,6 +110,32 @@ export default function AdminLogs() {
           </Table>
         </CardContent>
       </Card>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

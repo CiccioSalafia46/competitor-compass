@@ -1,22 +1,28 @@
 import { useState } from "react";
-import { useAdminData } from "@/hooks/useAdmin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
-import { Search, CheckCircle, XCircle } from "lucide-react";
+import { Search, CheckCircle, XCircle, Ban, Trash2, ShieldOff } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminUsers() {
-  const { data, loading, error } = useAdminData("users");
+  const { data, loading, error, refetch } = useAdminData("users");
+  const { execute, acting } = useAdminAction();
   const [search, setSearch] = useState("");
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "delete" | "ban" | "unban";
+    user: any;
+  } | null>(null);
 
   const users = data?.users || [];
   const filtered = users.filter(
@@ -24,6 +30,27 @@ export default function AdminUsers() {
       u.email?.toLowerCase().includes(search.toLowerCase()) ||
       u.display_name?.toLowerCase().includes(search.toLowerCase())
   );
+
+  async function handleConfirm() {
+    if (!confirmAction) return;
+    const { type, user } = confirmAction;
+    try {
+      if (type === "delete") {
+        await execute("delete_user", { target_user_id: user.id });
+        toast.success(`User ${user.email} deleted`);
+      } else if (type === "ban") {
+        await execute("ban_user", { target_user_id: user.id, ban: true });
+        toast.success(`User ${user.email} disabled`);
+      } else if (type === "unban") {
+        await execute("ban_user", { target_user_id: user.id, ban: false });
+        toast.success(`User ${user.email} re-enabled`);
+      }
+      setConfirmAction(null);
+      refetch();
+    } catch {
+      // toast already shown by useAdminAction
+    }
+  }
 
   if (loading) {
     return (
@@ -68,17 +95,18 @@ export default function AdminUsers() {
             <TableHeader>
               <TableRow>
                 <TableHead>User</TableHead>
-                <TableHead>Email Verified</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Roles</TableHead>
                 <TableHead>Workspaces</TableHead>
                 <TableHead>Last Sign In</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -92,18 +120,27 @@ export default function AdminUsers() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {user.email_confirmed_at ? (
-                      <CheckCircle className="h-4 w-4 text-primary" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {user.email_confirmed_at ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-primary" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                      {user.banned && (
+                        <Badge variant="destructive" className="text-[10px]">Disabled</Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1 flex-wrap">
                       {user.roles?.length > 0 ? (
-                        user.roles.map((r: string, i: number) => (
-                          <Badge key={i} variant={r === "admin" ? "default" : "secondary"} className="text-[10px]">
-                            {r}
+                        user.roles.map((r: any, i: number) => (
+                          <Badge
+                            key={i}
+                            variant={r.role === "admin" ? "default" : "secondary"}
+                            className="text-[10px]"
+                          >
+                            {r.role}
                           </Badge>
                         ))
                       ) : (
@@ -133,12 +170,79 @@ export default function AdminUsers() {
                   <TableCell className="text-xs text-muted-foreground">
                     {format(new Date(user.created_at), "MMM d, yyyy")}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {user.banned ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          disabled={acting}
+                          onClick={() => setConfirmAction({ type: "unban", user })}
+                        >
+                          <ShieldOff className="h-3 w-3" />
+                          Enable
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs gap-1 text-amber-600"
+                          disabled={acting}
+                          onClick={() => setConfirmAction({ type: "ban", user })}
+                        >
+                          <Ban className="h-3 w-3" />
+                          Disable
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs gap-1 text-destructive"
+                        disabled={acting}
+                        onClick={() => setConfirmAction({ type: "delete", user })}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.type === "delete"
+                ? "Delete User"
+                : confirmAction?.type === "ban"
+                ? "Disable User"
+                : "Re-enable User"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.type === "delete"
+                ? `This will permanently delete ${confirmAction?.user?.email} and remove all their data. This cannot be undone.`
+                : confirmAction?.type === "ban"
+                ? `This will disable ${confirmAction?.user?.email}'s account. They will not be able to sign in.`
+                : `This will re-enable ${confirmAction?.user?.email}'s account.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirm}
+              className={confirmAction?.type === "delete" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            >
+              {confirmAction?.type === "delete" ? "Delete" : confirmAction?.type === "ban" ? "Disable" : "Enable"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

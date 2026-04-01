@@ -1,18 +1,41 @@
-import { useAdminData } from "@/hooks/useAdmin";
+import { useState } from "react";
+import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import { RefreshCw, Unplug } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminIntegrations() {
-  const { data, loading, error } = useAdminData("integrations");
+  const { data, loading, error, refetch } = useAdminData("integrations");
+  const { execute, acting } = useAdminAction();
+  const [disconnectTarget, setDisconnectTarget] = useState<any>(null);
+
+  async function handleResync(connectionId: string) {
+    try {
+      await execute("force_resync", { connection_id: connectionId });
+      toast.success("Sync state reset. Next sync will do a full re-import.");
+      refetch();
+    } catch {}
+  }
+
+  async function handleDisconnect() {
+    if (!disconnectTarget) return;
+    try {
+      await execute("disconnect_gmail", { connection_id: disconnectTarget.id });
+      toast.success(`Disconnected ${disconnectTarget.email_address}`);
+      setDisconnectTarget(null);
+      refetch();
+    } catch {}
+  }
 
   if (loading) {
     return (
@@ -42,7 +65,6 @@ export default function AdminIntegrations() {
         <p className="text-sm text-muted-foreground">Gmail connections and API usage</p>
       </div>
 
-      {/* Gmail Connections */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Gmail Connections ({gmailConns.length})</CardTitle>
@@ -56,12 +78,13 @@ export default function AdminIntegrations() {
                 <TableHead>Last Sync</TableHead>
                 <TableHead>Error</TableHead>
                 <TableHead>Connected</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {gmailConns.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                     No Gmail connections
                   </TableCell>
                 </TableRow>
@@ -71,16 +94,14 @@ export default function AdminIntegrations() {
                   <TableCell className="text-sm font-medium">{conn.email_address}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={conn.sync_status === "idle" ? "secondary" : conn.sync_error ? "destructive" : "default"}
+                      variant={conn.sync_error ? "destructive" : conn.sync_status === "idle" ? "secondary" : "default"}
                       className="text-[10px]"
                     >
                       {conn.sync_status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {conn.last_sync_at
-                      ? format(new Date(conn.last_sync_at), "MMM d, HH:mm")
-                      : "Never"}
+                    {conn.last_sync_at ? format(new Date(conn.last_sync_at), "MMM d, HH:mm") : "Never"}
                   </TableCell>
                   <TableCell className="max-w-48">
                     {conn.sync_error ? (
@@ -92,6 +113,30 @@ export default function AdminIntegrations() {
                   <TableCell className="text-xs text-muted-foreground">
                     {format(new Date(conn.connected_at), "MMM d, yyyy")}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        disabled={acting}
+                        onClick={() => handleResync(conn.id)}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Resync
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs gap-1 text-destructive"
+                        disabled={acting}
+                        onClick={() => setDisconnectTarget(conn)}
+                      >
+                        <Unplug className="h-3 w-3" />
+                        Disconnect
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -99,7 +144,6 @@ export default function AdminIntegrations() {
         </CardContent>
       </Card>
 
-      {/* Rate Limits by Endpoint */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">API Usage by Endpoint</CardTitle>
@@ -121,6 +165,26 @@ export default function AdminIntegrations() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!disconnectTarget} onOpenChange={() => setDisconnectTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect Gmail</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the Gmail connection for {disconnectTarget?.email_address}, including all stored tokens. The user will need to reconnect.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDisconnect}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Disconnect
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
