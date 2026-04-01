@@ -24,6 +24,7 @@ import SettingsPage from "./pages/Settings";
 import TeamManagement from "./pages/TeamManagement";
 import UsageDashboard from "./pages/UsageDashboard";
 import AuthRedirect from "./components/AuthRedirect";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
