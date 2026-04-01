@@ -198,8 +198,8 @@ function OnboardingContent() {
 
 function WelcomeStep({ onNext }: { onNext: () => void }) {
   const features = [
-    { icon: Newspaper, title: "Newsletter Intelligence", desc: "Import and analyze competitor newsletters automatically" },
-    { icon: Users, title: "Competitor Tracking", desc: "Monitor rivals' messaging, offers, and strategies" },
+    { icon: Newspaper, title: "Competitor Monitoring", desc: "Import and analyze competitor campaigns automatically" },
+    { icon: Users, title: "Competitive Tracking", desc: "Monitor rivals' messaging, offers, and strategies" },
     { icon: Lightbulb, title: "AI Insights", desc: "Get strategic recommendations from your competitive data" },
   ];
 
