@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import {
   Megaphone, Search, RefreshCw, ChevronLeft, ChevronRight, BarChart3,
-  Loader2, Sparkles, X, Filter, Download, Eye, AlertCircle
+  Loader2, Sparkles, X, Filter, Download, Eye, AlertCircle, ExternalLink
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle
