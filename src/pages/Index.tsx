@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { memo } from "react";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 export default function Index() {
   const { user } = useAuth();
