@@ -25,6 +25,8 @@ import TeamManagement from "./pages/TeamManagement";
 import UsageDashboard from "./pages/UsageDashboard";
 import AuthRedirect from "./components/AuthRedirect";
 import Billing from "./pages/Billing";
+import MetaAds from "./pages/MetaAds";
+import MetaAdsCompare from "./pages/MetaAdsCompare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +55,8 @@ const App = () => (
                 <Route path="/newsletters/new" element={<NewNewsletter />} />
                 <Route path="/newsletters/:id" element={<NewsletterDetail />} />
                 <Route path="/competitors" element={<Competitors />} />
+                <Route path="/meta-ads" element={<MetaAds />} />
+                <Route path="/meta-ads/compare" element={<MetaAdsCompare />} />
                 <Route path="/analyses/:id" element={<AnalysisView />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/settings/team" element={<TeamManagement />} />

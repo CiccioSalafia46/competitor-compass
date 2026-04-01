@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut, Plus, Shield, Gauge, Inbox } from "lucide-react";
+import { BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut, Plus, Shield, Gauge, Inbox, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -39,6 +39,7 @@ export function AppSidebar() {
     { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
     { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
     { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
+    { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst },
     { label: "Usage", icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
     { label: "Team", icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
     { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
