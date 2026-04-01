@@ -65,15 +65,21 @@ export default function Competitors() {
 
   const handleCreate = async () => {
     if (!currentWorkspace || !name.trim()) return;
+    if (isAtLimit("competitors")) {
+      toast({ title: "Limit reached", description: "Upgrade your plan to track more competitors.", variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("competitors").insert({
+      const { data, error } = await supabase.from("competitors").insert({
         workspace_id: currentWorkspace.id,
         name: name.trim(),
         website: website.trim() || null,
         description: description.trim() || null,
-      });
+      }).select().single();
       if (error) throw error;
+      await trackUsage("competitor_added");
+      await log("created", "competitor", data.id, { name: data.name });
       toast({ title: "Competitor added" });
       setName("");
       setWebsite("");
