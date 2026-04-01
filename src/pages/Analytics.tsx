@@ -92,7 +92,7 @@ export default function Analytics() {
                   <XAxis dataKey="week" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} name="Newsletters" />
+                  <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} name="Campaigns" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
