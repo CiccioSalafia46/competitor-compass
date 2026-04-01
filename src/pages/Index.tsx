@@ -58,7 +58,7 @@ export default function Index() {
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-20 sm:pb-28 relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20 relative">
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="outline" className="mb-6 gap-1.5 px-3 py-1.5 text-xs font-normal border-primary/30 text-primary">
               <Sparkles className="h-3 w-3" /> AI-Powered Competitor Intelligence
