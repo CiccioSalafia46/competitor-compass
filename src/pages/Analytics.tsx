@@ -84,7 +84,7 @@ export default function Analytics() {
       {/* Activity over time */}
       <div className="grid lg:grid-cols-2 gap-4">
         {hasNewsletters && (
-          <ChartCard title="Newsletter Volume" description="Weekly newsletter frequency">
+          <ChartCard title="Campaign Volume" description="Weekly competitor campaign frequency">
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.newslettersByWeek} barSize={16}>
