@@ -28,7 +28,7 @@ const PLAN_VALUE_BUCKETS: Record<PlanTier, {
       {
         name: "Data Access",
         icon: Newspaper,
-        features: ["200 newsletters/mo", "Manual import only", "30-day history"],
+        features: ["200 data imports/mo", "Manual import only", "30-day history"],
       },
       {
         name: "Intelligence",
