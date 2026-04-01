@@ -8,6 +8,11 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import AppLayout from "./components/AppLayout";
+import { AdminGuard } from "@/components/admin/AdminGuard";
+
+function AdminGuardWrapper({ children }: { children: React.ReactNode }) {
+  return <AdminGuard>{children}</AdminGuard>;
+}
 
 // Eagerly loaded (always needed on first paint)
 import Index from "./pages/Index";
