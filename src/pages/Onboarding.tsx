@@ -50,8 +50,8 @@ function OnboardingContent() {
 
   // Allow manual step navigation
   type VisibleStep = Exclude<OnboardingStep, "done">;
-  const [activeStep, setActiveStep] = useState<VisibleStep>(
-    workspaces.length === 0 ? "welcome" : currentStep
+  const initialStep: VisibleStep = workspaces.length === 0 ? "welcome" : (currentStep === "done" ? "insights" : currentStep as VisibleStep);
+  const [activeStep, setActiveStep] = useState<VisibleStep>(initialStep);
   );
 
   // If workspace exists, skip workspace step
