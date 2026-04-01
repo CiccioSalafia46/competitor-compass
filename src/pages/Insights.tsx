@@ -140,22 +140,29 @@ export default function Insights() {
               ))}
             </div>
           ) : insights.length === 0 ? (
-            <Card className="border">
-              <CardContent className="py-16 text-center">
-                <Lightbulb className="h-8 w-8 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-sm font-medium text-foreground">No insights generated yet</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Import newsletters or ads first, then click "Generate Insights"
+            <Card className="border-dashed border-2 bg-accent/20">
+              <CardContent className="py-12 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mx-auto mb-4">
+                  <Lightbulb className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="text-base font-semibold text-foreground mb-1">No insights yet</h2>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-1">
+                  AI insights are generated from your newsletter and ad data.
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 h-8 text-xs"
-                  onClick={() => generateInsights(categoryFilter)}
-                  disabled={generating}
-                >
-                  {generating ? "Analyzing…" : "Generate Now"}
-                </Button>
+                <p className="text-xs text-muted-foreground/70 mb-5">
+                  Import some newsletters first, then generate insights to discover what your competitors are doing.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => generateInsights(categoryFilter)}
+                    disabled={generating}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {generating ? "Analyzing…" : "Generate Insights"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (
