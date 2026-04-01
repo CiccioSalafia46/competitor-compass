@@ -8,6 +8,11 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import AppLayout from "./components/AppLayout";
+import { AdminGuard } from "@/components/admin/AdminGuard";
+
+function AdminGuardWrapper({ children }: { children: React.ReactNode }) {
+  return <AdminGuard>{children}</AdminGuard>;
+}
 
 // Eagerly loaded (always needed on first paint)
 import Index from "./pages/Index";
@@ -38,6 +43,14 @@ const Alerts = lazy(() => import("./pages/Alerts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+
+// Admin pages
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminWorkspaces = lazy(() => import("./pages/admin/AdminWorkspaces"));
+const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
+const AdminIntegrations = lazy(() => import("./pages/admin/AdminIntegrations"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,6 +112,14 @@ const App = () => (
                     <Route path="/settings/usage" element={<UsageDashboard />} />
                     <Route path="/settings/billing" element={<Billing />} />
                     <Route path="/billing" element={<Billing />} />
+                  </Route>
+                  {/* Admin Panel — isolated from main app layout */}
+                  <Route path="/admin" element={<AdminGuardWrapper><AdminLayout /></AdminGuardWrapper>}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="workspaces" element={<AdminWorkspaces />} />
+                    <Route path="logs" element={<AdminLogs />} />
+                    <Route path="integrations" element={<AdminIntegrations />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
