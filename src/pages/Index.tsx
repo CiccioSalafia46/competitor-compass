@@ -34,7 +34,8 @@ export default function Index() {
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
             <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <DarkModeToggle />
             {user ? (
               <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => navigate("/dashboard")}>
                 Dashboard <ArrowRight className="h-3 w-3" />
