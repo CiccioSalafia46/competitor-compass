@@ -23,7 +23,9 @@ export default function Newsletters() {
       .select("*")
       .eq("workspace_id", currentWorkspace.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
+      .limit(200)
+      .then(({ data, error }) => {
+        if (error) console.error("Newsletter entries fetch error:", error);
         setEntries(data || []);
         setLoading(false);
       });
