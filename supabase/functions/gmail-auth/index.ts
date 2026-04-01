@@ -205,7 +205,25 @@ serve(async (req) => {
       }
 
       if (action === "disconnect") {
-        const { connectionId, workspaceId, userId } = body;
+        // Verify the caller is authenticated
+        const disconnectAuthHeader = req.headers.get("Authorization");
+        if (!disconnectAuthHeader?.startsWith("Bearer ")) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        const { data: disconnectUser, error: disconnectErr } = await supabase.auth.getUser(disconnectAuthHeader.replace("Bearer ", ""));
+        if (disconnectErr || !disconnectUser.user) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const { connectionId } = body;
+        const workspaceId = body.workspaceId;
+        const userId = disconnectUser.user.id;
         if (!connectionId) {
           return new Response(
             JSON.stringify({ error: "connectionId is required" }),

@@ -182,6 +182,28 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const clientId = Deno.env.get("GOOGLE_CLIENT_ID")!;
+    const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Auth: verify the caller is authenticated
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { connectionId, fullSync, maxResults } = await req.json();
 
     if (!connectionId) {
@@ -190,12 +212,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const clientId = Deno.env.get("GOOGLE_CLIENT_ID")!;
-    const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get connection info
     const { data: connection, error: connErr } = await supabase
