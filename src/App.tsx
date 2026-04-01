@@ -52,6 +52,7 @@ const AdminWorkspaces = lazy(() => import("./pages/admin/AdminWorkspaces"));
 const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
 const AdminIntegrations = lazy(() => import("./pages/admin/AdminIntegrations"));
 const AdminIssues = lazy(() => import("./pages/admin/AdminIssues"));
+const AdminSecrets = lazy(() => import("./pages/admin/AdminSecrets"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
