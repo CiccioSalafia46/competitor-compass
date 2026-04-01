@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { memo, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
