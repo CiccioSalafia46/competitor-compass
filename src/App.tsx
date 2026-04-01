@@ -78,6 +78,8 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/redirect" element={<AuthRedirect />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
                   <Route element={<AppLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inbox" element={<NewsletterInbox />} />
