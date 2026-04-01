@@ -32,6 +32,7 @@ export default function Dashboard() {
   const { alerts, unreadCount } = useAlerts();
   const { insights } = useInsights();
   const { isConnected: gmailConnected } = useGmailConnection();
+  const { isAtLimit } = useUsage();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({
