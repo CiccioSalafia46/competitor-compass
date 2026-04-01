@@ -209,7 +209,12 @@ export default function Competitors() {
         </div>
       )}
 
-      {/* Delete confirmation */}
+      {/* Upgrade prompt when near/at limit */}
+      {isAtLimit("competitors") && (
+        <UpgradePrompt reason="competitor_limit" variant="inline" />
+      )}
+
+
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
