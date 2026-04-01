@@ -99,7 +99,7 @@ const UpgradePrompt = memo(function UpgradePrompt({
         </div>
         <h3 className="text-sm font-semibold text-foreground mb-1">{config.title}</h3>
         <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-4">{displayDesc}</p>
-        <Button size="sm" className="gap-1.5" onClick={() => navigate("/billing")}>
+        <Button size="sm" className="gap-1.5" onClick={() => navigate("/settings/billing")}>
           Upgrade to {suggestedPlan} <ArrowRight className="h-3 w-3" />
         </Button>
         <p className="text-[10px] text-muted-foreground mt-2">

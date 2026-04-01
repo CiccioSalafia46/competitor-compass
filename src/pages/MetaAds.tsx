@@ -90,7 +90,7 @@ export default function MetaAdsPage() {
                 </span>
               ))}
             </div>
-            <Button className="gap-2" onClick={() => navigate("/billing")}>
+            <Button className="gap-2" onClick={() => navigate("/settings/billing")}>
               <Zap className="h-4 w-4" /> Upgrade to Premium
               <ArrowRight className="h-4 w-4" />
             </Button>
