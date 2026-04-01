@@ -60,6 +60,9 @@ const App = () => (
                 <Route path="/competitors" element={<Competitors />} />
                 <Route path="/meta-ads" element={<MetaAds />} />
                 <Route path="/meta-ads/compare" element={<MetaAdsCompare />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/alerts" element={<Alerts />} />
                 <Route path="/analyses/:id" element={<AnalysisView />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/settings/team" element={<TeamManagement />} />
