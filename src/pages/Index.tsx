@@ -320,7 +320,7 @@ export default function Index() {
 }
 
 /* ─── Pricing Card ─── */
-const PricingCard = memo(function PricingCard({
+function PricingCard({
   name, price, period, desc, features, cta, onCta, highlighted,
 }: {
   name: string; price: string; period: string; desc: string;
