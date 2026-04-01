@@ -155,7 +155,7 @@ export default function Analytics() {
         )}
 
         {data.categoryDistribution.length > 0 && (
-          <ChartCard title="Product Categories" description="From newsletter extraction">
+          <ChartCard title="Product Categories" description="From competitor analysis">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.categoryDistribution.slice(0, 6)} barSize={14}>
