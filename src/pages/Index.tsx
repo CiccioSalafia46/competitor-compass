@@ -58,7 +58,7 @@ export default function Index() {
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-20 sm:pb-28 relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20 relative">
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="outline" className="mb-6 gap-1.5 px-3 py-1.5 text-xs font-normal border-primary/30 text-primary">
               <Sparkles className="h-3 w-3" /> AI-Powered Competitor Intelligence
@@ -117,8 +117,8 @@ export default function Index() {
       </section>
 
       {/* ─── Problem ─── */}
-      <section id="why" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-        <div className="text-center mb-14">
+      <section id="why" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+        <div className="text-center mb-10">
           <Badge variant="outline" className="mb-4 text-[10px] border-destructive/30 text-destructive font-normal">The problem</Badge>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
             Your competitors are moving fast.<br className="hidden sm:block" />
@@ -178,8 +178,8 @@ export default function Index() {
 
       {/* ─── How It Works ─── */}
       <section id="how" className="bg-accent/30 border-y">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-          <div className="text-center mb-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+          <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4 text-[10px] font-normal">How it works</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               From setup to competitive advantage in minutes
@@ -216,8 +216,8 @@ export default function Index() {
       </section>
 
       {/* ─── Platform Features ─── */}
-      <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-        <div className="text-center mb-16">
+      <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+        <div className="text-center mb-12">
           <Badge variant="outline" className="mb-4 text-[10px] font-normal">Platform</Badge>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             Everything you need to outsmart the competition
@@ -227,7 +227,7 @@ export default function Index() {
           </p>
         </div>
 
-        <div className="space-y-20">
+        <div className="space-y-14">
           {/* Feature 1 */}
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
@@ -347,7 +347,7 @@ export default function Index() {
         </div>
 
         {/* Secondary features grid */}
-        <div className="mt-20 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { icon: LineChart, title: "Analytics Dashboard", desc: "Visualize campaign frequency, promotion patterns, and competitor strategy shifts over time." },
             { icon: Users, title: "Team Collaboration", desc: "Invite your team with Admin, Analyst, or Viewer roles. Full audit trail on every action." },
@@ -372,8 +372,8 @@ export default function Index() {
 
       {/* ─── Social Proof ─── */}
       <section className="border-y bg-accent/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-          <div className="text-center mb-14">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+          <div className="text-center mb-10">
             <Badge variant="outline" className="mb-4 text-[10px] font-normal">What teams are saying</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               Built for teams that compete on intelligence
@@ -415,9 +415,9 @@ export default function Index() {
       </section>
 
       {/* ─── Pricing ─── */}
-      <section id="pricing" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-        <div className="text-center mb-14">
-          <Badge variant="outline" className="mb-4 text-[10px] font-normal">Pricing</Badge>
+      <section id="pricing" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+        <div className="text-center mb-10">
+          <Badge variant="outline" className="mb-3 text-[10px] font-normal">Pricing</Badge>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             Start free. Scale as your intelligence needs grow.
           </h2>
@@ -488,9 +488,9 @@ export default function Index() {
 
       {/* ─── FAQ ─── */}
       <section id="faq" className="bg-accent/20 border-y">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-          <div className="text-center mb-14">
-            <Badge variant="outline" className="mb-4 text-[10px] font-normal">FAQ</Badge>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+          <div className="text-center mb-10">
+            <Badge variant="outline" className="mb-3 text-[10px] font-normal">FAQ</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               Common questions
             </h2>
@@ -523,7 +523,7 @@ export default function Index() {
       {/* ─── Final CTA ─── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-primary/[0.04] to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-24 sm:py-32 text-center relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center relative">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-4">
             Start tracking your competitors the smart way
           </h2>
@@ -583,8 +583,8 @@ export default function Index() {
           <div className="border-t mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-[11px] text-muted-foreground">© {new Date().getFullYear()} Tracklyze. All rights reserved.</p>
             <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-              <span>Privacy Policy</span>
-              <span>Terms of Service</span>
+              <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+              <a href="/terms" className="hover:text-foreground transition-colors">Terms of Service</a>
             </div>
           </div>
         </div>

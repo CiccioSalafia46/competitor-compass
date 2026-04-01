@@ -36,6 +36,8 @@ const Insights = lazy(() => import("./pages/Insights"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Alerts = lazy(() => import("./pages/Alerts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +78,8 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/redirect" element={<AuthRedirect />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
                   <Route element={<AppLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inbox" element={<NewsletterInbox />} />
