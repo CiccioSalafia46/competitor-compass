@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useAlerts } from "@/hooks/useAlerts";
 import { useInsights } from "@/hooks/useInsights";
