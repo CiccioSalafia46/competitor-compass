@@ -78,7 +78,7 @@ export const AppSidebar = memo(function AppSidebar() {
   );
 
   const renderNavGroup = useCallback(
-    (items: typeof coreNav, label: string) => {
+    (items: { label: string; icon: any; path: string; matchPrefix: string; show: boolean; badge?: string }[], label: string) => {
       const filtered = items.filter((i) => i.show);
       if (filtered.length === 0) return null;
       return (
@@ -106,7 +106,16 @@ export const AppSidebar = memo(function AppSidebar() {
                       )}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.label}</span>}
+                      {!collapsed && (
+                        <span className="flex-1 flex items-center justify-between">
+                          {item.label}
+                          {item.badge && (
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 font-normal ml-1">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
