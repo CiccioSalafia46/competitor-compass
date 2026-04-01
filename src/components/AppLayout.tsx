@@ -1,12 +1,15 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AppSidebar } from "@/components/AppSidebar";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { useAlerts } from "@/hooks/useAlerts";
 import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { memo, useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
@@ -32,7 +35,9 @@ export default function AppLayout() {
           <TopBar />
           <SidebarInset className="flex-1">
             <main className="flex-1 overflow-auto scrollbar-thin">
-              <Outlet />
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
             </main>
           </SidebarInset>
         </div>
@@ -41,9 +46,30 @@ export default function AppLayout() {
   );
 }
 
-function TopBar() {
+// Memoized TopBar to avoid re-renders on every child route change
+const TopBar = memo(function TopBar() {
   const navigate = useNavigate();
-  const { unreadCount } = useAlerts();
+  const { currentWorkspace } = useWorkspace();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Lightweight unread count query — only counts, no full data fetch
+  const fetchUnread = useCallback(async () => {
+    if (!currentWorkspace) return;
+    const { count } = await supabase
+      .from("alerts")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", currentWorkspace.id)
+      .eq("is_read", false)
+      .eq("is_dismissed", false);
+    setUnreadCount(count || 0);
+  }, [currentWorkspace]);
+
+  useEffect(() => {
+    fetchUnread();
+    // Poll every 60s instead of re-fetching on every render
+    const interval = setInterval(fetchUnread, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchUnread]);
 
   return (
     <header className="h-12 flex items-center justify-between border-b bg-card px-3 shrink-0">
@@ -65,4 +91,4 @@ function TopBar() {
       </div>
     </header>
   );
-}
+});
