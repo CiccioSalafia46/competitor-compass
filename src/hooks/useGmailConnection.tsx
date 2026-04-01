@@ -44,12 +44,11 @@ export function useGmailConnection() {
   }, [fetchConnection]);
 
   const connect = async () => {
-    if (!currentWorkspace || !user) return;
+    if (!currentWorkspace) return;
     const { data, error } = await supabase.functions.invoke("gmail-auth", {
       body: {
         action: "initiate",
         workspaceId: currentWorkspace.id,
-        userId: user.id,
         redirectUrl: window.location.origin + "/settings",
       },
     });
