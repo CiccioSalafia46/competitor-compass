@@ -173,7 +173,7 @@ export const AppSidebar = memo(function AppSidebar() {
               onClick={() => navigate("/newsletters/new")}
             >
               <Plus className="h-3 w-3" />
-              Add newsletter
+              Import data
             </Button>
           </div>
         )}
