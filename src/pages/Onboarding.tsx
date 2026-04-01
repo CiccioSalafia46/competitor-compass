@@ -1,6 +1,21 @@
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/hooks/useWorkspace";
+
+export default function Onboarding() {
+  const { user, loading: authLoading } = useAuth();
+
+  // Protect: redirect unauthenticated users
+  if (!authLoading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <OnboardingContent />;
+}
+
+// Separate component to avoid hook rules issues with early return
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { BarChart3 } from "lucide-react";
 
-export default function Onboarding() {
+function OnboardingContent() {
   const [workspaceName, setWorkspaceName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const { createWorkspace } = useWorkspace();

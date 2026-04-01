@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
 type Analysis = Database["public"]["Tables"]["analyses"]["Row"];
 
@@ -82,6 +82,15 @@ export default function AnalysisView() {
 
   const result = analysis.result as unknown as AnalysisResult | null;
 
+  const confidenceLabel = (conf: string) => {
+    switch (conf) {
+      case "high": return "Observed / directly stated";
+      case "medium": return "Derived / reasonably inferred";
+      case "low": return "Estimated / speculative";
+      default: return conf;
+    }
+  };
+
   return (
     <div className="p-6 lg:p-8 max-w-3xl animate-fade-in">
       <button
@@ -95,9 +104,9 @@ export default function AnalysisView() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground capitalize">
-            {analysis.analysis_type.replace("_", " ")} Analysis
+            {analysis.analysis_type.replace(/_/g, " ")} Analysis
           </h1>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge variant={
               analysis.status === "completed" ? "default" :
               analysis.status === "failed" ? "destructive" :
@@ -106,12 +115,19 @@ export default function AnalysisView() {
               {analysis.status}
             </Badge>
             {analysis.confidence && (
-              <Badge variant="outline" className="capitalize">{analysis.confidence} confidence</Badge>
+              <Badge variant="outline" className="capitalize" title={confidenceLabel(analysis.confidence)}>
+                {analysis.confidence} confidence
+              </Badge>
             )}
             {analysis.model_used && (
               <span className="text-xs text-muted-foreground">Model: {analysis.model_used}</span>
             )}
           </div>
+          {analysis.confidence && (
+            <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-wider">
+              {confidenceLabel(analysis.confidence)}
+            </p>
+          )}
         </div>
         {analysis.status === "failed" && (
           <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2">

@@ -24,19 +24,18 @@ export default function Dashboard() {
     if (!currentWorkspace) return;
     const fetchStats = async () => {
       setLoading(true);
-      const [newsletters, competitors, analyses] = await Promise.all([
+      const [newsletters, competitors, totalAnalyses, completedAnalyses] = await Promise.all([
         supabase.from("newsletter_entries").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
         supabase.from("competitors").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
-        supabase.from("analyses").select("id, status", { count: "exact" }).eq("workspace_id", currentWorkspace.id),
+        supabase.from("analyses").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
+        supabase.from("analyses").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id).eq("status", "completed"),
       ]);
-
-      const completedCount = analyses.data?.filter((a) => a.status === "completed").length || 0;
 
       setStats({
         newsletters: newsletters.count || 0,
         competitors: competitors.count || 0,
-        analyses: analyses.count || 0,
-        completedAnalyses: completedCount,
+        analyses: totalAnalyses.count || 0,
+        completedAnalyses: completedAnalyses.count || 0,
       });
 
       const { data: recent } = await supabase
@@ -70,10 +69,10 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    { label: "Newsletters", value: stats.newsletters, icon: Newspaper, color: "text-primary" },
-    { label: "Competitors", value: stats.competitors, icon: Users, color: "text-accent-foreground" },
-    { label: "Analyses", value: stats.analyses, icon: BarChart3, color: "text-success" },
-    { label: "Completed", value: stats.completedAnalyses, icon: TrendingUp, color: "text-warning" },
+    { label: "Newsletters", value: stats.newsletters, icon: Newspaper, color: "text-primary", type: "Observed" as const },
+    { label: "Competitors", value: stats.competitors, icon: Users, color: "text-accent-foreground", type: "Observed" as const },
+    { label: "Total Analyses", value: stats.analyses, icon: BarChart3, color: "text-success", type: "Observed" as const },
+    { label: "Completed", value: stats.completedAnalyses, icon: TrendingUp, color: "text-warning", type: "Observed" as const },
   ];
 
   return (
@@ -94,6 +93,7 @@ export default function Dashboard() {
                 </div>
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </div>
+              <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-wider">{stat.type}</p>
             </CardContent>
           </Card>
         ))}
@@ -124,7 +124,9 @@ export default function Dashboard() {
                     onClick={() => navigate(`/analyses/${analysis.id}`)}
                   >
                     <div>
-                      <p className="text-sm font-medium capitalize">{analysis.analysis_type.replace("_", " ")}</p>
+                      <p className="text-sm font-medium capitalize">
+                        {analysis.analysis_type.replace(/_/g, " ")}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {analysis.completed_at ? new Date(analysis.completed_at).toLocaleDateString() : "—"}
                       </p>

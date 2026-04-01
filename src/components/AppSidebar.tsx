@@ -17,10 +17,10 @@ import { BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut, Plus } 
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Newsletters", icon: Newspaper, path: "/newsletters" },
-  { label: "Competitors", icon: Users, path: "/competitors" },
-  { label: "Settings", icon: Settings, path: "/settings" },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard" },
+  { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters" },
+  { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors" },
+  { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings" },
 ];
 
 export function AppSidebar() {
@@ -32,6 +32,10 @@ export function AppSidebar() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const isActive = (matchPrefix: string) => {
+    return location.pathname === matchPrefix || location.pathname.startsWith(matchPrefix + "/");
   };
 
   return (
@@ -75,7 +79,7 @@ export function AppSidebar() {
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
-                    isActive={location.pathname === item.path}
+                    isActive={isActive(item.matchPrefix)}
                     onClick={() => navigate(item.path)}
                     className="gap-2"
                   >
