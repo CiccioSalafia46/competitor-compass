@@ -534,8 +534,8 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
           },
           {
             icon: Newspaper,
-            title: "Paste a newsletter",
-            desc: "Manually paste newsletter HTML or text for immediate analysis",
+            title: "Paste competitor content",
+            desc: "Manually paste competitor email or campaign content for immediate analysis",
             action: () => navigate("/newsletters/new"),
             label: "Add newsletter",
             disabled: false,
