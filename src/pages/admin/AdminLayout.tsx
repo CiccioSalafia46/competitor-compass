@@ -9,6 +9,7 @@ import {
   Shield,
   ArrowLeft,
   AlertTriangle,
+  KeyRound,
 } from "lucide-react";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/admin/issues", icon: AlertTriangle, label: "Issues" },
   { to: "/admin/logs", icon: ScrollText, label: "Audit Logs" },
   { to: "/admin/integrations", icon: Plug, label: "Integrations" },
+  { to: "/admin/secrets", icon: KeyRound, label: "Secrets & Config" },
 ];
 
 export default function AdminLayout() {
