@@ -110,7 +110,7 @@ export default function NewsletterInbox() {
           <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">Demo Mode</p>
-            <p className="text-xs text-muted-foreground">Sample newsletters for preview. Connect Gmail to import real data.</p>
+            <p className="text-xs text-muted-foreground">Sample data for preview. Connect Gmail to import real competitor activity.</p>
           </div>
           <Badge variant="outline" className="shrink-0 text-[10px]">Sample</Badge>
         </div>
