@@ -109,11 +109,11 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
         <div>
           <h1 className="text-xl font-semibold text-foreground tracking-tight">{currentWorkspace.name}</h1>
-          <p className="text-sm text-muted-foreground">Intelligence command center</p>
+          <p className="text-sm text-muted-foreground">Competitor intelligence command center</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/newsletters/new")}>
-            <Plus className="h-3 w-3" /> Add newsletter
+            <Plus className="h-3 w-3" /> Import data
           </Button>
           <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/insights")}>
             <Sparkles className="h-3 w-3" /> Generate insights
@@ -126,7 +126,7 @@ export default function Dashboard() {
 
       {/* ─── KPI Strip ─── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        <KpiCard icon={Newspaper} label="Newsletter Inbox" value={stats.inboxItems} href="/inbox" sublabel="Observed" />
+        <KpiCard icon={Newspaper} label="Competitor Inbox" value={stats.inboxItems} href="/inbox" sublabel="Observed" />
         <KpiCard icon={Users} label="Competitors" value={stats.competitors} href="/competitors" sublabel="Tracked" />
         <KpiCard icon={BarChart3} label="Analyses" value={stats.completedAnalyses} href="/analytics" sublabel="Completed" />
         <KpiCard icon={Megaphone} label="Meta Ads" value={stats.metaAds} href="/meta-ads" sublabel={`${stats.activeAds} active`} />
@@ -141,7 +141,7 @@ export default function Dashboard() {
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mx-auto mb-4">
               <Zap className="h-6 w-6 text-primary" />
             </div>
-            <h2 className="text-base font-semibold text-foreground mb-1">Get started with your intelligence</h2>
+            <h2 className="text-base font-semibold text-foreground mb-1">Get started with competitor intelligence</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
               Connect your data sources and add competitors to unlock automated competitive intelligence.
             </p>
@@ -157,7 +157,7 @@ export default function Dashboard() {
                 </Button>
               )}
               <Button size="sm" className="gap-1.5" onClick={() => navigate("/newsletters/new")}>
-                <Newspaper className="h-3.5 w-3.5" /> Import newsletter
+                <Newspaper className="h-3.5 w-3.5" /> Import competitor data
               </Button>
             </div>
           </CardContent>
@@ -274,7 +274,7 @@ export default function Dashboard() {
             <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium flex items-center gap-1.5">
                 <Activity className="h-3.5 w-3.5" />
-                Recent Newsletters
+                Recent Competitor Activity
                 <MetricBadge label="Observed" />
               </CardTitle>
               <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => navigate("/inbox")}>
@@ -285,8 +285,8 @@ export default function Dashboard() {
               {recentInbox.length === 0 ? (
                 <EmptySection
                   icon={Newspaper}
-                  title="No newsletters yet"
-                  desc={gmailConnected ? "Newsletters will appear after your next Gmail sync" : "Connect Gmail or paste newsletters to start tracking"}
+                  title="No competitor activity yet"
+                  desc={gmailConnected ? "Activity will appear after your next sync" : "Connect data sources or import competitor data to start tracking"}
                   action={gmailConnected ? undefined : { label: "Connect Gmail", onClick: () => navigate("/settings") }}
                 />
               ) : (
@@ -335,7 +335,7 @@ export default function Dashboard() {
                 <EmptySection
                   icon={Users}
                   title="No competitors yet"
-                  desc="Add competitors to start tracking their newsletter and ad activity"
+                  desc="Add competitors to start tracking their campaigns and activity"
                   action={{ label: "Add competitor", onClick: () => navigate("/competitors") }}
                 />
               ) : (
@@ -381,7 +381,7 @@ export default function Dashboard() {
       {/* ─── Quick Actions ─── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[
-          { icon: Newspaper, label: "Add Newsletter", desc: "Paste or import", path: "/newsletters/new" },
+          { icon: Newspaper, label: "Import Data", desc: "Paste or import", path: "/newsletters/new" },
           { icon: Users, label: "Competitors", desc: "Add or manage", path: "/competitors" },
           { icon: TrendingUp, label: "Analytics", desc: "Trends & patterns", path: "/analytics" },
           { icon: Megaphone, label: "Meta Ads", desc: "Ad intelligence", path: "/meta-ads" },

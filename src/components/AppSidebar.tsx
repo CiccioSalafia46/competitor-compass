@@ -51,7 +51,7 @@ export const AppSidebar = memo(function AppSidebar() {
     () => [
       { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
       { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
-      { label: "Newsletters", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
+      { label: "Data Sources", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
       { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
     ],
     [isAnalyst]
@@ -136,7 +136,7 @@ export const AppSidebar = memo(function AppSidebar() {
             <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="text-sm font-semibold text-foreground tracking-tight">Newsletter Intel</span>
+            <span className="text-sm font-semibold text-foreground tracking-tight">Tracklyze</span>
           )}
         </div>
       </SidebarHeader>
@@ -173,7 +173,7 @@ export const AppSidebar = memo(function AppSidebar() {
               onClick={() => navigate("/newsletters/new")}
             >
               <Plus className="h-3 w-3" />
-              Add newsletter
+              Import data
             </Button>
           </div>
         )}

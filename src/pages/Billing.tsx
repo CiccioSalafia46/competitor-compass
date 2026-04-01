@@ -28,7 +28,7 @@ const PLAN_VALUE_BUCKETS: Record<PlanTier, {
       {
         name: "Data Access",
         icon: Newspaper,
-        features: ["200 newsletters/mo", "Manual import only", "30-day history"],
+        features: ["200 data imports/mo", "Manual import only", "30-day history"],
       },
       {
         name: "Intelligence",
@@ -54,7 +54,7 @@ const PLAN_VALUE_BUCKETS: Record<PlanTier, {
       {
         name: "Data Access",
         icon: Newspaper,
-        features: ["2,000 newsletters/mo", "Gmail auto-import", "Full history"],
+        features: ["2,000 data imports/mo", "Gmail auto-import", "Full history"],
       },
       {
         name: "Intelligence",
@@ -85,7 +85,7 @@ const PLAN_VALUE_BUCKETS: Record<PlanTier, {
       {
         name: "Data Access",
         icon: Newspaper,
-        features: ["20,000 newsletters/mo", "Priority processing", "Unlimited history"],
+        features: ["20,000 data imports/mo", "Priority processing", "Unlimited history"],
       },
       {
         name: "Intelligence",
@@ -124,15 +124,15 @@ const PLAN_PRICES: Record<PlanTier, { amount: string; period: string; annual?: s
 
 /** Feature comparison rows for the comparison table */
 const COMPARISON_ROWS: { label: string; free: string; starter: string; premium: string; category: string }[] = [
-  { category: "Data", label: "Newsletters/month", free: "200", starter: "2,000", premium: "20,000" },
-  { category: "Data", label: "Newsletter import", free: "Manual", starter: "Gmail auto-sync", premium: "Gmail + priority" },
+  { category: "Data", label: "Data imports/month", free: "200", starter: "2,000", premium: "20,000" },
+  { category: "Data", label: "Import method", free: "Manual", starter: "Gmail auto-sync", premium: "Gmail + priority" },
   { category: "Intelligence", label: "AI analyses/month", free: "50", starter: "500", premium: "5,000" },
   { category: "Intelligence", label: "Strategic insights", free: "—", starter: "✓", premium: "Advanced" },
   { category: "Intelligence", label: "Trend detection", free: "—", starter: "—", premium: "✓" },
   { category: "Monitoring", label: "Competitors", free: "3", starter: "10", premium: "Unlimited" },
   { category: "Monitoring", label: "Custom alerts", free: "—", starter: "✓", premium: "✓" },
   { category: "Monitoring", label: "Slack/webhooks", free: "—", starter: "—", premium: "✓" },
-  { category: "Ads", label: "Meta Ads Intelligence", free: "—", starter: "—", premium: "Coming soon" },
+  { category: "Ads", label: "Ad Intelligence", free: "—", starter: "—", premium: "Coming soon" },
   { category: "Team", label: "User seats", free: "1", starter: "3", premium: "10" },
   { category: "Team", label: "Role-based access", free: "—", starter: "✓", premium: "✓" },
   { category: "Reports", label: "Scheduled reports", free: "—", starter: "Weekly", premium: "Branded + daily" },
@@ -212,7 +212,7 @@ export default function Billing() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: "Competitors", used: usage.competitors, limit: limits.competitors, key: "competitors" as const },
-              { label: "Newsletters", used: usage.newsletters_this_month, limit: limits.newsletters_per_month, key: "newsletters_this_month" as const },
+              { label: "Data Imports", used: usage.newsletters_this_month, limit: limits.newsletters_per_month, key: "newsletters_this_month" as const },
               { label: "AI Analyses", used: usage.analyses_this_month, limit: limits.analyses_per_month, key: "analyses_this_month" as const },
               { label: "Team Seats", used: usage.seats_used, limit: limits.seats, key: "seats_used" as const },
             ].map((m) => {

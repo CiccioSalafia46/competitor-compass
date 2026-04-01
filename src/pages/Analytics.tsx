@@ -67,7 +67,7 @@ export default function Analytics() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Analytics</h1>
-          <p className="page-description">Competitive activity trends from observed platform data</p>
+          <p className="page-description">Competitor activity trends and campaign intelligence</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export default function Analytics() {
           <CardContent className="py-16 text-center">
             <TrendingUp className="h-8 w-8 mx-auto text-muted-foreground/30 mb-3" />
             <p className="text-sm font-medium">Not enough data yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Import newsletters or track ads to see analytics.</p>
+            <p className="text-xs text-muted-foreground mt-1">Import competitor data or track campaigns to see analytics.</p>
           </CardContent>
         </Card>
       )}
@@ -84,7 +84,7 @@ export default function Analytics() {
       {/* Activity over time */}
       <div className="grid lg:grid-cols-2 gap-4">
         {hasNewsletters && (
-          <ChartCard title="Newsletter Volume" description="Weekly newsletter frequency">
+          <ChartCard title="Campaign Volume" description="Weekly competitor campaign frequency">
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.newslettersByWeek} barSize={16}>
@@ -92,7 +92,7 @@ export default function Analytics() {
                   <XAxis dataKey="week" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} name="Newsletters" />
+                  <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} name="Campaigns" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -118,7 +118,7 @@ export default function Analytics() {
 
       {/* Competitor comparison */}
       {data.competitorActivity.length > 0 && (
-        <ChartCard title="Competitor Activity" description="Newsletters vs ads by competitor">
+        <ChartCard title="Competitor Activity" description="Campaigns vs ads by competitor">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.competitorActivity} layout="vertical" barSize={12}>
@@ -127,7 +127,7 @@ export default function Analytics() {
                 <YAxis type="category" dataKey="competitor" tick={{ fontSize: 10 }} width={100} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
-                <Bar dataKey="newsletters" fill="hsl(var(--chart-1))" name="Newsletters" radius={[0, 3, 3, 0]} />
+                <Bar dataKey="newsletters" fill="hsl(var(--chart-1))" name="Campaigns" radius={[0, 3, 3, 0]} />
                 <Bar dataKey="ads" fill="hsl(var(--chart-3))" name="Ads" radius={[0, 3, 3, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -155,7 +155,7 @@ export default function Analytics() {
         )}
 
         {data.categoryDistribution.length > 0 && (
-          <ChartCard title="Product Categories" description="From newsletter extraction">
+          <ChartCard title="Product Categories" description="From competitor analysis">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.categoryDistribution.slice(0, 6)} barSize={14}>
@@ -171,7 +171,7 @@ export default function Analytics() {
         )}
 
         {data.campaignTypes.length > 0 && (
-          <ChartCard title="Campaign Types" description="Extracted classification">
+          <ChartCard title="Campaign Types" description="AI classification">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

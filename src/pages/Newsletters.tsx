@@ -41,12 +41,12 @@ export default function Newsletters() {
     <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Newsletters</h1>
-          <p className="text-sm text-muted-foreground mt-1">Collected competitor newsletters</p>
+          <h1 className="text-2xl font-semibold text-foreground">Data Sources</h1>
+          <p className="text-sm text-muted-foreground mt-1">Collected competitor communications</p>
         </div>
         <Button onClick={() => navigate("/newsletters/new")} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add newsletter
+          Import data
         </Button>
       </div>
 
@@ -54,13 +54,13 @@ export default function Newsletters() {
         <Card className="shadow-raised border">
           <CardContent className="py-12 text-center">
             <Newspaper className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-sm font-medium text-foreground">No newsletters yet</p>
+            <p className="text-sm font-medium text-foreground">No data imported yet</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Add your first competitor newsletter to start gathering intel
+              Import your first competitor communication to start gathering intel
             </p>
             <Button onClick={() => navigate("/newsletters/new")} className="mt-4 gap-2">
               <Plus className="h-4 w-4" />
-              Add newsletter
+              Import data
             </Button>
           </CardContent>
         </Card>

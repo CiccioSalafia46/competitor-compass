@@ -27,7 +27,7 @@ export default function Index() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <BarChart3 className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-foreground tracking-tight">Newsletter Intel</span>
+            <span className="font-semibold text-foreground tracking-tight">Tracklyze</span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#problem" className="hover:text-foreground transition-colors">Why</a>
@@ -60,16 +60,16 @@ export default function Index() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-16 sm:pb-20">
         <div className="max-w-3xl mx-auto text-center">
           <Badge variant="outline" className="mb-6 gap-1.5 px-3 py-1 text-xs font-normal">
-            <Sparkles className="h-3 w-3" /> AI-powered competitive intelligence for marketing teams
+            <Sparkles className="h-3 w-3" /> AI-powered competitor intelligence platform
           </Badge>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-foreground leading-[1.12]">
-            Know what your competitors
+            Track, analyze, and outsmart
             <br className="hidden sm:block" />
-            are doing <span className="text-primary">before they do it</span>
+            your competitors
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Automatically track competitor newsletters and ads. AI extracts pricing changes,
-            positioning shifts, and campaign strategies — so your team always stays one step ahead.
+            Monitor competitor campaigns, uncover strategic insights, and make smarter
+            marketing decisions — all powered by AI that works while you sleep.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button size="lg" className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-medium" onClick={() => navigate(cta)}>
@@ -83,7 +83,7 @@ export default function Index() {
           </div>
           {/* Trust bar */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-            {["Read-only Gmail access", "No credit card required", "Data encrypted at rest", "Cancel anytime"].map((t) => (
+            {["Read-only data access", "No credit card required", "Data encrypted at rest", "Cancel anytime"].map((t) => (
               <span key={t} className="flex items-center gap-1.5">
                 <Check className="h-3 w-3 text-primary" /> {t}
               </span>
@@ -124,9 +124,9 @@ export default function Index() {
         </div>
         <div className="grid sm:grid-cols-3 gap-5">
           {[
-            { icon: AlertTriangle, title: "Scattered across inboxes", desc: "Competitor newsletters sit unread in shared inboxes. There's no structure, no history, no searchable archive." },
-            { icon: Clock, title: "Hours of manual work", desc: "Someone has to read every email, compare it to last month, spot the differences. It doesn't scale." },
-            { icon: X, title: "Missed strategic signals", desc: "A pricing change, a new product launch, a shift in messaging — by the time you notice, you're reacting, not leading." },
+            { icon: AlertTriangle, title: "Intelligence is scattered", desc: "Competitor campaigns, emails, and promotions sit across inboxes and tools. There's no central view of what they're doing." },
+            { icon: Clock, title: "Manual tracking doesn't scale", desc: "Someone has to read every email, compare it to last month, spot the changes. It's a full-time job that nobody has time for." },
+            { icon: X, title: "You miss critical signals", desc: "A pricing change, a new campaign launch, a shift in messaging — by the time you notice, you're reacting instead of leading." },
           ].map((p) => (
             <div key={p.title} className="rounded-lg border border-destructive/20 bg-destructive/5 p-6">
               <p.icon className="h-5 w-5 text-destructive mb-3" />
@@ -145,13 +145,13 @@ export default function Index() {
             Focus on strategy, not data collection.
           </h2>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-8">
-            Newsletter Intel connects to your inbox, imports competitor emails automatically,
+            Tracklyze connects to your data sources, monitors competitor activity automatically,
             and uses AI to extract the signals that matter — pricing, promotions, positioning, campaign patterns.
           </p>
           <div className="grid sm:grid-cols-3 gap-5 max-w-3xl mx-auto">
             {[
-              { icon: Zap, title: "Automatic collection", desc: "Gmail integration imports and classifies competitor newsletters without manual effort." },
-              { icon: Brain, title: "AI-powered extraction", desc: "Advanced models extract pricing, offers, CTAs, and strategic themes from every email." },
+              { icon: Zap, title: "Automatic collection", desc: "Connect data sources and let Tracklyze import and classify competitor activity without manual effort." },
+              { icon: Brain, title: "AI-powered extraction", desc: "Advanced models extract pricing, offers, CTAs, and strategic themes from every piece of competitor communication." },
               { icon: Target, title: "Actionable insights", desc: "Get alerts on competitor moves and strategic recommendations your team can act on immediately." },
             ].map((s) => (
               <div key={s.title} className="rounded-lg border bg-primary/5 border-primary/20 p-6">
@@ -170,7 +170,7 @@ export default function Index() {
           <div className="text-center mb-14">
             <p className="text-xs font-medium text-primary uppercase tracking-widest mb-2">How It Works</p>
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
-              From inbox to intelligence in under 5 minutes
+              From setup to intelligence in under 5 minutes
             </h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
               No complex setup. No API keys. Just connect and start getting insights.
@@ -178,9 +178,9 @@ export default function Index() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { step: "1", icon: Mail, title: "Connect your Gmail", desc: "One-click OAuth. Read-only access. We never send, delete, or modify emails. Disconnect anytime." },
-              { step: "2", icon: Users, title: "Add your competitors", desc: "Enter competitor names and domains. We automatically match incoming newsletters to the right brands." },
-              { step: "3", icon: Sparkles, title: "AI extracts intelligence", desc: "Every newsletter is analyzed for pricing signals, promotional strategies, messaging angles, and CTAs." },
+              { step: "1", icon: Mail, title: "Connect your sources", desc: "One-click Gmail OAuth. Read-only access. We never send, delete, or modify data. Disconnect anytime." },
+              { step: "2", icon: Users, title: "Add your competitors", desc: "Enter competitor names and domains. Tracklyze automatically matches incoming data to the right brands." },
+              { step: "3", icon: Sparkles, title: "AI analyzes everything", desc: "Every competitor communication is analyzed for pricing signals, promotional strategies, messaging angles, and CTAs." },
               { step: "4", icon: Lightbulb, title: "Act on insights", desc: "View competitor dashboards, receive alerts on key changes, and use strategic insights to inform your decisions." },
             ].map((s, i) => (
               <div key={s.step} className="relative text-center">
@@ -221,13 +221,13 @@ export default function Index() {
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div>
               <Badge variant="outline" className="mb-3 text-[10px]">Data Collection</Badge>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Automated newsletter inbox</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Automated competitor monitoring</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                Connect Gmail with read-only access. We classify, organize, and archive every competitor
-                newsletter automatically. No more forwarding emails or copy-pasting content.
+                Connect your data sources and let Tracklyze classify, organize, and archive every competitor
+                communication automatically. No more manual tracking or missed campaigns.
               </p>
               <ul className="space-y-2">
-                {["Gmail OAuth — one-click connection", "Automatic sender classification", "Searchable archive with filters", "Read newsletters in a clean reader view"].map(f => (
+                {["Gmail OAuth — one-click connection", "Automatic competitor classification", "Searchable archive with filters", "Clean reader view for competitor content"].map(f => (
                   <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Check className="h-3.5 w-3.5 text-primary shrink-0" /> {f}
                   </li>
@@ -237,7 +237,7 @@ export default function Index() {
             <div className="rounded-xl border bg-accent/40 p-8 flex items-center justify-center min-h-[200px]">
               <div className="text-center">
                 <Mail className="h-12 w-12 text-primary/30 mx-auto mb-3" />
-                <p className="text-xs text-muted-foreground">Newsletter inbox preview</p>
+                <p className="text-xs text-muted-foreground">Competitor inbox preview</p>
               </div>
             </div>
           </div>
@@ -252,9 +252,9 @@ export default function Index() {
             </div>
             <div className="order-1 lg:order-2">
               <Badge variant="outline" className="mb-3 text-[10px]">Intelligence</Badge>
-              <h3 className="text-xl font-semibold text-foreground mb-2">AI-powered analysis</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">AI-powered campaign analysis</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                Every newsletter is analyzed by advanced AI models that extract structured intelligence —
+                Every competitor communication is analyzed by advanced AI models that extract structured intelligence —
                 pricing signals, promotion strategies, messaging angles, CTAs, and competitive positioning.
               </p>
               <ul className="space-y-2">
@@ -277,7 +277,7 @@ export default function Index() {
                 or shift messaging. AI synthesizes patterns into strategic recommendations.
               </p>
               <ul className="space-y-2">
-                {["Custom alert rules (price drops, keywords, new ads)", "AI-generated strategic insights", "Competitor activity dashboards", "Trend analysis over time"].map(f => (
+                {["Custom alert rules (price drops, keywords, new campaigns)", "AI-generated strategic insights", "Competitor activity dashboards", "Trend analysis over time"].map(f => (
                   <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Check className="h-3.5 w-3.5 text-primary shrink-0" /> {f}
                   </li>
@@ -296,9 +296,9 @@ export default function Index() {
         {/* Additional features grid */}
         <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: LineChart, title: "Analytics Dashboard", desc: "Visualize newsletter frequency, promotion patterns, and campaign types across all competitors." },
+            { icon: LineChart, title: "Analytics Dashboard", desc: "Visualize campaign frequency, promotion patterns, and competitor strategies across all tracked brands." },
             { icon: Users, title: "Team Workspaces", desc: "Invite your team with role-based access. Admin, Analyst, and Viewer roles with full audit trail." },
-            { icon: Eye, title: "Newsletter Reader", desc: "Read competitor emails in a clean, distraction-free view with AI intelligence displayed alongside." },
+            { icon: Eye, title: "Content Reader", desc: "Read competitor communications in a clean, distraction-free view with AI intelligence displayed alongside." },
             { icon: Megaphone, title: "Ad Intelligence", desc: "Track competitor ad creative and messaging from Meta's Ad Library. Coming soon to Premium.", tag: "Coming soon" },
           ].map((f) => (
             <Card key={f.title} className="border hover:shadow-sm transition-shadow">
@@ -329,8 +329,8 @@ export default function Index() {
           <div className="grid sm:grid-cols-3 gap-5">
             {[
               { title: "Marketing Teams", desc: "Monitor competitor messaging, campaign cadence, and promotional strategies to sharpen your own positioning and find gaps in the market.", icon: Megaphone, outcome: "→ React faster to competitor campaigns" },
-              { title: "Growth & Product Teams", desc: "Identify competitor pricing changes, new feature launches, and expansion signals before they impact your pipeline or market share.", icon: TrendingUp, outcome: "→ Spot pricing threats early" },
-              { title: "E-Commerce & DTC Brands", desc: "Track competitor promotions, discount patterns, seasonal strategies, and product focus areas to optimize your own calendar.", icon: Newspaper, outcome: "→ Never miss a competitor sale" },
+              { title: "Growth & Product Teams", desc: "Identify competitor pricing changes, new launches, and expansion signals before they impact your pipeline or market share.", icon: TrendingUp, outcome: "→ Spot pricing threats early" },
+              { title: "E-Commerce & DTC Brands", desc: "Track competitor promotions, discount patterns, seasonal strategies, and product focus areas to optimize your own calendar.", icon: Newspaper, outcome: "→ Never miss a competitor campaign" },
             ].map((uc) => (
               <Card key={uc.title} className="border">
                 <CardContent className="p-6">
@@ -387,8 +387,8 @@ export default function Index() {
               Simple pricing. Start free, grow as you scale.
             </h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-              Every plan includes core intelligence features. Upgrade when you need more volume,
-              deeper analysis, or team collaboration.
+              Every plan includes core intelligence features. Upgrade when you need more depth,
+              more competitors, or team collaboration.
             </p>
           </div>
           <div className="grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
@@ -396,14 +396,14 @@ export default function Index() {
               name="Free"
               price="$0"
               period="forever"
-              desc="For individuals exploring competitive intelligence"
+              desc="For individuals exploring competitor intelligence"
               features={[
                 "1 workspace",
                 "3 competitors",
-                "200 newsletters / month",
+                "200 data imports / month",
                 "50 AI analyses / month",
-                "Basic email alerts",
-                "Newsletter reader",
+                "Basic alerts",
+                "Content reader",
               ]}
               cta={ctaShort}
               onCta={() => navigate(cta)}
@@ -415,7 +415,7 @@ export default function Index() {
               desc="For teams actively monitoring competitors"
               features={[
                 "10 competitors",
-                "2,000 newsletters / month",
+                "2,000 data imports / month",
                 "500 AI analyses / month",
                 "Full AI extraction",
                 "Custom alert rules",
@@ -434,10 +434,10 @@ export default function Index() {
               desc="Full strategic intelligence platform"
               features={[
                 "Unlimited competitors",
-                "20,000 newsletters / month",
+                "20,000 data imports / month",
                 "5,000 AI analyses / month",
                 "Advanced AI insights",
-                "Meta Ads Intelligence ✦",
+                "Ad Intelligence ✦",
                 "Slack / webhook alerts",
                 "10 team seats",
                 "Priority support",
@@ -448,7 +448,7 @@ export default function Index() {
             />
           </div>
           <p className="text-center text-[10px] text-muted-foreground mt-5">
-            ✦ Meta Ads Intelligence — coming soon exclusively on Premium
+            ✦ Ad Intelligence — coming soon exclusively on Premium
           </p>
         </div>
       </section>
@@ -463,12 +463,12 @@ export default function Index() {
         </div>
         <div className="max-w-2xl mx-auto space-y-3">
           {[
-            { q: "Is my Gmail data safe?", a: "Yes. We request read-only access and never modify, delete, or send emails. All data is encrypted in transit and at rest. You can disconnect Gmail anytime from your settings." },
-            { q: "How does the AI analysis work?", a: "We use advanced language models to extract structured intelligence from newsletter content — including positioning, pricing signals, promotions, CTAs, and campaign patterns. Results include confidence scores so you know how reliable each insight is." },
-            { q: "Can I use this without connecting Gmail?", a: "Absolutely. You can manually paste newsletter content for analysis. Gmail integration just automates the import process." },
-            { q: "What makes this different from just reading competitor emails?", a: "Manual reading doesn't scale. Newsletter Intel automatically archives, classifies, and analyzes every email using AI. It detects pricing changes, tracks campaign patterns over time, and generates strategic insights your team can act on — things you'd miss reading one email at a time." },
+            { q: "Is my data safe?", a: "Yes. We request read-only access to your data sources and never modify, delete, or send anything on your behalf. All data is encrypted in transit and at rest. You can disconnect sources anytime from your settings." },
+            { q: "How does the AI analysis work?", a: "We use advanced language models to extract structured intelligence from competitor communications — including positioning, pricing signals, promotions, CTAs, and campaign patterns. Results include confidence scores so you know how reliable each insight is." },
+            { q: "Can I use Tracklyze without connecting Gmail?", a: "Absolutely. You can manually import competitor content for analysis. Gmail integration just automates the collection process." },
+            { q: "What makes this different from manually tracking competitors?", a: "Manual tracking doesn't scale. Tracklyze automatically collects, classifies, and analyzes every competitor communication using AI. It detects pricing changes, tracks campaign patterns over time, and generates strategic insights your team can act on — things you'd miss monitoring one piece at a time." },
             { q: "How accurate are the AI insights?", a: "Each insight includes a confidence score. Our AI models achieve high accuracy on structured data extraction (pricing, promotions, CTAs). Strategic insights are labeled as 'AI-derived' to distinguish from directly observed data." },
-            { q: "What is Meta Ads Intelligence?", a: "It's an upcoming Premium feature that will analyze competitor ad creative, messaging, and targeting from Meta's Ad Library. It's not yet active — we'll announce when it launches." },
+            { q: "What is Ad Intelligence?", a: "It's an upcoming Premium feature that will analyze competitor ad creative, messaging, and targeting from Meta's Ad Library. It's not yet active — we'll announce when it launches." },
             { q: "Can I invite my team?", a: "Yes. Starter plans include 3 seats and Premium includes 10 seats. You can assign Admin, Analyst, or Viewer roles with appropriate access levels." },
             { q: "Can I cancel anytime?", a: "Yes. All plans are month-to-month with no long-term commitment. Your data remains accessible until the end of your billing period." },
           ].map((faq, i) => (
@@ -492,7 +492,7 @@ export default function Index() {
             Stop guessing what your competitors are doing.
           </h2>
           <p className="text-base text-muted-foreground max-w-md mx-auto mb-8">
-            Start getting automated competitive intelligence today.
+            Start getting automated competitor intelligence today.
             Free plan available — no credit card required.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -519,10 +519,10 @@ export default function Index() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
                   <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
                 </div>
-                <span className="text-sm font-semibold text-foreground">Newsletter Intel</span>
+                <span className="text-sm font-semibold text-foreground">Tracklyze</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
-                AI-powered competitive intelligence platform. Track competitor newsletters and ads,
+                AI-powered competitor intelligence platform. Monitor competitor campaigns,
                 extract strategic insights, and stay ahead of market shifts.
               </p>
             </div>
@@ -550,7 +550,7 @@ export default function Index() {
           </div>
           <div className="border-t mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-[11px] text-muted-foreground">
-              © {new Date().getFullYear()} Newsletter Intel. All rights reserved.
+              © {new Date().getFullYear()} Tracklyze. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
               <span>Privacy Policy</span>

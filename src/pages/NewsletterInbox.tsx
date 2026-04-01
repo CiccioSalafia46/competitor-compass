@@ -84,9 +84,9 @@ export default function NewsletterInbox() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Newsletter Inbox</h1>
+          <h1 className="page-title">Competitor Inbox</h1>
           <p className="page-description">
-            {showDemo ? "Demo mode — connect Gmail to import real newsletters" : `${totalCount} newsletters`}
+            {showDemo ? "Demo mode — connect Gmail to import real competitor data" : `${totalCount} items tracked`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -110,7 +110,7 @@ export default function NewsletterInbox() {
           <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">Demo Mode</p>
-            <p className="text-xs text-muted-foreground">Sample newsletters for preview. Connect Gmail to import real data.</p>
+            <p className="text-xs text-muted-foreground">Sample data for preview. Connect Gmail to import real competitor activity.</p>
           </div>
           <Badge variant="outline" className="shrink-0 text-[10px]">Sample</Badge>
         </div>
@@ -169,9 +169,9 @@ export default function NewsletterInbox() {
         <Card className="border">
           <CardContent className="py-16 text-center">
             <InboxIcon className="h-8 w-8 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-foreground">No newsletters found</p>
+            <p className="text-sm font-medium text-foreground">No competitor activity found</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {isConnected ? "Try syncing or adjusting your filters" : "Connect Gmail to start importing"}
+              {isConnected ? "Try syncing or adjusting your filters" : "Connect Gmail to start importing competitor data"}
             </p>
           </CardContent>
         </Card>

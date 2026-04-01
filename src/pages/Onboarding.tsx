@@ -103,7 +103,7 @@ function OnboardingContent() {
               <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
                 <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
-              <span className="text-sm font-semibold text-foreground">Newsletter Intel</span>
+              <span className="text-sm font-semibold text-foreground">Tracklyze</span>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/dashboard")}>
               Skip setup →
@@ -198,8 +198,8 @@ function OnboardingContent() {
 
 function WelcomeStep({ onNext }: { onNext: () => void }) {
   const features = [
-    { icon: Newspaper, title: "Newsletter Intelligence", desc: "Import and analyze competitor newsletters automatically" },
-    { icon: Users, title: "Competitor Tracking", desc: "Monitor rivals' messaging, offers, and strategies" },
+    { icon: Newspaper, title: "Competitor Monitoring", desc: "Import and analyze competitor campaigns automatically" },
+    { icon: Users, title: "Competitive Tracking", desc: "Monitor rivals' messaging, offers, and strategies" },
     { icon: Lightbulb, title: "AI Insights", desc: "Get strategic recommendations from your competitive data" },
   ];
 
@@ -208,9 +208,9 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary mx-auto mb-4">
         <Sparkles className="h-6 w-6 text-primary-foreground" />
       </div>
-      <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Newsletter Intel</h1>
+      <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Tracklyze</h1>
       <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
-        Your competitive intelligence platform. We'll help you set up in just a few minutes.
+        Your competitor intelligence platform. We'll help you set up in just a few minutes.
       </p>
 
       <div className="grid gap-3 mb-8 text-left">
@@ -518,7 +518,7 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
         </div>
         <h2 className="text-xl font-semibold text-foreground">Import your first data</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Choose how to get competitive data into the platform
+          Choose how to get competitor data into the platform
         </p>
       </div>
 
@@ -527,17 +527,17 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
           {
             icon: Mail,
             title: "Gmail sync",
-            desc: "If you connected Gmail, newsletters will appear automatically in your inbox",
+            desc: "If you connected Gmail, competitor communications will appear automatically in your inbox",
             action: () => { onComplete(); },
             label: "Continue",
             disabled: false,
           },
           {
             icon: Newspaper,
-            title: "Paste a newsletter",
-            desc: "Manually paste newsletter HTML or text for immediate analysis",
+            title: "Paste competitor content",
+            desc: "Manually paste competitor email or campaign content for immediate analysis",
             action: () => navigate("/newsletters/new"),
-            label: "Add newsletter",
+            label: "Import data",
             disabled: false,
           },
         ].map((opt) => (
@@ -580,7 +580,7 @@ function InsightsStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: 
 
       <div className="grid gap-3 mb-6 text-left max-w-sm mx-auto">
         {[
-          { icon: Lightbulb, label: "AI insights generated from newsletter patterns" },
+          { icon: Lightbulb, label: "AI insights generated from competitor patterns" },
           { icon: BarChart3, label: "Analytics dashboards updated in real-time" },
           { icon: Users, label: "Competitor activity tracked continuously" },
         ].map((item) => (

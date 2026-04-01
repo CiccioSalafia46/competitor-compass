@@ -98,7 +98,7 @@ export default function Insights() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-5 animate-fade-in max-w-5xl">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Strategic Insights</h1>
+          <h1 className="page-title">Competitor Insights</h1>
           <p className="page-description">AI-generated competitive intelligence analysis</p>
         </div>
         <Button
@@ -147,10 +147,10 @@ export default function Insights() {
                 </div>
                 <h2 className="text-base font-semibold text-foreground mb-1">No insights yet</h2>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-1">
-                  AI insights are generated from your newsletter and ad data.
+                  AI insights are generated from your competitor tracking data.
                 </p>
                 <p className="text-xs text-muted-foreground/70 mb-5">
-                  Import some newsletters first, then generate insights to discover what your competitors are doing.
+                  Import some competitor data first, then generate insights to discover what your competitors are doing.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <Button
