@@ -381,7 +381,7 @@ export default function Dashboard() {
       {/* ─── Quick Actions ─── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[
-          { icon: Newspaper, label: "Add Newsletter", desc: "Paste or import", path: "/newsletters/new" },
+          { icon: Newspaper, label: "Import Data", desc: "Paste or import", path: "/newsletters/new" },
           { icon: Users, label: "Competitors", desc: "Add or manage", path: "/competitors" },
           { icon: TrendingUp, label: "Analytics", desc: "Trends & patterns", path: "/analytics" },
           { icon: Megaphone, label: "Meta Ads", desc: "Ad intelligence", path: "/meta-ads" },
