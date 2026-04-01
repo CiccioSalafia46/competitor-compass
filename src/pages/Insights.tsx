@@ -98,7 +98,7 @@ export default function Insights() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-5 animate-fade-in max-w-5xl">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Strategic Insights</h1>
+          <h1 className="page-title">Competitor Insights</h1>
           <p className="page-description">AI-generated competitive intelligence analysis</p>
         </div>
         <Button
