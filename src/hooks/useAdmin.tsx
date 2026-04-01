@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export function useAdminCheck() {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ export function useAdminCheck() {
   return { isAdmin, loading };
 }
 
-export function useAdminData(action: string) {
+export function useAdminData(action: string, extraBody?: Record<string, any>) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export function useAdminData(action: string) {
     setError(null);
     try {
       const { data: result, error: err } = await supabase.functions.invoke("admin-data", {
-        body: { action },
+        body: { action, ...extraBody },
       });
       if (err) throw err;
       if (result?.error) throw new Error(result.error);
@@ -48,11 +49,34 @@ export function useAdminData(action: string) {
     } finally {
       setLoading(false);
     }
-  }, [action]);
+  }, [action, JSON.stringify(extraBody)]);
 
   useEffect(() => {
     fetch();
   }, [fetch]);
 
   return { data, loading, error, refetch: fetch };
+}
+
+export function useAdminAction() {
+  const [acting, setActing] = useState(false);
+
+  const execute = useCallback(async (action: string, body: Record<string, any> = {}) => {
+    setActing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-data", {
+        body: { action, ...body },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    } catch (e: any) {
+      toast.error(e.message || "Action failed");
+      throw e;
+    } finally {
+      setActing(false);
+    }
+  }, []);
+
+  return { execute, acting };
 }
