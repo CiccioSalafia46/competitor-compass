@@ -285,8 +285,8 @@ export default function Dashboard() {
               {recentInbox.length === 0 ? (
                 <EmptySection
                   icon={Newspaper}
-                  title="No newsletters yet"
-                  desc={gmailConnected ? "Newsletters will appear after your next Gmail sync" : "Connect Gmail or paste newsletters to start tracking"}
+                  title="No competitor activity yet"
+                  desc={gmailConnected ? "Activity will appear after your next sync" : "Connect data sources or import competitor data to start tracking"}
                   action={gmailConnected ? undefined : { label: "Connect Gmail", onClick: () => navigate("/settings") }}
                 />
               ) : (
