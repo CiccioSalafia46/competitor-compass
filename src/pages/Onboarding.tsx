@@ -84,7 +84,9 @@ function OnboardingContent() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isCreating || !workspaceName.trim()}>
-                {isCreating ? "Creating..." : "Create workspace"}
+                {isCreating ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating...</>
+                ) : "Create workspace"}
               </Button>
             </form>
           </CardContent>
