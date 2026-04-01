@@ -108,6 +108,14 @@ const App = () => (
                     <Route path="/settings/billing" element={<Billing />} />
                     <Route path="/billing" element={<Billing />} />
                   </Route>
+                  {/* Admin Panel — isolated from main app layout */}
+                  <Route path="/admin" element={<AdminGuardWrapper><AdminLayout /></AdminGuardWrapper>}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="workspaces" element={<AdminWorkspaces />} />
+                    <Route path="logs" element={<AdminLogs />} />
+                    <Route path="integrations" element={<AdminIntegrations />} />
+                  </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
