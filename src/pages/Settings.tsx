@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { User, Building2, CreditCard, Shield } from "lucide-react";
+import GmailConnect from "@/components/GmailConnect";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -159,6 +160,9 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Gmail Integration */}
+      <GmailConnect />
     </div>
   );
 }

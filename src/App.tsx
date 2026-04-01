@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -23,6 +24,7 @@ import SettingsPage from "./pages/Settings";
 import TeamManagement from "./pages/TeamManagement";
 import UsageDashboard from "./pages/UsageDashboard";
 import AuthRedirect from "./components/AuthRedirect";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <WorkspaceProvider>
+          <SubscriptionProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -54,9 +57,11 @@ const App = () => (
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/settings/team" element={<TeamManagement />} />
                 <Route path="/settings/usage" element={<UsageDashboard />} />
+                <Route path="/settings/billing" element={<Billing />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+          </SubscriptionProvider>
           </WorkspaceProvider>
         </AuthProvider>
       </BrowserRouter>
