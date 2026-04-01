@@ -155,7 +155,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Newsletters</span>
+                <span className="text-muted-foreground">Data Imports</span>
                 <span>{usage.newsletters_this_month} / {limits.newsletters_per_month.toLocaleString()}</span>
               </div>
               <Progress value={getUsagePercent("newsletters_this_month")} className="h-1.5" />
