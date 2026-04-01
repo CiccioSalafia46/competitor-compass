@@ -9,9 +9,8 @@ const corsHeaders = {
 
 const META_AD_LIBRARY_API = "https://graph.facebook.com/v21.0/ads_archive";
 
-const logStep = (step: string, details?: any) => {
-  const d = details ? ` - ${JSON.stringify(details)}` : "";
-  console.log(`[FETCH-META-ADS] ${step}${d}`);
+const logStep = (step: string, details?: Record<string, any>) => {
+  console.log(JSON.stringify({ fn: "fetch-meta-ads", step, ts: new Date().toISOString(), ...(details || {}) }));
 };
 
 serve(async (req) => {
