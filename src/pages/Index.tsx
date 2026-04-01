@@ -227,7 +227,7 @@ export default function Index() {
           </p>
         </div>
 
-        <div className="space-y-20">
+        <div className="space-y-14">
           {/* Feature 1 */}
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
