@@ -194,10 +194,7 @@ export default function MetaAdsPage() {
           <Input
             placeholder="Search ad copy…"
             value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-              setFilters((f) => ({ ...f, search: e.target.value || undefined }));
-            }}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-8 h-8 text-sm"
           />
         </div>
