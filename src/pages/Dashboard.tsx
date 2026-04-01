@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 
 type Analysis = Database["public"]["Tables"]["analyses"]["Row"];
 
