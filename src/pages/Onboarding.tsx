@@ -208,9 +208,9 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary mx-auto mb-4">
         <Sparkles className="h-6 w-6 text-primary-foreground" />
       </div>
-      <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Newsletter Intel</h1>
+      <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Tracklyze</h1>
       <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
-        Your competitive intelligence platform. We'll help you set up in just a few minutes.
+        Your competitor intelligence platform. We'll help you set up in just a few minutes.
       </p>
 
       <div className="grid gap-3 mb-8 text-left">
