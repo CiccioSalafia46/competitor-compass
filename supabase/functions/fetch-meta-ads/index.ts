@@ -201,7 +201,7 @@ serve(async (req) => {
     const msg = err instanceof Error ? err.message : String(err);
     logStep("ERROR", { message: msg });
     return new Response(
-      JSON.stringify({ error: msg }),
+      JSON.stringify({ error: "An internal error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
