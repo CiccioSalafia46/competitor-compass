@@ -4,6 +4,7 @@ import {
   getDefaultRangeDays,
   getNextScheduledRun,
   isReportTemplateKey,
+  type CustomReportConfig,
   type GeneratedReportPayload,
   type ReportAnalyticsData,
   type ReportAnalyticsSummary,
@@ -157,6 +158,8 @@ function normalizeAnalytics(result: AnalyticsRpcResult, rangeDays: number): Repo
     discountDistribution: data.discountDistribution ?? [],
   };
 }
+
+export type { CustomReportConfig };
 
 export function validateReportTemplateKey(value: unknown): ReportTemplateKey {
   if (typeof value === "string" && isReportTemplateKey(value)) {
@@ -336,13 +339,14 @@ export async function generateReportRun(
     rangeDays?: number;
     createdBy?: string | null;
     scheduleId?: string | null;
+    customConfig?: CustomReportConfig;
   },
 ): Promise<ReportRunRecord> {
   const rangeDays = normalizeRangeDays(params.rangeDays, getDefaultRangeDays(params.templateKey));
 
   try {
     const context = await fetchReportContext(supabase, params.workspaceId, rangeDays);
-    const payload = buildReportPayload(context, params.templateKey);
+    const payload = buildReportPayload(context, params.templateKey, params.customConfig);
     return await insertReportRun(supabase, {
       workspaceId: params.workspaceId,
       createdBy: params.createdBy,

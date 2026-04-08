@@ -16,6 +16,7 @@ import {
   updateScheduleNextRun,
   validateReportTemplateKey,
   validateScheduleInput,
+  type CustomReportConfig,
 } from "../_shared/reports.ts";
 
 type ActionBody = {
@@ -25,6 +26,7 @@ type ActionBody = {
   rangeDays?: number;
   schedule?: Record<string, unknown>;
   scheduleId?: string;
+  customConfig?: Record<string, unknown>;
 };
 
 type ReportScheduleRow = {
@@ -131,6 +133,7 @@ serve(async (req) => {
         templateKey,
         rangeDays: body.rangeDays ?? getDefaultRangeDays(templateKey),
         createdBy: user.id,
+        customConfig: body.customConfig as CustomReportConfig | undefined,
       });
 
       return jsonResponse({ run });

@@ -4,6 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { getErrorMessage } from "@/lib/errors";
 import type {
+  CustomReportConfig,
   ReportRunRecord,
   ReportScheduleInput,
   ReportScheduleRecord,
@@ -70,7 +71,7 @@ export function useReports() {
   }, [fetchReports]);
 
   const generate = useCallback(
-    async (templateKey: ReportTemplateKey, rangeDays?: number) => {
+    async (templateKey: ReportTemplateKey, rangeDays?: number, customConfig?: CustomReportConfig) => {
       if (!currentWorkspace) {
         return null;
       }
@@ -83,6 +84,7 @@ export function useReports() {
             workspaceId: currentWorkspace.id,
             templateKey,
             rangeDays,
+            ...(customConfig ? { customConfig } : {}),
           },
         });
 

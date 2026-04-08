@@ -18,7 +18,37 @@ export const REPORT_TEMPLATES = {
     description: "Narrative, CTA, category, and positioning changes across the tracked competitor set.",
     defaultRangeDays: 30,
   },
+  custom_report: {
+    label: "Custom report",
+    description: "Build a bespoke briefing by choosing exactly which sections, competitors, and date range to include.",
+    defaultRangeDays: 30,
+  },
 } as const;
+
+/** Section identifiers available for custom report construction. */
+export const CUSTOM_REPORT_SECTION_LABELS = {
+  executive_summary: "Executive summary",
+  competitor_activity: "Competitor activity",
+  promo_behavior: "Promotion behavior",
+  messaging_evolution: "Messaging evolution",
+  category_focus: "Category & campaign focus",
+  insights: "Prioritized insights",
+  opportunities: "Strategic opportunities",
+  actions: "Recommended actions",
+} as const;
+
+export type CustomReportSection = keyof typeof CUSTOM_REPORT_SECTION_LABELS;
+
+/** User-supplied configuration for a custom report. */
+export type CustomReportConfig = {
+  /** Display name shown as the report title. */
+  title: string;
+  /** Ordered list of sections to include in the output. */
+  sections: CustomReportSection[];
+  /** Limit analysis to these competitor names. Empty = all competitors. */
+  competitorFilter: string[];
+  rangeDays: number;
+};
 
 export type ReportTemplateKey = keyof typeof REPORT_TEMPLATES;
 export type ReportFrequency = "daily" | "weekly";
@@ -105,6 +135,8 @@ export type GeneratedReportPayload = {
     trackedSignals: number;
     structuredInsights: number;
   };
+  /** Present only for custom_report runs. */
+  customConfig?: CustomReportConfig;
 };
 
 export type ReportScheduleRecord = {
@@ -703,6 +735,220 @@ function buildMessagingAnalysis(context: ReportBuilderContext): GeneratedReportP
   };
 }
 
+// ─── Custom report builder ────────────────────────────────────────────────────
+
+function buildCustomReport(context: ReportBuilderContext, config: CustomReportConfig): GeneratedReportPayload {
+  const inc = (section: CustomReportSection) => config.sections.includes(section);
+
+  // Apply competitor filter when specified
+  const snapshots =
+    config.competitorFilter.length > 0
+      ? context.competitorSnapshots.filter((snapshot) =>
+          config.competitorFilter.some((f) =>
+            snapshot.competitorName.toLowerCase().includes(f.toLowerCase()),
+          ),
+        )
+      : context.competitorSnapshots;
+
+  const filteredContext: ReportBuilderContext = { ...context, competitorSnapshots: snapshots };
+
+  const insights = inc("insights") ? getTopInsightSummaries(filteredContext.insights, 6) : [];
+  const actions = inc("actions") ? buildRecommendedActions(insights, snapshots) : [];
+
+  // ── Charts ────────────────────────────────────────────────────────────────
+  const charts: ReportChart[] = [];
+
+  if (inc("competitor_activity")) {
+    charts.push({
+      id: "custom-weekly-activity",
+      title: "Competitive activity trend",
+      description: "Weekly volume across newsletters, ads, and structured insights.",
+      kind: "line",
+      xKey: "week",
+      data: filteredContext.analytics.weeklyActivity,
+      series: [
+        { key: "newsletters", label: "Newsletters", color: CHART_COLORS.primary },
+        { key: "ads", label: "Ads", color: CHART_COLORS.secondary },
+        { key: "insights", label: "Insights", color: CHART_COLORS.tertiary },
+      ],
+    });
+  }
+
+  if (inc("promo_behavior")) {
+    charts.push({
+      id: "custom-promo-distribution",
+      title: "Discount distribution",
+      description: "How competitor discounts cluster across observed campaigns.",
+      kind: "bar",
+      xKey: "band",
+      data: filteredContext.analytics.discountDistribution,
+      series: [{ key: "count", label: "Campaigns", color: CHART_COLORS.accent }],
+    });
+  }
+
+  if (inc("category_focus")) {
+    charts.push({
+      id: "custom-category-distribution",
+      title: "Category focus distribution",
+      description: "Most common product categories appearing across tracked campaigns.",
+      kind: "bar",
+      xKey: "category",
+      data: filteredContext.analytics.categoryDistribution.slice(0, 8),
+      series: [{ key: "count", label: "Mentions", color: CHART_COLORS.primary }],
+    });
+  }
+
+  // ── Sections ──────────────────────────────────────────────────────────────
+  const sections: ReportSection[] = [];
+
+  if (inc("executive_summary")) {
+    sections.push({
+      id: "custom-executive-summary",
+      title: "Executive summary",
+      summary: "Signal volume, active competitors, and promotion intensity for the selected window.",
+      metrics: [
+        {
+          label: "Newsletters",
+          value: String(filteredContext.analytics.summary.totalNewslettersInRange),
+          detail: `${formatChange(filteredContext.analytics.summary.newsletterGrowthRate)} vs previous period`,
+        },
+        {
+          label: "Ads",
+          value: String(filteredContext.analytics.summary.totalAdsInRange),
+          detail: `${formatChange(filteredContext.analytics.summary.adGrowthRate)} vs previous period`,
+        },
+        {
+          label: "Active competitors",
+          value: `${filteredContext.analytics.summary.activeCompetitorsInRange}/${filteredContext.analytics.summary.totalCompetitors}`,
+          detail: config.competitorFilter.length > 0 ? `Filtered: ${config.competitorFilter.join(", ")}` : "Across all tracked competitors",
+        },
+        {
+          label: "Promo rate",
+          value: formatPercent(filteredContext.analytics.summary.promotionRate),
+          detail: `Avg discount ${filteredContext.analytics.summary.averageDiscount.toFixed(1)}%`,
+        },
+      ],
+    });
+  }
+
+  if (inc("competitor_activity")) {
+    const activityRows = snapshots.slice(0, 8).map((snapshot) => ({
+      Competitor: snapshot.competitorName,
+      Newsletters: snapshot.activity.newsletters,
+      Ads: snapshot.activity.ads,
+      "Share of voice": formatPercent(snapshot.activity.shareOfVoice * 100),
+      "Last active": snapshot.activity.lastActivityAt
+        ? new Date(snapshot.activity.lastActivityAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : "No activity",
+    }));
+    sections.push({
+      id: "custom-competitor-activity",
+      title: "Competitor activity",
+      summary: "Signal volume and reach breakdown by tracked company.",
+      table: {
+        columns: ["Competitor", "Newsletters", "Ads", "Share of voice", "Last active"],
+        rows: activityRows,
+      },
+    });
+  }
+
+  if (inc("promo_behavior")) {
+    const promoRows = snapshots.slice(0, 8).map((snapshot) => ({
+      Competitor: snapshot.competitorName,
+      "Promo rate": formatPercent(snapshot.promoBehavior.promoRate * 100),
+      "Avg discount": `${Math.round(snapshot.promoBehavior.averageDiscount)}%`,
+      "Max discount": `${Math.round(snapshot.promoBehavior.maxDiscount)}%`,
+      Profile: snapshot.promoBehavior.profile,
+    }));
+    sections.push({
+      id: "custom-promo-behavior",
+      title: "Promotion behavior",
+      summary: "Offer aggressiveness, discount depth, and promotional profile per competitor.",
+      table: {
+        columns: ["Competitor", "Promo rate", "Avg discount", "Max discount", "Profile"],
+        rows: promoRows,
+      },
+    });
+  }
+
+  if (inc("messaging_evolution")) {
+    sections.push({
+      id: "custom-messaging-evolution",
+      title: "Messaging evolution",
+      summary: "How each competitor's narrative and positioning angles are shifting.",
+      callouts: snapshots.slice(0, 5).map((snapshot) => ({
+        title: snapshot.competitorName,
+        body: snapshot.messagingEvolution.shiftSummary,
+        tone: snapshot.messagingEvolution.emergingAngles.length > 0 ? ("warning" as const) : ("neutral" as const),
+      })),
+    });
+  }
+
+  if (inc("category_focus")) {
+    const categoryRows = snapshots.slice(0, 6).map((snapshot) => ({
+      Competitor: snapshot.competitorName,
+      "Top category": snapshot.categoryFocus[0]?.category ?? "—",
+      "Second category": snapshot.categoryFocus[1]?.category ?? "—",
+      "Positioning angle": snapshot.messagingEvolution.currentAngles[0] ?? "—",
+    }));
+    sections.push({
+      id: "custom-category-focus",
+      title: "Category & campaign focus",
+      summary: "Top product categories and positioning angles per competitor.",
+      table: {
+        columns: ["Competitor", "Top category", "Second category", "Positioning angle"],
+        rows: categoryRows,
+      },
+    });
+  }
+
+  if (inc("opportunities")) {
+    const opportunityBullets = snapshots
+      .flatMap((snapshot) => snapshot.opportunities.slice(0, 1))
+      .filter((entry, index, array) => array.indexOf(entry) === index)
+      .slice(0, 6);
+    if (opportunityBullets.length > 0) {
+      sections.push({
+        id: "custom-opportunities",
+        title: "Strategic opportunities",
+        summary: "Gaps and whitespace detected from competitor strategy analysis.",
+        bullets: opportunityBullets,
+      });
+    }
+  }
+
+  // ── Payload assembly ──────────────────────────────────────────────────────
+  const sectionCount = config.sections.length;
+  const competitorScope =
+    config.competitorFilter.length > 0
+      ? `Scoped to ${config.competitorFilter.join(", ")}.`
+      : `Covering ${snapshots.length} tracked competitor${snapshots.length !== 1 ? "s" : ""}.`;
+
+  return {
+    templateKey: "custom_report",
+    title: config.title.trim() || "Custom report",
+    subtitle: `Custom-built briefing with ${sectionCount} selected section${sectionCount !== 1 ? "s" : ""}. ${competitorScope}`,
+    generatedAt: context.generatedAt,
+    rangeDays: config.rangeDays,
+    workspaceId: context.workspaceId,
+    workspaceName: context.workspaceName,
+    summary: {
+      whatChanged: buildWhatChanged(filteredContext, insights.length > 0 ? insights : getTopInsightSummaries(filteredContext.insights, 1)),
+      whatMatters: buildWhatMatters(filteredContext, insights.length > 0 ? insights : getTopInsightSummaries(filteredContext.insights, 1), actions),
+    },
+    charts,
+    sections,
+    insights,
+    actions,
+    metadata: {
+      activeCompetitors: filteredContext.analytics.summary.activeCompetitorsInRange,
+      trackedSignals: snapshots.reduce((sum, snapshot) => sum + snapshot.activity.totalSignals, 0),
+      structuredInsights: filteredContext.analytics.summary.totalInsightsInRange,
+    },
+    customConfig: config,
+  };
+}
+
 export function isReportTemplateKey(value: string): value is ReportTemplateKey {
   return value in REPORT_TEMPLATES;
 }
@@ -737,7 +983,23 @@ export function getNextScheduledRun(input: ReportScheduleInput, from = new Date(
   return null;
 }
 
-export function buildReportPayload(context: ReportBuilderContext, templateKey: ReportTemplateKey): GeneratedReportPayload {
+export function buildReportPayload(
+  context: ReportBuilderContext,
+  templateKey: ReportTemplateKey,
+  customConfig?: CustomReportConfig,
+): GeneratedReportPayload {
+  if (templateKey === "custom_report") {
+    return buildCustomReport(
+      context,
+      customConfig ?? {
+        title: "Custom report",
+        sections: Object.keys(CUSTOM_REPORT_SECTION_LABELS) as CustomReportSection[],
+        competitorFilter: [],
+        rangeDays: context.rangeDays,
+      },
+    );
+  }
+
   if (templateKey === "promo_digest") {
     return buildPromoDigest(context);
   }

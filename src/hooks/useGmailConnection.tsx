@@ -40,7 +40,7 @@ export function useGmailConnection() {
   }, [currentWorkspace]);
 
   useEffect(() => {
-    fetchConnection();
+    void fetchConnection();
   }, [fetchConnection]);
 
   // Check URL params for OAuth callback result

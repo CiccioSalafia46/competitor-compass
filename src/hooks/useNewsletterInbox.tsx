@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 import type { NewsletterInboxItem, NewsletterExtraction } from "@/types/gmail";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { fetchNewsletterCompetitorSuggestions, type CompetitorSuggestion } from "@/lib/competitor-attribution";
@@ -73,6 +75,11 @@ export function useNewsletterInbox(filters: InboxFilters = {}) {
 
     if (error) {
       console.error("Inbox fetch error:", error);
+      toast.error(getErrorMessage(error, "Failed to load inbox."));
+      setItems([]);
+      setTotalCount(0);
+      setLoading(false);
+      return;
     }
 
     setItems((data as NewsletterInboxItem[]) || []);
@@ -81,7 +88,7 @@ export function useNewsletterInbox(filters: InboxFilters = {}) {
   }, [currentWorkspace, page, filters.competitorId, filters.unassignedOnly, filters.isNewsletter, filters.isArchived, filters.search, filters.dateFrom, filters.dateTo]);
 
   useEffect(() => {
-    fetchInbox();
+    void fetchInbox();
   }, [fetchInbox]);
 
   const markRead = async (id: string) => {

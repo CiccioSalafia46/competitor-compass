@@ -20,6 +20,7 @@ import {
   PlayCircle,
   Printer,
   RefreshCcw,
+  SlidersHorizontal,
   WandSparkles,
 } from "lucide-react";
 import { useReports } from "@/hooks/useReports";
@@ -28,6 +29,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +45,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { downloadReportJson, printReport } from "@/lib/report-export";
 import {
+  CUSTOM_REPORT_SECTION_LABELS,
   REPORT_TEMPLATES,
+  type CustomReportConfig,
+  type CustomReportSection,
   type GeneratedReportPayload,
   type ReportChart,
   type ReportRunRecord,
@@ -336,6 +341,158 @@ function ScheduleDialog({
             disabled={saving || !draft.name.trim()}
           >
             {saving ? "Saving..." : schedule ? "Update schedule" : "Create schedule"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const ALL_SECTIONS = Object.keys(CUSTOM_REPORT_SECTION_LABELS) as CustomReportSection[];
+
+function ReportBuilderDialog({
+  open,
+  onOpenChange,
+  onGenerate,
+  generating,
+}: {
+  open: boolean;
+  onOpenChange: (value: boolean) => void;
+  onGenerate: (config: CustomReportConfig) => Promise<void>;
+  generating: boolean;
+}) {
+  const [title, setTitle] = useState("Custom report");
+  const [sections, setSections] = useState<CustomReportSection[]>(ALL_SECTIONS);
+  const [rangeDays, setRangeDays] = useState(30);
+  const [competitorInput, setCompetitorInput] = useState("");
+
+  const competitorFilter = competitorInput
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const toggleSection = (section: CustomReportSection) => {
+    setSections((previous) =>
+      previous.includes(section) ? previous.filter((s) => s !== section) : [...previous, section],
+    );
+  };
+
+  const handleGenerate = async () => {
+    await onGenerate({
+      title: title.trim() || "Custom report",
+      sections,
+      competitorFilter,
+      rangeDays,
+    });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Custom report builder</DialogTitle>
+          <DialogDescription>
+            Choose which sections to include, the date range, and optional competitor filters.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-5 py-2">
+          <div className="space-y-2">
+            <Label htmlFor="custom-report-title">Report title</Label>
+            <Input
+              id="custom-report-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Custom report"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label>Sections to include</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {ALL_SECTIONS.map((section) => (
+                <div key={section} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`section-${section}`}
+                    checked={sections.includes(section)}
+                    onCheckedChange={() => toggleSection(section)}
+                  />
+                  <label
+                    htmlFor={`section-${section}`}
+                    className="cursor-pointer text-sm text-foreground"
+                  >
+                    {CUSTOM_REPORT_SECTION_LABELS[section]}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {sections.length} of {ALL_SECTIONS.length} sections selected
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Coverage window</Label>
+              <Select
+                value={String(rangeDays)}
+                onValueChange={(value) => setRangeDays(Number(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {rangeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="competitor-filter">Competitor filter</Label>
+              <Input
+                id="competitor-filter"
+                value={competitorInput}
+                onChange={(event) => setCompetitorInput(event.target.value)}
+                placeholder="Acme, Globex (optional)"
+              />
+              <p className="text-[11px] text-muted-foreground">Comma-separated names. Leave blank to include all.</p>
+            </div>
+          </div>
+
+          {sections.length > 0 ? (
+            <div className="rounded-xl border bg-muted/20 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Preview</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{title.trim() || "Custom report"}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {sections.map((s) => CUSTOM_REPORT_SECTION_LABELS[s]).join(" · ")}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Last {rangeDays} days
+                {competitorFilter.length > 0 ? ` · Filtered: ${competitorFilter.join(", ")}` : " · All competitors"}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-muted-foreground">
+              Select at least one section to generate a report.
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => void handleGenerate()}
+            disabled={generating || sections.length === 0}
+          >
+            <WandSparkles className="mr-2 h-4 w-4" />
+            {generating ? "Generating..." : "Generate"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -648,6 +805,7 @@ export default function Reports() {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<ReportScheduleRecord | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [builderOpen, setBuilderOpen] = useState(false);
 
   const selectedRun = useMemo(
     () => recentRuns.find((run) => run.id === selectedRunId) ?? recentRuns[0] ?? null,
@@ -670,6 +828,13 @@ export default function Reports() {
 
   const handleGenerate = async (templateKey: ReportTemplateKey, rangeDays?: number) => {
     const run = await generate(templateKey, rangeDays);
+    if (run) {
+      setSelectedRunId(run.id);
+    }
+  };
+
+  const handleGenerateCustom = async (config: CustomReportConfig) => {
+    const run = await generate("custom_report", config.rangeDays, config);
     if (run) {
       setSelectedRunId(run.id);
     }
@@ -763,46 +928,67 @@ export default function Reports() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {Object.entries(REPORT_TEMPLATES).map(([key, template]) => (
-              <Card key={key} className="border shadow-sm">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <CardTitle className="text-base">{template.label}</CardTitle>
-                      <CardDescription className="mt-2">{template.description}</CardDescription>
+          <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            {Object.entries(REPORT_TEMPLATES).map(([key, template]) => {
+              const isCustom = key === "custom_report";
+              const icon =
+                key === "weekly_competitor_pulse" ? (
+                  <FileBarChart className="h-5 w-5" />
+                ) : key === "promo_digest" ? (
+                  <FileCog className="h-5 w-5" />
+                ) : key === "custom_report" ? (
+                  <SlidersHorizontal className="h-5 w-5" />
+                ) : (
+                  <FileText className="h-5 w-5" />
+                );
+
+              return (
+                <Card key={key} className="border shadow-sm">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <CardTitle className="text-base">{template.label}</CardTitle>
+                        <CardDescription className="mt-2">{template.description}</CardDescription>
+                      </div>
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        {icon}
+                      </div>
                     </div>
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      {key === "weekly_competitor_pulse" ? (
-                        <FileBarChart className="h-5 w-5" />
-                      ) : key === "promo_digest" ? (
-                        <FileCog className="h-5 w-5" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+                      {isCustom ? "Configurable range" : `Default range: ${template.defaultRangeDays} day${template.defaultRangeDays === 1 ? "" : "s"}`}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {isCustom ? (
+                        <Button
+                          className="gap-2"
+                          onClick={() => setBuilderOpen(true)}
+                          disabled={!canCreateReports}
+                        >
+                          <SlidersHorizontal className="h-4 w-4" />
+                          Build report
+                        </Button>
                       ) : (
-                        <FileText className="h-5 w-5" />
+                        <>
+                          <Button
+                            className="gap-2"
+                            onClick={() => void handleGenerate(key as ReportTemplateKey, template.defaultRangeDays)}
+                            disabled={!canCreateReports || generatingTemplate === key}
+                          >
+                            <WandSparkles className="h-4 w-4" />
+                            {generatingTemplate === key ? "Generating..." : "Generate"}
+                          </Button>
+                          <Button variant="outline" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
+                            Schedule
+                          </Button>
+                        </>
                       )}
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-                    Default range: {template.defaultRangeDays} day{template.defaultRangeDays === 1 ? "" : "s"}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      className="gap-2"
-                      onClick={() => void handleGenerate(key as ReportTemplateKey, template.defaultRangeDays)}
-                      disabled={!canCreateReports || generatingTemplate === key}
-                    >
-                      <WandSparkles className="h-4 w-4" />
-                      {generatingTemplate === key ? "Generating..." : "Generate"}
-                    </Button>
-                    <Button variant="outline" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
-                      Schedule
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr,1.05fr]">
@@ -964,6 +1150,13 @@ export default function Reports() {
         }}
         schedule={editingSchedule}
         saving={savingSchedule}
+      />
+
+      <ReportBuilderDialog
+        open={builderOpen}
+        onOpenChange={setBuilderOpen}
+        onGenerate={handleGenerateCustom}
+        generating={generatingTemplate === "custom_report"}
       />
     </div>
   );

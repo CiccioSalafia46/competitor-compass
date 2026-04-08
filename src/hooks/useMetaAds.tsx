@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { getErrorMessage } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 export type MetaAd = Database["public"]["Tables"]["meta_ads"]["Row"];
@@ -49,7 +51,14 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
     if (filters.dateTo) query = query.lte("first_seen_at", filters.dateTo);
 
     const { data, count, error } = await query;
-    if (error) console.error("Meta ads fetch error:", error);
+    if (error) {
+      console.error("Meta ads fetch error:", error);
+      toast.error(getErrorMessage(error, "Failed to load Meta ads."));
+      setAds([]);
+      setTotalCount(0);
+      setLoading(false);
+      return;
+    }
 
     setAds((data as MetaAd[]) || []);
     setTotalCount(count || 0);

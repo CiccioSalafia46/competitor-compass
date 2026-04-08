@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { getErrorMessage } from "@/lib/errors";
 import { isTransientNavigationFetchError } from "@/lib/transient-network";
 import type { InsightPriorityLevel } from "@/lib/insight-priority";
 import {
@@ -63,6 +64,10 @@ export function useInsights(categoryFilter?: string, options: UseInsightsOptions
         return;
       }
       console.error("Insights fetch error:", error);
+      toast.error(getErrorMessage(error, "Failed to load insights."));
+      setInsights([]);
+      setLoading(false);
+      return;
     }
 
     setInsights(normalizeInsights(data));
