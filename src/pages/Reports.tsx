@@ -259,30 +259,32 @@ function ScheduleDialog({
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="report-hour">Hour</Label>
+              <Label htmlFor="report-hour">Hour (0–23)</Label>
               <Input
                 id="report-hour"
                 type="number"
                 min={0}
                 max={23}
                 value={draft.hourOfDay}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, hourOfDay: Number(event.target.value) }))
-                }
+                onChange={(event) => {
+                  const v = Math.min(23, Math.max(0, Math.round(Number(event.target.value))));
+                  setDraft((current) => ({ ...current, hourOfDay: isNaN(v) ? 0 : v }));
+                }}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="report-minute">Minute</Label>
+              <Label htmlFor="report-minute">Minute (0–59)</Label>
               <Input
                 id="report-minute"
                 type="number"
                 min={0}
                 max={59}
                 value={draft.minuteOfHour}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, minuteOfHour: Number(event.target.value) }))
-                }
+                onChange={(event) => {
+                  const v = Math.min(59, Math.max(0, Math.round(Number(event.target.value))));
+                  setDraft((current) => ({ ...current, minuteOfHour: isNaN(v) ? 0 : v }));
+                }}
               />
             </div>
           </div>

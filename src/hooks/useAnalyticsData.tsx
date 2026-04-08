@@ -199,7 +199,7 @@ export function useAnalyticsData(rangeDays = 30) {
     setLoading(false);
   }, [currentWorkspace, rangeDays]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
   return { data, loading, error, refetch: fetchData };
 }

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  CUSTOM_REPORT_SECTION_LABELS,
   buildReportPayload,
   getNextScheduledRun,
+  type CustomReportConfig,
   type ReportBuilderContext,
   type ReportScheduleInput,
 } from "./reports";
@@ -176,6 +178,20 @@ const baseContext: ReportBuilderContext = {
         profile: "aggressive",
       },
       categoryFocus: [{ category: "Sneakers", count: 6, share: 0.6 }],
+      positioningStrategy: "Rival A leads on price with aggressive promotions across email and paid channels.",
+      recurringPatterns: ["High promo cadence (>60% of sends)", "Consistent urgency signals"],
+      campaignClusters: [
+        { type: "promotion", count: 7, share: 0.7 },
+        { type: "product_launch", count: 3, share: 0.3 },
+      ],
+      activityByMonth: [
+        { month: "Nov 25", newsletters: 2, ads: 0, insights: 0 },
+        { month: "Dec 25", newsletters: 3, ads: 1, insights: 1 },
+        { month: "Jan 26", newsletters: 2, ads: 1, insights: 0 },
+        { month: "Feb 26", newsletters: 1, ads: 0, insights: 0 },
+        { month: "Mar 26", newsletters: 1, ads: 1, insights: 1 },
+        { month: "Apr 26", newsletters: 1, ads: 0, insights: 0 },
+      ],
       strengths: ["Strong promo cadence"],
       weaknesses: ["Heavy discounting"],
       strategicGaps: ["Weak accessories story"],
@@ -231,6 +247,20 @@ const baseContext: ReportBuilderContext = {
         profile: "light",
       },
       categoryFocus: [{ category: "Sneakers", count: 4, share: 0.5 }],
+      positioningStrategy: "Rival B positions on performance outcomes with a light promotional footprint.",
+      recurringPatterns: [],
+      campaignClusters: [
+        { type: "product_launch", count: 4, share: 0.57 },
+        { type: "promotion", count: 3, share: 0.43 },
+      ],
+      activityByMonth: [
+        { month: "Nov 25", newsletters: 1, ads: 0, insights: 0 },
+        { month: "Dec 25", newsletters: 1, ads: 0, insights: 0 },
+        { month: "Jan 26", newsletters: 1, ads: 1, insights: 0 },
+        { month: "Feb 26", newsletters: 2, ads: 0, insights: 0 },
+        { month: "Mar 26", newsletters: 1, ads: 1, insights: 1 },
+        { month: "Apr 26", newsletters: 1, ads: 0, insights: 0 },
+      ],
       strengths: ["Clear positioning"],
       weaknesses: ["Low offer pressure"],
       strategicGaps: ["Limited accessories angle"],
@@ -286,5 +316,106 @@ describe("buildReportPayload", () => {
     expect(report.templateKey).toBe("messaging_analysis");
     expect(report.sections.some((section) => section.id === "messaging-brief")).toBe(true);
     expect(report.sections.some((section) => section.id === "strategic-opportunities")).toBe(true);
+  });
+});
+
+describe("custom_report", () => {
+  const allSectionsConfig: CustomReportConfig = {
+    title: "Full custom briefing",
+    sections: Object.keys(CUSTOM_REPORT_SECTION_LABELS) as CustomReportConfig["sections"],
+    competitorFilter: [],
+    rangeDays: 30,
+  };
+
+  it("generates a custom report with all sections selected", () => {
+    const report = buildReportPayload(baseContext, "custom_report", allSectionsConfig);
+
+    expect(report.templateKey).toBe("custom_report");
+    expect(report.title).toBe("Full custom briefing");
+    expect(report.customConfig).toMatchObject({ sections: allSectionsConfig.sections });
+    expect(report.insights.length).toBeGreaterThan(0);
+    expect(report.actions.length).toBeGreaterThan(0);
+  });
+
+  it("generates a custom report with only executive_summary and insights", () => {
+    const config: CustomReportConfig = {
+      title: "Quick brief",
+      sections: ["executive_summary", "insights"],
+      competitorFilter: [],
+      rangeDays: 7,
+    };
+    const report = buildReportPayload(baseContext, "custom_report", config);
+
+    expect(report.templateKey).toBe("custom_report");
+    // insights section included
+    expect(report.insights.length).toBeGreaterThan(0);
+    // no charts for these sections
+    expect(report.charts).toHaveLength(0);
+  });
+
+  it("filters competitors when competitorFilter is set", () => {
+    const config: CustomReportConfig = {
+      title: "Rival A only",
+      sections: ["competitor_activity"],
+      competitorFilter: ["Rival A"],
+      rangeDays: 30,
+    };
+    const report = buildReportPayload(baseContext, "custom_report", config);
+
+    // Only Rival A should appear in competitor_activity table
+    const activitySection = report.sections.find((s) => s.id === "custom-competitor-activity");
+    expect(activitySection).toBeDefined();
+    if (activitySection?.table) {
+      const competitors = activitySection.table.rows.map((r) => r["Competitor"]);
+      expect(competitors).toContain("Rival A");
+      expect(competitors).not.toContain("Rival B");
+    }
+  });
+
+  it("falls back to a default config when none is provided", () => {
+    const report = buildReportPayload(baseContext, "custom_report");
+
+    expect(report.templateKey).toBe("custom_report");
+    // All sections included by default, so insights should be present
+    expect(report.insights.length).toBeGreaterThan(0);
+  });
+
+  it("produces zero charts and no insights when empty sections selected", () => {
+    const config: CustomReportConfig = {
+      title: "Empty",
+      sections: [],
+      competitorFilter: [],
+      rangeDays: 30,
+    };
+    const report = buildReportPayload(baseContext, "custom_report", config);
+
+    expect(report.charts).toHaveLength(0);
+    expect(report.sections).toHaveLength(0);
+    expect(report.insights).toHaveLength(0);
+    expect(report.actions).toHaveLength(0);
+  });
+
+  it("includes promo_behavior chart when that section is selected", () => {
+    const config: CustomReportConfig = {
+      title: "Promo only",
+      sections: ["promo_behavior"],
+      competitorFilter: [],
+      rangeDays: 30,
+    };
+    const report = buildReportPayload(baseContext, "custom_report", config);
+
+    expect(report.charts.some((c) => c.id === "custom-promo-distribution")).toBe(true);
+  });
+
+  it("includes category_focus chart when that section is selected", () => {
+    const config: CustomReportConfig = {
+      title: "Category only",
+      sections: ["category_focus"],
+      competitorFilter: [],
+      rangeDays: 30,
+    };
+    const report = buildReportPayload(baseContext, "custom_report", config);
+
+    expect(report.charts.some((c) => c.id === "custom-category-distribution")).toBe(true);
   });
 });

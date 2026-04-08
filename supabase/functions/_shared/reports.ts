@@ -18,12 +18,16 @@ import { fetchCompetitorIntelligenceSnapshots } from "./competitor-intelligence.
 
 type SupabaseQueryResult<T> = Promise<{ data: T[] | null; error: unknown }> | Promise<{ data: T | null; error: unknown }>;
 
+type ChainableQuery<T> = Promise<{ data: T[] | null; error: unknown }> & {
+  eq: (column: string, value: string | boolean | null) => ChainableQuery<T>;
+  order: (column: string, options?: { ascending?: boolean }) => ChainableQuery<T>;
+  limit: (value: number) => ChainableQuery<T>;
+  lte: (column: string, value: string) => ChainableQuery<T>;
+};
+
 type SupabaseClientLike = {
   from: <T extends Record<string, unknown>>(table: string) => {
-    select: (columns: string, options?: { count?: string; head?: boolean }) => {
-      eq: (column: string, value: string | boolean | null) => any;
-      order: (column: string, options?: { ascending?: boolean }) => any;
-      limit: (value: number) => SupabaseQueryResult<T>;
+    select: (columns: string, options?: { count?: string; head?: boolean }) => ChainableQuery<T> & {
       maybeSingle: () => Promise<{ data: T | null; error: unknown }>;
       insert: (value: Record<string, unknown>) => {
         select: (columns?: string) => {
@@ -40,7 +44,6 @@ type SupabaseClientLike = {
       delete: () => {
         eq: (column: string, value: string) => Promise<{ error: unknown }>;
       };
-      lte: (column: string, value: string) => any;
     };
     insert: (value: Record<string, unknown>) => {
       select: (columns?: string) => {

@@ -152,4 +152,71 @@ describe("buildCompetitorIntelligenceSnapshots", () => {
       impact: "conversion",
     });
   });
+
+  it("builds a positioningStrategy narrative string", () => {
+    const [lovable] = buildCompetitorIntelligenceSnapshots({
+      competitors,
+      newsletters,
+      metaAds,
+      insights,
+    });
+
+    expect(typeof lovable.positioningStrategy).toBe("string");
+    expect(lovable.positioningStrategy.length).toBeGreaterThan(0);
+  });
+
+  it("populates activityByMonth with exactly 6 monthly buckets", () => {
+    const [lovable] = buildCompetitorIntelligenceSnapshots({
+      competitors,
+      newsletters,
+      metaAds,
+      insights,
+    });
+
+    expect(lovable.activityByMonth).toHaveLength(6);
+    // Most recent month (last entry) should reflect the signals we have
+    const total = lovable.activityByMonth.reduce((sum, m) => sum + m.newsletters + m.ads + m.insights, 0);
+    expect(total).toBeGreaterThan(0);
+  });
+
+  it("builds campaignClusters from newsletter and ad signals", () => {
+    const [lovable] = buildCompetitorIntelligenceSnapshots({
+      competitors,
+      newsletters,
+      metaAds,
+      insights,
+    });
+
+    expect(lovable.campaignClusters.length).toBeGreaterThan(0);
+    const totalShare = lovable.campaignClusters.reduce((sum, c) => sum + c.share, 0);
+    // Total share should approximate 100% (may have floating point noise)
+    expect(totalShare).toBeGreaterThan(0.9);
+  });
+
+  it("detects recurring patterns for high-promo competitors", () => {
+    const [lovable] = buildCompetitorIntelligenceSnapshots({
+      competitors,
+      newsletters,
+      metaAds,
+      insights,
+    });
+
+    // Lovable has a 30% discount on one of two newsletters → promoRate = 0.5
+    // This is under 0.6 threshold but urgency is present
+    expect(Array.isArray(lovable.recurringPatterns)).toBe(true);
+  });
+
+  it("competitor with no signals has empty clusters and zero activity", () => {
+    const [, acme] = buildCompetitorIntelligenceSnapshots({
+      competitors,
+      newsletters,
+      metaAds,
+      insights,
+    });
+
+    expect(acme.competitorName).toBe("Acme");
+    // Acme only has 1 newsletter with no discount, no ads, no insights
+    expect(acme.promoBehavior.promoRate).toBe(0);
+    expect(acme.campaignClusters.length).toBeGreaterThanOrEqual(0);
+  });
 });

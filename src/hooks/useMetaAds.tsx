@@ -65,7 +65,7 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
     setLoading(false);
   }, [currentWorkspace, page, filters.competitorId, filters.isActive, filters.search, filters.dateFrom, filters.dateTo]);
 
-  useEffect(() => { fetchAds(); }, [fetchAds]);
+  useEffect(() => { void fetchAds(); }, [fetchAds]);
 
   const fetchFromMeta = async (opts: { competitorId?: string; pageId?: string; searchTerms?: string }) => {
     if (!currentWorkspace) return;

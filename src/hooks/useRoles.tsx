@@ -36,27 +36,41 @@ export function useRoles() {
       return;
     }
 
-    const [{ data: userRoles }, { data: membership }] = await Promise.all([
-      supabase
-        .from("user_roles")
-        .select("*")
-        .eq("workspace_id", workspaceId)
-        .eq("user_id", userId),
-      supabase
-        .from("workspace_members")
-        .select("role")
-        .eq("workspace_id", workspaceId)
-        .eq("user_id", userId)
-        .maybeSingle(),
-    ]);
+    try {
+      const [{ data: userRoles, error: rolesError }, { data: membership, error: memberError }] = await Promise.all([
+        supabase
+          .from("user_roles")
+          .select("*")
+          .eq("workspace_id", workspaceId)
+          .eq("user_id", userId),
+        supabase
+          .from("workspace_members")
+          .select("role")
+          .eq("workspace_id", workspaceId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
 
-    setRoles((userRoles as UserRole[]) || []);
-    setMembershipRole((membership as WorkspaceMembership | null)?.role ?? null);
-    setLoading(false);
+      if (rolesError) {
+        console.error("Failed to fetch user roles:", rolesError);
+      }
+      if (memberError) {
+        console.error("Failed to fetch workspace membership:", memberError);
+      }
+
+      setRoles((userRoles as UserRole[]) || []);
+      setMembershipRole((membership as WorkspaceMembership | null)?.role ?? null);
+    } catch (error) {
+      console.error("Role fetch error:", error);
+      setRoles([]);
+      setMembershipRole(null);
+    } finally {
+      setLoading(false);
+    }
   }, [userId, workspaceId]);
 
   useEffect(() => {
-    fetchRoles();
+    void fetchRoles();
   }, [fetchRoles]);
 
   const myRoles = roles.map((r) => r.role);
@@ -123,7 +137,7 @@ export function useWorkspaceRoles() {
   }, [workspaceId]);
 
   useEffect(() => {
-    fetchAll();
+    void fetchAll();
   }, [fetchAll]);
 
   const assignRole = async (userId: string, role: AppRole) => {

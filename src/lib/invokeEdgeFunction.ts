@@ -54,7 +54,7 @@ export async function invokeEdgeFunction<T>(
   functionName: string,
   options: InvokeOptions = {}
 ): Promise<T> {
-  let { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabase.auth.getSession();
   let accessToken = sessionData.session?.access_token;
 
   // Session missing or expired — attempt a silent refresh before giving up
