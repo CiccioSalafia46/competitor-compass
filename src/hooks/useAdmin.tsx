@@ -1,61 +1,85 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useAdminCheck() {
-  const { user } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
+  const accessToken = session?.access_token ?? null;
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (authLoading || (userId && !accessToken)) {
+      setLoading(true);
+      return;
+    }
+
+    if (!userId) {
       setIsAdmin(false);
       setLoading(false);
       return;
     }
+
+    let cancelled = false;
+
     (async () => {
+      setLoading(true);
       try {
-        // Check if user has admin role in ANY workspace — sufficient for platform admin
-        const { data } = await supabase
-          .from("user_roles")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .limit(1);
-        setIsAdmin((data?.length ?? 0) > 0);
+        const result = await invokeEdgeFunction<{ isPlatformAdmin?: boolean }>("admin-data", {
+          body: { action: "auth_status" },
+        });
+        if (!cancelled) {
+          setIsAdmin(Boolean(result?.isPlatformAdmin));
+        }
       } catch (err) {
         console.error("Admin check failed:", err);
-        setIsAdmin(false);
+        if (!cancelled) {
+          setIsAdmin(false);
+        }
       }
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     })();
-  }, [user]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, authLoading, userId]);
 
   return { isAdmin, loading };
 }
 
-export function useAdminData(action: string, extraBody?: Record<string, any>) {
-  const [data, setData] = useState<any>(null);
+export function useAdminData<T>(action: string, extraBody?: Record<string, unknown>) {
+  const { session, loading: authLoading } = useAuth();
+  const accessToken = session?.access_token ?? null;
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const extraBodyKey = JSON.stringify(extraBody ?? {});
 
   const fetch = useCallback(async () => {
+    if (authLoading || !accessToken) {
+      setLoading(Boolean(authLoading));
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const { data: result, error: err } = await supabase.functions.invoke("admin-data", {
-        body: { action, ...extraBody },
+      const result = await invokeEdgeFunction<T & { error?: string }>("admin-data", {
+        body: { action, ...(JSON.parse(extraBodyKey) as Record<string, unknown>) },
       });
-      if (err) throw err;
       if (result?.error) throw new Error(result.error);
       setData(result);
-    } catch (e: any) {
-      setError(e.message || "Failed to load");
+    } catch (error) {
+      setError(getErrorMessage(error, "Failed to load"));
     } finally {
       setLoading(false);
     }
-  }, [action, JSON.stringify(extraBody)]);
+  }, [accessToken, action, authLoading, extraBodyKey]);
 
   useEffect(() => {
     fetch();
@@ -67,18 +91,17 @@ export function useAdminData(action: string, extraBody?: Record<string, any>) {
 export function useAdminAction() {
   const [acting, setActing] = useState(false);
 
-  const execute = useCallback(async (action: string, body: Record<string, any> = {}) => {
+  const execute = useCallback(async <T,>(action: string, body: Record<string, unknown> = {}) => {
     setActing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-data", {
+      const data = await invokeEdgeFunction<T & { error?: string }>("admin-data", {
         body: { action, ...body },
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
-    } catch (e: any) {
-      toast.error(e.message || "Action failed");
-      throw e;
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Action failed"));
+      throw error;
     } finally {
       setActing(false);
     }

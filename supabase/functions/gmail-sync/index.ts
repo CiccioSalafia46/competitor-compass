@@ -1,11 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import {
+  HttpError,
+  assertWorkspaceMember,
+  requireAuthenticatedUser,
+} from "../_shared/auth.ts";
+import {
+  evaluateAlertRules,
+  scheduleBackgroundAlertEvaluation,
+} from "../_shared/alerts.ts";
+import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
@@ -28,6 +32,66 @@ interface ClassificationResult {
   score: number;
   method: string;
 }
+
+function normalizeDomain(value: string | null | undefined) {
+  if (!value) return null;
+
+  let normalized = value.trim().toLowerCase();
+  if (!normalized) return null;
+
+  normalized = normalized.replace(/^[a-z]+:\/\//, "");
+
+  if (normalized.includes("@")) {
+    const parts = normalized.split("@");
+    normalized = parts[parts.length - 1] ?? "";
+  }
+
+  normalized = normalized.split("/")[0] ?? normalized;
+  normalized = normalized.split("?")[0] ?? normalized;
+  normalized = normalized.split("#")[0] ?? normalized;
+  normalized = normalized.split(":")[0] ?? normalized;
+  normalized = normalized.replace(/^www\./, "").replace(/\.$/, "");
+
+  return normalized || null;
+}
+
+function collectCompetitorDomains(website: string | null | undefined, domains: string[] | null | undefined) {
+  return Array.from(
+    new Set(
+      [normalizeDomain(website), ...(domains ?? []).map((entry) => normalizeDomain(entry))]
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
+  );
+}
+
+type TokenStoreClient = {
+  from: (table: string) => {
+    update: (values: Record<string, unknown>) => {
+      eq: (column: string, value: string) => Promise<unknown>;
+    };
+  };
+};
+
+type GmailHeader = {
+  name: string;
+  value: string;
+};
+
+type GmailBody = {
+  data?: string;
+};
+
+type GmailPayloadPart = {
+  mimeType?: string;
+  headers?: GmailHeader[];
+  body?: GmailBody;
+  parts?: GmailPayloadPart[];
+};
+
+type SyncSummary = {
+  status: "up_to_date" | "imported" | "completed_with_issues";
+  message: string;
+};
 
 function classifyEmail(headers: Record<string, string>, fromEmail: string, textContent: string): ClassificationResult {
   let score = 0;
@@ -101,7 +165,7 @@ function classifyEmail(headers: Record<string, string>, fromEmail: string, textC
 }
 
 async function refreshToken(
-  supabase: any,
+  supabase: TokenStoreClient,
   connectionId: string,
   refreshTokenValue: string,
   clientId: string,
@@ -137,7 +201,7 @@ async function refreshToken(
   return data.access_token;
 }
 
-function extractHeaders(payload: any): Record<string, string> {
+function extractHeaders(payload: GmailPayloadPart | undefined): Record<string, string> {
   const headers: Record<string, string> = {};
   if (payload?.headers) {
     for (const h of payload.headers) {
@@ -147,11 +211,11 @@ function extractHeaders(payload: any): Record<string, string> {
   return headers;
 }
 
-function extractBody(payload: any): { html: string; text: string } {
+function extractBody(payload: GmailPayloadPart | undefined): { html: string; text: string } {
   let html = "";
   let text = "";
 
-  function walk(part: any) {
+  function walk(part: GmailPayloadPart | undefined) {
     if (!part) return;
     if (part.mimeType === "text/html" && part.body?.data) {
       html = atob(part.body.data.replace(/-/g, "+").replace(/_/g, "/"));
@@ -176,6 +240,59 @@ function extractBody(payload: any): { html: string; text: string } {
   return { html, text };
 }
 
+function pluralize(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function buildSyncSummary(params: {
+  imported: number;
+  skipped: number;
+  errors: number;
+  total: number;
+  attributed: number;
+  needsReview: number;
+}): SyncSummary {
+  const { imported, skipped, errors, total, attributed, needsReview } = params;
+  const attributionSummary = imported > 0
+    ? `${attributed > 0 ? ` Matched ${pluralize(attributed, "email")} to tracked competitors.` : ""}${needsReview > 0 ? ` ${pluralize(needsReview, "email")} still need competitor review.` : ""}`.trim()
+    : "";
+
+  if (errors > 0) {
+    if (imported > 0) {
+      return {
+        status: "completed_with_issues",
+        message: `Sync completed with issues. Imported ${pluralize(imported, "new email")}, skipped ${pluralize(skipped, "duplicate")}, and ${pluralize(errors, "message")} failed.${attributionSummary ? ` ${attributionSummary}` : ""}`,
+      };
+    }
+
+    return {
+      status: "completed_with_issues",
+      message: `Sync completed with issues. No new emails were imported and ${pluralize(errors, "message")} failed.`,
+    };
+  }
+
+  if (total === 0) {
+    return {
+      status: "up_to_date",
+      message: "Sync completed. No new competitor emails were found in the current sync window.",
+    };
+  }
+
+  if (imported === 0) {
+    return {
+      status: "up_to_date",
+      message: skipped > 0
+        ? `Sync completed. No new emails were imported; ${pluralize(skipped, "message")} already existed in your inbox.`
+        : "Sync completed. There was nothing new to import.",
+    };
+  }
+
+  return {
+    status: "imported",
+    message: `Sync completed. Imported ${pluralize(imported, "new email")}${skipped > 0 ? ` and skipped ${pluralize(skipped, "duplicate")}` : ""}.${attributionSummary ? ` ${attributionSummary}` : ""}`,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -188,29 +305,12 @@ serve(async (req) => {
     const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Auth: verify the caller is authenticated
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (userError || !userData.user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { user } = await requireAuthenticatedUser(supabase, req);
 
     const { connectionId, fullSync, maxResults } = await req.json();
 
     if (!connectionId) {
-      return new Response(
-        JSON.stringify({ error: "connectionId is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "connectionId is required" }, 400);
     }
 
     // Get connection info
@@ -221,11 +321,10 @@ serve(async (req) => {
       .single();
 
     if (connErr || !connection) {
-      return new Response(
-        JSON.stringify({ error: "Connection not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Connection not found" }, 404);
     }
+
+    await assertWorkspaceMember(supabase, user.id, connection.workspace_id);
 
     // Update sync status
     await supabase
@@ -241,14 +340,11 @@ serve(async (req) => {
       .single();
 
     if (tokenErr || !tokens) {
-      await supabase
-        .from("gmail_connections")
-        .update({ sync_status: "error", sync_error: "No tokens found. Please reconnect Gmail." })
-        .eq("id", connectionId);
-      return new Response(
-        JSON.stringify({ error: "No tokens found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+        await supabase
+          .from("gmail_connections")
+          .update({ sync_status: "error", sync_error: "No tokens found. Please reconnect Gmail." })
+          .eq("id", connectionId);
+      return jsonResponse({ error: "No tokens found" }, 404);
     }
 
     // Refresh token if expired
@@ -261,24 +357,21 @@ serve(async (req) => {
           .from("gmail_connections")
           .update({ sync_status: "error", sync_error: "Token refresh failed. Please reconnect." })
           .eq("id", connectionId);
-        return new Response(
-          JSON.stringify({ error: "Token refresh failed" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return jsonResponse({ error: "Token refresh failed" }, 401);
       }
     }
 
     // Get competitors for auto-association
     const { data: competitors } = await supabase
       .from("competitors")
-      .select("id, name, domains")
+      .select("id, name, website, domains")
       .eq("workspace_id", connection.workspace_id)
       .eq("is_monitored", true);
 
     const competitorDomainMap = new Map<string, string>();
     for (const c of competitors || []) {
-      for (const domain of c.domains || []) {
-        competitorDomainMap.set(domain.toLowerCase(), c.id);
+      for (const domain of collectCompetitorDomains(c.website, c.domains)) {
+        competitorDomainMap.set(domain, c.id);
       }
     }
 
@@ -313,10 +406,7 @@ serve(async (req) => {
           .eq("id", connectionId);
       }
 
-      return new Response(
-        JSON.stringify({ error: `Gmail API error: ${listResp.status}` }),
-        { status: listResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: `Gmail API error: ${listResp.status}` }, listResp.status);
     }
 
     const listData = await listResp.json();
@@ -325,18 +415,27 @@ serve(async (req) => {
     let imported = 0;
     let skipped = 0;
     let errors = 0;
+    let attributed = 0;
+    let needsReview = 0;
+    const importedNewsletterIds: string[] = [];
+
+    // Bulk dedup: fetch all already-existing gmail_message_ids in one query
+    const allMessageIds = messages.map((m: { id: string }) => m.id);
+    const existingIds = new Set<string>();
+    if (allMessageIds.length > 0) {
+      const { data: existingRows } = await supabase
+        .from("newsletter_inbox")
+        .select("gmail_message_id")
+        .eq("workspace_id", connection.workspace_id)
+        .in("gmail_message_id", allMessageIds);
+      for (const row of existingRows ?? []) {
+        if (row.gmail_message_id) existingIds.add(row.gmail_message_id);
+      }
+    }
 
     for (const msg of messages) {
       try {
-        // Check for dedup
-        const { data: existing } = await supabase
-          .from("newsletter_inbox")
-          .select("id")
-          .eq("workspace_id", connection.workspace_id)
-          .eq("gmail_message_id", msg.id)
-          .maybeSingle();
-
-        if (existing) {
+        if (existingIds.has(msg.id)) {
           skipped++;
           continue;
         }
@@ -367,29 +466,43 @@ serve(async (req) => {
         const classification = classifyEmail(headers, fromEmail, text || html);
 
         // Auto-associate with competitor
-        const senderDomain = fromEmail.split("@")[1]?.toLowerCase() || "";
-        let competitorId: string | null = competitorDomainMap.get(senderDomain) || null;
+        const senderDomain = normalizeDomain(fromEmail);
+        const competitorId: string | null = senderDomain ? competitorDomainMap.get(senderDomain) ?? null : null;
 
         // Insert into inbox
-        await supabase.from("newsletter_inbox").insert({
-          workspace_id: connection.workspace_id,
-          gmail_connection_id: connectionId,
-          gmail_message_id: msg.id,
-          from_email: fromEmail,
-          from_name: fromName,
-          subject,
-          html_content: html || null,
-          text_content: text || null,
-          received_at: receivedAt,
-          is_newsletter: classification.isNewsletter,
-          newsletter_score: classification.score,
-          classification_method: classification.method,
-          competitor_id: competitorId,
-          headers_json: headers,
-          is_demo: false,
-        });
+        const { data: insertedNewsletter, error: insertError } = await supabase
+          .from("newsletter_inbox")
+          .insert({
+            workspace_id: connection.workspace_id,
+            gmail_connection_id: connectionId,
+            gmail_message_id: msg.id,
+            from_email: fromEmail,
+            from_name: fromName,
+            subject,
+            html_content: html || null,
+            text_content: text || null,
+            received_at: receivedAt,
+            is_newsletter: classification.isNewsletter,
+            newsletter_score: classification.score,
+            classification_method: classification.method,
+            competitor_id: competitorId,
+            headers_json: headers,
+            is_demo: false,
+          })
+          .select("id")
+          .single<{ id: string }>();
+
+        if (insertError || !insertedNewsletter) {
+          throw insertError || new Error("Unable to insert newsletter inbox item");
+        }
 
         imported++;
+        importedNewsletterIds.push(insertedNewsletter.id);
+        if (competitorId) {
+          attributed++;
+        } else if (classification.isNewsletter) {
+          needsReview++;
+        }
       } catch (err) {
         console.error(`Error processing message ${msg.id}:`, err);
         errors++;
@@ -416,21 +529,46 @@ serve(async (req) => {
       });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        imported,
-        skipped,
-        errors,
-        total: messages.length,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const syncedAt = new Date().toISOString();
+    const summary = buildSyncSummary({
+      imported,
+      skipped,
+      errors,
+      total: messages.length,
+      attributed,
+      needsReview,
+    });
+
+    if (importedNewsletterIds.length > 0) {
+      scheduleBackgroundAlertEvaluation(
+        evaluateAlertRules(supabase, {
+          workspaceId: connection.workspace_id,
+          source: "gmail_sync",
+          triggeredBy: user.id,
+          newsletterIds: importedNewsletterIds,
+        }),
+      );
+    }
+
+    return jsonResponse({
+      success: true,
+      status: summary.status,
+      imported,
+      skipped,
+      errors,
+      attributed,
+      needs_review: needsReview,
+      total: messages.length,
+      sync_mode: fullSync ? "full" : "incremental",
+      synced_at: syncedAt,
+      message: summary.message,
+    });
   } catch (err) {
+    const message = getErrorMessage(err);
     console.error("Sync error:", err);
-    return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    if (err instanceof HttpError) {
+      return jsonResponse({ error: message }, err.status);
+    }
+    return jsonResponse({ error: message }, 500);
   }
 });

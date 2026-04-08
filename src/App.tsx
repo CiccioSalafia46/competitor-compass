@@ -9,6 +9,7 @@ import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import AppLayout from "./components/AppLayout";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { RouteGuard } from "@/components/RouteGuard";
 
 function AdminGuardWrapper({ children }: { children: React.ReactNode }) {
   return <AdminGuard>{children}</AdminGuard>;
@@ -40,6 +41,8 @@ const MetaAdsCompare = lazy(() => import("./pages/MetaAdsCompare"));
 const Insights = lazy(() => import("./pages/Insights"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Alerts = lazy(() => import("./pages/Alerts"));
+const Reports = lazy(() => import("./pages/Reports"));
+const WeeklyBriefing = lazy(() => import("./pages/WeeklyBriefing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -81,7 +84,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <WorkspaceProvider>
             <SubscriptionProvider>
@@ -97,23 +100,25 @@ const App = () => (
                   <Route path="/terms" element={<Terms />} />
                   <Route element={<AppLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/inbox" element={<NewsletterInbox />} />
-                    <Route path="/inbox/:id" element={<NewsletterReader />} />
+                    <Route path="/inbox" element={<RouteGuard requireVerified><NewsletterInbox /></RouteGuard>} />
+                    <Route path="/inbox/:id" element={<RouteGuard requireVerified><NewsletterReader /></RouteGuard>} />
                     <Route path="/newsletters" element={<Newsletters />} />
-                    <Route path="/newsletters/new" element={<NewNewsletter />} />
-                    <Route path="/newsletters/:id" element={<NewsletterDetail />} />
+                    <Route path="/newsletters/new" element={<RouteGuard minimumRole="analyst" requireVerified><NewNewsletter /></RouteGuard>} />
+                    <Route path="/newsletters/:id" element={<RouteGuard requireVerified><NewsletterDetail /></RouteGuard>} />
                     <Route path="/competitors" element={<Competitors />} />
-                    <Route path="/meta-ads" element={<MetaAds />} />
-                    <Route path="/meta-ads/compare" element={<MetaAdsCompare />} />
-                    <Route path="/insights" element={<Insights />} />
+                    <Route path="/meta-ads" element={<RouteGuard minimumRole="analyst" requireVerified><MetaAds /></RouteGuard>} />
+                    <Route path="/meta-ads/compare" element={<RouteGuard minimumRole="analyst" requireVerified><MetaAdsCompare /></RouteGuard>} />
+                    <Route path="/insights" element={<RouteGuard minimumRole="analyst" requireVerified><Insights /></RouteGuard>} />
+                    <Route path="/weekly-briefing" element={<RouteGuard minimumRole="analyst" requireVerified><WeeklyBriefing /></RouteGuard>} />
                     <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/reports" element={<RouteGuard requireVerified><Reports /></RouteGuard>} />
                     <Route path="/alerts" element={<Alerts />} />
-                    <Route path="/analyses/:id" element={<AnalysisView />} />
+                    <Route path="/analyses/:id" element={<RouteGuard requireVerified><AnalysisView /></RouteGuard>} />
                     <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/settings/team" element={<TeamManagement />} />
-                    <Route path="/settings/usage" element={<UsageDashboard />} />
-                    <Route path="/settings/billing" element={<Billing />} />
-                    <Route path="/billing" element={<Billing />} />
+                    <Route path="/settings/team" element={<RouteGuard minimumRole="admin"><TeamManagement /></RouteGuard>} />
+                    <Route path="/settings/usage" element={<RouteGuard minimumRole="admin"><UsageDashboard /></RouteGuard>} />
+                    <Route path="/settings/billing" element={<RouteGuard minimumRole="admin"><Billing /></RouteGuard>} />
+                    <Route path="/billing" element={<RouteGuard minimumRole="admin"><Billing /></RouteGuard>} />
                   </Route>
                   {/* Admin Panel — isolated from main app layout */}
                   <Route path="/admin" element={<AdminGuardWrapper><AdminLayout /></AdminGuardWrapper>}>

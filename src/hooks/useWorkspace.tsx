@@ -11,6 +11,7 @@ interface WorkspaceContextType {
   setCurrentWorkspace: (ws: Workspace) => void;
   createWorkspace: (name: string) => Promise<Workspace>;
   loading: boolean;
+  error: string | null;
   refetch: () => Promise<void>;
 }
 
@@ -18,20 +19,24 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const initializedRef = useRef(false);
 
   const fetchWorkspaces = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       setWorkspaces([]);
       setCurrentWorkspace(null);
       setLoading(false);
+      setError(null);
       initializedRef.current = false;
       return;
     }
     setLoading(true);
+    setError(null);
     const { data, error } = await supabase
       .from("workspaces")
       .select("*")
@@ -39,6 +44,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
     if (error) {
       console.error("Error fetching workspaces:", error);
+      setWorkspaces([]);
+      setCurrentWorkspace(null);
+      setError(error.message || "Failed to load workspaces.");
       setLoading(false);
       return;
     }
@@ -57,7 +65,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     }
 
     setLoading(false);
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     fetchWorkspaces();
@@ -70,13 +78,17 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }, [currentWorkspace]);
 
   const createWorkspace = async (name: string): Promise<Workspace> => {
-    if (!user) throw new Error("Not authenticated");
+    if (!userId) throw new Error("Not authenticated");
+    setError(null);
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     const { data, error } = await supabase
       .rpc("create_workspace", { _name: name, _slug: `${slug}-${Date.now()}` })
       .single();
 
-    if (error) throw error;
+    if (error) {
+      setError(error.message || "Failed to create workspace.");
+      throw error;
+    }
     setWorkspaces((prev) => [...prev, data]);
     setCurrentWorkspace(data);
     initializedRef.current = true;
@@ -85,7 +97,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <WorkspaceContext.Provider
-      value={{ workspaces, currentWorkspace, setCurrentWorkspace, createWorkspace, loading, refetch: fetchWorkspaces }}
+      value={{ workspaces, currentWorkspace, setCurrentWorkspace, createWorkspace, loading, error, refetch: fetchWorkspaces }}
     >
       {children}
     </WorkspaceContext.Provider>

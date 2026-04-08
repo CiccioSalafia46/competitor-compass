@@ -1,15 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import {
+  HttpError,
+  assertWorkspaceAnalyst,
+  requireAuthenticatedUser,
+} from "../_shared/auth.ts";
+import {
+  evaluateAlertRules,
+  scheduleBackgroundAlertEvaluation,
+} from "../_shared/alerts.ts";
+import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 
 const META_AD_LIBRARY_API = "https://graph.facebook.com/v21.0/ads_archive";
 
-const logStep = (step: string, details?: Record<string, any>) => {
+const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(JSON.stringify({ fn: "fetch-meta-ads", step, ts: new Date().toISOString(), ...(details || {}) }));
 };
 
@@ -26,16 +30,13 @@ serve(async (req) => {
     );
 
     // Auth check
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !userData.user) throw new Error("Not authenticated");
-    const userId = userData.user.id;
+    const { user } = await requireAuthenticatedUser(supabase, req);
+    const userId = user.id;
     logStep("User authenticated");
 
     const { workspaceId, competitorId, pageId, searchTerms, adType, limit } = await req.json();
     if (!workspaceId) throw new Error("workspaceId is required");
+    await assertWorkspaceAnalyst(supabase, userId, workspaceId);
 
     // Rate limit: 10 fetches per hour per user
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
@@ -53,10 +54,7 @@ serve(async (req) => {
 
     const metaToken = Deno.env.get("META_ACCESS_TOKEN");
     if (!metaToken) {
-      return new Response(
-        JSON.stringify({ error: "META_ACCESS_TOKEN not configured. Add a Meta App access token to fetch ads." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "META_ACCESS_TOKEN not configured. Add a Meta App access token to fetch ads." }, 400);
     }
 
     // Build API params
@@ -86,10 +84,7 @@ serve(async (req) => {
     if (!resp.ok) {
       const errBody = await resp.text();
       logStep("Meta API error", { status: resp.status, body: errBody });
-      return new Response(
-        JSON.stringify({ error: `Meta API error: ${resp.status}`, details: errBody }),
-        { status: resp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: `Meta API error: ${resp.status}`, details: errBody }, resp.status);
     }
 
     const apiData = await resp.json();
@@ -98,6 +93,7 @@ serve(async (req) => {
 
     let imported = 0;
     let skipped = 0;
+    const importedMetaAdIds: string[] = [];
 
     // Find competitor association
     let resolvedCompetitorId = competitorId || null;
@@ -147,38 +143,43 @@ serve(async (req) => {
         mediaType = "image";
       }
 
-      const { error: insertErr } = await supabase.from("meta_ads").insert({
-        workspace_id: workspaceId,
-        competitor_id: resolvedCompetitorId,
-        meta_ad_id: ad.id,
-        page_id: ad.page_id,
-        page_name: ad.page_name,
-        ad_snapshot_url: ad.ad_snapshot_url,
-        ad_creative_bodies: ad.ad_creative_bodies || [],
-        ad_creative_link_titles: ad.ad_creative_link_titles || [],
-        ad_creative_link_descriptions: ad.ad_creative_link_descriptions || [],
-        ad_creative_link_captions: ad.ad_creative_link_captions || [],
-        cta_type: null,
-        ad_delivery_start_time: ad.ad_delivery_start_time || null,
-        ad_delivery_stop_time: ad.ad_delivery_stop_time || null,
-        is_active: isActive,
-        publisher_platforms: ad.publisher_platforms || [],
-        platforms: ad.publisher_platforms || [],
-        estimated_audience_size: audienceSize,
-        spend_range: spendRange,
-        impressions_range: impressionsRange,
-        currency: ad.currency || null,
-        languages: ad.languages || [],
-        media_type: mediaType,
-        raw_data: ad,
-        first_seen_at: ad.ad_delivery_start_time || new Date().toISOString(),
-        last_seen_at: new Date().toISOString(),
-      });
+      const { data: insertedAd, error: insertErr } = await supabase
+        .from("meta_ads")
+        .insert({
+          workspace_id: workspaceId,
+          competitor_id: resolvedCompetitorId,
+          meta_ad_id: ad.id,
+          page_id: ad.page_id,
+          page_name: ad.page_name,
+          ad_snapshot_url: ad.ad_snapshot_url,
+          ad_creative_bodies: ad.ad_creative_bodies || [],
+          ad_creative_link_titles: ad.ad_creative_link_titles || [],
+          ad_creative_link_descriptions: ad.ad_creative_link_descriptions || [],
+          ad_creative_link_captions: ad.ad_creative_link_captions || [],
+          cta_type: null,
+          ad_delivery_start_time: ad.ad_delivery_start_time || null,
+          ad_delivery_stop_time: ad.ad_delivery_stop_time || null,
+          is_active: isActive,
+          publisher_platforms: ad.publisher_platforms || [],
+          platforms: ad.publisher_platforms || [],
+          estimated_audience_size: audienceSize,
+          spend_range: spendRange,
+          impressions_range: impressionsRange,
+          currency: ad.currency || null,
+          languages: ad.languages || [],
+          media_type: mediaType,
+          raw_data: ad,
+          first_seen_at: ad.ad_delivery_start_time || new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single<{ id: string }>();
 
-      if (insertErr) {
-        logStep("Insert error", { error: insertErr.message, adId: ad.id });
+      if (insertErr || !insertedAd) {
+        logStep("Insert error", { error: insertErr?.message || "unknown_error", adId: ad.id });
       } else {
         imported++;
+        importedMetaAdIds.push(insertedAd.id);
       }
     }
 
@@ -191,18 +192,26 @@ serve(async (req) => {
       });
     }
 
+    if (importedMetaAdIds.length > 0) {
+      scheduleBackgroundAlertEvaluation(
+        evaluateAlertRules(supabase, {
+          workspaceId,
+          source: "meta_ads",
+          triggeredBy: userId,
+          metaAdIds: importedMetaAdIds,
+        }),
+      );
+    }
+
     logStep("Complete", { imported, skipped });
 
-    return new Response(
-      JSON.stringify({ success: true, imported, skipped, total: ads.length }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ success: true, imported, skipped, total: ads.length });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = getErrorMessage(err);
     logStep("ERROR", { message: msg });
-    return new Response(
-      JSON.stringify({ error: "An internal error occurred. Please try again." }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    if (err instanceof HttpError) {
+      return jsonResponse({ error: msg }, err.status);
+    }
+    return jsonResponse({ error: "An internal error occurred. Please try again." }, 500);
   }
 });

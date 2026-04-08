@@ -110,7 +110,7 @@ export default function MetaAdsPage() {
           {DEMO_META_ADS.map((ad) => (
             <MetaAdCard
               key={ad.id}
-              ad={ad as any}
+              ad={ad}
               isDemo
               onSelect={(id) => setSelectedDemoAd(id)}
             />

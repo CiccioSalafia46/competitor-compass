@@ -9,11 +9,12 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import type { AdminLogEntry, AdminLogsResponse } from "@/types/admin";
 
 export default function AdminLogs() {
   const [page, setPage] = useState(1);
   const perPage = 50;
-  const { data, loading, error } = useAdminData("logs", { page, perPage });
+  const { data, loading, error } = useAdminData<AdminLogsResponse>("logs", { page, perPage });
   const [search, setSearch] = useState("");
 
   const logs = data?.logs || [];
@@ -22,7 +23,7 @@ export default function AdminLogs() {
 
   const filtered = search
     ? logs.filter(
-        (l: any) =>
+        (l: AdminLogEntry) =>
           l.action?.toLowerCase().includes(search.toLowerCase()) ||
           l.entity_type?.toLowerCase().includes(search.toLowerCase()) ||
           l.entity_id?.toLowerCase().includes(search.toLowerCase())
@@ -57,7 +58,7 @@ export default function AdminLogs() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Filter by action or entity…"
+          placeholder="Filter by action or entity..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -73,18 +74,19 @@ export default function AdminLogs() {
                 <TableHead>Entity</TableHead>
                 <TableHead>Entity ID</TableHead>
                 <TableHead>User ID</TableHead>
+                <TableHead>Metadata</TableHead>
                 <TableHead>Timestamp</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     No logs found
                   </TableCell>
                 </TableRow>
               )}
-              {filtered.map((log: any) => (
+              {filtered.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell>
                     <Badge
@@ -96,10 +98,19 @@ export default function AdminLogs() {
                   </TableCell>
                   <TableCell className="text-sm">{log.entity_type}</TableCell>
                   <TableCell className="text-xs text-muted-foreground font-mono">
-                    {log.entity_id?.slice(0, 8) || "—"}
+                    {log.entity_id?.slice(0, 8) || "-"}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground font-mono">
                     {log.user_id?.slice(0, 8)}
+                  </TableCell>
+                  <TableCell className="max-w-72">
+                    {log.metadata && Object.keys(log.metadata).length > 0 ? (
+                      <code className="line-clamp-2 rounded bg-muted px-2 py-1 text-[10px] text-muted-foreground">
+                        {JSON.stringify(log.metadata)}
+                      </code>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {format(new Date(log.created_at), "MMM d, HH:mm:ss")}

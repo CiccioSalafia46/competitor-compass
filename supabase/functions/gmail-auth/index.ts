@@ -1,11 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import {
+  HttpError,
+  assertWorkspaceAdmin,
+  requireAuthenticatedUser,
+} from "../_shared/auth.ts";
+import { sanitizeRedirectUrl } from "../_shared/app.ts";
+import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 
 const GOOGLE_OAUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -13,6 +14,110 @@ const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/userinfo.email",
 ];
+const STATE_VERSION = 1;
+const STATE_TTL_MS = 30 * 60 * 1000;
+
+type OAuthStatePayload = {
+  version: number;
+  workspaceId: string;
+  userId: string;
+  redirectUrl: string;
+  expiresAt: number;
+};
+
+function bytesToBase64Url(bytes: Uint8Array) {
+  const binary = String.fromCharCode(...bytes);
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function base64UrlToBytes(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+  const binary = atob(padded);
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function constantTimeEqual(left: Uint8Array, right: Uint8Array) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  let mismatch = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    mismatch |= left[index] ^ right[index];
+  }
+
+  return mismatch === 0;
+}
+
+async function signState(payloadEncoded: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(payloadEncoded),
+  );
+
+  return bytesToBase64Url(new Uint8Array(signature));
+}
+
+async function createStateToken(payload: OAuthStatePayload, secret: string) {
+  const payloadEncoded = bytesToBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
+  const signatureEncoded = await signState(payloadEncoded, secret);
+  return `${payloadEncoded}.${signatureEncoded}`;
+}
+
+async function parseStateToken(rawState: string | null, secret: string): Promise<OAuthStatePayload | null> {
+  if (!rawState) {
+    return null;
+  }
+
+  const [payloadEncoded, signatureEncoded, extraSegment] = rawState.split(".");
+  if (!payloadEncoded || !signatureEncoded || extraSegment) {
+    return null;
+  }
+
+  try {
+    const expectedSignature = await signState(payloadEncoded, secret);
+    const expectedBytes = base64UrlToBytes(expectedSignature);
+    const actualBytes = base64UrlToBytes(signatureEncoded);
+
+    if (!constantTimeEqual(expectedBytes, actualBytes)) {
+      return null;
+    }
+
+    const payloadJson = new TextDecoder().decode(base64UrlToBytes(payloadEncoded));
+    const payload = JSON.parse(payloadJson) as Partial<OAuthStatePayload>;
+
+    if (
+      payload.version !== STATE_VERSION ||
+      typeof payload.workspaceId !== "string" ||
+      typeof payload.userId !== "string" ||
+      typeof payload.redirectUrl !== "string" ||
+      typeof payload.expiresAt !== "number"
+    ) {
+      return null;
+    }
+
+    if (payload.expiresAt < Date.now()) {
+      return null;
+    }
+
+    return payload as OAuthStatePayload;
+  } catch {
+    return null;
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,9 +130,9 @@ serve(async (req) => {
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
 
   if (!clientId || !clientSecret) {
-    return new Response(
-      JSON.stringify({ error: "Google OAuth credentials not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET." }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    return jsonResponse(
+      { error: "Google OAuth credentials not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET." },
+      500,
     );
   }
 
@@ -35,31 +140,29 @@ serve(async (req) => {
   const url = new URL(req.url);
   const redirectUri = `${supabaseUrl}/functions/v1/gmail-auth`;
 
-  // GET: OAuth callback from Google
   if (req.method === "GET") {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
     const error = url.searchParams.get("error");
 
-    if (error) {
-      const stateData = state ? JSON.parse(atob(state)) : {};
-      const appUrl = stateData.redirectUrl || supabaseUrl;
-      return Response.redirect(`${appUrl}?gmail_error=${encodeURIComponent(error)}`, 302);
-    }
-
-    if (!code || !state) {
-      return new Response("Missing code or state parameter", { status: 400 });
-    }
-
-    let stateData: { workspaceId: string; userId: string; redirectUrl: string };
-    try {
-      stateData = JSON.parse(atob(state));
-    } catch {
+    const stateData = await parseStateToken(state, supabaseServiceKey);
+    if (!stateData) {
       return new Response("Invalid state parameter", { status: 400 });
     }
 
+    const redirectUrl = sanitizeRedirectUrl(req, stateData.redirectUrl);
+
+    if (error) {
+      return Response.redirect(`${redirectUrl}?gmail_error=${encodeURIComponent(error)}`, 302);
+    }
+
+    if (!code || !stateData.workspaceId || !stateData.userId) {
+      return new Response("Missing code or state parameter", { status: 400 });
+    }
+
     try {
-      // Exchange authorization code for tokens
+      await assertWorkspaceAdmin(supabase, stateData.userId, stateData.workspaceId);
+
       const tokenResp = await fetch(GOOGLE_TOKEN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -74,23 +177,19 @@ serve(async (req) => {
 
       if (!tokenResp.ok) {
         console.error("Token exchange failed:", tokenResp.status);
-        return Response.redirect(`${stateData.redirectUrl}?gmail_error=token_exchange_failed`, 302);
+        return Response.redirect(`${redirectUrl}?gmail_error=token_exchange_failed`, 302);
       }
 
       const tokenData = await tokenResp.json();
-
-      // Get user email from Google
       const userInfoResp = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
         headers: { Authorization: `Bearer ${tokenData.access_token}` },
       });
 
       if (!userInfoResp.ok) {
-        return Response.redirect(`${stateData.redirectUrl}?gmail_error=userinfo_failed`, 302);
+        return Response.redirect(`${redirectUrl}?gmail_error=userinfo_failed`, 302);
       }
 
       const userInfo = await userInfoResp.json();
-
-      // Upsert gmail connection
       const { data: connection, error: connError } = await supabase
         .from("gmail_connections")
         .upsert(
@@ -102,17 +201,16 @@ serve(async (req) => {
             sync_status: "idle",
             sync_error: null,
           },
-          { onConflict: "workspace_id,email_address" }
+          { onConflict: "workspace_id,email_address" },
         )
         .select()
         .single();
 
       if (connError) {
         console.error("Connection upsert error:", connError);
-        return Response.redirect(`${stateData.redirectUrl}?gmail_error=db_error`, 302);
+        return Response.redirect(`${redirectUrl}?gmail_error=db_error`, 302);
       }
 
-      // Store tokens securely (only accessible by service role)
       const { error: tokenError } = await supabase
         .from("gmail_tokens")
         .upsert(
@@ -124,15 +222,14 @@ serve(async (req) => {
             scopes: tokenData.scope?.split(" ") || [],
             updated_at: new Date().toISOString(),
           },
-          { onConflict: "gmail_connection_id" }
+          { onConflict: "gmail_connection_id" },
         );
 
       if (tokenError) {
         console.error("Token storage error:", tokenError);
-        return Response.redirect(`${stateData.redirectUrl}?gmail_error=token_storage_failed`, 302);
+        return Response.redirect(`${redirectUrl}?gmail_error=token_storage_failed`, 302);
       }
 
-      // Log audit event
       await supabase.from("audit_log").insert({
         workspace_id: stateData.workspaceId,
         user_id: stateData.userId,
@@ -142,51 +239,51 @@ serve(async (req) => {
         metadata: { email: userInfo.email },
       });
 
-      return Response.redirect(`${stateData.redirectUrl}?gmail_connected=true`, 302);
-    } catch (err) {
-      console.error("OAuth callback error:", err);
-      return Response.redirect(`${stateData.redirectUrl}?gmail_error=callback_failed`, 302);
+      return Response.redirect(`${redirectUrl}?gmail_connected=true`, 302);
+    } catch (error) {
+      console.error("OAuth callback error:", error);
+      return Response.redirect(`${redirectUrl}?gmail_error=callback_failed`, 302);
     }
   }
 
-  // POST: Initiate or disconnect
   if (req.method === "POST") {
     try {
       const body = await req.json();
       const { action } = body;
+      const { user } = await requireAuthenticatedUser(supabase, req);
 
       if (action === "initiate") {
-        // Verify the caller is the claimed user
-        const authHeader = req.headers.get("Authorization");
-        if (!authHeader?.startsWith("Bearer ")) {
-          return new Response(
-            JSON.stringify({ error: "Unauthorized" }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        const { data: callerData, error: callerErr } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-        if (callerErr || !callerData.user) {
-          return new Response(
-            JSON.stringify({ error: "Unauthorized" }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
         const { workspaceId, redirectUrl } = body;
-        const userId = callerData.user.id;
         if (!workspaceId) {
-          return new Response(
-            JSON.stringify({ error: "workspaceId is required" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          return jsonResponse({ error: "workspaceId is required" }, 400);
+        }
+
+        await assertWorkspaceAdmin(supabase, user.id, workspaceId);
+
+        // Rate limit: max 5 OAuth initiations per user per hour
+        const { data: allowed } = await supabase.rpc("check_rate_limit", {
+          _user_id: user.id,
+          _workspace_id: workspaceId,
+          _endpoint: "gmail-auth-initiate",
+          _max_per_hour: 5,
+        });
+        if (!allowed) {
+          return jsonResponse(
+            { error: "Too many OAuth attempts. Please wait before trying again." },
+            429,
           );
         }
 
-        const state = btoa(
-          JSON.stringify({
+        const safeRedirectUrl = sanitizeRedirectUrl(req, redirectUrl);
+        const state = await createStateToken(
+          {
+            version: STATE_VERSION,
             workspaceId,
-            userId,
-            redirectUrl: redirectUrl || url.origin,
-          })
+            userId: user.id,
+            redirectUrl: safeRedirectUrl,
+            expiresAt: Date.now() + STATE_TTL_MS,
+          },
+          supabaseServiceKey,
         );
 
         const authUrl = new URL(GOOGLE_OAUTH_URL);
@@ -198,68 +295,48 @@ serve(async (req) => {
         authUrl.searchParams.set("prompt", "consent");
         authUrl.searchParams.set("state", state);
 
-        return new Response(
-          JSON.stringify({ url: authUrl.toString() }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return jsonResponse({ url: authUrl.toString() });
       }
 
       if (action === "disconnect") {
-        // Verify the caller is authenticated
-        const disconnectAuthHeader = req.headers.get("Authorization");
-        if (!disconnectAuthHeader?.startsWith("Bearer ")) {
-          return new Response(
-            JSON.stringify({ error: "Unauthorized" }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        const { data: disconnectUser, error: disconnectErr } = await supabase.auth.getUser(disconnectAuthHeader.replace("Bearer ", ""));
-        if (disconnectErr || !disconnectUser.user) {
-          return new Response(
-            JSON.stringify({ error: "Unauthorized" }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
         const { connectionId } = body;
-        const workspaceId = body.workspaceId;
-        const userId = disconnectUser.user.id;
         if (!connectionId) {
-          return new Response(
-            JSON.stringify({ error: "connectionId is required" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+          return jsonResponse({ error: "connectionId is required" }, 400);
         }
 
+        const { data: connection } = await supabase
+          .from("gmail_connections")
+          .select("id, workspace_id")
+          .eq("id", connectionId)
+          .maybeSingle();
+
+        if (!connection) {
+          return jsonResponse({ error: "Connection not found" }, 404);
+        }
+
+        await assertWorkspaceAdmin(supabase, user.id, connection.workspace_id);
         await supabase.from("gmail_tokens").delete().eq("gmail_connection_id", connectionId);
         await supabase.from("gmail_connections").delete().eq("id", connectionId);
 
-        if (workspaceId && userId) {
-          await supabase.from("audit_log").insert({
-            workspace_id: workspaceId,
-            user_id: userId,
-            action: "gmail_disconnected",
-            entity_type: "gmail_connection",
-            entity_id: connectionId,
-          });
-        }
+        await supabase.from("audit_log").insert({
+          workspace_id: connection.workspace_id,
+          user_id: user.id,
+          action: "gmail_disconnected",
+          entity_type: "gmail_connection",
+          entity_id: connectionId,
+        });
 
-        return new Response(
-          JSON.stringify({ success: true }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return jsonResponse({ success: true });
       }
 
-      return new Response(
-        JSON.stringify({ error: "Unknown action. Use 'initiate' or 'disconnect'." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } catch (err) {
-      console.error("POST error:", err);
-      return new Response(
-        JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Unknown action. Use 'initiate' or 'disconnect'." }, 400);
+    } catch (error) {
+      console.error("POST error:", error);
+      const message = getErrorMessage(error);
+      if (error instanceof HttpError) {
+        return jsonResponse({ error: message }, error.status);
+      }
+      return jsonResponse({ error: message }, 500);
     }
   }
 

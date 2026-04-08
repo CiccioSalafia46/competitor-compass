@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { getErrorMessage } from "@/lib/errors";
+import { enqueueNewsletterAnalysis } from "@/lib/newsletter-analysis";
 
 type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 
@@ -44,7 +46,7 @@ export default function NewNewsletter() {
       .then(({ data }) => setCompetitors(data || []));
   }, [currentWorkspace]);
 
-  const handleSubmit = async (analyze: boolean) => {
+  const handleSubmit = async (openAnalysis: boolean) => {
     if (!currentWorkspace || !user || !content.trim()) return;
 
     if (isAtLimit("newsletters_this_month")) {
@@ -53,7 +55,7 @@ export default function NewNewsletter() {
     }
 
     setIsSubmitting(true);
-    if (analyze) setIsAnalyzing(true);
+    setIsAnalyzing(true);
 
     try {
       const { data: entry, error } = await supabase
@@ -75,44 +77,31 @@ export default function NewNewsletter() {
       await trackUsage("newsletter_imported");
       await log("created", "newsletter_entry", entry.id, { subject: entry.subject });
 
-      if (analyze && entry) {
-        // Create analysis record and trigger edge function
-        const { data: analysis, error: analysisError } = await supabase
-          .from("analyses")
-          .insert({
-            workspace_id: currentWorkspace.id,
-            newsletter_entry_id: entry.id,
-            analysis_type: "full",
-            status: "pending",
-          })
-          .select()
-          .single();
+      try {
+        const queued = await enqueueNewsletterAnalysis({ newsletterEntryIds: [entry.id] });
+        const analysis = queued.analyses[0];
 
-        if (analysisError) throw analysisError;
-
-        // Trigger the analysis edge function
-        const { error: fnError } = await supabase.functions.invoke("analyze-newsletter", {
-          body: { analysisId: analysis.id, newsletterEntryId: entry.id },
+        toast({
+          title: "Import saved",
+          description: "AI analysis was queued in the background. Raw content is already stored.",
         });
 
-        if (fnError) {
-          console.error("Analysis trigger failed:", fnError);
-          toast({
-            title: "Newsletter saved",
-            description: "Saved but analysis failed to start. You can retry from the newsletter view.",
-            variant: "destructive",
-          });
+        if (openAnalysis && analysis) {
+          navigate(`/analyses/${analysis.id}`);
         } else {
-          toast({ title: "Analysis started", description: "Your newsletter is being analyzed. Results will appear shortly." });
+          navigate("/newsletters");
         }
-
-        navigate(`/analyses/${analysis.id}`);
-      } else {
-        toast({ title: "Newsletter saved", description: "Content saved successfully." });
+      } catch (queueError) {
+        console.error("Analysis queue failed:", queueError);
+        toast({
+          title: "Import saved",
+          description: "Raw content was saved, but the AI analysis job could not be queued. You can retry from the newsletter detail view.",
+          variant: "destructive",
+        });
         navigate("/newsletters");
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsSubmitting(false);
       setIsAnalyzing(false);
@@ -131,7 +120,7 @@ export default function NewNewsletter() {
 
       <h1 className="text-2xl font-semibold text-foreground">Import Competitor Data</h1>
       <p className="text-sm text-muted-foreground mt-1 mb-6">
-        Paste competitor content for AI-powered competitive intelligence analysis
+        Paste competitor content. Every saved import is queued automatically for AI analysis.
       </p>
 
       <Card className="shadow-card border">
@@ -200,19 +189,24 @@ export default function NewNewsletter() {
             <Button
               variant="outline"
               onClick={() => handleSubmit(false)}
-              disabled={isSubmitting || !content.trim()}
+              disabled={isSubmitting || !content.trim() || !canAnalyze}
             >
-              Save only
+              {isAnalyzing ? "Queueing..." : "Save & queue"}
             </Button>
             <Button
               onClick={() => handleSubmit(true)}
-              disabled={isSubmitting || !content.trim()}
+              disabled={isSubmitting || !content.trim() || !canAnalyze}
               className="gap-2"
             >
               <Sparkles className="h-4 w-4" />
-              {isAnalyzing ? "Analyzing..." : "Save & Analyze"}
+              {isAnalyzing ? "Queueing..." : "Save & open analysis"}
             </Button>
           </div>
+          {!canAnalyze && (
+            <p className="text-xs text-destructive">
+              You need analyst access to import and queue newsletter analysis jobs.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

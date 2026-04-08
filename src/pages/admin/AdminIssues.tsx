@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { AlertTriangle, RefreshCw, Mail, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
+import type { AdminIssuesResponse } from "@/types/admin";
 
 export default function AdminIssues() {
-  const { data, loading, error, refetch } = useAdminData("issues");
+  const { data, loading, error, refetch } = useAdminData<AdminIssuesResponse>("issues");
   const { execute, acting } = useAdminAction();
 
   async function handleResync(connectionId: string) {
@@ -15,7 +16,9 @@ export default function AdminIssues() {
       await execute("force_resync", { connection_id: connectionId });
       toast.success("Sync state reset");
       refetch();
-    } catch {}
+    } catch {
+      // Error toast already handled by useAdminAction.
+    }
   }
 
   if (loading) {
@@ -70,7 +73,7 @@ export default function AdminIssues() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {syncErrors.map((conn: any) => (
+            {syncErrors.map((conn) => (
               <div key={conn.id} className="border rounded-lg p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -111,7 +114,7 @@ export default function AdminIssues() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {failedAnalyses.map((a: any) => (
+            {failedAnalyses.map((a) => (
               <div key={a.id} className="border rounded-lg p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-warning" />

@@ -34,7 +34,9 @@ function loadState(workspaceId?: string): OnboardingState {
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY}_${workspaceId || "global"}`);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    // Ignore invalid localStorage data and fall back to the default state.
+  }
   return { completedSteps: [], skippedSteps: [], dismissed: false };
 }
 

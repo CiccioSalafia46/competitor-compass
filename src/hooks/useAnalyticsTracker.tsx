@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 /**
  * Lightweight internal analytics tracker.
@@ -11,15 +12,16 @@ export function useAnalyticsTracker() {
   const { currentWorkspace } = useWorkspace();
 
   const track = useCallback(
-    async (event: string, metadata?: Record<string, any>) => {
+    async (event: string, metadata?: Json) => {
       if (!currentWorkspace) return;
       try {
-        await supabase.from("usage_events").insert({
+        const payload: Database["public"]["Tables"]["usage_events"]["Insert"] = {
           workspace_id: currentWorkspace.id,
           event_type: event,
           quantity: 1,
           metadata: metadata || {},
-        } as any);
+        };
+        await supabase.from("usage_events").insert(payload);
       } catch {
         // Silent fail — analytics should never break UX
       }

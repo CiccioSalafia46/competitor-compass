@@ -16,7 +16,7 @@ type OpenAiChatCompletionOptions = {
 
 type OpenAiSuccess = {
   ok: true;
-  data: any;
+  data: unknown;
   model: string;
   requestId?: string | null;
 };

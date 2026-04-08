@@ -19,7 +19,7 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
  * Returns a debounced callback. The callback will only fire after
  * `delay` ms of inactivity.
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number = 300
 ): (...args: Parameters<T>) => void {

@@ -15,6 +15,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type {
+  AdminFeatureFlag,
+  AdminIntegrationHealthItem,
+  AdminIntegrationTestResult,
+  AdminSecretsResponse,
+} from "@/types/admin";
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
@@ -32,18 +38,20 @@ function HealthIcon({ ok }: { ok: boolean | null }) {
 }
 
 export default function AdminSecrets() {
-  const { data, loading, error, refetch } = useAdminData("integration_health");
+  const { data, loading, error, refetch } = useAdminData<AdminSecretsResponse>("integration_health");
   const { execute, acting } = useAdminAction();
-  const [testResults, setTestResults] = useState<Record<string, any[]>>({});
+  const [testResults, setTestResults] = useState<Record<string, AdminIntegrationTestResult[]>>({});
   const [testingId, setTestingId] = useState<string | null>(null);
   const [flagConfirm, setFlagConfirm] = useState<{ key: string; label: string; enabled: boolean } | null>(null);
 
   async function runTest(integrationId: string) {
     setTestingId(integrationId);
     try {
-      const result = await execute("test_integration", { integration_id: integrationId });
+      const result = await execute<{ results: AdminIntegrationTestResult[] }>("test_integration", { integration_id: integrationId });
       setTestResults((prev) => ({ ...prev, [integrationId]: result.results }));
-    } catch {} finally {
+    } catch {
+      // Error toast already handled by useAdminAction.
+    } finally {
       setTestingId(null);
     }
   }
@@ -55,7 +63,9 @@ export default function AdminSecrets() {
       toast.success(`${flagConfirm.label} ${!flagConfirm.enabled ? "enabled" : "disabled"}`);
       setFlagConfirm(null);
       refetch();
-    } catch {}
+    } catch {
+      // Error toast already handled by useAdminAction.
+    }
   }
 
   if (loading) {
@@ -78,7 +88,7 @@ export default function AdminSecrets() {
 
   const integrations = data?.integrations || [];
   const flags = data?.flags || [];
-  const flagCategories = [...new Set(flags.map((f: any) => f.category))];
+  const flagCategories = [...new Set(flags.map((f) => f.category))];
 
   return (
     <div className="p-6 space-y-6 max-w-7xl">
@@ -104,7 +114,7 @@ export default function AdminSecrets() {
 
         {/* ─── Integration Registry ─── */}
         <TabsContent value="registry" className="space-y-4">
-          {integrations.map((integration: any) => (
+          {integrations.map((integration: AdminIntegrationHealthItem) => (
             <Card key={integration.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -130,7 +140,7 @@ export default function AdminSecrets() {
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Credentials</p>
                   <div className="space-y-1.5">
-                    {integration.secrets.map((secret: any) => (
+                    {integration.secrets.map((secret) => (
                       <div key={secret.name} className="flex items-center justify-between py-1.5 px-3 rounded-md bg-muted/50">
                         <div className="flex items-center gap-2">
                           {secret.configured ? (
@@ -160,7 +170,7 @@ export default function AdminSecrets() {
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Health</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {Object.entries(integration.health).map(([key, value]: any) => (
+                      {Object.entries(integration.health).map(([key, value]) => (
                         <div key={key} className="bg-muted/50 rounded-md p-2.5">
                           <p className="text-lg font-bold">{value}</p>
                           <p className="text-[11px] text-muted-foreground capitalize">
@@ -199,7 +209,7 @@ export default function AdminSecrets() {
                 {testResults[integration.id] && (
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Test Results</p>
-                    {testResults[integration.id].map((r: any, i: number) => (
+                    {testResults[integration.id].map((r, i: number) => (
                       <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-md bg-muted/50">
                         <div className="flex items-center gap-2">
                           {r.status === "pass" ? (
@@ -232,13 +242,13 @@ export default function AdminSecrets() {
               <CardDescription>Toggle features and integrations. Changes take effect immediately.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {flagCategories.map((category: string) => (
+              {flagCategories.map((category) => (
                 <div key={category}>
                   <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">{category}</p>
                   <div className="space-y-3">
                     {flags
-                      .filter((f: any) => f.category === category)
-                      .map((flag: any) => (
+                      .filter((f: AdminFeatureFlag) => f.category === category)
+                      .map((flag) => (
                         <div key={flag.key} className="flex items-center justify-between py-2 px-3 rounded-md bg-muted/50">
                           <div className="flex items-center gap-3">
                             <Zap className={`h-4 w-4 ${flag.enabled ? "text-primary" : "text-muted-foreground"}`} />

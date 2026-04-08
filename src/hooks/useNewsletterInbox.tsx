@@ -2,9 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import type { NewsletterInboxItem, NewsletterExtraction } from "@/types/gmail";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { fetchNewsletterCompetitorSuggestions, type CompetitorSuggestion } from "@/lib/competitor-attribution";
 
 interface InboxFilters {
   competitorId?: string;
+  unassignedOnly?: boolean;
   isNewsletter?: boolean;
   isArchived?: boolean;
   search?: string;
@@ -50,6 +53,8 @@ export function useNewsletterInbox(filters: InboxFilters = {}) {
 
     if (filters.competitorId) {
       query = query.eq("competitor_id", filters.competitorId);
+    } else if (filters.unassignedOnly) {
+      query = query.is("competitor_id", null);
     }
 
     if (filters.search) {
@@ -73,7 +78,7 @@ export function useNewsletterInbox(filters: InboxFilters = {}) {
     setItems((data as NewsletterInboxItem[]) || []);
     setTotalCount(count || 0);
     setLoading(false);
-  }, [currentWorkspace, page, filters.competitorId, filters.isNewsletter, filters.isArchived, filters.search, filters.dateFrom, filters.dateTo]);
+  }, [currentWorkspace, page, filters.competitorId, filters.unassignedOnly, filters.isNewsletter, filters.isArchived, filters.search, filters.dateFrom, filters.dateTo]);
 
   useEffect(() => {
     fetchInbox();
@@ -102,6 +107,19 @@ export function useNewsletterInbox(filters: InboxFilters = {}) {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, tags } : i)));
   };
 
+  const assignCompetitor = async (id: string, competitorId: string | null) => {
+    const { error } = await supabase
+      .from("newsletter_inbox")
+      .update({ competitor_id: competitorId })
+      .eq("id", id);
+
+    if (error) {
+      throw error;
+    }
+
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, competitor_id: competitorId } : item)));
+  };
+
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return {
@@ -115,6 +133,7 @@ export function useNewsletterInbox(filters: InboxFilters = {}) {
     toggleStar,
     archive,
     updateTags,
+    assignCompetitor,
     refetch: fetchInbox,
   };
 }
@@ -147,10 +166,9 @@ export function useNewsletterExtraction(newsletterInboxId: string | null) {
     if (!newsletterInboxId) return;
     setExtracting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("extract-newsletter-intel", {
+      const data = await invokeEdgeFunction<{ extraction?: NewsletterExtraction }>("extract-newsletter-intel", {
         body: { newsletterInboxId },
       });
-      if (error) throw error;
       if (data?.extraction) {
         setExtraction(data.extraction as NewsletterExtraction);
       }
@@ -161,4 +179,39 @@ export function useNewsletterExtraction(newsletterInboxId: string | null) {
   };
 
   return { extraction, loading, extracting, extract };
+}
+
+export function useNewsletterCompetitorSuggestions(enabled = true) {
+  const { currentWorkspace } = useWorkspace();
+  const [suggestions, setSuggestions] = useState<CompetitorSuggestion[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSuggestions = useCallback(async () => {
+    if (!currentWorkspace || !enabled) {
+      setSuggestions([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await fetchNewsletterCompetitorSuggestions(currentWorkspace.id);
+      setSuggestions(result);
+    } catch (error) {
+      console.error("Newsletter competitor suggestions fetch error:", error);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentWorkspace, enabled]);
+
+  useEffect(() => {
+    void fetchSuggestions();
+  }, [fetchSuggestions]);
+
+  return {
+    suggestions,
+    loading,
+    refetch: fetchSuggestions,
+  };
 }

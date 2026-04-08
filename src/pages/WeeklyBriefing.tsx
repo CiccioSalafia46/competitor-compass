@@ -1,0 +1,278 @@
+import { useEffect } from "react";
+import { useWeeklyBriefing, type WeeklyBriefingAction } from "@/hooks/useWeeklyBriefing";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import {
+  AlertCircle,
+  ArrowRight,
+  BarChart3,
+  Lightbulb,
+  Mail,
+  Megaphone,
+  RefreshCw,
+  Sparkles,
+  Target,
+  Users,
+  Zap,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+
+const urgencyTone: Record<WeeklyBriefingAction["urgency"], string> = {
+  high: "border-destructive/20 bg-destructive/10 text-destructive",
+  medium: "border-warning/20 bg-warning/10 text-warning",
+  low: "border-primary/20 bg-primary/10 text-primary",
+};
+
+const categoryIcon: Record<string, React.ElementType> = {
+  pricing: Target,
+  promotions: Zap,
+  email_strategy: Mail,
+  paid_ads: Megaphone,
+  product_focus: BarChart3,
+  messaging_positioning: Lightbulb,
+};
+
+function MetricCard({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) {
+  return (
+    <div className="rounded-xl border bg-muted/20 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+export default function WeeklyBriefingPage() {
+  const { briefing, loading, error, generate } = useWeeklyBriefing();
+
+  // Auto-generate on first mount
+  useEffect(() => {
+    void generate(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const weekLabel = briefing
+    ? `${format(new Date(briefing.week_start), "MMM d")} – ${format(new Date(briefing.week_end), "MMM d, yyyy")}`
+    : null;
+
+  return (
+    <div className="max-w-5xl space-y-6 p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Weekly Briefing</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {weekLabel ? `Week of ${weekLabel}` : "Auto-generated competitive intelligence summary"}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => generate(true)}
+          disabled={loading}
+        >
+          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          {loading ? "Generating…" : "Regenerate"}
+        </Button>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      {loading && !briefing && (
+        <div className="space-y-4">
+          <Skeleton className="h-28 w-full" />
+          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Skeleton className="h-56 w-full" />
+            <Skeleton className="h-56 w-full" />
+          </div>
+        </div>
+      )}
+
+      {briefing?.status === "failed" && (
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardContent className="p-6">
+            <p className="font-semibold text-foreground">Briefing generation failed</p>
+            <p className="mt-1 text-sm text-muted-foreground">{briefing.error_message ?? "Unknown error"}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {briefing?.status === "ready" && (
+        <>
+          {/* Executive summary */}
+          {briefing.executive_summary && (
+            <Card className="border shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-xl bg-primary/10 p-2 text-primary shrink-0">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">Executive summary</p>
+                    <p className="text-sm leading-7 text-foreground">{briefing.executive_summary}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Metrics row */}
+          {briefing.metrics_snapshot && (
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              <MetricCard label="Newsletters" value={briefing.metrics_snapshot.newsletters_this_week} icon={Mail} />
+              <MetricCard label="Active ads" value={briefing.metrics_snapshot.active_ads} icon={Megaphone} />
+              <MetricCard label="Competitors" value={briefing.metrics_snapshot.tracked_competitors} icon={Users} />
+              <MetricCard label="Alerts" value={briefing.metrics_snapshot.alerts_this_week} icon={AlertCircle} />
+              <MetricCard label="Unread alerts" value={briefing.metrics_snapshot.unread_alerts} icon={AlertCircle} />
+              <MetricCard label="High-priority" value={briefing.metrics_snapshot.high_priority_insights} icon={Target} />
+            </div>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Key signals */}
+            {briefing.key_signals.length > 0 && (
+              <Card className="border shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Key signals this week</CardTitle>
+                  <CardDescription>{briefing.key_signals.length} notable competitive movements</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {briefing.key_signals.map((signal, i) => {
+                    const Icon = categoryIcon[signal.category] ?? Lightbulb;
+                    return (
+                      <div key={i} className="flex items-start gap-3 rounded-xl border bg-muted/10 p-3">
+                        <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-semibold text-foreground">{signal.competitor}</p>
+                          <p className="text-sm text-muted-foreground leading-5 mt-0.5">{signal.signal}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Action items */}
+            {briefing.action_items.length > 0 && (
+              <Card className="border shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">This week's action items</CardTitle>
+                  <CardDescription>Recommended steps based on competitive intelligence</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {briefing.action_items.map((item, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground leading-5">{item.action}</p>
+                        <Badge
+                          variant="outline"
+                          className={cn("mt-1.5 text-[10px] capitalize", urgencyTone[item.urgency])}
+                        >
+                          {item.urgency} priority
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Top insights */}
+          {briefing.top_insights.length > 0 && (
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Top insights</CardTitle>
+                <CardDescription>Highest-value intelligence from this week's analysis</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {briefing.top_insights.map((insight, i) => {
+                  const Icon = categoryIcon[insight.category] ?? Lightbulb;
+                  return (
+                    <div key={i} className="flex items-start gap-3 rounded-xl border bg-muted/10 p-3">
+                      <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <p className="text-sm font-medium text-foreground">{insight.title}</p>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] capitalize",
+                              insight.priority === "high" ? "border-destructive/20 bg-destructive/10 text-destructive" :
+                              insight.priority === "medium" ? "border-warning/20 bg-warning/10 text-warning" :
+                              "border-primary/20 bg-primary/10 text-primary"
+                            )}
+                          >
+                            {insight.priority}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-5">{insight.takeaway}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Competitor spotlight */}
+          {briefing.competitor_spotlight?.name && (
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Competitor spotlight</CardTitle>
+                <CardDescription>Most notable competitor activity this week</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-xl border bg-muted/10 p-4">
+                  <p className="text-sm font-semibold text-foreground mb-1">{briefing.competitor_spotlight.name}</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">{briefing.competitor_spotlight.headline}</p>
+                  <Separator className="my-3" />
+                  <p className="text-sm text-muted-foreground leading-6">{briefing.competitor_spotlight.details}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <p className="text-xs text-muted-foreground text-right">
+            Generated {new Date(briefing.generated_at).toLocaleString()}
+          </p>
+        </>
+      )}
+
+      {/* Empty state when no briefing yet and not loading */}
+      {!loading && !briefing && !error && (
+        <Card className="border-2 border-dashed bg-muted/20">
+          <CardContent className="py-16 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground">No briefing for this week yet</h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+              Generate your first weekly competitive intelligence summary. It synthesises newsletters, ads, alerts and insights from the past 7 days.
+            </p>
+            <Button className="mt-6 gap-1.5" onClick={() => generate(false)}>
+              <Sparkles className="h-4 w-4" />
+              Generate briefing
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

@@ -20,8 +20,11 @@ export type Database = {
           created_at: string
           created_by: string
           delivery_channels: string[]
+          evaluation_mode: string
           id: string
           is_active: boolean
+          last_evaluated_at: string | null
+          last_triggered_at: string | null
           name: string
           rule_type: string
           updated_at: string
@@ -32,8 +35,11 @@ export type Database = {
           created_at?: string
           created_by: string
           delivery_channels?: string[]
+          evaluation_mode?: string
           id?: string
           is_active?: boolean
+          last_evaluated_at?: string | null
+          last_triggered_at?: string | null
           name: string
           rule_type: string
           updated_at?: string
@@ -44,8 +50,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           delivery_channels?: string[]
+          evaluation_mode?: string
           id?: string
           is_active?: boolean
+          last_evaluated_at?: string | null
+          last_triggered_at?: string | null
           name?: string
           rule_type?: string
           updated_at?: string
@@ -72,6 +81,7 @@ export type Database = {
           is_dismissed: boolean
           is_read: boolean
           metadata: Json | null
+          recipient_user_id: string | null
           severity: string
           title: string
           workspace_id: string
@@ -86,6 +96,7 @@ export type Database = {
           is_dismissed?: boolean
           is_read?: boolean
           metadata?: Json | null
+          recipient_user_id?: string | null
           severity?: string
           title: string
           workspace_id: string
@@ -100,6 +111,7 @@ export type Database = {
           is_dismissed?: boolean
           is_read?: boolean
           metadata?: Json | null
+          recipient_user_id?: string | null
           severity?: string
           title?: string
           workspace_id?: string
@@ -128,44 +140,151 @@ export type Database = {
           },
         ]
       }
+      alert_trigger_logs: {
+        Row: {
+          alert_id: string | null
+          alert_rule_id: string
+          competitor_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          details: Json
+          entity_id: string | null
+          event_source: string
+          event_type: string
+          id: string
+          message: string | null
+          recipient_user_id: string | null
+          status: string
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          alert_id?: string | null
+          alert_rule_id: string
+          competitor_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          details?: Json
+          entity_id?: string | null
+          event_source: string
+          event_type: string
+          id?: string
+          message?: string | null
+          recipient_user_id?: string | null
+          status?: string
+          title: string
+          workspace_id: string
+        }
+        Update: {
+          alert_id?: string | null
+          alert_rule_id?: string
+          competitor_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          details?: Json
+          entity_id?: string | null
+          event_source?: string
+          event_type?: string
+          id?: string
+          message?: string | null
+          recipient_user_id?: string | null
+          status?: string
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_trigger_logs_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_trigger_logs_alert_rule_id_fkey"
+            columns: ["alert_rule_id"]
+            isOneToOne: false
+            referencedRelation: "alert_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_trigger_logs_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_trigger_logs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analyses: {
         Row: {
           analysis_type: string
+          attempt_count: number
           completed_at: string | null
           confidence: string | null
           created_at: string
           error_message: string | null
           id: string
+          last_attempt_at: string | null
+          max_attempts: number
           model_used: string | null
           newsletter_entry_id: string
+          processing_started_at: string | null
+          queued_at: string
           result: Json | null
+          requested_by: string | null
           status: string
+          source_snapshot: Json
+          validation_errors: Json | null
           workspace_id: string
         }
         Insert: {
           analysis_type: string
+          attempt_count?: number
           completed_at?: string | null
           confidence?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
+          last_attempt_at?: string | null
+          max_attempts?: number
           model_used?: string | null
           newsletter_entry_id: string
+          processing_started_at?: string | null
+          queued_at?: string
           result?: Json | null
+          requested_by?: string | null
           status?: string
+          source_snapshot?: Json
+          validation_errors?: Json | null
           workspace_id: string
         }
         Update: {
           analysis_type?: string
+          attempt_count?: number
           completed_at?: string | null
           confidence?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
+          last_attempt_at?: string | null
+          max_attempts?: number
           model_used?: string | null
           newsletter_entry_id?: string
+          processing_started_at?: string | null
+          queued_at?: string
           result?: Json | null
+          requested_by?: string | null
           status?: string
+          source_snapshot?: Json
+          validation_errors?: Json | null
           workspace_id?: string
         }
         Relationships: [
@@ -403,13 +522,25 @@ export type Database = {
       insights: {
         Row: {
           affected_competitors: string[] | null
+          campaign_type: string
           category: string
           confidence: number | null
+          cta_analysis: string
+          cta_primary: string | null
           created_at: string
           expires_at: string | null
           id: string
+          impact_area: string
+          main_message: string
+          offer_coupon_code: string | null
+          offer_discount_percentage: number | null
+          offer_urgency: string[]
+          positioning_angle: string
+          priority_level: string
+          product_categories: string[]
           recommended_response: string
           source_type: string
+          strategic_takeaway: string
           strategic_implication: string
           supporting_evidence: Json | null
           title: string
@@ -419,13 +550,25 @@ export type Database = {
         }
         Insert: {
           affected_competitors?: string[] | null
+          campaign_type: string
           category: string
           confidence?: number | null
+          cta_analysis: string
+          cta_primary?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          impact_area?: string
+          main_message: string
+          offer_coupon_code?: string | null
+          offer_discount_percentage?: number | null
+          offer_urgency?: string[]
+          positioning_angle: string
+          priority_level?: string
+          product_categories?: string[]
           recommended_response: string
           source_type?: string
+          strategic_takeaway: string
           strategic_implication: string
           supporting_evidence?: Json | null
           title: string
@@ -435,13 +578,25 @@ export type Database = {
         }
         Update: {
           affected_competitors?: string[] | null
+          campaign_type?: string
           category?: string
           confidence?: number | null
+          cta_analysis?: string
+          cta_primary?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          impact_area?: string
+          main_message?: string
+          offer_coupon_code?: string | null
+          offer_discount_percentage?: number | null
+          offer_urgency?: string[]
+          positioning_angle?: string
+          priority_level?: string
+          product_categories?: string[]
           recommended_response?: string
           source_type?: string
+          strategic_takeaway?: string
           strategic_implication?: string
           supporting_evidence?: Json | null
           title?: string

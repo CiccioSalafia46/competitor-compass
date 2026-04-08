@@ -12,14 +12,16 @@ import {
   Users, Newspaper, Sparkles, Bell, Megaphone, BarChart3, Lock, Clock,
   Shield, TrendingUp,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAnalyticsTracker, ANALYTICS_EVENTS } from "@/hooks/useAnalyticsTracker";
+import { getErrorMessage } from "@/lib/errors";
 
 /** Value buckets for clear feature packaging */
 const PLAN_VALUE_BUCKETS: Record<PlanTier, {
   tagline: string;
   targetUser: string;
-  buckets: { name: string; icon: any; features: string[] }[];
+  buckets: { name: string; icon: LucideIcon; features: string[] }[];
 }> = {
   free: {
     tagline: "Explore the platform",
@@ -140,7 +142,7 @@ const COMPARISON_ROWS: { label: string; free: string; starter: string; premium: 
 ];
 
 export default function Billing() {
-  const { tier, subscribed, subscriptionEnd, loading, checkout, openPortal, checkSubscription } =
+  const { tier, subscribed, subscriptionEnd, cancelAtPeriodEnd, loading, checkout, openPortal, checkSubscription } =
     useSubscription();
   const { isAdmin } = useRoles();
   const { usage, limits, getUsagePercent } = useUsage();
@@ -148,21 +150,20 @@ export default function Billing() {
   const { track } = useAnalyticsTracker();
 
   const handleCheckout = async (plan: PlanTier) => {
-    const priceId = STRIPE_PLANS[plan].price_id;
-    if (!priceId) return;
+    if (plan === "free") return;
     track(ANALYTICS_EVENTS.UPGRADE_CLICKED, { from: tier, to: plan });
     try {
-      await checkout(priceId);
-    } catch (err: any) {
-      toast({ title: "Checkout error", description: err.message, variant: "destructive" });
+      await checkout(plan);
+    } catch (error) {
+      toast({ title: "Checkout error", description: getErrorMessage(error), variant: "destructive" });
     }
   };
 
   const handlePortal = async () => {
     try {
       await openPortal();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
     }
   };
 
@@ -200,6 +201,7 @@ export default function Billing() {
       {subscriptionEnd && (
         <p className="text-xs text-muted-foreground">
           Current billing period ends {new Date(subscriptionEnd).toLocaleDateString()}
+          {cancelAtPeriodEnd ? " and the subscription is set to cancel at period end." : ""}
         </p>
       )}
 

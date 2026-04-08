@@ -1,16 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { HttpError, assertWorkspaceMember, requireAuthenticatedUser } from "../_shared/auth.ts";
+import {
+  buildBillingStateFromInactive,
+  buildBillingStateFromSubscription,
+  getStripeClient,
+} from "../_shared/stripe-billing.ts";
+import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-const logStep = (step: string, details?: any) => {
-  const d = details ? ` - ${JSON.stringify(details)}` : "";
-  console.log(`[CHECK-SUBSCRIPTION] ${step}${d}`);
+const logStep = (step: string, details?: unknown) => {
+  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` ${JSON.stringify(details)}` : ""}`);
 };
 
 serve(async (req) => {
@@ -18,69 +17,82 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
+  const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
+    { auth: { persistSession: false } },
   );
 
   try {
-    logStep("Function started");
-
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    const { user } = await requireAuthenticatedUser(supabase, req);
+    const { workspaceId } = await req.json();
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Auth error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated");
-    logStep("User authenticated", { email: user.email });
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-
-    if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+    if (!workspaceId) {
+      return jsonResponse({ error: "workspaceId is required" }, 400);
     }
 
-    const customerId = customers.data[0].id;
-    logStep("Found customer", { customerId });
+    await assertWorkspaceMember(supabase, user.id, workspaceId);
 
+    const { data: billingRow } = await supabase
+      .from("workspace_billing")
+      .select("*")
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+
+    if (!billingRow?.stripe_customer_id) {
+      return jsonResponse({ subscribed: false, tier: "free" });
+    }
+
+    const stripe = getStripeClient(stripeKey);
     const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
+      customer: billingRow.stripe_customer_id,
+      status: "all",
+      limit: 20,
     });
 
-    const hasActiveSub = subscriptions.data.length > 0;
-    let productId = null;
-    let subscriptionEnd = null;
+    const activeSubscription = subscriptions.data.find((subscription) =>
+      ["active", "trialing", "past_due"].includes(subscription.status),
+    );
 
-    if (hasActiveSub) {
-      const sub = subscriptions.data[0];
-      subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
-      productId = sub.items.data[0].price.product;
-      logStep("Active subscription", { productId, subscriptionEnd });
+    if (!activeSubscription) {
+      await supabase.from("workspace_billing").upsert(
+        buildBillingStateFromInactive({
+          workspaceId,
+          stripeCustomerId: billingRow.stripe_customer_id,
+          checkoutEmail: billingRow.checkout_email || user.email || null,
+        }),
+      );
+
+      return jsonResponse({ subscribed: false, tier: "free" });
     }
 
-    return new Response(
-      JSON.stringify({ subscribed: hasActiveSub, product_id: productId, subscription_end: subscriptionEnd }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-    );
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+    const billingState = buildBillingStateFromSubscription({
+      workspaceId,
+      stripeCustomerId: billingRow.stripe_customer_id,
+      subscription: activeSubscription,
+      checkoutEmail: billingRow.checkout_email || user.email || null,
     });
+
+    await supabase.from("workspace_billing").upsert(billingState);
+
+    logStep("Subscription synced", { workspaceId, tier: billingState.plan_key, status: billingState.stripe_status });
+    return jsonResponse({
+      subscribed: true,
+      tier: billingState.plan_key,
+      price_id: billingState.stripe_price_id,
+      subscription_end: billingState.current_period_end,
+      status: billingState.stripe_status,
+      cancel_at_period_end: billingState.cancel_at_period_end,
+    });
+  } catch (error) {
+    const message = getErrorMessage(error);
+    logStep("ERROR", { message });
+    if (error instanceof HttpError) {
+      return jsonResponse({ error: message }, error.status);
+    }
+    return jsonResponse({ error: message }, 500);
   }
 });

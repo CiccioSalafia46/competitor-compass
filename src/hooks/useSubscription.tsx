@@ -1,81 +1,108 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { supabase } from "@/integrations/supabase/client";
 
 export const STRIPE_PLANS = {
-  free: { product_id: null, price_id: null, label: "Free" },
-  starter: {
-    product_id: "prod_UFlZSmAqdMlUBK",
-    price_id: "price_1THG2Z1A6XiCCUbzrdMuP3Xj",
-    label: "Starter",
-  },
-  premium: {
-    product_id: "prod_UFla6p6WSysUBH",
-    price_id: "price_1THG2r1A6XiCCUbz0FlpAOGa",
-    label: "Premium",
-  },
+  free: { label: "Free" },
+  starter: { label: "Starter" },
+  premium: { label: "Premium" },
 } as const;
 
 export type PlanTier = keyof typeof STRIPE_PLANS;
 
 interface SubscriptionState {
   subscribed: boolean;
-  productId: string | null;
+  priceId: string | null;
   subscriptionEnd: string | null;
+  cancelAtPeriodEnd: boolean;
   tier: PlanTier;
   loading: boolean;
   checkSubscription: () => Promise<void>;
-  checkout: (priceId: string) => Promise<void>;
+  checkout: (plan: Exclude<PlanTier, "free">) => Promise<void>;
   openPortal: () => Promise<void>;
-}
-
-function tierFromProductId(productId: string | null): PlanTier {
-  if (!productId) return "free";
-  if (productId === STRIPE_PLANS.starter.product_id) return "starter";
-  if (productId === STRIPE_PLANS.premium.product_id) return "premium";
-  return "free";
 }
 
 const SubscriptionContext = createContext<SubscriptionState | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const { user, session } = useAuth();
+  const { session } = useAuth();
+  const { currentWorkspace } = useWorkspace();
+  const workspaceId = currentWorkspace?.id ?? null;
+  const accessToken = session?.access_token ?? null;
   const [subscribed, setSubscribed] = useState(false);
-  const [productId, setProductId] = useState<string | null>(null);
+  const [priceId, setPriceId] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [tier, setTier] = useState<PlanTier>("free");
   const [loading, setLoading] = useState(true);
 
   const checkSubscription = useCallback(async () => {
-    if (!session) {
+    if (!accessToken || !workspaceId) {
       setSubscribed(false);
-      setProductId(null);
+      setPriceId(null);
       setSubscriptionEnd(null);
+      setCancelAtPeriodEnd(false);
+      setTier("free");
       setLoading(false);
       return;
     }
     try {
-      const { data, error } = await supabase.functions.invoke("check-subscription");
-      if (error) throw error;
-      setSubscribed(data?.subscribed ?? false);
-      setProductId(data?.product_id ?? null);
+      const data = await invokeEdgeFunction<{
+        subscribed?: boolean;
+        tier?: PlanTier;
+        price_id?: string | null;
+        subscription_end?: string | null;
+        cancel_at_period_end?: boolean;
+      }>("check-subscription", {
+        body: { workspaceId },
+      });
+      setSubscribed(Boolean(data?.subscribed));
+      setPriceId(data?.price_id ?? null);
       setSubscriptionEnd(data?.subscription_end ?? null);
+      setCancelAtPeriodEnd(Boolean(data?.cancel_at_period_end));
+      setTier(data?.tier ?? "free");
     } catch (e) {
       console.error("check-subscription error:", e);
+      setSubscribed(false);
+      setPriceId(null);
+      setSubscriptionEnd(null);
+      setCancelAtPeriodEnd(false);
+      setTier("free");
     } finally {
       setLoading(false);
     }
-  }, [session]);
+  }, [accessToken, workspaceId]);
 
   useEffect(() => {
     checkSubscription();
   }, [checkSubscription]);
 
-  // Auto-refresh every 60s
+  // Subscribe to workspace_billing changes via Realtime instead of polling every 60s
   useEffect(() => {
-    if (!session) return;
-    const interval = setInterval(checkSubscription, 60_000);
-    return () => clearInterval(interval);
-  }, [session, checkSubscription]);
+    if (!workspaceId || !accessToken) return;
+
+    const channel = supabase
+      .channel(`workspace-billing:${workspaceId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "workspace_billing",
+          filter: `workspace_id=eq.${workspaceId}`,
+        },
+        () => {
+          void checkSubscription();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [workspaceId, accessToken, checkSubscription]);
 
   // Check on checkout return
   useEffect(() => {
@@ -86,30 +113,54 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [checkSubscription]);
 
-  const checkout = async (priceId: string) => {
-    const { data, error } = await supabase.functions.invoke("create-checkout", {
-      body: { priceId },
+  const checkout = async (plan: Exclude<PlanTier, "free">) => {
+    if (!workspaceId) throw new Error("No workspace selected.");
+    const pendingWindow = window.open("about:blank", "_blank");
+    const data = await invokeEdgeFunction<{ url?: string }>("create-checkout", {
+      body: { workspaceId, plan },
     });
-    if (error) throw error;
-    if (data?.url) window.open(data.url, "_blank");
+    if (data?.url) {
+      if (pendingWindow) {
+        pendingWindow.location.href = data.url;
+      } else {
+        window.location.assign(data.url);
+      }
+    } else if (pendingWindow) {
+      pendingWindow.close();
+    }
   };
 
   const openPortal = async () => {
-    const { data, error } = await supabase.functions.invoke("customer-portal");
-    if (error) throw error;
-    if (data?.url) window.open(data.url, "_blank");
+    if (!workspaceId) throw new Error("No workspace selected.");
+    const pendingWindow = window.open("about:blank", "_blank");
+    const data = await invokeEdgeFunction<{ url?: string }>("customer-portal", {
+      body: { workspaceId },
+    });
+    if (data?.url) {
+      if (pendingWindow) {
+        pendingWindow.location.href = data.url;
+      } else {
+        window.location.assign(data.url);
+      }
+    } else if (pendingWindow) {
+      pendingWindow.close();
+    }
   };
-
-  const tier = tierFromProductId(productId);
 
   // Sync tier to sessionStorage so useUsage can read it without circular deps
   useEffect(() => {
-    try { sessionStorage.setItem("subscription_tier", tier); } catch {}
-  }, [tier]);
+    if (!workspaceId) return;
+    try {
+      sessionStorage.setItem(`subscription_tier:${workspaceId}`, tier);
+      sessionStorage.setItem("subscription_workspace_id", workspaceId);
+    } catch {
+      // Ignore storage write failures in restricted browser contexts.
+    }
+  }, [tier, workspaceId]);
 
   return (
     <SubscriptionContext.Provider
-      value={{ subscribed, productId, subscriptionEnd, tier, loading, checkSubscription, checkout, openPortal }}
+      value={{ subscribed, priceId, subscriptionEnd, cancelAtPeriodEnd, tier, loading, checkSubscription, checkout, openPortal }}
     >
       {children}
     </SubscriptionContext.Provider>

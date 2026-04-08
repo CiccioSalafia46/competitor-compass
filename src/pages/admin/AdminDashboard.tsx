@@ -5,9 +5,40 @@ import {
   Users, Building2, Mail, Newspaper, Lightbulb, Target,
   AlertTriangle, Activity, BarChart3, Megaphone, TrendingUp,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { format } from "date-fns";
 
-function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: number }) {
+type AdminOverviewActivity = {
+  id: string;
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  created_at: string;
+};
+
+type AdminOverviewSyncError = {
+  id: string;
+  email_address: string;
+  sync_status: string;
+  sync_error: string | null;
+};
+
+type AdminOverviewData = {
+  recentSignups: number;
+  totalUsers: number;
+  totalWorkspaces: number;
+  gmailConnections: number;
+  totalNewsletters: number;
+  totalInsights: number;
+  totalCompetitors: number;
+  totalAnalyses: number;
+  totalMetaAds: number;
+  rateLimitHits: number;
+  recentActivity?: AdminOverviewActivity[];
+  syncErrors?: AdminOverviewSyncError[];
+};
+
+function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
   return (
     <Card>
       <CardContent className="p-4 flex items-center gap-3">
@@ -24,7 +55,7 @@ function StatCard({ icon: Icon, label, value }: { icon: any; label: string; valu
 }
 
 export default function AdminDashboard() {
-  const { data, loading, error } = useAdminData("overview");
+  const { data, loading, error } = useAdminData<AdminOverviewData>("overview");
 
   if (loading) {
     return (
@@ -79,7 +110,7 @@ export default function AdminDashboard() {
             {data.recentActivity?.length === 0 && (
               <p className="text-sm text-muted-foreground">No recent activity</p>
             )}
-            {data.recentActivity?.map((log: any) => (
+            {data.recentActivity?.map((log) => (
               <div key={log.id} className="flex items-start justify-between border-b pb-2 last:border-0">
                 <div>
                   <p className="text-sm font-medium">{log.action}</p>
@@ -103,7 +134,7 @@ export default function AdminDashboard() {
             {data.syncErrors?.length === 0 && (
               <p className="text-sm text-muted-foreground">No active issues</p>
             )}
-            {data.syncErrors?.map((conn: any) => (
+            {data.syncErrors?.map((conn) => (
               <div key={conn.id} className="border rounded-md p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium">{conn.email_address}</span>

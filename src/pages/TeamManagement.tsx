@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Shield, Eye, BarChart3, Trash2 } from "lucide-react";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { getErrorMessage } from "@/lib/errors";
 
 interface MemberInfo {
   user_id: string;
@@ -87,15 +88,29 @@ export default function TeamManagement() {
   };
 
   const handleRoleChange = async (userId: string, existingRoleId: string | null, newRole: AppRole) => {
+    if (!currentWorkspace) return;
     try {
       if (existingRoleId) {
         await removeRole(existingRoleId);
       }
       await assignRole(userId, newRole);
-      await log("role_changed", "user", userId, { new_role: newRole });
+
+      // Sync workspace_members.role to prevent stale privilege escalation.
+      // If the user is no longer an admin app-role, demote the membership role to "member"
+      // so isWorkspaceAdmin stays accurate in useRoles.
+      const membershipRole = newRole === "admin" ? "admin" : "member";
+      const { error: memberError } = await supabase
+        .from("workspace_members")
+        .update({ role: membershipRole })
+        .eq("workspace_id", currentWorkspace.id)
+        .eq("user_id", userId)
+        .neq("role", "owner"); // never touch the workspace owner's membership row
+      if (memberError) throw memberError;
+
+      await log("role_changed", "user", userId, { new_role: newRole, membership_role: membershipRole });
       toast({ title: "Role updated" });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
     }
   };
 

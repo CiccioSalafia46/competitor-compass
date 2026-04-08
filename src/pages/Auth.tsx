@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart3, Loader2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -31,8 +32,8 @@ export default function Auth() {
         await signIn(email, password);
         navigate("/redirect");
       }
-    } catch (err: any) {
-      const msg = err.message || "Something went wrong";
+    } catch (error) {
+      const msg = getErrorMessage(error, "Something went wrong");
       let description = msg;
       if (msg.includes("password") && (msg.includes("leaked") || msg.includes("breach") || msg.includes("compromised") || msg.includes("HIBP"))) {
         description = "This password has appeared in a known data breach. Please choose a different, stronger password.";

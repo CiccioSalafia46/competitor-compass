@@ -14,16 +14,17 @@ import {
 import { format } from "date-fns";
 import { Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import type { AdminWorkspaceRecord, AdminWorkspacesResponse } from "@/types/admin";
 
 export default function AdminWorkspaces() {
-  const { data, loading, error, refetch } = useAdminData("workspaces");
+  const { data, loading, error, refetch } = useAdminData<AdminWorkspacesResponse>("workspaces");
   const { execute, acting } = useAdminAction();
   const [search, setSearch] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminWorkspaceRecord | null>(null);
 
   const workspaces = data?.workspaces || [];
   const filtered = workspaces.filter(
-    (w: any) =>
+    (w: AdminWorkspaceRecord) =>
       w.name?.toLowerCase().includes(search.toLowerCase()) ||
       w.slug?.toLowerCase().includes(search.toLowerCase()) ||
       w.owner_display_name?.toLowerCase().includes(search.toLowerCase())
@@ -36,7 +37,9 @@ export default function AdminWorkspaces() {
       toast.success(`Workspace "${deleteTarget.name}" deleted`);
       setDeleteTarget(null);
       refetch();
-    } catch {}
+    } catch {
+      // Error toast already handled by useAdminAction.
+    }
   }
 
   if (loading) {
@@ -97,7 +100,7 @@ export default function AdminWorkspaces() {
                   </TableCell>
                 </TableRow>
               )}
-              {filtered.map((ws: any) => (
+              {filtered.map((ws) => (
                 <TableRow key={ws.id}>
                   <TableCell>
                     <div>

@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Sparkles, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
+import { getErrorMessage } from "@/lib/errors";
+import { enqueueNewsletterAnalysis } from "@/lib/newsletter-analysis";
 
 type NewsletterEntry = Database["public"]["Tables"]["newsletter_entries"]["Row"];
 type Analysis = Database["public"]["Tables"]["analyses"]["Row"];
@@ -58,7 +60,7 @@ export default function NewsletterDetail() {
       setLoading(false);
     };
     fetch();
-  }, [id]);
+  }, [id, navigate, toast]);
 
   const handleAnalyze = async () => {
     if (!entry || !currentWorkspace) return;
@@ -77,17 +79,18 @@ export default function NewsletterDetail() {
 
       if (analysisError) throw analysisError;
 
-      const { error: fnError } = await supabase.functions.invoke("analyze-newsletter", {
-        body: { analysisId: analysis.id, newsletterEntryId: entry.id },
-      });
-
-      if (fnError) {
-        toast({ title: "Analysis failed to start", description: fnError.message, variant: "destructive" });
-      } else {
+      try {
+        await enqueueNewsletterAnalysis({ analysisId: analysis.id });
         navigate(`/analyses/${analysis.id}`);
+      } catch (error) {
+        toast({
+          title: "Analysis queue failed",
+          description: `${getErrorMessage(error)} Raw content is still available in this entry.`,
+          variant: "destructive",
+        });
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setAnalyzing(false);
     }

@@ -15,6 +15,7 @@ import {
 import DOMPurify from "dompurify";
 import type { NewsletterInboxItem } from "@/types/gmail";
 import { DEMO_NEWSLETTERS } from "@/lib/demo-data";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function NewsletterReader() {
   const { id } = useParams<{ id: string }>();
@@ -66,7 +67,7 @@ export default function NewsletterReader() {
         }
         setLoading(false);
       });
-  }, [id, isDemo]);
+  }, [id, isDemo, navigate, toast]);
 
   const sanitizedHtml = useMemo(() => {
     if (!item?.html_content) return "";
@@ -89,8 +90,8 @@ export default function NewsletterReader() {
     try {
       await extract();
       toast({ title: "Extraction complete" });
-    } catch (err: any) {
-      toast({ title: "Extraction failed", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Extraction failed", description: getErrorMessage(error), variant: "destructive" });
     }
   };
 
@@ -262,7 +263,7 @@ export default function NewsletterReader() {
           )}
 
           {/* Offers */}
-          {extraction.offers && (extraction.offers as any[]).length > 0 && (
+          {extraction.offers.length > 0 && (
             <Card className="shadow-raised border">
               <CardHeader className="pb-2 pt-3 px-3">
                 <CardTitle className="text-sm flex items-center gap-1">
@@ -270,7 +271,7 @@ export default function NewsletterReader() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-3 space-y-2">
-                {(extraction.offers as any[]).map((offer: any, i: number) => (
+                {extraction.offers.map((offer, i) => (
                   <div key={i} className="rounded-md border p-2 text-sm">
                     <p className="font-medium">{offer.description}</p>
                     <div className="flex gap-2 mt-1">
@@ -284,13 +285,13 @@ export default function NewsletterReader() {
           )}
 
           {/* CTAs */}
-          {extraction.calls_to_action && (extraction.calls_to_action as any[]).length > 0 && (
+          {extraction.calls_to_action.length > 0 && (
             <Card className="shadow-raised border">
               <CardHeader className="pb-2 pt-3 px-3">
                 <CardTitle className="text-sm">Calls to Action</CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-3 space-y-1">
-                {(extraction.calls_to_action as any[]).map((cta: any, i: number) => (
+                {extraction.calls_to_action.map((cta, i) => (
                   <div key={i} className="flex items-center justify-between rounded-md border p-2 text-sm">
                     <span>{cta.text}</span>
                     {cta.urgency && (
@@ -305,7 +306,7 @@ export default function NewsletterReader() {
           )}
 
           {/* Urgency Signals */}
-          {extraction.urgency_signals && (extraction.urgency_signals as any[]).length > 0 && (
+          {extraction.urgency_signals.length > 0 && (
             <Card className="shadow-raised border border-destructive/20">
               <CardHeader className="pb-2 pt-3 px-3">
                 <CardTitle className="text-sm flex items-center gap-1">
@@ -313,7 +314,7 @@ export default function NewsletterReader() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-3 space-y-1">
-                {(extraction.urgency_signals as any[]).map((signal: any, i: number) => (
+                {extraction.urgency_signals.map((signal, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <Badge variant="outline" className="text-xs capitalize">{signal.type?.replace(/_/g, " ")}</Badge>
                     <span>{signal.signal}</span>
@@ -324,7 +325,7 @@ export default function NewsletterReader() {
           )}
 
           {/* Strategy Takeaways */}
-          {extraction.strategy_takeaways && (extraction.strategy_takeaways as any[]).length > 0 && (
+          {extraction.strategy_takeaways.length > 0 && (
             <Card className="shadow-raised border">
               <CardHeader className="pb-2 pt-3 px-3">
                 <CardTitle className="text-sm flex items-center gap-1">
@@ -332,7 +333,7 @@ export default function NewsletterReader() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-3 space-y-2">
-                {(extraction.strategy_takeaways as any[]).map((takeaway: any, i: number) => (
+                {extraction.strategy_takeaways.map((takeaway, i) => (
                   <div key={i} className="rounded-md border p-2">
                     <p className="text-sm">{takeaway.insight}</p>
                     <div className="flex items-center gap-2 mt-1">
@@ -364,11 +365,11 @@ export default function NewsletterReader() {
               </Card>
             )}
 
-            {extraction.event_mentions && (extraction.event_mentions as any[]).length > 0 && (
+            {extraction.event_mentions.length > 0 && (
               <Card className="shadow-raised border">
                 <CardContent className="p-3">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Events</p>
-                  {(extraction.event_mentions as any[]).map((event: any, i: number) => (
+                  {extraction.event_mentions.map((event, i) => (
                     <div key={i} className="text-sm mb-1">
                       <span className="font-medium">{event.event}</span>
                       {event.date && <span className="text-muted-foreground"> — {event.date}</span>}

@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAdminCheck } from "@/hooks/useAdmin";
 import {
   Sidebar,
   SidebarContent,
@@ -20,18 +21,30 @@ import {
   BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut,
   Plus, Shield, Gauge, Inbox, Megaphone, Lightbulb, TrendingUp,
   Bell, CreditCard,
+  FileText, Sparkles,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { memo, useMemo, useCallback } from "react";
+
+type NavItem = {
+  label: string;
+  icon: LucideIcon;
+  path: string;
+  matchPrefix: string;
+  show: boolean;
+  badge?: string;
+};
 
 export const AppSidebar = memo(function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
   const { currentWorkspace, workspaces, setCurrentWorkspace } = useWorkspace();
-  const { isAdmin, isAnalyst, roles } = useRoles();
+  const { isAdmin, isAnalyst, canViewData, roles } = useRoles();
+  const { isAdmin: isPlatformAdmin } = useAdminCheck();
   const { tier } = useSubscription();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -61,10 +74,12 @@ export const AppSidebar = memo(function AppSidebar() {
     () => [
       { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? "Premium" : undefined },
       { label: "Insights", icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
+      { label: "Weekly Briefing", icon: Sparkles, path: "/weekly-briefing", matchPrefix: "/weekly-briefing", show: isAnalyst },
       { label: "Analytics", icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
+      { label: "Reports", icon: FileText, path: "/reports", matchPrefix: "/reports", show: canViewData },
       { label: "Alerts", icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
     ],
-    [isAnalyst, tier]
+    [canViewData, isAnalyst, tier]
   );
 
   const adminNav = useMemo(
@@ -73,13 +88,13 @@ export const AppSidebar = memo(function AppSidebar() {
       { label: "Team", icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
       { label: "Billing", icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
       { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
-      { label: "Admin Panel", icon: Shield, path: "/admin", matchPrefix: "/admin", show: isAdmin },
+      { label: "Admin Panel", icon: Shield, path: "/admin", matchPrefix: "/admin", show: isPlatformAdmin },
     ],
-    [isAdmin]
+    [isAdmin, isPlatformAdmin]
   );
 
   const renderNavGroup = useCallback(
-    (items: { label: string; icon: any; path: string; matchPrefix: string; show: boolean; badge?: string }[], label: string) => {
+    (items: NavItem[], label: string) => {
       const filtered = items.filter((i) => i.show);
       if (filtered.length === 0) return null;
       return (

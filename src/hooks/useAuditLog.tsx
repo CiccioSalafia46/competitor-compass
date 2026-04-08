@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 export function useAuditLog() {
   const { user } = useAuth();
@@ -10,17 +11,18 @@ export function useAuditLog() {
     action: string,
     entityType: string,
     entityId?: string,
-    metadata?: Record<string, any>
+    metadata?: Json
   ) => {
     if (!user || !currentWorkspace) return;
-    await supabase.from("audit_log").insert({
+    const payload: Database["public"]["Tables"]["audit_log"]["Insert"] = {
       workspace_id: currentWorkspace.id,
       user_id: user.id,
       action,
       entity_type: entityType,
       entity_id: entityId || null,
       metadata: metadata || {},
-    } as any);
+    };
+    await supabase.from("audit_log").insert(payload);
   };
 
   return { log };

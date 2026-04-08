@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import type { Database, Json } from "@/integrations/supabase/types";
+import { PLAN_LIMITS, type PlanTier } from "@/lib/plan-limits";
+
+export { PLAN_LIMITS };
 
 export interface UsageSummary {
   competitors: number;
@@ -10,36 +14,11 @@ export interface UsageSummary {
   seats_used: number;
 }
 
-// Plan limits
-export const PLAN_LIMITS = {
-  free: {
-    label: "Free",
-    seats: 1,
-    competitors: 3,
-    newsletters_per_month: 200,
-    analyses_per_month: 50,
-  },
-  starter: {
-    label: "Starter",
-    seats: 3,
-    competitors: 10,
-    newsletters_per_month: 2000,
-    analyses_per_month: 500,
-  },
-  premium: {
-    label: "Premium",
-    seats: 10,
-    competitors: -1, // unlimited
-    newsletters_per_month: 20000,
-    analyses_per_month: 5000,
-  },
-} as const;
-
-export type PlanTier = keyof typeof PLAN_LIMITS;
-
 export function useUsage() {
   const { user } = useAuth();
   const { currentWorkspace } = useWorkspace();
+  const userId = user?.id ?? null;
+  const workspaceId = currentWorkspace?.id ?? null;
   const [usage, setUsage] = useState<UsageSummary>({
     competitors: 0,
     newsletters_this_month: 0,
@@ -53,12 +32,15 @@ export function useUsage() {
   // Sync plan from subscription tier stored in sessionStorage by SubscriptionProvider
   useEffect(() => {
     const sync = () => {
+      if (!workspaceId) return;
       try {
-        const stored = sessionStorage.getItem("subscription_tier");
+        const stored = sessionStorage.getItem(`subscription_tier:${workspaceId}`);
         if (stored && (stored === "free" || stored === "starter" || stored === "premium")) {
           setCurrentPlan(stored as PlanTier);
         }
-      } catch {}
+      } catch {
+        // Ignore storage read failures in restricted browser contexts.
+      }
     };
     sync();
     // Listen for storage events from SubscriptionProvider
@@ -70,10 +52,10 @@ export function useUsage() {
       window.removeEventListener("storage", handler);
       clearInterval(interval);
     };
-  }, []);
+  }, [workspaceId]);
 
   const fetchUsage = useCallback(async () => {
-    if (!user || !currentWorkspace) {
+    if (!userId || !workspaceId) {
       setLoading(false);
       return;
     }
@@ -86,21 +68,21 @@ export function useUsage() {
       supabase
         .from("competitors")
         .select("id", { count: "exact", head: true })
-        .eq("workspace_id", currentWorkspace.id),
+        .eq("workspace_id", workspaceId),
       supabase
         .from("newsletter_entries")
         .select("id", { count: "exact", head: true })
-        .eq("workspace_id", currentWorkspace.id)
+        .eq("workspace_id", workspaceId)
         .gte("created_at", startOfMonth.toISOString()),
       supabase
         .from("analyses")
         .select("id", { count: "exact", head: true })
-        .eq("workspace_id", currentWorkspace.id)
+        .eq("workspace_id", workspaceId)
         .gte("created_at", startOfMonth.toISOString()),
       supabase
         .from("workspace_members")
         .select("id", { count: "exact", head: true })
-        .eq("workspace_id", currentWorkspace.id),
+        .eq("workspace_id", workspaceId),
     ]);
 
     setUsage({
@@ -110,7 +92,7 @@ export function useUsage() {
       seats_used: membersRes.count || 0,
     });
     setLoading(false);
-  }, [user, currentWorkspace]);
+  }, [userId, workspaceId]);
 
   useEffect(() => {
     fetchUsage();
@@ -141,14 +123,15 @@ export function useUsage() {
   };
 
   // Log a usage event
-  const trackUsage = async (eventType: string, quantity: number = 1, metadata: Record<string, any> = {}) => {
-    if (!currentWorkspace) return;
-    await supabase.from("usage_events").insert({
-      workspace_id: currentWorkspace.id,
+  const trackUsage = async (eventType: string, quantity: number = 1, metadata: Json = {}) => {
+    if (!workspaceId) return;
+    const payload: Database["public"]["Tables"]["usage_events"]["Insert"] = {
+      workspace_id: workspaceId,
       event_type: eventType,
       quantity,
       metadata,
-    } as any);
+    };
+    await supabase.from("usage_events").insert(payload);
   };
 
   return {

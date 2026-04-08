@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useEmailVerification() {
   const { user } = useAuth();
@@ -19,8 +20,8 @@ export function useEmailVerification() {
       });
       if (error) throw error;
       toast.success("Verification email sent. Please check your inbox.");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to resend verification email");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to resend verification email"));
     } finally {
       setResending(false);
     }

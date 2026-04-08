@@ -13,18 +13,21 @@ import {
 import { format } from "date-fns";
 import { RefreshCw, Unplug } from "lucide-react";
 import { toast } from "sonner";
+import type { AdminGmailConnection, AdminIntegrationsResponse } from "@/types/admin";
 
 export default function AdminIntegrations() {
-  const { data, loading, error, refetch } = useAdminData("integrations");
+  const { data, loading, error, refetch } = useAdminData<AdminIntegrationsResponse>("integrations");
   const { execute, acting } = useAdminAction();
-  const [disconnectTarget, setDisconnectTarget] = useState<any>(null);
+  const [disconnectTarget, setDisconnectTarget] = useState<AdminGmailConnection | null>(null);
 
   async function handleResync(connectionId: string) {
     try {
       await execute("force_resync", { connection_id: connectionId });
       toast.success("Sync state reset. Next sync will do a full re-import.");
       refetch();
-    } catch {}
+    } catch {
+      // Error toast already handled by useAdminAction.
+    }
   }
 
   async function handleDisconnect() {
@@ -34,7 +37,9 @@ export default function AdminIntegrations() {
       toast.success(`Disconnected ${disconnectTarget.email_address}`);
       setDisconnectTarget(null);
       refetch();
-    } catch {}
+    } catch {
+      // Error toast already handled by useAdminAction.
+    }
   }
 
   if (loading) {
@@ -89,7 +94,7 @@ export default function AdminIntegrations() {
                   </TableCell>
                 </TableRow>
               )}
-              {gmailConns.map((conn: any) => (
+              {gmailConns.map((conn) => (
                 <TableRow key={conn.id}>
                   <TableCell className="text-sm font-medium">{conn.email_address}</TableCell>
                   <TableCell>
@@ -154,8 +159,8 @@ export default function AdminIntegrations() {
           ) : (
             <div className="space-y-2">
               {Object.entries(rateLimits)
-                .sort(([, a]: any, [, b]: any) => b - a)
-                .map(([endpoint, count]: any) => (
+                .sort(([, a], [, b]) => b - a)
+                .map(([endpoint, count]) => (
                   <div key={endpoint} className="flex items-center justify-between py-1.5 border-b last:border-0">
                     <span className="text-sm font-mono">{endpoint}</span>
                     <Badge variant="secondary">{count} calls</Badge>
