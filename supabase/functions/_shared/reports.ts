@@ -163,6 +163,7 @@ function normalizeAnalytics(result: AnalyticsRpcResult, rangeDays: number): Repo
 }
 
 export type { CustomReportConfig };
+export { getDefaultRangeDays, getNextScheduledRun };
 
 export function validateReportTemplateKey(value: unknown): ReportTemplateKey {
   if (typeof value === "string" && isReportTemplateKey(value)) {

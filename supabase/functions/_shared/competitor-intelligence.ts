@@ -223,14 +223,14 @@ export async function fetchCompetitorIntelligenceSnapshots(
       .from<ExtractionRow>("newsletter_extractions")
       .select("newsletter_inbox_id, created_at, campaign_type, main_message, discount_percentage, coupon_code, free_shipping, product_categories, urgency_signals, strategy_takeaways, calls_to_action")
       .in("newsletter_inbox_id", newsletterIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(1000);
 
-    const resolvedExtractions = await extractionsResult.limit(1000);
-    if (resolvedExtractions.error) {
-      throw resolvedExtractions.error;
+    if (extractionsResult.error) {
+      throw extractionsResult.error;
     }
 
-    extractionRows = resolvedExtractions.data ?? [];
+    extractionRows = extractionsResult.data ?? [];
   }
 
   const [metaAdsResult, insightsResult] = await Promise.all([

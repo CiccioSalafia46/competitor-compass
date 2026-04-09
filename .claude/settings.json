@@ -9,7 +9,12 @@
       "Bash(supabase --version)",
       "Bash(npx supabase:*)",
       "Bash(npx tsc:*)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(echo \"EXIT $?\")",
+      "Bash(grep -n \"invokeEdgeFunction\\\\|supabase.functions.invoke\" /c/Users/franc/competitor-compass/src/hooks/*.tsx)",
+      "Bash(echo \"LINT EXIT $?\")",
+      "Bash(echo \"TSC EXIT $?\")",
+      "Bash(grep -n \"useEffect.*{$\" -A3 c:/Users/franc/competitor-compass/src/hooks/useAlerts.tsx)"
     ]
   }
 }
