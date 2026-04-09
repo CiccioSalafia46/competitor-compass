@@ -16,6 +16,34 @@ type CompetitorIntelligenceHookResult = {
 
 type CompetitorIntelligenceResponsePayload = CompetitorIntelligenceResponse | { error?: string };
 
+// Edge function may return null for array fields on sparse records. Normalize
+// to empty arrays so all downstream .length / .map() calls are always safe.
+function normalizeSnapshot(s: CompetitorIntelligenceSnapshot): CompetitorIntelligenceSnapshot {
+  return {
+    ...s,
+    domains: s.domains ?? [],
+    campaignTimeline: s.campaignTimeline ?? [],
+    categoryFocus: s.categoryFocus ?? [],
+    recurringPatterns: s.recurringPatterns ?? [],
+    campaignClusters: s.campaignClusters ?? [],
+    activityByMonth: s.activityByMonth ?? [],
+    strengths: s.strengths ?? [],
+    weaknesses: s.weaknesses ?? [],
+    strategicGaps: s.strategicGaps ?? [],
+    opportunities: s.opportunities ?? [],
+    topSignals: s.topSignals ?? [],
+    messagingEvolution: s.messagingEvolution
+      ? {
+          ...s.messagingEvolution,
+          currentThemes: s.messagingEvolution.currentThemes ?? [],
+          previousThemes: s.messagingEvolution.previousThemes ?? [],
+          emergingAngles: s.messagingEvolution.emergingAngles ?? [],
+          currentAngles: s.messagingEvolution.currentAngles ?? [],
+        }
+      : { shiftSummary: "", currentThemes: [], previousThemes: [], emergingAngles: [], currentAngles: [] },
+  };
+}
+
 export function useCompetitorIntelligence(
   workspaceId: string | null | undefined,
   windowDays = 180,
@@ -56,7 +84,7 @@ export function useCompetitorIntelligence(
         throw new Error(response.error);
       }
 
-      setSnapshots(response.competitors ?? []);
+      setSnapshots((response.competitors ?? []).map(normalizeSnapshot));
       setGeneratedAt(response.generatedAt ?? null);
     } catch (fetchError) {
       setSnapshots([]);
