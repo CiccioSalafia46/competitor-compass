@@ -149,7 +149,7 @@ export function useWorkspaceRoles() {
     };
     const { error } = await supabase
       .from("user_roles")
-      .insert(payload);
+      .upsert(payload, { onConflict: "user_id,workspace_id,role" });
     if (error) throw error;
     await fetchAll();
   };
