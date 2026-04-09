@@ -1,4 +1,5 @@
-import { useSubscription, STRIPE_PLANS, PlanTier } from "@/hooks/useSubscription";
+import { useSubscription } from "@/hooks/useSubscription";
+import { STRIPE_PLANS, type PlanTier } from "@/lib/subscription-plans";
 import { useRoles } from "@/hooks/useRoles";
 import { useUsage, PLAN_LIMITS } from "@/hooks/useUsage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

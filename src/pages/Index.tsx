@@ -1,5 +1,22 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+
+const BADGE_PHRASES = [
+  "AI-Powered Competitor Intelligence",
+  "Real-Time Market Monitoring",
+  "Automated Competitive Analysis",
+  "Strategic Insights on Autopilot",
+  "Stay Ahead of Every Competitor",
+];
+
+const TYPEWRITER_PHRASES = [
+  "before it impacts your growth",
+  "in real time, every single day",
+  "faster than they can react",
+  "with zero manual research",
+  "while you focus on winning",
+];
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +34,60 @@ export default function Index() {
   const cta = user ? "/dashboard" : "/auth";
   const ctaLabel = user ? "Go to Dashboard" : "Start Free — No Card Required";
   const ctaShort = user ? "Dashboard" : "Get Started Free";
+
+  // ── Badge rotation ──────────────────────────────────────────────────────────
+  const [badgeIndex, setBadgeIndex] = useState(0);
+  const [badgeFading, setBadgeFading] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setBadgeFading(true);
+      setTimeout(() => {
+        setBadgeIndex((i) => (i + 1) % BADGE_PHRASES.length);
+        setBadgeFading(false);
+      }, 400);
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── Typewriter ──────────────────────────────────────────────────────────────
+  const [typeText, setTypeText] = useState(TYPEWRITER_PHRASES[0]);
+  const [typePhrase, setTypePhrase] = useState(0);
+  const [typeMode, setTypeMode] = useState<"typing" | "waiting" | "deleting">("waiting");
+  const [cursorOn, setCursorOn] = useState(true);
+
+  useEffect(() => {
+    const id = setInterval(() => setCursorOn((v) => !v), 530);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const phrase = TYPEWRITER_PHRASES[typePhrase];
+
+    if (typeMode === "waiting") {
+      const id = setTimeout(() => setTypeMode("deleting"), 2000);
+      return () => clearTimeout(id);
+    }
+
+    if (typeMode === "deleting") {
+      if (typeText.length === 0) {
+        setTypePhrase((i) => (i + 1) % TYPEWRITER_PHRASES.length);
+        setTypeMode("typing");
+        return;
+      }
+      const id = setTimeout(() => setTypeText((t) => t.slice(0, -1)), 30);
+      return () => clearTimeout(id);
+    }
+
+    if (typeMode === "typing") {
+      if (typeText.length === phrase.length) {
+        setTypeMode("waiting");
+        return;
+      }
+      const id = setTimeout(() => setTypeText(phrase.slice(0, typeText.length + 1)), 50);
+      return () => clearTimeout(id);
+    }
+  }, [typeText, typeMode, typePhrase]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -60,12 +131,22 @@ export default function Index() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20 relative">
           <div className="max-w-3xl mx-auto text-center">
-            <Badge variant="outline" className="mb-6 gap-1.5 px-3 py-1.5 text-xs font-normal border-primary/30 text-primary">
-              <Sparkles className="h-3 w-3" /> AI-Powered Competitor Intelligence
+            <Badge
+              variant="outline"
+              className="mb-6 gap-1.5 px-3 py-1.5 text-xs font-normal border-primary/30 text-primary"
+              style={{ opacity: badgeFading ? 0 : 1, transition: "opacity 0.4s ease" }}
+            >
+              <Sparkles className="h-3 w-3" /> {BADGE_PHRASES[badgeIndex]}
             </Badge>
             <h1 className="text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-foreground leading-[1.1]">
               Know what your competitors are doing —{" "}
-              <span className="text-primary">before it impacts your growth</span>
+              <span className="text-primary inline-block min-h-[1.2em]">
+                {typeText}
+                <span
+                  className="text-primary"
+                  style={{ opacity: cursorOn ? 1 : 0, transition: "opacity 0.1s" }}
+                >|</span>
+              </span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-muted-foreground text-base sm:text-lg leading-relaxed">
               Track campaigns, analyze strategies, and uncover opportunities in real time.

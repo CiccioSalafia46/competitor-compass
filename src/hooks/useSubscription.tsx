@@ -3,14 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { supabase } from "@/integrations/supabase/client";
+import type { PlanTier } from "@/lib/subscription-plans";
 
-export const STRIPE_PLANS = {
-  free: { label: "Free" },
-  starter: { label: "Starter" },
-  premium: { label: "Premium" },
-} as const;
-
-export type PlanTier = keyof typeof STRIPE_PLANS;
+export type { PlanTier };
 
 interface SubscriptionState {
   subscribed: boolean;
