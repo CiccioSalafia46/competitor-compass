@@ -88,6 +88,21 @@ describe("RouteGuard", () => {
     expect(screen.getByText("settings-screen")).toBeInTheDocument();
   });
 
+  it("redirects viewer-role route to onboarding when no workspace", () => {
+    mockedUseAuth.mockReturnValue({
+      user: { id: "user-1", email_confirmed_at: "2026-01-01" },
+      loading: false,
+    } as never);
+    mockedUseWorkspace.mockReturnValue({
+      loading: false,
+      currentWorkspace: null,
+    } as never);
+
+    renderGuard({ minimumRole: "viewer" });
+
+    expect(screen.getByText("onboarding-screen")).toBeInTheDocument();
+  });
+
   it("redirects users without the required role", () => {
     mockedUseAuth.mockReturnValue({
       user: { id: "user-1", email_confirmed_at: "2026-04-05T10:00:00.000Z" },

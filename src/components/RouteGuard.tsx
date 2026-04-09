@@ -43,7 +43,7 @@ export function RouteGuard({
     return <Navigate to="/settings?verify=email" replace />;
   }
 
-  if (minimumRole !== "viewer" && !currentWorkspace) {
+  if (!currentWorkspace) {
     return <Navigate to="/onboarding" replace />;
   }
 

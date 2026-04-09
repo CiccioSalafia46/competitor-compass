@@ -107,9 +107,11 @@ function OnboardingContent() {
               </div>
               <span className="text-sm font-semibold text-foreground">Tracklyze</span>
             </div>
-            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/dashboard")}>
-              Skip setup →
-            </Button>
+            {workspaces.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/dashboard")}>
+                Skip setup →
+              </Button>
+            )}
           </div>
           <Progress value={progress} className="h-1.5" />
           <div className="flex items-center gap-1 mt-2 overflow-x-auto pb-1">
