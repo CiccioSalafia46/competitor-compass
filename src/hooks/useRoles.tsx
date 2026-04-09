@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -6,7 +6,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 export type AppRole = "admin" | "analyst" | "viewer";
 
-interface UserRole {
+export interface UserRole {
   id: string;
   user_id: string;
   workspace_id: string;
@@ -14,9 +14,68 @@ interface UserRole {
   created_at: string;
 }
 
-interface WorkspaceMembership {
-  role: string;
+// ─── Query keys ────────────────────────────────────────────────────────────────
+// Exported so mutations in useWorkspaceRoles can invalidate useRoles caches.
+export const rolesQueryKey = (userId: string | null, workspaceId: string | null) =>
+  ["roles", userId, workspaceId] as const;
+
+export const workspaceRolesQueryKey = (workspaceId: string | null) =>
+  ["workspace-roles", workspaceId] as const;
+
+// ─── Query functions (module-level, stable references) ─────────────────────────
+
+interface RolesQueryData {
+  userRoles: UserRole[];
+  membershipRole: string | null;
 }
+
+async function fetchRolesForUser(userId: string, workspaceId: string): Promise<RolesQueryData> {
+  const [{ data: userRoles, error: rolesError }, { data: membership, error: memberError }] =
+    await Promise.all([
+      supabase
+        .from("user_roles")
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .eq("user_id", userId),
+      supabase
+        .from("workspace_members")
+        .select("role")
+        .eq("workspace_id", workspaceId)
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+
+  if (rolesError) {
+    console.error("Failed to fetch user roles:", rolesError);
+  }
+  if (memberError) {
+    console.error("Failed to fetch workspace membership:", memberError);
+  }
+
+  return {
+    userRoles: (userRoles as UserRole[]) ?? [],
+    membershipRole: (membership as { role?: string } | null)?.role ?? null,
+  };
+}
+
+async function fetchAllWorkspaceRoles(workspaceId: string): Promise<UserRole[]> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("*")
+    .eq("workspace_id", workspaceId);
+
+  if (error) {
+    console.error("Failed to fetch workspace roles:", error);
+    throw error;
+  }
+
+  return (data as UserRole[]) ?? [];
+}
+
+// ─── useRoles ─────────────────────────────────────────────────────────────────
+// Returns RBAC booleans and capability flags for the current user in the
+// current workspace. React Query deduplicates concurrent calls from sibling
+// components (AppSidebar, RouteGuard, page components) into a single fetch.
 
 export function useRoles() {
   const { user } = useAuth();
@@ -24,144 +83,118 @@ export function useRoles() {
   const userId = user?.id ?? null;
   const workspaceId = currentWorkspace?.id ?? null;
   const workspaceOwnerId = currentWorkspace?.owner_id ?? null;
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [membershipRole, setMembershipRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const fetchRoles = useCallback(async () => {
-    if (!userId || !workspaceId) {
-      setRoles([]);
-      setMembershipRole(null);
-      setLoading(false);
-      return;
-    }
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: rolesQueryKey(userId, workspaceId),
+    queryFn: () => fetchRolesForUser(userId!, workspaceId!),
+    enabled: !!userId && !!workspaceId,
+    staleTime: 60_000,
+    gcTime: 300_000,
+  });
 
-    try {
-      const [{ data: userRoles, error: rolesError }, { data: membership, error: memberError }] = await Promise.all([
-        supabase
-          .from("user_roles")
-          .select("*")
-          .eq("workspace_id", workspaceId)
-          .eq("user_id", userId),
-        supabase
-          .from("workspace_members")
-          .select("role")
-          .eq("workspace_id", workspaceId)
-          .eq("user_id", userId)
-          .maybeSingle(),
-      ]);
+  const userRoles = data?.userRoles ?? [];
+  const membershipRole = data?.membershipRole ?? null;
 
-      if (rolesError) {
-        console.error("Failed to fetch user roles:", rolesError);
-      }
-      if (memberError) {
-        console.error("Failed to fetch workspace membership:", memberError);
-      }
-
-      setRoles((userRoles as UserRole[]) || []);
-      setMembershipRole((membership as WorkspaceMembership | null)?.role ?? null);
-    } catch (error) {
-      console.error("Role fetch error:", error);
-      setRoles([]);
-      setMembershipRole(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, workspaceId]);
-
-  useEffect(() => {
-    void fetchRoles();
-  }, [fetchRoles]);
-
-  const myRoles = roles.map((r) => r.role);
+  const myRoles = userRoles.map((r) => r.role);
   const isWorkspaceOwner = workspaceOwnerId === userId;
-  const isWorkspaceAdmin = isWorkspaceOwner || membershipRole === "owner" || membershipRole === "admin";
-  const isViewerByMembership = membershipRole === "owner" || membershipRole === "admin" || membershipRole === "member";
+  const isWorkspaceAdmin =
+    isWorkspaceOwner || membershipRole === "owner" || membershipRole === "admin";
+  const isViewerByMembership =
+    membershipRole === "owner" || membershipRole === "admin" || membershipRole === "member";
   const isAdmin = myRoles.includes("admin") || isWorkspaceAdmin;
   const isAnalyst = myRoles.includes("analyst") || isAdmin;
   const isViewer = myRoles.includes("viewer") || isAnalyst || isViewerByMembership;
 
-  const hasRole = (role: AppRole) => {
+  const hasRole = (role: AppRole): boolean => {
     if (role === "viewer") return isViewer;
     if (role === "analyst") return isAnalyst;
     if (role === "admin") return isAdmin;
     return false;
   };
 
-  // Can perform action based on minimum role
-  const canManageWorkspace = isAdmin;
-  const canManageBilling = isAdmin;
-  const canManageMembers = isAdmin;
-  const canManageCompetitors = isAnalyst;
-  const canAnalyze = isAnalyst;
-  const canCreateReports = isAnalyst;
-  const canViewData = isViewer;
-
   return {
     roles: myRoles,
-    loading,
+    loading: isLoading,
     isAdmin,
     isAnalyst,
     isViewer,
     hasRole,
-    canManageWorkspace,
-    canManageBilling,
-    canManageMembers,
-    canManageCompetitors,
-    canAnalyze,
-    canCreateReports,
-    canViewData,
-    refetch: fetchRoles,
+    canManageWorkspace: isAdmin,
+    canManageBilling: isAdmin,
+    canManageMembers: isAdmin,
+    canManageCompetitors: isAnalyst,
+    canAnalyze: isAnalyst,
+    canCreateReports: isAnalyst,
+    canViewData: isViewer,
+    refetch,
   };
 }
 
-// Hook to get all workspace member roles (for team management)
+// ─── useWorkspaceRoles ────────────────────────────────────────────────────────
+// Returns all user_roles rows for the current workspace — used by TeamManagement.
+// Mutations (assignRole, removeRole) invalidate both this query and the current
+// user's useRoles cache so UI updates immediately after role changes.
+
 export function useWorkspaceRoles() {
   const { currentWorkspace } = useWorkspace();
   const workspaceId = currentWorkspace?.id ?? null;
-  const [memberRoles, setMemberRoles] = useState<UserRole[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchAll = useCallback(async () => {
-    if (!workspaceId) {
-      setMemberRoles([]);
-      setLoading(false);
-      return;
-    }
-    const { data } = await supabase
-      .from("user_roles")
-      .select("*")
-      .eq("workspace_id", workspaceId);
-    setMemberRoles((data as UserRole[]) || []);
-    setLoading(false);
-  }, [workspaceId]);
+  const { data: memberRoles = [], isLoading, refetch } = useQuery({
+    queryKey: workspaceRolesQueryKey(workspaceId),
+    queryFn: () => fetchAllWorkspaceRoles(workspaceId!),
+    enabled: !!workspaceId,
+    staleTime: 60_000,
+    gcTime: 300_000,
+  });
 
-  useEffect(() => {
-    void fetchAll();
-  }, [fetchAll]);
+  // Invalidate both lists so the current user's own role cache stays fresh too.
+  const invalidateAfterMutation = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: workspaceRolesQueryKey(workspaceId) }),
+      queryClient.invalidateQueries({ queryKey: ["roles"] }),
+    ]);
 
-  const assignRole = async (userId: string, role: AppRole) => {
-    if (!workspaceId) return;
-    const payload: Database["public"]["Tables"]["user_roles"]["Insert"] = {
-      user_id: userId,
-      workspace_id: workspaceId,
-      role,
-    };
-    const { error } = await supabase
-      .from("user_roles")
-      .upsert(payload, { onConflict: "user_id,workspace_id,role" });
-    if (error) throw error;
-    await fetchAll();
+  const assignRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
+      if (!workspaceId) throw new Error("No workspace selected");
+      const payload: Database["public"]["Tables"]["user_roles"]["Insert"] = {
+        user_id: userId,
+        workspace_id: workspaceId,
+        role,
+      };
+      const { error } = await supabase
+        .from("user_roles")
+        .upsert(payload, { onConflict: "user_id,workspace_id,role" });
+      if (error) throw error;
+    },
+    onSuccess: () => { void invalidateAfterMutation(); },
+  });
+
+  const removeRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("id", roleId);
+      if (error) throw error;
+    },
+    onSuccess: () => { void invalidateAfterMutation(); },
+  });
+
+  // Expose as async functions matching the previous API shape so call sites
+  // (TeamManagement) can still await them and catch thrown errors.
+  const assignRole = (userId: string, role: AppRole) =>
+    assignRoleMutation.mutateAsync({ userId, role });
+
+  const removeRole = (roleId: string) =>
+    removeRoleMutation.mutateAsync(roleId);
+
+  return {
+    memberRoles,
+    loading: isLoading,
+    assignRole,
+    removeRole,
+    refetch,
   };
-
-  const removeRole = async (roleId: string) => {
-    const { error } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("id", roleId);
-    if (error) throw error;
-    await fetchAll();
-  };
-
-  return { memberRoles, loading, assignRole, removeRole, refetch: fetchAll };
 }
