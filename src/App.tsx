@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -118,7 +118,7 @@ const App = () => (
                     <Route path="/settings/team" element={<RouteGuard minimumRole="admin"><TeamManagement /></RouteGuard>} />
                     <Route path="/settings/usage" element={<RouteGuard minimumRole="admin"><UsageDashboard /></RouteGuard>} />
                     <Route path="/settings/billing" element={<RouteGuard minimumRole="admin"><Billing /></RouteGuard>} />
-                    <Route path="/billing" element={<RouteGuard minimumRole="admin"><Billing /></RouteGuard>} />
+                    <Route path="/billing" element={<Navigate to="/settings/billing" replace />} />
                   </Route>
                   {/* Admin Panel — isolated from main app layout */}
                   <Route path="/admin" element={<AdminGuardWrapper><AdminLayout /></AdminGuardWrapper>}>
