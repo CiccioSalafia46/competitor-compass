@@ -1560,7 +1560,7 @@ serve(async (req) => {
 
       const { error: insertError } = await supabaseAdmin.from("insights").insert(rows);
       if (insertError) {
-        throw insertError;
+        throw new Error(`Insights insert failed: ${insertError.message} [code: ${insertError.code}]`);
       }
     }
 

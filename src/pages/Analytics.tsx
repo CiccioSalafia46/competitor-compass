@@ -216,10 +216,10 @@ export default function Analytics() {
             Audit competitive pressure, data quality, execution coverage, and the actions your team should take next.
           </p>
         </div>
-        <div className="flex flex-col items-stretch gap-3 sm:items-end">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+          <div className="flex items-center gap-1.5">
             <Select value={rangeDays} onValueChange={setRangeDays}>
-              <SelectTrigger className="w-[148px] bg-background">
+              <SelectTrigger className="h-8 w-[148px] text-xs bg-background">
                 <SelectValue placeholder="Time range" />
               </SelectTrigger>
               <SelectContent>
@@ -228,18 +228,15 @@ export default function Analytics() {
                 <SelectItem value="180">Last 180 days</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => void refetch()} className="gap-2">
+            <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => void refetch()}>
               <RefreshCcw className="h-3.5 w-3.5" />
               Refresh
             </Button>
           </div>
-          <div className="rounded-xl border bg-card px-4 py-3 text-right shadow-sm">
-            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Latest ingestion</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{formatDateTime(summary.lastGmailSyncAt)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Window: {formatRangeLabel(summary.rangeDays)}. Based on the most recent Gmail sync for this workspace.
-            </p>
-          </div>
+          <p className="text-[11px] text-muted-foreground/70 sm:text-right">
+            Last sync: <span className="font-medium text-foreground/80">{formatDateTime(summary.lastGmailSyncAt)}</span>
+            {" · "}{formatRangeLabel(summary.rangeDays)} window
+          </p>
         </div>
       </div>
 

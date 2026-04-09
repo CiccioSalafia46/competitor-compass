@@ -135,7 +135,7 @@ export default function Dashboard() {
   const competitorOptions = useMemo(
     () => Array.from(new Set([
       ...snapshotCompetitors.map((c) => c.name),
-      ...(snapshotDecisionModel?.prioritizedInsights ?? []).flatMap((i) => i.affected_competitors),
+      ...(snapshotDecisionModel?.prioritizedInsights ?? []).flatMap((i) => i.affected_competitors ?? []),
     ].filter(Boolean))).sort((a, b) => a.localeCompare(b)),
     [snapshotCompetitors, snapshotDecisionModel?.prioritizedInsights],
   );
@@ -158,7 +158,7 @@ export default function Dashboard() {
   );
   const filteredInsights = useMemo(
     () => (snapshotDecisionModel?.prioritizedInsights ?? []).filter((i) => {
-      const competitorMatch = selectedCompetitor ? i.affected_competitors.includes(selectedCompetitor) : true;
+      const competitorMatch = selectedCompetitor ? (i.affected_competitors ?? []).includes(selectedCompetitor) : true;
       const campaignMatch = selectedCampaignType ? i.campaign_type === selectedCampaignType : true;
       return competitorMatch && campaignMatch;
     }),
@@ -247,13 +247,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-[1360px] space-y-4 p-4 sm:p-5 lg:p-6 animate-fade-in">
+    <div className="max-w-[1360px] space-y-5 p-4 sm:p-5 lg:p-6 animate-fade-in">
 
       {/* ── Zone 1: Command Header ──────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight">{currentWorkspace.name}</h1>
+            <h1 className="page-title">{currentWorkspace.name}</h1>
             {urgentSignals.map((s) => (
               <button
                 key={s.label}
@@ -825,9 +825,9 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
               <p className="mt-1 text-xs leading-5 text-foreground/80">{insight.why_it_matters}</p>
             </div>
           )}
-          {insight.affected_competitors.length > 0 && (
+          {(insight.affected_competitors ?? []).length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {insight.affected_competitors.slice(0, 3).map((c) => (
+              {(insight.affected_competitors ?? []).slice(0, 3).map((c) => (
                 <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
               ))}
             </div>
@@ -860,7 +860,7 @@ function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; on
           {typeof insight.confidence === "number" && (
             <span className="text-[10px] text-muted-foreground">· {Math.round(insight.confidence * 100)}%</span>
           )}
-          {insight.affected_competitors.slice(0, 1).map((c) => (
+          {(insight.affected_competitors ?? []).slice(0, 1).map((c) => (
             <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
           ))}
         </div>

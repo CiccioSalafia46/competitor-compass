@@ -737,10 +737,10 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {payload.insights.length === 0 ? (
+            {(payload.insights ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">No prioritized insights were available for this run.</p>
             ) : (
-              payload.insights.map((insight) => (
+              (payload.insights ?? []).map((insight) => (
                 <div key={insight.id} className="rounded-xl border bg-muted/10 px-4 py-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-foreground">{insight.title}</p>
@@ -766,10 +766,10 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {payload.actions.length === 0 ? (
+            {(payload.actions ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">No follow-up actions were generated for this run.</p>
             ) : (
-              payload.actions.map((action) => (
+              (payload.actions ?? []).map((action) => (
                 <div key={action.title} className="rounded-xl border px-4 py-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-foreground">{action.title}</p>
@@ -880,193 +880,196 @@ export default function Reports() {
 
   return (
     <div className="max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Reports</h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Generate structured team reports, save recurring schedules, and export stakeholder-ready briefings with charts and strategic insights.
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="page-title">Reports</h1>
+          <p className="page-description">
+            Structured briefings, recurring schedules, and stakeholder-ready exports.
           </p>
-          {!canCreateReports ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Read-only mode. Analyst or admin access is required to generate and schedule reports.
+          {!canCreateReports && (
+            <p className="text-xs text-muted-foreground/60">
+              Read-only — analyst or admin access required.
             </p>
-          ) : null}
-          {currentWorkspace ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Workspace: <span className="font-medium text-foreground">{currentWorkspace.name}</span>
-            </p>
-          ) : null}
+          )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2" onClick={() => void refetch()}>
-            <RefreshCcw className="h-4 w-4" />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => void refetch()}>
+            <RefreshCcw className="h-3.5 w-3.5" />
             Refresh
           </Button>
           <Button
             variant="outline"
-            className="gap-2"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
             onClick={() => void runDueSchedules()}
             disabled={!canCreateReports || runningDue}
           >
-            <PlayCircle className="h-4 w-4" />
-            {runningDue ? "Running..." : dueCount > 0 ? `Run due (${dueCount})` : "Run due"}
+            <PlayCircle className="h-3.5 w-3.5" />
+            {runningDue ? "Running…" : dueCount > 0 ? `Run due (${dueCount})` : "Run due"}
           </Button>
-          <Button className="gap-2" onClick={() => openCreateSchedule()} disabled={!canCreateReports}>
-            <CalendarClock className="h-4 w-4" />
-            Schedule report
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => openCreateSchedule()} disabled={!canCreateReports}>
+            <CalendarClock className="h-3.5 w-3.5" />
+            Schedule
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid gap-4 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="border">
-              <CardContent className="p-5">
-                <Skeleton className="h-28 w-full" />
-              </CardContent>
-            </Card>
+        <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-xl border overflow-hidden">
+              <div className="border-b bg-muted/20 px-4 py-3.5">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="mt-1.5 h-3 w-full" />
+              </div>
+              <div className="p-4 space-y-3">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-8 w-28" />
+              </div>
+            </div>
           ))}
         </div>
       ) : (
         <>
-          <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {Object.entries(REPORT_TEMPLATES).map(([key, template]) => {
               const isCustom = key === "custom_report";
               const icon =
                 key === "weekly_competitor_pulse" ? (
-                  <FileBarChart className="h-5 w-5" />
+                  <FileBarChart className="h-4 w-4" />
                 ) : key === "promo_digest" ? (
-                  <FileCog className="h-5 w-5" />
+                  <FileCog className="h-4 w-4" />
                 ) : key === "custom_report" ? (
-                  <SlidersHorizontal className="h-5 w-5" />
+                  <SlidersHorizontal className="h-4 w-4" />
                 ) : (
-                  <FileText className="h-5 w-5" />
+                  <FileText className="h-4 w-4" />
                 );
 
               return (
-                <Card key={key} className="border shadow-sm">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <CardTitle className="text-base">{template.label}</CardTitle>
-                        <CardDescription className="mt-2">{template.description}</CardDescription>
-                      </div>
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        {icon}
-                      </div>
+                <div key={key} className="rounded-xl border overflow-hidden transition-shadow hover:shadow-md">
+                  <div className="flex items-start gap-3 border-b bg-muted/20 px-4 py-3.5">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
+                      {icon}
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-                      {isCustom ? "Configurable range" : `Default range: ${template.defaultRangeDays} day${template.defaultRangeDays === 1 ? "" : "s"}`}
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold leading-snug text-foreground">{template.label}</p>
+                      <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{template.description}</p>
                     </div>
+                  </div>
+                  <div className="space-y-3 p-4">
+                    <p className="text-[11px] text-muted-foreground/70">
+                      {isCustom ? "Configurable date range" : `Default: last ${template.defaultRangeDays} day${template.defaultRangeDays === 1 ? "" : "s"}`}
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {isCustom ? (
                         <Button
-                          className="gap-2"
+                          size="sm"
+                          className="h-8 gap-1.5 text-xs"
                           onClick={() => setBuilderOpen(true)}
                           disabled={!canCreateReports}
                         >
-                          <SlidersHorizontal className="h-4 w-4" />
+                          <SlidersHorizontal className="h-3.5 w-3.5" />
                           Build report
                         </Button>
                       ) : (
                         <>
                           <Button
-                            className="gap-2"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs"
                             onClick={() => void handleGenerate(key as ReportTemplateKey, template.defaultRangeDays)}
                             disabled={!canCreateReports || generatingTemplate === key}
                           >
-                            <WandSparkles className="h-4 w-4" />
-                            {generatingTemplate === key ? "Generating..." : "Generate"}
+                            <WandSparkles className="h-3.5 w-3.5" />
+                            {generatingTemplate === key ? "Generating…" : "Generate"}
                           </Button>
-                          <Button variant="outline" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
+                          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
                             Schedule
                           </Button>
                         </>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr,1.05fr]">
-            <Card className="border shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base">Saved schedules</CardTitle>
-                <CardDescription>
-                  Persist recurring templates per workspace so the team can generate them consistently.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="rounded-xl border overflow-hidden">
+              <div className="border-b bg-muted/20 px-4 py-3">
+                <p className="text-[13px] font-semibold text-foreground">Saved schedules</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">Recurring templates that generate automatically for your team.</p>
+              </div>
+              <div className="divide-y">
                 {schedules.length === 0 ? (
-                  <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
                     No schedules saved yet.
                   </div>
                 ) : (
                   schedules.map((schedule) => (
-                    <div key={schedule.id} className="rounded-xl border px-4 py-3">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-sm font-semibold text-foreground">{schedule.name}</p>
-                            <Badge variant={schedule.isActive ? "secondary" : "outline"}>
-                              {schedule.isActive ? "Active" : "Paused"}
-                            </Badge>
-                            <Badge variant="outline">
-                              {REPORT_TEMPLATES[schedule.templateKey].label}
-                            </Badge>
-                          </div>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            {schedule.frequency === "weekly"
-                              ? `Weekly on ${weekdayOptions.find((option) => Number(option.value) === (schedule.dayOfWeek ?? 1))?.label ?? "Monday"}`
-                              : "Daily"} at {`${String(schedule.hourOfDay).padStart(2, "0")}:${String(schedule.minuteOfHour).padStart(2, "0")}`} ({schedule.timezone})
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Next run {formatDateTime(schedule.nextRunAt)} · Last run {formatDateTime(schedule.lastRunAt)}
-                          </p>
+                    <div
+                      key={schedule.id}
+                      className={cn(
+                        "flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between transition-colors hover:bg-muted/20",
+                        "border-l-[3px]",
+                        schedule.isActive ? "border-l-primary" : "border-l-border",
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-[13px] font-medium text-foreground">{schedule.name}</p>
+                          <span className={cn(
+                            "inline-flex h-1.5 w-1.5 rounded-full",
+                            schedule.isActive ? "bg-primary" : "bg-muted-foreground/40",
+                          )} />
+                          <span className="text-[11px] text-muted-foreground">{REPORT_TEMPLATES[schedule.templateKey].label}</span>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingSchedule(schedule);
-                              setScheduleDialogOpen(true);
-                            }}
-                            disabled={!canCreateReports}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => void deleteSchedule(schedule.id)}
-                            disabled={!canCreateReports}
-                          >
-                            Delete
-                          </Button>
-                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {schedule.frequency === "weekly"
+                            ? `Weekly on ${weekdayOptions.find((option) => Number(option.value) === (schedule.dayOfWeek ?? 1))?.label ?? "Monday"}`
+                            : "Daily"} at {`${String(schedule.hourOfDay).padStart(2, "0")}:${String(schedule.minuteOfHour).padStart(2, "0")}`}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground/60">
+                          Next {formatDateTime(schedule.nextRunAt)} · Last {formatDateTime(schedule.lastRunAt)}
+                        </p>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            setEditingSchedule(schedule);
+                            setScheduleDialogOpen(true);
+                          }}
+                          disabled={!canCreateReports}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/5"
+                          onClick={() => void deleteSchedule(schedule.id)}
+                          disabled={!canCreateReports}
+                        >
+                          Delete
+                        </Button>
                       </div>
                     </div>
                   ))
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card className="border shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base">Recent runs</CardTitle>
-                <CardDescription>
-                  Last generated reports, ready for review, export, or stakeholder sharing.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="rounded-xl border overflow-hidden">
+              <div className="border-b bg-muted/20 px-4 py-3">
+                <p className="text-[13px] font-semibold text-foreground">Recent runs</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">Last generated reports — click to inspect the full briefing.</p>
+              </div>
+              <div className="divide-y">
                 {recentRuns.length === 0 ? (
-                  <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
                     No reports generated yet.
                   </div>
                 ) : (
@@ -1076,18 +1079,24 @@ export default function Reports() {
                       type="button"
                       onClick={() => setSelectedRunId(run.id)}
                       className={cn(
-                        "block w-full rounded-xl border px-4 py-3 text-left transition-colors hover:border-primary/30",
-                        run.id === selectedRun?.id && "border-primary bg-primary/5",
+                        "block w-full px-4 py-3 text-left transition-colors hover:bg-muted/20",
+                        "border-l-[3px]",
+                        run.id === selectedRun?.id
+                          ? "border-l-primary bg-primary/5"
+                          : "border-l-transparent",
                       )}
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">{run.title}</p>
-                        <Badge variant={run.status === "completed" ? "secondary" : "outline"}>
+                        <p className="text-[13px] font-medium text-foreground">{run.title}</p>
+                        <Badge
+                          variant={run.status === "completed" ? "secondary" : "outline"}
+                          className="text-[10px] py-0"
+                        >
                           {run.status}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {REPORT_TEMPLATES[run.templateKey].label} · Generated {formatDateTime(run.generatedAt)}
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {REPORT_TEMPLATES[run.templateKey].label} · {formatDateTime(run.generatedAt)}
                       </p>
                       {run.errorMessage ? (
                         <p className="mt-1 text-xs text-destructive">{run.errorMessage}</p>
@@ -1095,24 +1104,22 @@ export default function Reports() {
                     </button>
                   ))
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           <Tabs defaultValue="report" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="report">Selected report</TabsTrigger>
-              <TabsTrigger value="process">How this works</TabsTrigger>
+            <TabsList className="h-8 bg-muted/50 text-xs">
+              <TabsTrigger value="report" className="h-7 text-xs">Selected report</TabsTrigger>
+              <TabsTrigger value="process" className="h-7 text-xs">How it works</TabsTrigger>
             </TabsList>
             <TabsContent value="report">
               {selectedRun ? (
                 <ReportViewer run={selectedRun} />
               ) : (
-                <Card className="border">
-                  <CardContent className="py-16 text-center text-sm text-muted-foreground">
-                    Generate or select a report run to inspect the full briefing.
-                  </CardContent>
-                </Card>
+                <div className="rounded-xl border border-dashed py-16 text-center text-sm text-muted-foreground">
+                  Generate or select a report run above to inspect the full briefing.
+                </div>
               )}
             </TabsContent>
             <TabsContent value="process">

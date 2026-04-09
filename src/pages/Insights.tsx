@@ -67,7 +67,7 @@ function formatOfferSummary(insight: Insight) {
     segments.push(`Coupon: ${insight.offer_coupon_code}`);
   }
 
-  if (insight.offer_urgency.length > 0) {
+  if ((insight.offer_urgency ?? []).length > 0) {
     segments.push(`Urgency: ${insight.offer_urgency.join(", ")}`);
   }
 
@@ -183,7 +183,7 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
             </div>
             <div className="rounded-xl border bg-muted/30 p-3">
               <p className="section-label">Evidence</p>
-              <p className="stat-value mt-1.5 text-lg font-semibold leading-none text-foreground">{insight.supporting_evidence.length}</p>
+              <p className="stat-value mt-1.5 text-lg font-semibold leading-none text-foreground">{(insight.supporting_evidence ?? []).length}</p>
             </div>
             <div className="rounded-xl border bg-muted/30 p-3">
               <p className="section-label">Impact</p>
@@ -273,7 +273,7 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
           </div>
         </div>
 
-        {insight.supporting_evidence.length > 0 ? (
+        {(insight.supporting_evidence ?? []).length > 0 ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-foreground">Supporting evidence</p>
@@ -291,10 +291,10 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
 
         <div className="flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-2">
-            {insight.affected_competitors.length > 0 ? (
+            {(insight.affected_competitors ?? []).length > 0 ? (
               <>
                 <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Competitors</span>
-                {insight.affected_competitors.map((competitor) => (
+                {(insight.affected_competitors ?? []).map((competitor) => (
                   <Badge key={`${insight.id}-${competitor}`} variant="outline">
                     {competitor}
                   </Badge>
