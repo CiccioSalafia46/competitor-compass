@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 import {
   type DashboardDecisionModel,
@@ -7,7 +7,6 @@ import {
   type DashboardUsageSummary,
 } from "@/lib/dashboard-decision-engine";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
-import { useAuth } from "@/hooks/useAuth";
 
 export type DashboardCompetitorPreview = Pick<
   Database["public"]["Tables"]["competitors"]["Row"],
@@ -32,57 +31,38 @@ export interface DashboardSnapshot {
   decisionModel: DashboardDecisionModel;
 }
 
-type DashboardSnapshotResponse = DashboardSnapshot | { error?: string };
+export const dashboardSnapshotQueryKey = (workspaceId: string | null | undefined) =>
+  ["dashboard-snapshot", workspaceId] as const;
+
+async function fetchDashboardSnapshot(workspaceId: string): Promise<DashboardSnapshot> {
+  const response = await invokeEdgeFunction<DashboardSnapshot | { error?: string }>(
+    "dashboard-snapshot",
+    { body: { workspaceId } },
+  );
+  if ("error" in response && response.error) {
+    throw new Error(response.error);
+  }
+  return response as DashboardSnapshot;
+}
 
 export function useDashboardSnapshot(workspaceId: string | null | undefined) {
-  const { session, loading: authLoading } = useAuth();
-  const accessToken = session?.access_token ?? null;
-  const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchSnapshot = useCallback(async () => {
-    if (!workspaceId) {
-      setSnapshot(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
+  const { data: snapshot = null, isLoading, error } = useQuery({
+    queryKey: dashboardSnapshotQueryKey(workspaceId),
+    queryFn: () => fetchDashboardSnapshot(workspaceId!),
+    enabled: !!workspaceId,
+    staleTime: 60_000,
+    gcTime: 300_000,
+  });
 
-    if (authLoading || !accessToken) {
-      setLoading(true);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await invokeEdgeFunction<DashboardSnapshotResponse>("dashboard-snapshot", {
-        body: { workspaceId },
-      });
-
-      if ("error" in response && response.error) {
-        throw new Error(response.error);
-      }
-
-      setSnapshot(response as DashboardSnapshot);
-    } catch (fetchError) {
-      setSnapshot(null);
-      setError(fetchError instanceof Error ? fetchError.message : "Failed to load dashboard snapshot.");
-    } finally {
-      setLoading(false);
-    }
-  }, [accessToken, authLoading, workspaceId]);
-
-  useEffect(() => {
-    void fetchSnapshot();
-  }, [fetchSnapshot]);
+  const refetch = () =>
+    queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(workspaceId) });
 
   return {
     snapshot,
-    loading,
-    error,
-    refetch: fetchSnapshot,
+    loading: isLoading,
+    error: error ? (error instanceof Error ? error.message : "Failed to load dashboard snapshot.") : null,
+    refetch,
   };
 }

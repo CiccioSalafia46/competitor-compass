@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -121,64 +121,121 @@ export default function Dashboard() {
     setSelectedCampaignType("");
   }
 
+  // ── All derived memos must come before early returns (Rules of Hooks) ─────────
+
+  const snapshotCompetitors = useMemo(() => snapshot?.competitors ?? [], [snapshot?.competitors]);
+  const snapshotRecentInbox = useMemo(() => snapshot?.recentInbox ?? [], [snapshot?.recentInbox]);
+  const snapshotDecisionModel = snapshot?.decisionModel;
+
+  const competitorNameById = useMemo(
+    () => new Map(snapshotCompetitors.map((c) => [c.id, c.name])),
+    [snapshotCompetitors],
+  );
+
+  const competitorOptions = useMemo(
+    () => Array.from(new Set([
+      ...snapshotCompetitors.map((c) => c.name),
+      ...(snapshotDecisionModel?.prioritizedInsights ?? []).flatMap((i) => i.affected_competitors),
+    ].filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [snapshotCompetitors, snapshotDecisionModel?.prioritizedInsights],
+  );
+
+  const campaignTypeOptions = useMemo(
+    () => Array.from(new Set(
+      (snapshotDecisionModel?.prioritizedInsights ?? []).map((i) => i.campaign_type).filter((v) => typeof v === "string" && v.trim()),
+    )).sort((a, b) => a.localeCompare(b)),
+    [snapshotDecisionModel?.prioritizedInsights],
+  );
+
+  const matchesMeta = (list: string[] | undefined, sel: string) =>
+    !sel || !list || list.length === 0 || list.includes(sel);
+
+  const filteredHighlights = useMemo(
+    () => (snapshotDecisionModel?.dailyHighlights ?? []).filter(
+      (h) => matchesMeta(h.competitors, selectedCompetitor) && matchesMeta(h.campaignTypes, selectedCampaignType),
+    ),
+    [snapshotDecisionModel?.dailyHighlights, selectedCompetitor, selectedCampaignType],
+  );
+  const filteredInsights = useMemo(
+    () => (snapshotDecisionModel?.prioritizedInsights ?? []).filter((i) => {
+      const competitorMatch = selectedCompetitor ? i.affected_competitors.includes(selectedCompetitor) : true;
+      const campaignMatch = selectedCampaignType ? i.campaign_type === selectedCampaignType : true;
+      return competitorMatch && campaignMatch;
+    }),
+    [snapshotDecisionModel?.prioritizedInsights, selectedCompetitor, selectedCampaignType],
+  );
+  const filteredActions = useMemo(
+    () => (snapshotDecisionModel?.recommendedActions ?? []).filter(
+      (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
+    ),
+    [snapshotDecisionModel?.recommendedActions, selectedCompetitor, selectedCampaignType],
+  );
+  const filteredAnomalies = useMemo(
+    () => (snapshotDecisionModel?.anomalies ?? []).filter(
+      (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
+    ),
+    [snapshotDecisionModel?.anomalies, selectedCompetitor, selectedCampaignType],
+  );
+  const filteredCompetitorSummary = useMemo(
+    () => selectedCompetitor
+      ? (snapshotDecisionModel?.competitorSummary ?? []).filter((e) => e.competitor === selectedCompetitor)
+      : (snapshotDecisionModel?.competitorSummary ?? []),
+    [snapshotDecisionModel?.competitorSummary, selectedCompetitor],
+  );
+  const filteredRecentInbox = useMemo(
+    () => snapshotRecentInbox.filter((item) => {
+      if (!selectedCompetitor) return true;
+      const name = item.competitor_id ? competitorNameById.get(item.competitor_id) : null;
+      return name === selectedCompetitor;
+    }),
+    [snapshotRecentInbox, selectedCompetitor, competitorNameById],
+  );
+
+  const aiSummary: DashboardAISummary = useMemo(
+    () => {
+      if (!snapshotDecisionModel) return buildDashboardAiSummary({ highlights: [], insights: [], anomalies: [], recommendedActions: [] });
+      return selectedCompetitor || selectedCampaignType
+        ? buildDashboardAiSummary({
+            highlights: filteredHighlights,
+            insights: filteredInsights,
+            anomalies: filteredAnomalies,
+            recommendedActions: filteredActions,
+            focus: { competitor: selectedCompetitor || null, campaignType: selectedCampaignType || null },
+          })
+        : snapshotDecisionModel.aiSummary ?? buildDashboardAiSummary({
+            highlights: snapshotDecisionModel.dailyHighlights,
+            insights: snapshotDecisionModel.prioritizedInsights,
+            anomalies: snapshotDecisionModel.anomalies,
+            recommendedActions: snapshotDecisionModel.recommendedActions,
+          });
+    },
+    [selectedCompetitor, selectedCampaignType, filteredHighlights, filteredInsights, filteredAnomalies, filteredActions, snapshotDecisionModel],
+  );
+
+  const urgentSignals: { label: string; count: number; href: string; tone: "red" | "amber" | "blue" }[] = useMemo(
+    () => {
+      const unreadAlertCount = snapshot?.unreadAlertCount ?? 0;
+      return [
+        ...(unreadAlertCount > 0 ? [{ label: "Unread alerts", count: unreadAlertCount, href: "/alerts", tone: "red" as const }] : []),
+        ...(filteredAnomalies.filter((a) => a.severity === "high").length > 0
+          ? [{ label: "Critical anomalies", count: filteredAnomalies.filter((a) => a.severity === "high").length, href: "/analytics", tone: "amber" as const }]
+          : []),
+        ...(filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length > 0
+          ? [{ label: "High-priority insights", count: filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length, href: "/insights", tone: "blue" as const }]
+          : []),
+      ];
+    },
+    [snapshot?.unreadAlertCount, filteredAnomalies, filteredInsights],
+  );
+
+  // ── Early returns after all hooks ────────────────────────────────────────────
+
   if (workspaceError) return <ErrorState title="Workspace unavailable" description={workspaceError} onRetry={() => void refetchWorkspace()} />;
   if (wsLoading || (currentWorkspace && loading)) return <LoadingState />;
   if (!currentWorkspace) return <EmptyWorkspaceState onCreate={() => navigate("/onboarding")} />;
   if (snapshotError || !snapshot) return <ErrorState title="Dashboard failed to load" description={snapshotError || "Snapshot unavailable."} onRetry={() => void refetchSnapshot()} />;
 
-  const { stats, recentInbox, competitors, decisionModel, gmailConnected, usage, limits, unreadAlertCount } = snapshot;
-  const competitorNameById = new Map(competitors.map((c) => [c.id, c.name]));
-
-  const competitorOptions = Array.from(new Set([
-    ...competitors.map((c) => c.name),
-    ...decisionModel.prioritizedInsights.flatMap((i) => i.affected_competitors),
-  ].filter(Boolean))).sort((a, b) => a.localeCompare(b));
-
-  const campaignTypeOptions = Array.from(new Set(
-    decisionModel.prioritizedInsights.map((i) => i.campaign_type).filter((v) => typeof v === "string" && v.trim()),
-  )).sort((a, b) => a.localeCompare(b));
-
-  const matchesMeta = (list: string[] | undefined, sel: string) =>
-    !sel || !list || list.length === 0 || list.includes(sel);
-
-  const filteredHighlights = decisionModel.dailyHighlights.filter(
-    (h) => matchesMeta(h.competitors, selectedCompetitor) && matchesMeta(h.campaignTypes, selectedCampaignType),
-  );
-  const filteredInsights = decisionModel.prioritizedInsights.filter((i) => {
-    const competitorMatch = selectedCompetitor ? i.affected_competitors.includes(selectedCompetitor) : true;
-    const campaignMatch = selectedCampaignType ? i.campaign_type === selectedCampaignType : true;
-    return competitorMatch && campaignMatch;
-  });
-  const filteredActions = decisionModel.recommendedActions.filter(
-    (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
-  );
-  const filteredAnomalies = decisionModel.anomalies.filter(
-    (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
-  );
-  const filteredCompetitorSummary = selectedCompetitor
-    ? decisionModel.competitorSummary.filter((e) => e.competitor === selectedCompetitor)
-    : decisionModel.competitorSummary;
-  const filteredRecentInbox = recentInbox.filter((item) => {
-    if (!selectedCompetitor) return true;
-    const name = item.competitor_id ? competitorNameById.get(item.competitor_id) : null;
-    return name === selectedCompetitor;
-  });
-
-  const aiSummary: DashboardAISummary =
-    selectedCompetitor || selectedCampaignType
-      ? buildDashboardAiSummary({
-          highlights: filteredHighlights,
-          insights: filteredInsights,
-          anomalies: filteredAnomalies,
-          recommendedActions: filteredActions,
-          focus: { competitor: selectedCompetitor || null, campaignType: selectedCampaignType || null },
-        })
-      : decisionModel.aiSummary ?? buildDashboardAiSummary({
-          highlights: decisionModel.dailyHighlights,
-          insights: decisionModel.prioritizedInsights,
-          anomalies: decisionModel.anomalies,
-          recommendedActions: decisionModel.recommendedActions,
-        });
+  const { stats, competitors, decisionModel, gmailConnected, usage, limits, unreadAlertCount } = snapshot;
 
   const activeFilterCount = Number(Boolean(selectedCompetitor)) + Number(Boolean(selectedCampaignType));
   const hasData = stats.inboxItems > 0 || stats.competitors > 0 || stats.metaAds > 0;
@@ -188,17 +245,6 @@ export default function Dashboard() {
     if (limit === -1) return false;
     return usage[metric] >= limit;
   };
-
-  // Urgency pills for the command header
-  const urgentSignals: { label: string; count: number; href: string; tone: "red" | "amber" | "blue" }[] = [
-    ...(unreadAlertCount > 0 ? [{ label: "Unread alerts", count: unreadAlertCount, href: "/alerts", tone: "red" as const }] : []),
-    ...(filteredAnomalies.filter((a) => a.severity === "high").length > 0
-      ? [{ label: "Critical anomalies", count: filteredAnomalies.filter((a) => a.severity === "high").length, href: "/analytics", tone: "amber" as const }]
-      : []),
-    ...(filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length > 0
-      ? [{ label: "High-priority insights", count: filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length, href: "/insights", tone: "blue" as const }]
-      : []),
-  ];
 
   return (
     <div className="max-w-[1360px] space-y-4 p-4 sm:p-5 lg:p-6 animate-fade-in">

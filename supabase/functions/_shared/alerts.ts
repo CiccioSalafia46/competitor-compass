@@ -949,11 +949,10 @@ export async function evaluateAlertRules(
     }, new Map<string, AlertCandidate>()),
   ).map(([, value]) => value);
 
-  const results: EvaluatedAlert[] = [];
-
-  for (const candidate of uniqueCandidates) {
-    results.push(await persistAlertCandidate(supabase, trigger, candidate));
-  }
+  // Each candidate has a unique (rule.id, dedupeKey) pair — no write conflicts.
+  const results = await Promise.all(
+    uniqueCandidates.map((candidate) => persistAlertCandidate(supabase, trigger, candidate)),
+  );
 
   const now = new Date().toISOString();
   const evaluatedRuleIds = rules.map((rule) => rule.id);

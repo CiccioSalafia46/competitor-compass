@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { getErrorMessage } from "@/lib/errors";
@@ -145,61 +145,57 @@ const EMPTY_SUMMARY: AnalyticsSummary = {
   lastGmailSyncAt: null,
 };
 
+async function fetchAnalyticsData(workspaceId: string, rangeDays: number): Promise<AnalyticsData> {
+  const { data: result, error } = await supabase.rpc("get_workspace_analytics", {
+    _workspace_id: workspaceId,
+    _range_days: rangeDays,
+  });
+
+  if (error) throw error;
+
+  const r = (result as AnalyticsRpcResult) ?? {};
+  return {
+    summary: { ...EMPTY_SUMMARY, ...r.summary, rangeDays },
+    newslettersByWeek: r.newslettersByWeek || [],
+    adsByWeek: r.adsByWeek || [],
+    weeklyActivity: r.weeklyActivity || [],
+    promotionFrequency: r.promotionFrequency || [],
+    ctaDistribution: r.ctaDistribution || [],
+    categoryDistribution: r.categoryDistribution || [],
+    urgencyFrequency: r.urgencyFrequency || [],
+    campaignTypes: r.campaignTypes || [],
+    competitorActivity: r.competitorActivity || [],
+    competitorPressure: r.competitorPressure || [],
+    topSenderDomains: r.topSenderDomains || [],
+    weekdayCadence: r.weekdayCadence || [],
+    recentSignals: r.recentSignals || [],
+    shareOfVoice: r.shareOfVoice || [],
+    discountDistribution: r.discountDistribution || [],
+    insightCategoryDistribution: r.insightCategoryDistribution || [],
+    competitorCoverage: r.competitorCoverage || [],
+  };
+}
+
 export function useAnalyticsData(rangeDays = 30) {
   const { currentWorkspace } = useWorkspace();
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const workspaceId = currentWorkspace?.id ?? null;
+  const queryClient = useQueryClient();
 
-  const fetchData = useCallback(async () => {
-    if (!currentWorkspace) {
-      setData(null);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
+  const { data = null, isLoading, error } = useQuery({
+    queryKey: ["analytics", workspaceId, rangeDays],
+    queryFn: () => fetchAnalyticsData(workspaceId!, rangeDays),
+    enabled: !!workspaceId,
+    staleTime: 60_000,
+    gcTime: 300_000,
+  });
 
-    try {
-      const { data: result, error } = await supabase.rpc("get_workspace_analytics", {
-        _workspace_id: currentWorkspace.id,
-        _range_days: rangeDays,
-      });
+  const refetch = () =>
+    queryClient.invalidateQueries({ queryKey: ["analytics", workspaceId, rangeDays] });
 
-      if (error) throw error;
-
-      const r = (result as AnalyticsRpcResult) ?? {};
-      setData({
-        summary: { ...EMPTY_SUMMARY, ...r.summary, rangeDays },
-        newslettersByWeek: r.newslettersByWeek || [],
-        adsByWeek: r.adsByWeek || [],
-        weeklyActivity: r.weeklyActivity || [],
-        promotionFrequency: r.promotionFrequency || [],
-        ctaDistribution: r.ctaDistribution || [],
-        categoryDistribution: r.categoryDistribution || [],
-        urgencyFrequency: r.urgencyFrequency || [],
-        campaignTypes: r.campaignTypes || [],
-        competitorActivity: r.competitorActivity || [],
-        competitorPressure: r.competitorPressure || [],
-        topSenderDomains: r.topSenderDomains || [],
-        weekdayCadence: r.weekdayCadence || [],
-        recentSignals: r.recentSignals || [],
-        shareOfVoice: r.shareOfVoice || [],
-        discountDistribution: r.discountDistribution || [],
-        insightCategoryDistribution: r.insightCategoryDistribution || [],
-        competitorCoverage: r.competitorCoverage || [],
-      });
-    } catch (e) {
-      console.error("Analytics RPC error:", e);
-      setData(null);
-      setError(getErrorMessage(e, "Failed to load analytics."));
-    }
-
-    setLoading(false);
-  }, [currentWorkspace, rangeDays]);
-
-  useEffect(() => { void fetchData(); }, [fetchData]);
-
-  return { data, loading, error, refetch: fetchData };
+  return {
+    data,
+    loading: isLoading,
+    error: error ? getErrorMessage(error, "Failed to load analytics.") : null,
+    refetch,
+  };
 }

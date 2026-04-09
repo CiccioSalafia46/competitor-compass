@@ -1,4 +1,4 @@
-import { useMemo, useState, type ElementType } from "react";
+import { memo, useMemo, useState, type ElementType } from "react";
 import { useInsights, INSIGHT_CATEGORIES, type Insight, type InsightEvidence } from "@/hooks/useInsights";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -123,7 +123,7 @@ function EvidenceItemView({ evidence }: { evidence: InsightEvidence }) {
   );
 }
 
-function InsightCard({ insight }: { insight: Insight }) {
+const InsightCard = memo(function InsightCard({ insight }: { insight: Insight }) {
   const meta = CATEGORY_META[insight.category] || CATEGORY_META.pricing;
   const Icon = meta.icon;
   const confidenceValue = insight.confidence != null ? `${Math.round(insight.confidence * 100)}%` : "N/A";
@@ -312,7 +312,7 @@ function InsightCard({ insight }: { insight: Insight }) {
       </CardContent>
     </Card>
   );
-}
+});
 
 export default function Insights() {
   const [activeTab, setActiveTab] = useState<string>("all");
