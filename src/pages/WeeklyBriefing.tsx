@@ -144,14 +144,14 @@ export default function WeeklyBriefingPage() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Key signals */}
-            {briefing.key_signals.length > 0 && (
+            {(briefing.key_signals ?? []).length > 0 && (
               <Card className="border shadow-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">Key signals this week</CardTitle>
-                  <CardDescription>{briefing.key_signals.length} notable competitive movements</CardDescription>
+                  <CardDescription>{(briefing.key_signals ?? []).length} notable competitive movements</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {briefing.key_signals.map((signal, i) => {
+                  {(briefing.key_signals ?? []).map((signal, i) => {
                     const Icon = categoryIcon[signal.category] ?? Lightbulb;
                     return (
                       <div key={i} className="flex items-start gap-3 rounded-xl border bg-muted/10 p-3">
@@ -168,14 +168,14 @@ export default function WeeklyBriefingPage() {
             )}
 
             {/* Action items */}
-            {briefing.action_items.length > 0 && (
+            {(briefing.action_items ?? []).length > 0 && (
               <Card className="border shadow-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">This week's action items</CardTitle>
                   <CardDescription>Recommended steps based on competitive intelligence</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {briefing.action_items.map((item, i) => (
+                  {(briefing.action_items ?? []).map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -195,14 +195,14 @@ export default function WeeklyBriefingPage() {
           </div>
 
           {/* Top insights */}
-          {briefing.top_insights.length > 0 && (
+          {(briefing.top_insights ?? []).length > 0 && (
             <Card className="border shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Top insights</CardTitle>
                 <CardDescription>Highest-value intelligence from this week's analysis</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {briefing.top_insights.map((insight, i) => {
+                {(briefing.top_insights ?? []).map((insight, i) => {
                   const Icon = categoryIcon[insight.category] ?? Lightbulb;
                   return (
                     <div key={i} className="flex items-start gap-3 rounded-xl border bg-muted/10 p-3">

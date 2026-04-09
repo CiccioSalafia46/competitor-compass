@@ -247,7 +247,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-[1360px] space-y-5 p-4 sm:p-5 lg:p-6 animate-fade-in">
+    <div className="max-w-[1360px] space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
 
       {/* ── Zone 1: Command Header ──────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -289,7 +289,7 @@ export default function Dashboard() {
       <OnboardingChecklist />
 
       {/* ── Zone 2: KPI Strip ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
         <KpiStrip icon={Newspaper} label="Inbox" value={stats.inboxItems} sub="signals" href="/inbox" />
         <KpiStrip icon={Users} label="Competitors" value={stats.competitors} sub="tracked" href="/competitors" />
         <KpiStrip icon={TrendingUp} label="Analyses" value={stats.completedAnalyses} sub="done" href="/analytics" />
@@ -306,11 +306,11 @@ export default function Dashboard() {
         <>
           {/* ── Zone 3: Intelligence Command Panel ─────────────────────────── */}
           <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2.5 border-b bg-muted/30 px-4 py-3">
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/15">
-                <Sparkles className="h-3 w-3 text-primary" />
+            <div className="flex items-center gap-2.5 border-b bg-muted/40 px-5 py-3.5">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/15">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
               </div>
-              <p className="section-label">Intelligence brief</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground/70">Intelligence brief</p>
               {activeFilterCount > 0 && (
                 <Badge variant="secondary" className="ml-auto text-[10px] font-medium">
                   Filtered · {activeFilterCount} active
@@ -395,7 +395,7 @@ export default function Dashboard() {
           )}
 
           {/* ── Zone 5: Top Insights + Competitor Pressure ─────────────────── */}
-          <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+          <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
 
             {/* Top insights: featured #1 + compact list */}
             <section className="space-y-2">
@@ -438,7 +438,7 @@ export default function Dashboard() {
           </div>
 
           {/* ── Zone 6: Highlights | Anomalies | Inbox ─────────────────────── */}
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-3">
 
             {/* Daily highlights */}
             <section className="space-y-2">
@@ -529,27 +529,29 @@ export default function Dashboard() {
       <SystemHealthPanel />
 
       {/* ── Quick nav ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[
-          { icon: Newspaper, label: "Import data", desc: "Paste or upload", path: "/newsletters/new" },
-          { icon: Users, label: "Competitors", desc: "Manage monitored rivals", path: "/competitors" },
-          { icon: TrendingUp, label: "Analytics", desc: "Activity trends", path: "/analytics" },
-          { icon: Megaphone, label: "Meta Ads", desc: "Paid intelligence", path: "/meta-ads" },
-        ].map((a) => (
-          <button
-            key={a.path}
-            onClick={() => navigate(a.path)}
-            className="flex items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm transition-all hover:shadow-md hover:-translate-y-px hover:border-primary/25 hover:bg-accent/30"
-          >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <a.icon className="h-3.5 w-3.5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold">{a.label}</p>
-              <p className="text-[10px] text-muted-foreground">{a.desc}</p>
-            </div>
-          </button>
-        ))}
+      <div className="rounded-xl border bg-muted/20 p-1">
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+          {[
+            { icon: Newspaper, label: "Import data", desc: "Paste or upload", path: "/newsletters/new" },
+            { icon: Users, label: "Competitors", desc: "Manage monitored rivals", path: "/competitors" },
+            { icon: TrendingUp, label: "Analytics", desc: "Activity trends", path: "/analytics" },
+            { icon: Megaphone, label: "Meta Ads", desc: "Paid intelligence", path: "/meta-ads" },
+          ].map((a) => (
+            <button
+              key={a.path}
+              onClick={() => navigate(a.path)}
+              className="flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-background hover:shadow-sm"
+            >
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background border text-muted-foreground shadow-sm">
+                <a.icon className="h-3.5 w-3.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-foreground">{a.label}</p>
+                <p className="text-[10px] text-muted-foreground/70">{a.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -563,11 +565,12 @@ function SectionHeader({ label, sub, action }: {
   action?: { label: string; onClick: () => void };
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 pb-1">
-      <div className="flex items-baseline gap-2.5">
+    <div className="flex items-center justify-between gap-3 pb-2">
+      <div className="flex items-center gap-2.5">
+        <span className="h-4 w-[3px] rounded-full bg-primary/60 shrink-0" />
         <p className="text-sm font-semibold tracking-tight text-foreground">{label}</p>
         {sub && (
-          <p className="text-[11px] text-muted-foreground hidden sm:block">{sub}</p>
+          <p className="text-[11px] text-muted-foreground/70 hidden sm:block">{sub}</p>
         )}
       </div>
       {action && (
@@ -697,27 +700,32 @@ const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, a
     <button
       onClick={() => navigate(href)}
       className={cn(
-        "group flex flex-col gap-2 rounded-xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md hover:-translate-y-px",
+        "group relative flex flex-col gap-3 overflow-hidden rounded-xl border bg-card p-5 text-left shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md",
         accent
-          ? "border-destructive/30 bg-destructive/5 hover:border-destructive/40"
-          : "hover:border-primary/20 hover:bg-accent/20",
+          ? "border-destructive/30 bg-destructive/5 hover:border-destructive/50"
+          : "hover:border-primary/25 hover:bg-card",
       )}
     >
+      {/* Accent bottom stripe */}
       <div className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-lg",
-        accent ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground",
+        "absolute bottom-0 left-0 h-0.5 w-full transition-all duration-150",
+        accent ? "bg-destructive/40 group-hover:bg-destructive/60" : "bg-transparent group-hover:bg-primary/30",
+      )} />
+      <div className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-lg",
+        accent ? "bg-destructive/10 text-destructive" : "bg-primary/8 text-primary",
       )}>
-        <Icon className="h-3.5 w-3.5" />
+        <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
         <p className={cn(
-          "stat-value text-xl font-semibold leading-none tracking-tight",
-          accent && "text-destructive",
+          "stat-value text-[1.65rem] font-bold leading-none tracking-tight",
+          accent ? "text-destructive" : "text-foreground",
         )}>
           {value}
         </p>
-        <p className="mt-1 truncate text-[11px] font-medium text-foreground/80">{label}</p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground/60">{sub}</p>
+        <p className="mt-1.5 truncate text-xs font-semibold text-foreground/70">{label}</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground/50">{sub}</p>
       </div>
     </button>
   );
@@ -734,17 +742,17 @@ function BriefColumn({ icon: Icon, label, text, accent, cta, onNavigate }: {
   onNavigate?: ReturnType<typeof useNavigate>;
 }) {
   return (
-    <div className={cn("flex flex-col gap-3 p-4", accent && "bg-primary/[0.03]")}>
+    <div className={cn("flex flex-col gap-3.5 p-5", accent && "bg-primary/[0.025]")}>
       <div className="flex items-center gap-2">
-        <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded", accent ? "bg-primary/10" : "bg-muted")}>
-          <Icon className={cn("h-3.5 w-3.5", accent ? "text-primary" : "text-muted-foreground")} />
+        <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent ? "bg-primary/12 text-primary" : "bg-muted text-muted-foreground")}>
+          <Icon className="h-3.5 w-3.5" />
         </div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+        <p className={cn("text-[10px] font-semibold uppercase tracking-[0.16em]", accent ? "text-primary/70" : "text-muted-foreground")}>{label}</p>
       </div>
-      <p className="text-sm leading-6 text-foreground">{text}</p>
+      <p className="text-sm leading-[1.65] text-foreground">{text}</p>
       {cta && onNavigate && (
         <div className="mt-auto pt-1">
-          <Button size="sm" className="h-7 gap-1 text-xs" onClick={() => onNavigate(cta.href)}>
+          <Button size="sm" className="h-7 gap-1.5 text-xs" onClick={() => onNavigate(cta.href)}>
             {cta.label}
             <ArrowRight className="h-3 w-3" />
           </Button>
@@ -802,7 +810,7 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
     <button
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border border-l-[3px] bg-background p-4 text-left transition-all hover:shadow-sm hover:bg-accent/20",
+        "w-full rounded-xl border border-l-[3px] bg-card p-5 text-left shadow-sm transition-all duration-150 hover:shadow-md hover:-translate-y-px hover:bg-accent/15",
         PRIORITY_BORDER[priority],
       )}
     >

@@ -128,19 +128,17 @@ export default function Index() {
 
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-primary/[0.01] to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-28 pb-16 sm:pb-24 relative">
           <div className="max-w-3xl mx-auto text-center">
-            <Badge
-              variant="outline"
-              className="mb-6 gap-1.5 px-3 py-1.5 text-xs font-normal border-primary/30 text-primary"
-              style={{ opacity: badgeFading ? 0 : 1, transition: "opacity 0.4s ease" }}
-            >
-              <Sparkles className="h-3 w-3" /> {BADGE_PHRASES[badgeIndex]}
-            </Badge>
-            <h1 className="text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-foreground leading-[1.1]">
-              Know what your competitors are doing —{" "}
-              <span className="text-primary inline-block min-h-[1.2em]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1.5 mb-7">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs font-medium text-primary">AI-Powered Competitor Intelligence</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-foreground leading-[1.08]">
+              Know what your competitors<br className="hidden sm:block" /> are doing —{" "}
+              <span className="text-primary inline-block min-h-[1.15em]">
                 {typeText}
                 <span
                   className="text-primary"
@@ -148,42 +146,43 @@ export default function Index() {
                 >|</span>
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-muted-foreground text-base sm:text-lg leading-relaxed">
-              Track campaigns, analyze strategies, and uncover opportunities in real time.
-              One platform for your entire competitive intelligence workflow.
+            <p className="mx-auto mt-6 max-w-[500px] text-muted-foreground text-base sm:text-[1.05rem] leading-relaxed">
+              One platform to track campaigns, decode strategies, and surface competitive signals automatically — before they impact your business.
             </p>
             <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button size="lg" className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-medium shadow-md shadow-primary/20" onClick={() => navigate(cta)}>
+              <Button size="lg" className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-semibold shadow-lg shadow-primary/25" onClick={() => navigate(cta)}>
                 {ctaLabel} <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="lg" className="h-12 px-8 text-sm gap-2 w-full sm:w-auto" onClick={() =>
+              <Button variant="outline" size="lg" className="h-12 px-8 text-sm gap-2 w-full sm:w-auto border-border/60" onClick={() =>
                 document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })
               }>
                 See how it works <ChevronDown className="h-4 w-4" />
               </Button>
             </div>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-              {["Free plan available", "Setup in under 5 minutes", "No credit card required", "Cancel anytime"].map((t) => (
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              {["Free plan available", "Setup in 5 minutes", "No credit card", "Cancel anytime"].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
-                  <Check className="h-3 w-3 text-primary" /> {t}
+                  <Check className="h-3 w-3 text-primary/80" /> {t}
                 </span>
               ))}
             </div>
           </div>
 
           {/* Metrics strip */}
-          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            {[
-              { value: "10x", label: "Faster than manual tracking" },
-              { value: "100%", label: "Automated data collection" },
-              { value: "24/7", label: "Continuous monitoring" },
-              { value: "<5 min", label: "Time to first insight" },
-            ].map((m) => (
-              <div key={m.label} className="text-center p-4 rounded-lg border bg-card">
-                <p className="text-2xl font-bold text-primary">{m.value}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">{m.label}</p>
-              </div>
-            ))}
+          <div className="mt-16 max-w-2xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 rounded-xl border bg-card shadow-sm overflow-hidden">
+              {[
+                { value: "10×", label: "Faster than manual" },
+                { value: "100%", label: "Automated collection" },
+                { value: "24/7", label: "Continuous monitoring" },
+                { value: "< 5 min", label: "Time to first insight" },
+              ].map((m) => (
+                <div key={m.label} className="flex flex-col items-center justify-center px-4 py-5 text-center">
+                  <p className="text-2xl font-bold text-primary tracking-tight">{m.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{m.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -222,10 +221,8 @@ export default function Index() {
           ))}
         </div>
 
-        <div className="flex justify-center my-12">
-          <div className="flex flex-col items-center gap-1 text-primary/50">
-            <ChevronDown className="h-5 w-5 animate-bounce" />
-          </div>
+        <div className="flex justify-center my-14">
+          <div className="h-px w-16 bg-gradient-to-r from-transparent via-border to-transparent" />
         </div>
 
         {/* Solution */}
@@ -269,18 +266,22 @@ export default function Index() {
               No complex configuration. Connect your sources, add competitors, and let the AI do the rest.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
               { step: "01", icon: Search, title: "Connect your sources", desc: "One-click OAuth for data sources. Read-only access. We never send, delete, or modify anything." },
               { step: "02", icon: Users, title: "Define your competitors", desc: "Add competitor names and domains. Tracklyze automatically matches and classifies incoming data." },
               { step: "03", icon: Sparkles, title: "AI analyzes everything", desc: "Every piece of competitor activity is analyzed for pricing, offers, CTAs, messaging patterns, and strategy." },
               { step: "04", icon: TrendingUp, title: "Act with confidence", desc: "View dashboards, set custom alerts, and use strategic insights to stay ahead of the competition." },
-            ].map((s) => (
+            ].map((s, i) => (
               <div key={s.step} className="relative">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-3xl font-bold text-primary/20">{s.step}</span>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shrink-0">
-                    <s.icon className="h-5 w-5" />
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="relative shrink-0">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
+                      <s.icon className="h-5 w-5" />
+                    </div>
+                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-background border text-[9px] font-bold text-foreground">
+                      {i + 1}
+                    </span>
                   </div>
                 </div>
                 <h3 className="text-sm font-semibold text-foreground mb-2">{s.title}</h3>
@@ -460,24 +461,20 @@ export default function Index() {
               Built for teams that compete on intelligence
             </h2>
           </div>
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-3 gap-5">
             {[
               { quote: "We finally have a single source of truth for everything our competitors are doing. The AI extraction saves us hours every week.", role: "Head of Growth", company: "E-Commerce Brand" },
               { quote: "The alerts caught a competitor's pricing change 48 hours before our team would have noticed. That alone justified the investment.", role: "Marketing Director", company: "DTC Company" },
               { quote: "What used to take a full-time analyst now runs automatically. The insights are structured, actionable, and always up to date.", role: "VP of Marketing", company: "SaaS Company" },
             ].map((t, i) => (
-              <Card key={i} className="border border-dashed">
-                <CardContent className="p-6">
-                  <div className="flex gap-0.5 mb-4">
-                    {[1,2,3,4,5].map(s => (
-                      <svg key={s} className="h-3.5 w-3.5 text-primary fill-primary" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                    ))}
-                  </div>
-                  <p className="text-sm text-foreground leading-relaxed mb-5 italic">
-                    &ldquo;{t.quote}&rdquo;
+              <Card key={i} className="border bg-card shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="text-4xl font-serif text-primary/20 leading-none mb-3 select-none">&ldquo;</div>
+                  <p className="text-sm text-foreground leading-relaxed flex-1">
+                    {t.quote}
                   </p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                  <div className="flex items-center gap-3 mt-6 pt-5 border-t border-border/50">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                       {t.role.charAt(0)}
                     </div>
                     <div>
@@ -602,23 +599,29 @@ export default function Index() {
       </section>
 
       {/* ─── Final CTA ─── */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/[0.04] to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center relative">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-4">
-            Start tracking your competitors the smart way
+      <section className="relative overflow-hidden border-t">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.06] via-background to-background pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center relative">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 mb-7">
+            <Sparkles className="h-3 w-3 text-primary" />
+            <span className="text-[11px] font-medium text-primary">Ready to get started?</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-5 leading-tight">
+            Stop tracking competitors manually.<br className="hidden sm:block" />
+            <span className="text-primary">Start winning on intelligence.</span>
           </h2>
-          <p className="text-base text-muted-foreground max-w-md mx-auto mb-9">
+          <p className="text-base text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
             Join teams using Tracklyze to automate competitive intelligence
             and make faster, smarter marketing decisions.
           </p>
-          <Button size="lg" className="h-13 px-10 text-base gap-2.5 font-medium shadow-lg shadow-primary/20" onClick={() => navigate(cta)}>
+          <Button size="lg" className="h-12 px-10 text-sm gap-2 font-semibold shadow-lg shadow-primary/25" onClick={() => navigate(cta)}>
             {ctaLabel} <ArrowRight className="h-4 w-4" />
           </Button>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
             {["Free plan available", "Setup in 5 minutes", "No credit card", "Cancel anytime"].map((t) => (
               <span key={t} className="flex items-center gap-1.5">
-                <Check className="h-3 w-3 text-primary" /> {t}
+                <Check className="h-3 w-3 text-primary/80" /> {t}
               </span>
             ))}
           </div>
@@ -683,12 +686,12 @@ function PricingCard({
 }) {
   return (
     <Card className={cn(
-      "border relative flex flex-col",
-      highlighted && "border-primary shadow-lg ring-1 ring-primary/20"
+      "border relative flex flex-col transition-shadow duration-200 hover:shadow-md",
+      highlighted && "border-primary shadow-xl ring-1 ring-primary/20 scale-[1.02]"
     )}>
       {highlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="text-[10px] px-3 shadow-sm">Most Popular</Badge>
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+          <Badge className="text-[10px] px-3 py-1 shadow-md">Most Popular</Badge>
         </div>
       )}
       <CardContent className="p-6 flex flex-col flex-1">
