@@ -22,16 +22,22 @@ Il progetto e gia funzionante, ma il debito tecnico rilevante si concentra in qu
 Problema:
 - `workspace_billing` e `platform_admins` non risultano nei generated types browser
 
+Nota (verificato 2026-04-09):
+- `platform_admins` ESISTE nel DB — creata in `20260405143000_harden_platform_auth_and_billing.sql`
+- `_shared/auth.ts:isPlatformAdmin()` e corretto e sicuro; query errori silenziosi per tabella mancante non si verificano
+- `workspace_billing` ESISTE nel DB — stessa migrazione
+- Il problema e solo nei tipi generati browser, non a runtime backend
+
 Impatto:
-- type drift
-- errori futuri silenziosi durante refactor/schema changes
+- type drift lato frontend
+- errori futuri silenziosi durante refactor/schema changes client-side
 
 Evidenza:
 - `src/integrations/supabase/types.ts`
 
 Azioni suggerite:
-- rigenerare `src/integrations/supabase/types.ts`
-- rendere la rigenerazione parte del workflow schema
+- rigenerare `src/integrations/supabase/types.ts` con `supabase gen types typescript`
+- rendere la rigenerazione parte del workflow schema (CI step o pre-commit hook)
 
 ### P0.2 `verify_jwt = false` su tutte le Edge Functions
 
@@ -202,6 +208,25 @@ Azioni suggerite:
 - in caso contrario, estrarre un contract condiviso o una view/RPC backend-oriented
 
 ## 4. Priorita P2
+
+### P2.0 Sistema toast duplicato (useToast + sonner)
+
+Problema:
+- `App.tsx` monta sia `<Toaster>` (shadcn/radix, usa `useToast` da `@/hooks/use-toast`) che `<Sonner>` (sonner)
+- `useToast` e usato in 13 file (Auth, Billing, Competitors, GmailConnect, NewsletterInbox, Onboarding, TeamManagement, AnalysisView, ForgotPassword, NewNewsletter, NewsletterDetail, NewsletterReader, ResetPassword)
+- `toast` da `sonner` e usato in 13 hook/pagine admin (useAlerts, useInsights, useAdmin, useMetaAds, Settings, AdminUsers, etc.)
+
+Impatto:
+- due overlay portals attivi simultaneamente
+- rischio conflitti z-index e duplicazioni visive
+- standard inconsistente tra flussi core e hook
+
+Azione necessaria:
+- migrare tutti i callsite `useToast` da `@/hooks/use-toast` a `toast` da `sonner`
+- rimuovere `<Toaster>` (radix) da `App.tsx` e il hook `@/hooks/use-toast`
+- NON rimuovere nessuno dei due sistemi senza completare prima la migrazione (13 file)
+
+Non risolvibile in un singolo commit. Richiede una migration sprint dedicata.
 
 ### P2.1 React Query installato ma non adottato
 
