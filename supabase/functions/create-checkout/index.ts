@@ -1,16 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { HttpError, assertWorkspaceAdmin, requireAuthenticatedUser } from "../_shared/auth.ts";
+import { sanitizeRedirectUrl } from "../_shared/app.ts";
+import { getBillingPlanConfig } from "../_shared/billing.ts";
+import { buildBillingStateFromCheckoutPending, getStripeClient } from "../_shared/stripe-billing.ts";
+import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-const logStep = (step: string, details?: any) => {
-  const d = details ? ` - ${JSON.stringify(details)}` : "";
-  console.log(`[CREATE-CHECKOUT] ${step}${d}`);
+const logStep = (step: string, details?: unknown) => {
+  console.log(`[CREATE-CHECKOUT] ${step}${details ? ` ${JSON.stringify(details)}` : ""}`);
 };
 
 serve(async (req) => {
@@ -18,59 +15,100 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
+  const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } },
   );
 
   try {
-    logStep("Function started");
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated");
-    logStep("User authenticated", { email: user.email });
-
-    const { priceId } = await req.json();
-    if (!priceId) throw new Error("priceId is required");
-    logStep("Price ID", { priceId });
-
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
-
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not set");
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const { user } = await requireAuthenticatedUser(supabase, req);
+    const { workspaceId, plan } = await req.json();
 
+    if (!workspaceId) {
+      return jsonResponse({ error: "workspaceId is required" }, 400);
+    }
+
+    const planConfig = getBillingPlanConfig(plan);
+    await assertWorkspaceAdmin(supabase, user.id, workspaceId);
+
+    const stripe = getStripeClient(stripeKey);
+
+    const { data: workspace } = await supabase
+      .from("workspaces")
+      .select("id, name, slug")
+      .eq("id", workspaceId)
+      .single();
+
+    const { data: billingRow } = await supabase
+      .from("workspace_billing")
+      .select("stripe_customer_id")
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+
+    let customerId = billingRow?.stripe_customer_id ?? null;
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email || undefined,
+        name: workspace?.name || undefined,
+        metadata: {
+          workspace_id: workspaceId,
+          workspace_slug: workspace?.slug || "",
+        },
+      });
+      customerId = customer.id;
+    }
+
+    const appOrigin = sanitizeRedirectUrl(req);
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      client_reference_id: workspaceId,
+      line_items: [{ price: planConfig.priceId, quantity: 1 }],
       mode: "subscription",
-      success_url: `${origin}/settings?checkout=success`,
-      cancel_url: `${origin}/settings?checkout=canceled`,
+      success_url: `${appOrigin}/settings/billing?checkout=success`,
+      cancel_url: `${appOrigin}/settings/billing?checkout=canceled`,
+      metadata: {
+        workspace_id: workspaceId,
+        plan: planConfig.plan,
+        created_by: user.id,
+      },
+      subscription_data: {
+        metadata: {
+          workspace_id: workspaceId,
+          plan: planConfig.plan,
+          created_by: user.id,
+        },
+      },
     });
 
-    logStep("Checkout session created", { sessionId: session.id });
+    await supabase.from("workspace_billing").upsert(
+      buildBillingStateFromCheckoutPending({
+        workspaceId,
+        stripeCustomerId: customerId,
+        priceId: planConfig.priceId,
+        checkoutEmail: user.email || null,
+      }),
+    );
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
+    logStep("Checkout session created", {
+      workspaceId,
+      plan: planConfig.plan,
+      sessionId: session.id,
     });
+
+    return jsonResponse({ url: session.url });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    const message = getErrorMessage(error);
+    logStep("ERROR", { message });
+    if (error instanceof HttpError) {
+      return jsonResponse({ error: message }, error.status);
+    }
+    return jsonResponse({ error: message }, 500);
   }
 });

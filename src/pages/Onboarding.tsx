@@ -5,6 +5,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useOnboarding, type OnboardingStep } from "@/hooks/useOnboarding";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
 import { useRoles } from "@/hooks/useRoles";
+import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,9 @@ import {
   Mail, Users, Lightbulb, Newspaper, Sparkles, Inbox, Globe,
   CheckCircle, SkipForward, Rocket,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
@@ -30,7 +33,7 @@ export default function Onboarding() {
   return <OnboardingContent />;
 }
 
-const STEP_META: Record<OnboardingStep, { title: string; subtitle: string; icon: any }> = {
+const STEP_META: Record<OnboardingStep, { title: string; subtitle: string; icon: LucideIcon }> = {
   welcome: { title: "Welcome", subtitle: "Get started", icon: Sparkles },
   workspace: { title: "Workspace", subtitle: "Your team hub", icon: BarChart3 },
   competitors: { title: "Competitors", subtitle: "Track rivals", icon: Users },
@@ -49,18 +52,17 @@ function OnboardingContent() {
   } = useOnboarding();
 
   type VisibleStep = Exclude<OnboardingStep, "done">;
-  const toVisible = (s: OnboardingStep): VisibleStep => s === "done" ? "insights" : s as VisibleStep;
 
   const [activeStep, setActiveStep] = useState<VisibleStep>(
-    workspaces.length === 0 ? "welcome" : toVisible(currentStep)
+    workspaces.length === 0 ? "welcome" : currentStep === "done" ? "insights" : currentStep
   );
 
   // If workspace exists, skip workspace step
   useEffect(() => {
     if (workspaces.length > 0 && activeStep === "welcome") {
-      setActiveStep(currentStep === "workspace" ? "competitors" : toVisible(currentStep));
+      setActiveStep(currentStep === "workspace" ? "competitors" : currentStep === "done" ? "insights" : currentStep);
     }
-  }, [workspaces.length]);
+  }, [activeStep, currentStep, workspaces.length]);
 
   const visibleSteps = stepOrder.filter((s): s is VisibleStep => s !== "done");
   const stepIndex = visibleSteps.indexOf(activeStep);
@@ -254,9 +256,9 @@ function WorkspaceStep({ onComplete }: { onComplete: () => void }) {
     try {
       await createWorkspace(name.trim());
       onComplete();
-    } catch (err: any) {
+    } catch (error) {
       submittingRef.current = false;
-      const raw = err?.message || "";
+      const raw = getErrorMessage(error, "");
       const msg = raw.includes("row-level security") || raw.includes("violates")
         ? "Something went wrong. Please try signing out and back in."
         : raw.includes("duplicate key")
@@ -349,8 +351,8 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
       if (error) throw error;
       toast({ title: `Added ${validCompetitors.length} competitor${validCompetitors.length > 1 ? "s" : ""}` });
       onComplete();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -421,6 +423,7 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
 function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
   const { isConnected, connect, loading } = useGmailConnection();
   const { isAdmin } = useRoles();
+  const { isVerified, requireVerification } = useEmailVerification();
   const [connecting, setConnecting] = useState(false);
   const { toast } = useToast();
 
@@ -431,7 +434,7 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
       toast({ title: "Gmail connected!" });
       onComplete();
     }
-  }, []);
+  }, [onComplete, toast]);
 
   // If already connected
   useEffect(() => {
@@ -439,11 +442,14 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
   }, [loading, isConnected, onComplete]);
 
   const handleConnect = async () => {
+    if (!requireVerification("connect Gmail")) {
+      return;
+    }
     setConnecting(true);
     try {
       await connect();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
       setConnecting(false);
     }
   };
@@ -491,7 +497,11 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
               <SkipForward className="h-3.5 w-3.5" /> Skip for now
             </Button>
             {isAdmin ? (
-              <Button onClick={handleConnect} disabled={connecting || loading} className="flex-1 gap-1.5">
+              <Button
+                onClick={handleConnect}
+                disabled={connecting || loading || !isVerified}
+                className="flex-1 gap-1.5"
+              >
                 {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                 {connecting ? "Redirecting…" : "Connect Gmail"}
               </Button>
@@ -501,6 +511,9 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
               </div>
             )}
           </div>
+          {!isVerified && (
+            <p className="text-xs text-muted-foreground">Verify your email before connecting Gmail.</p>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,18 +1,62 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import {
+  HttpError,
+  assertPlatformAdmin,
+  isPlatformAdmin,
+  requireAuthenticatedUser,
+} from "../_shared/auth.ts";
+import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+type AuditMetadata = Record<string, unknown>;
+type AuthListUsersResponse = {
+  users?: AuthListUser[];
+  total?: number;
 };
-
-function json(data: any, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+type AuthListUser = {
+  id: string;
+  email?: string | null;
+  created_at?: string;
+  last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+  banned_until?: string | null;
+};
+type ProfileRow = {
+  user_id: string;
+  display_name: string | null;
+};
+type UserRoleRow = {
+  user_id: string;
+  role: string;
+  workspace_id: string;
+};
+type WorkspaceMemberRow = {
+  user_id: string;
+  workspace_id: string;
+  role: string;
+  workspaces?: { name?: string | null } | null;
+};
+type WorkspaceRow = {
+  id: string;
+  owner_id: string | null;
+  created_at: string;
+  name: string;
+  slug: string;
+};
+type WorkspaceScopedRow = {
+  workspace_id: string;
+  id: string;
+};
+type GmailConnectionIdRow = {
+  id: string;
+};
+type RateLimitRow = {
+  endpoint: string | null;
+};
+type TokenRow = {
+  id: string;
+  token_expires_at: string | null;
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -24,28 +68,19 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !userData.user) throw new Error("Authentication failed");
-
-    const adminUserId = userData.user.id;
-
-    const { data: adminRoles } = await supabaseAdmin
-      .from("user_roles")
-      .select("id")
-      .eq("user_id", adminUserId)
-      .eq("role", "admin")
-      .limit(1);
-
-    if (!adminRoles || adminRoles.length === 0) return json({ error: "Forbidden" }, 403);
-
     const body = await req.json();
     const { action } = body;
+    const { user } = await requireAuthenticatedUser(supabaseAdmin, req);
+    const adminUserId = user.id;
+
+    if (action === "auth_status") {
+      return jsonResponse({ isPlatformAdmin: await isPlatformAdmin(supabaseAdmin, user) });
+    }
+
+    await assertPlatformAdmin(supabaseAdmin, user);
 
     // Helper: log admin action
-    async function auditLog(actionName: string, entityType: string, entityId?: string, metadata?: any) {
+    async function auditLog(actionName: string, entityType: string, entityId?: string, metadata?: AuditMetadata) {
       // Find any workspace for the admin to attach the log
       const { data: ws } = await supabaseAdmin
         .from("workspace_members")
@@ -107,7 +142,7 @@ serve(async (req) => {
           .select("id", { count: "exact", head: true })
           .gte("created_at", weekAgo);
 
-        return json({
+        return jsonResponse({
           totalUsers: totalUsers || 0,
           totalWorkspaces: totalWorkspaces || 0,
           gmailConnections: gmailConnections || 0,
@@ -131,11 +166,19 @@ serve(async (req) => {
         const { data: roles } = await supabaseAdmin.from("user_roles").select("*");
         const { data: members } = await supabaseAdmin.from("workspace_members").select("*, workspaces(name)");
 
-        return json({
-          users: (users?.users || []).map((u: any) => {
-            const profile = profiles?.find((p: any) => p.user_id === u.id);
-            const userRoles = roles?.filter((r: any) => r.user_id === u.id) || [];
-            const userWorkspaces = members?.filter((m: any) => m.user_id === u.id) || [];
+        const authUsers = (((users as AuthListUsersResponse | null)?.users ?? []) as AuthListUser[]);
+        const totalUsers = typeof (users as AuthListUsersResponse | null)?.total === "number"
+          ? (users as AuthListUsersResponse).total as number
+          : authUsers.length;
+        const profileRows = (profiles ?? []) as ProfileRow[];
+        const roleRows = (roles ?? []) as UserRoleRow[];
+        const memberRows = (members ?? []) as WorkspaceMemberRow[];
+
+        return jsonResponse({
+          users: authUsers.map((u) => {
+            const profile = profileRows.find((p) => p.user_id === u.id);
+            const userRoles = roleRows.filter((r) => r.user_id === u.id);
+            const userWorkspaces = memberRows.filter((m) => m.user_id === u.id);
             return {
               id: u.id,
               email: u.email,
@@ -145,22 +188,24 @@ serve(async (req) => {
               banned: u.banned_until ? true : false,
               banned_until: u.banned_until,
               display_name: profile?.display_name || u.email,
-              roles: userRoles.map((r: any) => ({ role: r.role, workspace_id: r.workspace_id })),
-              workspaces: userWorkspaces.map((w: any) => ({
-                id: w.workspace_id,
+              roles: userRoles.map((r) => ({ role: r.role, workspace_id: r.workspace_id })),
+              workspaces: userWorkspaces.map((w) => ({
+                workspace_id: w.workspace_id,
                 name: w.workspaces?.name,
                 role: w.role,
               })),
             };
           }),
-          total: users?.users?.length || 0,
+          total: totalUsers,
+          page,
+          perPage,
         });
       }
 
       case "delete_user": {
         const { target_user_id } = body;
-        if (!target_user_id) return json({ error: "target_user_id required" }, 400);
-        if (target_user_id === adminUserId) return json({ error: "Cannot delete yourself" }, 400);
+        if (!target_user_id) return jsonResponse({ error: "target_user_id required" }, 400);
+        if (target_user_id === adminUserId) return jsonResponse({ error: "Cannot delete yourself" }, 400);
 
         // Remove from workspace_members, user_roles, profiles
         await supabaseAdmin.from("workspace_members").delete().eq("user_id", target_user_id);
@@ -168,32 +213,32 @@ serve(async (req) => {
         await supabaseAdmin.from("profiles").delete().eq("user_id", target_user_id);
 
         const { error } = await supabaseAdmin.auth.admin.deleteUser(target_user_id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return jsonResponse({ error: error.message }, 500);
 
         await auditLog("admin.delete_user", "user", target_user_id);
-        return json({ success: true });
+        return jsonResponse({ success: true });
       }
 
       case "ban_user": {
         const { target_user_id, ban } = body;
-        if (!target_user_id) return json({ error: "target_user_id required" }, 400);
-        if (target_user_id === adminUserId) return json({ error: "Cannot ban yourself" }, 400);
+        if (!target_user_id) return jsonResponse({ error: "target_user_id required" }, 400);
+        if (target_user_id === adminUserId) return jsonResponse({ error: "Cannot ban yourself" }, 400);
 
         if (ban) {
           // Ban for 100 years effectively = disable
           const { error } = await supabaseAdmin.auth.admin.updateUserById(target_user_id, {
             ban_duration: "876000h",
           });
-          if (error) return json({ error: error.message }, 500);
+          if (error) return jsonResponse({ error: error.message }, 500);
         } else {
           const { error } = await supabaseAdmin.auth.admin.updateUserById(target_user_id, {
             ban_duration: "none",
           });
-          if (error) return json({ error: error.message }, 500);
+          if (error) return jsonResponse({ error: error.message }, 500);
         }
 
         await auditLog(ban ? "admin.ban_user" : "admin.unban_user", "user", target_user_id);
-        return json({ success: true });
+        return jsonResponse({ success: true });
       }
 
       case "workspaces": {
@@ -226,18 +271,26 @@ serve(async (req) => {
         // Owners
         const { data: profiles } = await supabaseAdmin.from("profiles").select("user_id, display_name");
 
-        return json({
-          workspaces: (workspaces || []).map((ws: any) => {
-            const ownerProfile = profiles?.find((p: any) => p.user_id === ws.owner_id);
+        const workspaceRows = (workspaces ?? []) as WorkspaceRow[];
+        const memberRows = (members ?? []) as WorkspaceMemberRow[];
+        const competitorRows = (competitors ?? []) as WorkspaceScopedRow[];
+        const newsletterRows = (newsletters ?? []) as WorkspaceScopedRow[];
+        const insightRows = (insights ?? []) as WorkspaceScopedRow[];
+        const analysisRows = (analyses ?? []) as WorkspaceScopedRow[];
+        const profileRows = (profiles ?? []) as ProfileRow[];
+
+        return jsonResponse({
+          workspaces: workspaceRows.map((ws) => {
+            const ownerProfile = profileRows.find((p) => p.user_id === ws.owner_id);
             return {
               ...ws,
               owner_display_name: ownerProfile?.display_name || ws.owner_id?.slice(0, 8),
-              memberCount: members?.filter((m: any) => m.workspace_id === ws.id).length || 0,
-              competitorCount: competitors?.filter((c: any) => c.workspace_id === ws.id).length || 0,
-              newsletterCount: newsletters?.filter((n: any) => n.workspace_id === ws.id).length || 0,
-              insightCount: insights?.filter((i: any) => i.workspace_id === ws.id).length || 0,
-              analysisCount: analyses?.filter((a: any) => a.workspace_id === ws.id).length || 0,
-              members: members?.filter((m: any) => m.workspace_id === ws.id) || [],
+              memberCount: memberRows.filter((member) => member.workspace_id === ws.id).length,
+              competitorCount: competitorRows.filter((competitor) => competitor.workspace_id === ws.id).length,
+              newsletterCount: newsletterRows.filter((newsletter) => newsletter.workspace_id === ws.id).length,
+              insightCount: insightRows.filter((insight) => insight.workspace_id === ws.id).length,
+              analysisCount: analysisRows.filter((analysis) => analysis.workspace_id === ws.id).length,
+              members: memberRows.filter((member) => member.workspace_id === ws.id),
             };
           }),
         });
@@ -245,7 +298,7 @@ serve(async (req) => {
 
       case "delete_workspace": {
         const { workspace_id } = body;
-        if (!workspace_id) return json({ error: "workspace_id required" }, 400);
+        if (!workspace_id) return jsonResponse({ error: "workspace_id required" }, 400);
 
         // Cascade delete related data
         await Promise.all([
@@ -270,7 +323,7 @@ serve(async (req) => {
           .select("id")
           .eq("workspace_id", workspace_id);
         if (gmailConns?.length) {
-          const connIds = gmailConns.map((c: any) => c.id);
+          const connIds = (gmailConns as GmailConnectionIdRow[]).map((connection) => connection.id);
           await supabaseAdmin.from("gmail_tokens").delete().in("gmail_connection_id", connIds);
         }
         await supabaseAdmin.from("gmail_connections").delete().eq("workspace_id", workspace_id);
@@ -280,7 +333,7 @@ serve(async (req) => {
         await supabaseAdmin.from("workspaces").delete().eq("id", workspace_id);
 
         await auditLog("admin.delete_workspace", "workspace", workspace_id);
-        return json({ success: true });
+        return jsonResponse({ success: true });
       }
 
       case "logs": {
@@ -288,14 +341,14 @@ serve(async (req) => {
         const perPage = body.perPage || 100;
         const from = (page - 1) * perPage;
 
-        let query = supabaseAdmin
+        const query = supabaseAdmin
           .from("audit_log")
-          .select("*", { count: "exact" })
+          .select("id, action, entity_type, entity_id, user_id, metadata, created_at", { count: "exact" })
           .order("created_at", { ascending: false })
           .range(from, from + perPage - 1);
 
         const { data: logs, count } = await query;
-        return json({ logs: logs || [], total: count || 0 });
+        return jsonResponse({ logs: logs || [], total: count || 0 });
       }
 
       case "integrations": {
@@ -311,11 +364,12 @@ serve(async (req) => {
           .limit(200);
 
         const endpointCounts: Record<string, number> = {};
-        (rateLimits || []).forEach((r: any) => {
-          endpointCounts[r.endpoint] = (endpointCounts[r.endpoint] || 0) + 1;
+        ((rateLimits ?? []) as RateLimitRow[]).forEach((rateLimit) => {
+          if (!rateLimit.endpoint) return;
+          endpointCounts[rateLimit.endpoint] = (endpointCounts[rateLimit.endpoint] || 0) + 1;
         });
 
-        return json({
+        return jsonResponse({
           gmailConnections: gmailConns || [],
           rateLimitsByEndpoint: endpointCounts,
         });
@@ -323,7 +377,7 @@ serve(async (req) => {
 
       case "force_resync": {
         const { connection_id } = body;
-        if (!connection_id) return json({ error: "connection_id required" }, 400);
+        if (!connection_id) return jsonResponse({ error: "connection_id required" }, 400);
 
         await supabaseAdmin
           .from("gmail_connections")
@@ -331,18 +385,18 @@ serve(async (req) => {
           .eq("id", connection_id);
 
         await auditLog("admin.force_resync", "gmail_connection", connection_id);
-        return json({ success: true });
+        return jsonResponse({ success: true });
       }
 
       case "disconnect_gmail": {
         const { connection_id } = body;
-        if (!connection_id) return json({ error: "connection_id required" }, 400);
+        if (!connection_id) return jsonResponse({ error: "connection_id required" }, 400);
 
         await supabaseAdmin.from("gmail_tokens").delete().eq("gmail_connection_id", connection_id);
         await supabaseAdmin.from("gmail_connections").delete().eq("id", connection_id);
 
         await auditLog("admin.disconnect_gmail", "gmail_connection", connection_id);
-        return json({ success: true });
+        return jsonResponse({ success: true });
       }
 
       case "issues": {
@@ -361,7 +415,7 @@ serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(50);
 
-        return json({
+        return jsonResponse({
           syncErrors: syncErrors || [],
           failedAnalyses: failedAnalyses || [],
         });
@@ -372,7 +426,8 @@ serve(async (req) => {
         const secretNames = [
           "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
           "STRIPE_SECRET_KEY",
-          "LOVABLE_API_KEY",
+          "STRIPE_WEBHOOK_SECRET",
+          "OPENAI_API_KEY",
           "SUPABASE_SERVICE_ROLE_KEY",
         ];
         const secretStatus: Record<string, { configured: boolean; masked: string }> = {};
@@ -399,8 +454,8 @@ serve(async (req) => {
           .select("id, token_expires_at")
           .limit(100);
         const now = new Date();
-        const expiredTokens = (tokenData || []).filter(
-          (t: any) => new Date(t.token_expires_at) < now
+        const expiredTokens = ((tokenData ?? []) as TokenRow[]).filter(
+          (token) => Boolean(token.token_expires_at) && new Date(token.token_expires_at as string) < now
         ).length;
 
         // Analysis health
@@ -444,28 +499,30 @@ serve(async (req) => {
             name: "Stripe Billing",
             category: "billing",
             envStatus: secretStatus["STRIPE_SECRET_KEY"]?.configured ? "configured" : "missing",
-            productionReady: secretStatus["STRIPE_SECRET_KEY"]?.configured
-              && secretStatus["STRIPE_SECRET_KEY"]?.masked?.includes("live") || false,
+            productionReady:
+              Boolean(secretStatus["STRIPE_SECRET_KEY"]?.configured) &&
+              Boolean(secretStatus["STRIPE_WEBHOOK_SECRET"]?.configured),
             health: {},
             secrets: [
               { name: "STRIPE_SECRET_KEY", ...secretStatus["STRIPE_SECRET_KEY"] },
+              { name: "STRIPE_WEBHOOK_SECRET", ...secretStatus["STRIPE_WEBHOOK_SECRET"] },
             ],
-            notes: "Check if key starts with sk_live_ for production. Test keys start with sk_test_.",
+            notes: "Requires both Stripe secret key and webhook secret. Billing sync is driven by webhook events plus on-demand subscription refresh.",
           },
           {
             id: "ai_provider",
-            name: "AI Provider (Lovable AI)",
+            name: "AI Provider (OpenAI)",
             category: "intelligence",
-            envStatus: secretStatus["LOVABLE_API_KEY"]?.configured ? "configured" : "missing",
-            productionReady: secretStatus["LOVABLE_API_KEY"]?.configured,
+            envStatus: secretStatus["OPENAI_API_KEY"]?.configured ? "configured" : "missing",
+            productionReady: secretStatus["OPENAI_API_KEY"]?.configured,
             health: {
               totalAnalyses: totalAnalyses || 0,
               failedAnalyses: failedAnalyses || 0,
             },
             secrets: [
-              { name: "LOVABLE_API_KEY", ...secretStatus["LOVABLE_API_KEY"] },
+              { name: "OPENAI_API_KEY", ...secretStatus["OPENAI_API_KEY"] },
             ],
-            notes: "Managed by Lovable platform. No rotation needed.",
+            notes: "Used by newsletter analysis, extraction, ad analysis and insight generation functions.",
           },
           {
             id: "supabase_service",
@@ -481,12 +538,12 @@ serve(async (req) => {
           },
         ];
 
-        return json({ integrations, flags: flags || [], secretStatus });
+        return jsonResponse({ integrations, flags: flags || [], secretStatus });
       }
 
       case "test_integration": {
         const { integration_id } = body;
-        if (!integration_id) return json({ error: "integration_id required" }, 400);
+        if (!integration_id) return jsonResponse({ error: "integration_id required" }, 400);
 
         const results: { test: string; status: "pass" | "fail" | "warn"; message: string }[] = [];
 
@@ -514,10 +571,16 @@ serve(async (req) => {
           });
         } else if (integration_id === "stripe") {
           const key = Deno.env.get("STRIPE_SECRET_KEY");
+          const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
           results.push({
             test: "Secret Key configured",
             status: key ? "pass" : "fail",
             message: key ? "Present" : "STRIPE_SECRET_KEY is missing",
+          });
+          results.push({
+            test: "Webhook secret configured",
+            status: webhookSecret ? "pass" : "fail",
+            message: webhookSecret ? "Present" : "STRIPE_WEBHOOK_SECRET is missing",
           });
           if (key) {
             results.push({
@@ -527,11 +590,11 @@ serve(async (req) => {
             });
           }
         } else if (integration_id === "ai_provider") {
-          const key = Deno.env.get("LOVABLE_API_KEY");
+          const key = Deno.env.get("OPENAI_API_KEY");
           results.push({
             test: "API Key configured",
             status: key ? "pass" : "fail",
-            message: key ? "Present" : "LOVABLE_API_KEY is missing",
+            message: key ? "Present" : "OPENAI_API_KEY is missing",
           });
           const { count: total } = await supabaseAdmin
             .from("analyses")
@@ -549,33 +612,33 @@ serve(async (req) => {
         }
 
         await auditLog("admin.test_integration", "integration", integration_id);
-        return json({ results });
+        return jsonResponse({ results });
       }
 
       case "toggle_flag": {
         const { flag_key, enabled } = body;
-        if (!flag_key || typeof enabled !== "boolean") return json({ error: "flag_key and enabled required" }, 400);
+        if (!flag_key || typeof enabled !== "boolean") return jsonResponse({ error: "flag_key and enabled required" }, 400);
 
         const { error: updateErr } = await supabaseAdmin
           .from("feature_flags")
           .update({ enabled, updated_by: adminUserId, updated_at: new Date().toISOString() })
           .eq("key", flag_key);
 
-        if (updateErr) return json({ error: updateErr.message }, 500);
+        if (updateErr) return jsonResponse({ error: updateErr.message }, 500);
 
         await auditLog("admin.toggle_flag", "feature_flag", flag_key, { enabled });
-        return json({ success: true });
+        return jsonResponse({ success: true });
       }
 
       default:
-        return json({ error: "Unknown action" }, 400);
+        return jsonResponse({ error: "Unknown action" }, 400);
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
+    const message = getErrorMessage(error);
     console.error("[admin-data] Error:", message);
-    return json(
-      { error: message === "Authentication failed" || message === "Forbidden" ? message : "An error occurred" },
-      message === "Forbidden" ? 403 : 500
-    );
+    if (error instanceof HttpError) {
+      return jsonResponse({ error: message }, error.status);
+    }
+    return jsonResponse({ error: "An error occurred" }, 500);
   }
 });

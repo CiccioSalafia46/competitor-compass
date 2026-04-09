@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate } from "react-router-dom";
-import { User, Building2, CreditCard, Shield, Download, Moon, Sun } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { User, Building2, CreditCard, Shield, Download, Moon, Sun, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV } from "@/lib/export-csv";
 import { toast } from "sonner";
 import GmailConnect from "@/components/GmailConnect";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -22,6 +23,8 @@ export default function SettingsPage() {
   const { isAdmin, roles } = useRoles();
   const { usage, currentPlan, limits, getUsagePercent } = useUsage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const showVerifyBanner = searchParams.get("verify") === "email";
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async (type: "newsletters" | "insights") => {
@@ -41,7 +44,7 @@ export default function SettingsPage() {
       } else {
         const { data, error } = await supabase
           .from("insights")
-          .select("title, category, what_is_happening, why_it_matters, recommended_response, confidence, created_at")
+          .select("title, category, campaign_type, impact_area, priority_level, main_message, strategic_takeaway, cta_primary, offer_discount_percentage, offer_coupon_code, offer_urgency, product_categories, confidence, created_at")
           .eq("workspace_id", currentWorkspace.id)
           .order("created_at", { ascending: false })
           .limit(5000);
@@ -49,8 +52,8 @@ export default function SettingsPage() {
         exportToCSV(data || [], `insights-${currentWorkspace.slug}`);
       }
       toast.success(`${type === "newsletters" ? "Newsletters" : "Insights"} exported successfully`);
-    } catch (e: any) {
-      toast.error(e.message || "Export failed");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Export failed"));
     } finally {
       setExporting(false);
     }
@@ -62,6 +65,19 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">Manage your account and workspace</p>
       </div>
+
+      {/* Email verification banner */}
+      {showVerifyBanner && (
+        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40 p-4 text-sm">
+          <MailCheck className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-medium text-blue-900 dark:text-blue-100">Verify your email to continue</p>
+            <p className="text-blue-700 dark:text-blue-300 mt-0.5">
+              A verification link has been sent to <strong>{user?.email}</strong>. Check your inbox and click the link to activate your account.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Account */}
       <Card className="shadow-raised border">

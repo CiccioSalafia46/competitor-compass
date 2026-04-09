@@ -2,76 +2,111 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { toast } from "sonner";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { getErrorMessage } from "@/lib/errors";
+import { isTransientNavigationFetchError } from "@/lib/transient-network";
+import type { InsightPriorityLevel } from "@/lib/insight-priority";
+import {
+  normalizeInsights,
+  type NormalizedInsight as Insight,
+  type NormalizedInsightEvidence as InsightEvidence,
+} from "@/lib/insight-normalization";
 
-export interface Insight {
-  id: string;
-  workspace_id: string;
-  category: string;
-  title: string;
-  what_is_happening: string;
-  why_it_matters: string;
-  strategic_implication: string;
-  recommended_response: string;
-  confidence: number | null;
-  supporting_evidence: any[];
-  affected_competitors: string[];
-  source_type: string;
-  created_at: string;
+interface UseInsightsOptions {
+  limit?: number;
 }
 
 const INSIGHT_CATEGORIES = [
-  "pricing", "promotions", "email_strategy", "paid_ads",
-  "product_focus", "seasonal_strategy", "messaging_positioning", "cadence_frequency",
+  "pricing",
+  "promotions",
+  "email_strategy",
+  "paid_ads",
+  "product_focus",
+  "seasonal_strategy",
+  "messaging_positioning",
+  "cadence_frequency",
 ] as const;
 
 export type InsightCategory = typeof INSIGHT_CATEGORIES[number];
+export type { Insight, InsightEvidence, InsightPriorityLevel };
 export { INSIGHT_CATEGORIES };
 
-export function useInsights(categoryFilter?: string) {
+export function useInsights(categoryFilter?: string, options: UseInsightsOptions = {}) {
   const { currentWorkspace } = useWorkspace();
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const limit = options.limit ?? 24;
 
   const fetchInsights = useCallback(async () => {
-    if (!currentWorkspace) { setInsights([]); setLoading(false); return; }
+    if (!currentWorkspace) {
+      setInsights([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     let query = supabase
       .from("insights")
-      .select("*")
+      .select("id, workspace_id, category, title, campaign_type, main_message, what_is_happening, why_it_matters, strategic_implication, strategic_takeaway, recommended_response, confidence, offer_discount_percentage, offer_coupon_code, offer_urgency, cta_primary, cta_analysis, product_categories, positioning_angle, supporting_evidence, affected_competitors, source_type, priority_level, impact_area, created_at")
       .eq("workspace_id", currentWorkspace.id)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(limit);
 
-    if (categoryFilter) query = query.eq("category", categoryFilter);
+    if (categoryFilter) {
+      query = query.eq("category", categoryFilter);
+    }
 
     const { data, error } = await query;
-    if (error) console.error("Insights fetch error:", error);
-    setInsights((data as unknown as Insight[]) || []);
-    setLoading(false);
-  }, [currentWorkspace, categoryFilter]);
-
-  useEffect(() => { fetchInsights(); }, [fetchInsights]);
-
-  const generateInsights = async (category?: string) => {
-    if (!currentWorkspace) return;
-    setGenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-insights", {
-        body: { workspaceId: currentWorkspace.id, category },
-      });
-      if (error) throw error;
-      if (data?.error) {
-        if (data.error.includes("Rate limit")) toast.error("Rate limited — try again shortly.");
-        else if (data.error.includes("credits")) toast.error("AI credits exhausted. Add funds in Settings.");
-        else toast.error(data.error);
+    if (error) {
+      if (isTransientNavigationFetchError(error)) {
         return;
       }
+      console.error("Insights fetch error:", error);
+      toast.error(getErrorMessage(error, "Failed to load insights."));
+      setInsights([]);
+      setLoading(false);
+      return;
+    }
+
+    setInsights(normalizeInsights(data));
+    setLoading(false);
+  }, [currentWorkspace, categoryFilter, limit]);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
+
+  const generateInsights = async (category?: string) => {
+    if (!currentWorkspace) {
+      toast.error("No workspace selected.");
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const data = await invokeEdgeFunction<{ error?: string; message?: string; insights?: Insight[] }>(
+        "generate-insights",
+        {
+          body: { workspaceId: currentWorkspace.id, category },
+        }
+      );
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.message === "Insufficient data") {
+        toast.error("Import competitor newsletters or ads before generating insights.");
+        return;
+      }
+
       toast.success(`Generated ${data?.insights?.length || 0} insights`);
       await fetchInsights();
-    } catch (e: any) {
-      toast.error(e.message || "Failed to generate insights");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to generate insights");
     } finally {
       setGenerating(false);
     }

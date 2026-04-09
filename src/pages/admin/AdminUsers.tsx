@@ -12,21 +12,28 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
-import { Search, CheckCircle, XCircle, Ban, Trash2, ShieldOff } from "lucide-react";
+import { Search, CheckCircle, XCircle, Ban, Trash2, ShieldOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import type { AdminUserRecord, AdminUsersResponse } from "@/types/admin";
 
 export default function AdminUsers() {
-  const { data, loading, error, refetch } = useAdminData("users");
+  const [page, setPage] = useState(1);
+  const perPage = 25;
+  const { data, loading, error, refetch } = useAdminData<AdminUsersResponse>("users", { page, perPage });
   const { execute, acting } = useAdminAction();
   const [search, setSearch] = useState("");
   const [confirmAction, setConfirmAction] = useState<{
     type: "delete" | "ban" | "unban";
-    user: any;
+    user: AdminUserRecord;
   } | null>(null);
 
   const users = data?.users || [];
+  const total = data?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const confirmedCount = users.filter((user) => Boolean(user.email_confirmed_at)).length;
+  const disabledCount = users.filter((user) => user.banned).length;
   const filtered = users.filter(
-    (u: any) =>
+    (u: AdminUserRecord) =>
       u.email?.toLowerCase().includes(search.toLowerCase()) ||
       u.display_name?.toLowerCase().includes(search.toLowerCase())
   );
@@ -75,14 +82,20 @@ export default function AdminUsers() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-sm text-muted-foreground">{users.length} registered users</p>
+          <p className="text-sm text-muted-foreground">{total} registered users</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary">{confirmedCount} verified on page</Badge>
+          <Badge variant={disabledCount > 0 ? "destructive" : "outline"}>
+            {disabledCount} disabled on page
+          </Badge>
         </div>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by email or name…"
+          placeholder="Search by email or name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -111,7 +124,7 @@ export default function AdminUsers() {
                   </TableCell>
                 </TableRow>
               )}
-              {filtered.map((user: any) => (
+              {filtered.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div>
@@ -134,7 +147,7 @@ export default function AdminUsers() {
                   <TableCell>
                     <div className="flex gap-1 flex-wrap">
                       {user.roles?.length > 0 ? (
-                        user.roles.map((r: any, i: number) => (
+                        user.roles.map((r, i: number) => (
                           <Badge
                             key={i}
                             variant={r.role === "admin" ? "default" : "secondary"}
@@ -144,14 +157,14 @@ export default function AdminUsers() {
                           </Badge>
                         ))
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       {user.workspaces?.length > 0 ? (
-                        user.workspaces.slice(0, 2).map((w: any, i: number) => (
+                        user.workspaces.slice(0, 2).map((w, i: number) => (
                           <span key={i} className="text-xs">{w.name} ({w.role})</span>
                         ))
                       ) : (
@@ -213,6 +226,27 @@ export default function AdminUsers() {
           </Table>
         </CardContent>
       </Card>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((value) => value + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
         <AlertDialogContent>

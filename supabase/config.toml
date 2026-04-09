@@ -1,1 +1,55 @@
-project_id = "srcncxrrgwotkofwdfwm"
+project_id = "qynksmyzqkzltnuajarm"
+
+[functions.admin-data]
+verify_jwt = false
+
+[functions.analyze-meta-ad]
+verify_jwt = false
+
+[functions.analyze-newsletter]
+verify_jwt = false
+
+[functions.enqueue-newsletter-analysis]
+verify_jwt = false
+
+[functions.check-subscription]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.customer-portal]
+verify_jwt = false
+
+[functions.competitor-intelligence]
+verify_jwt = false
+
+[functions.dashboard-snapshot]
+verify_jwt = false
+
+[functions.reports-center]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.evaluate-alerts]
+verify_jwt = false
+
+[functions.extract-newsletter-intel]
+verify_jwt = false
+
+[functions.fetch-meta-ads]
+verify_jwt = false
+
+[functions.generate-insights]
+verify_jwt = false
+
+[functions.generate-weekly-briefing]
+verify_jwt = false
+
+[functions.gmail-auth]
+verify_jwt = false
+
+[functions.gmail-sync]
+verify_jwt = false

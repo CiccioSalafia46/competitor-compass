@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { isTransientNavigationFetchError } from "@/lib/transient-network";
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
@@ -59,22 +60,55 @@ const TopBar = memo(function TopBar() {
 
   // Lightweight unread count query — only counts, no full data fetch
   const fetchUnread = useCallback(async () => {
-    if (!currentWorkspace) return;
-    const { count } = await supabase
+    if (!currentWorkspace) {
+      setUnreadCount(0);
+      return;
+    }
+    const { count, error } = await supabase
       .from("alerts")
       .select("id", { count: "exact", head: true })
       .eq("workspace_id", currentWorkspace.id)
       .eq("is_read", false)
       .eq("is_dismissed", false);
+    if (error) {
+      if (isTransientNavigationFetchError(error)) {
+        return;
+      }
+      console.error("Top bar unread alerts query failed:", error);
+      // Keep previous count — don't reset to 0 on non-transient errors
+      return;
+    }
     setUnreadCount(count || 0);
   }, [currentWorkspace]);
 
   useEffect(() => {
+    // Initial fetch
     fetchUnread();
-    // Poll every 60s instead of re-fetching on every render
-    const interval = setInterval(fetchUnread, 60_000);
-    return () => clearInterval(interval);
-  }, [fetchUnread]);
+
+    if (!currentWorkspace) return;
+
+    // Use Realtime instead of polling — subscribe to INSERT/UPDATE/DELETE on alerts for this workspace
+    const channel = supabase
+      .channel(`alerts-unread:${currentWorkspace.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "alerts",
+          filter: `workspace_id=eq.${currentWorkspace.id}`,
+        },
+        () => {
+          // Re-fetch the count on any change — keeps logic simple and avoids manual delta tracking
+          void fetchUnread();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [currentWorkspace, fetchUnread]);
 
   return (
     <header className="h-12 flex items-center justify-between border-b bg-card px-3 shrink-0">

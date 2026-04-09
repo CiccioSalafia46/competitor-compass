@@ -1,4 +1,4 @@
-export function exportToCSV(data: Record<string, any>[], filename: string) {
+export function exportToCSV(data: Record<string, unknown>[], filename: string) {
   if (data.length === 0) return;
 
   const headers = Object.keys(data[0]);
@@ -18,11 +18,14 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
     ),
   ].join("\n");
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = `${filename}.csv`;
+  link.style.display = "none";
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }

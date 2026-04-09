@@ -55,7 +55,13 @@ export async function invokeEdgeFunction<T>(
   options: InvokeOptions = {}
 ): Promise<T> {
   const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
+  let accessToken = sessionData.session?.access_token;
+
+  // Session missing or expired — attempt a silent refresh before giving up
+  if (!accessToken) {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    accessToken = refreshed.session?.access_token;
+  }
 
   if (options.requireSession !== false && !accessToken) {
     throw new Error("Session expired. Sign in again and retry.");

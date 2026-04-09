@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import type { Database } from "@/integrations/supabase/types";
 
 export type AppRole = "admin" | "analyst" | "viewer";
 
@@ -13,35 +14,72 @@ interface UserRole {
   created_at: string;
 }
 
+interface WorkspaceMembership {
+  role: string;
+}
+
 export function useRoles() {
   const { user } = useAuth();
   const { currentWorkspace } = useWorkspace();
+  const userId = user?.id ?? null;
+  const workspaceId = currentWorkspace?.id ?? null;
+  const workspaceOwnerId = currentWorkspace?.owner_id ?? null;
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [membershipRole, setMembershipRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchRoles = useCallback(async () => {
-    if (!user || !currentWorkspace) {
+    if (!userId || !workspaceId) {
       setRoles([]);
+      setMembershipRole(null);
       setLoading(false);
       return;
     }
-    const { data } = await supabase
-      .from("user_roles")
-      .select("*")
-      .eq("workspace_id", currentWorkspace.id)
-      .eq("user_id", user.id);
-    setRoles((data as UserRole[]) || []);
-    setLoading(false);
-  }, [user, currentWorkspace]);
+
+    try {
+      const [{ data: userRoles, error: rolesError }, { data: membership, error: memberError }] = await Promise.all([
+        supabase
+          .from("user_roles")
+          .select("*")
+          .eq("workspace_id", workspaceId)
+          .eq("user_id", userId),
+        supabase
+          .from("workspace_members")
+          .select("role")
+          .eq("workspace_id", workspaceId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
+
+      if (rolesError) {
+        console.error("Failed to fetch user roles:", rolesError);
+      }
+      if (memberError) {
+        console.error("Failed to fetch workspace membership:", memberError);
+      }
+
+      setRoles((userRoles as UserRole[]) || []);
+      setMembershipRole((membership as WorkspaceMembership | null)?.role ?? null);
+    } catch (error) {
+      console.error("Role fetch error:", error);
+      setRoles([]);
+      setMembershipRole(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, workspaceId]);
 
   useEffect(() => {
-    fetchRoles();
+    void fetchRoles();
   }, [fetchRoles]);
 
   const myRoles = roles.map((r) => r.role);
-  const isAdmin = myRoles.includes("admin");
+  const isWorkspaceOwner = workspaceOwnerId === userId;
+  const isWorkspaceAdmin = isWorkspaceOwner || membershipRole === "owner" || membershipRole === "admin";
+  const isViewerByMembership = membershipRole === "owner" || membershipRole === "admin" || membershipRole === "member";
+  const isAdmin = myRoles.includes("admin") || isWorkspaceAdmin;
   const isAnalyst = myRoles.includes("analyst") || isAdmin;
-  const isViewer = myRoles.includes("viewer") || isAnalyst;
+  const isViewer = myRoles.includes("viewer") || isAnalyst || isViewerByMembership;
 
   const hasRole = (role: AppRole) => {
     if (role === "viewer") return isViewer;
@@ -80,11 +118,12 @@ export function useRoles() {
 // Hook to get all workspace member roles (for team management)
 export function useWorkspaceRoles() {
   const { currentWorkspace } = useWorkspace();
+  const workspaceId = currentWorkspace?.id ?? null;
   const [memberRoles, setMemberRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
-    if (!currentWorkspace) {
+    if (!workspaceId) {
       setMemberRoles([]);
       setLoading(false);
       return;
@@ -92,20 +131,25 @@ export function useWorkspaceRoles() {
     const { data } = await supabase
       .from("user_roles")
       .select("*")
-      .eq("workspace_id", currentWorkspace.id);
+      .eq("workspace_id", workspaceId);
     setMemberRoles((data as UserRole[]) || []);
     setLoading(false);
-  }, [currentWorkspace]);
+  }, [workspaceId]);
 
   useEffect(() => {
-    fetchAll();
+    void fetchAll();
   }, [fetchAll]);
 
   const assignRole = async (userId: string, role: AppRole) => {
-    if (!currentWorkspace) return;
+    if (!workspaceId) return;
+    const payload: Database["public"]["Tables"]["user_roles"]["Insert"] = {
+      user_id: userId,
+      workspace_id: workspaceId,
+      role,
+    };
     const { error } = await supabase
       .from("user_roles")
-      .insert({ user_id: userId, workspace_id: currentWorkspace.id, role } as any);
+      .insert(payload);
     if (error) throw error;
     await fetchAll();
   };

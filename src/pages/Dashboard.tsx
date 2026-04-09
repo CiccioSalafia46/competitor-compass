@@ -1,399 +1,503 @@
-import { useEffect, useState, useMemo, memo } from "react";
+import { memo } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Activity,
+  AlertCircle,
+  ArrowRight,
+  Bell,
+  CheckCircle,
+  ChevronRight,
+  Filter,
+  Lightbulb,
+  Mail,
+  Megaphone,
+  Newspaper,
+  Plus,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Users,
+  X,
+  Zap,
+} from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useAlerts } from "@/hooks/useAlerts";
-import { useInsights } from "@/hooks/useInsights";
-import { useGmailConnection } from "@/hooks/useGmailConnection";
-import { useUsage } from "@/hooks/useUsage";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  useDashboardSnapshot,
+  type DashboardCompetitorPreview,
+  type DashboardInboxPreview,
+} from "@/hooks/useDashboardSnapshot";
+import {
+  buildDashboardAiSummary,
+  type DashboardAISummary,
+  type DashboardAnomaly,
+  type DashboardHighlight,
+  type DashboardInsight,
+  type DashboardRecommendedAction,
+  type DashboardCompetitorSummary,
+} from "@/lib/dashboard-decision-engine";
+import {
+  INSIGHT_IMPACT_LABELS,
+  INSIGHT_PRIORITY_LABELS,
+  type InsightPriorityLevel,
+} from "@/lib/insight-priority";
+import { cn } from "@/lib/utils";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
+import { SystemHealthPanel } from "@/components/SystemHealthPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Newspaper, Users, BarChart3, TrendingUp, Megaphone,
-  Lightbulb, Bell, ArrowRight, AlertCircle, Mail,
-  Plus, Sparkles, Activity, Eye, Info, Clock, Zap,
-  CheckCircle, ChevronRight,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
-import type { Database } from "@/integrations/supabase/types";
-import OnboardingChecklist from "@/components/OnboardingChecklist";
-import { SystemHealthPanel } from "@/components/SystemHealthPanel";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
-type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
-type InboxItem = Database["public"]["Tables"]["newsletter_inbox"]["Row"];
+const ALL_COMPETITORS = "__all_competitors__";
+const ALL_CAMPAIGNS = "__all_campaigns__";
+
+// ─── Priority styling helpers ─────────────────────────────────────────────────
+
+function normalizeDashboardPriority(priority: string | null | undefined): InsightPriorityLevel {
+  if (priority === "high" || priority === "medium" || priority === "low") return priority;
+  if (priority === "critical") return "high";
+  return "low";
+}
+
+const PRIORITY_BORDER: Record<InsightPriorityLevel, string> = {
+  high: "border-l-destructive",
+  medium: "border-l-warning",
+  low: "border-l-primary",
+};
+
+const PRIORITY_BADGE: Record<InsightPriorityLevel, string> = {
+  high: "border-destructive/20 bg-destructive/10 text-destructive",
+  medium: "border-warning/20 bg-warning/10 text-warning",
+  low: "border-primary/20 bg-primary/10 text-primary",
+};
+
+const PRIORITY_DOT: Record<InsightPriorityLevel, string> = {
+  high: "bg-destructive",
+  medium: "bg-warning",
+  low: "bg-primary",
+};
+
+function getImpactLabel(value: string | null | undefined) {
+  if (value === "traffic" || value === "conversion" || value === "branding") return INSIGHT_IMPACT_LABELS[value];
+  return "General";
+}
+
+function fmt(value: string | null | undefined, fallback = "") {
+  return value?.trim() ? value.replaceAll("_", " ") : fallback;
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const { currentWorkspace, loading: wsLoading } = useWorkspace();
-  const { alerts, unreadCount } = useAlerts();
-  const { insights } = useInsights();
-  const { isConnected: gmailConnected } = useGmailConnection();
-  const { isAtLimit } = useUsage();
+  const { currentWorkspace, loading: wsLoading, error: workspaceError, refetch: refetchWorkspace } = useWorkspace();
+  const { snapshot, loading, error: snapshotError, refetch: refetchSnapshot } = useDashboardSnapshot(currentWorkspace?.id);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCompetitor = searchParams.get("competitor") ?? "";
+  const selectedCampaignType = searchParams.get("campaign") ?? "";
 
-  const [stats, setStats] = useState({
-    newsletters: 0, competitors: 0, completedAnalyses: 0,
-    metaAds: 0, activeAds: 0, inboxItems: 0, insightCount: 0,
+  function setSelectedCompetitor(value: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set("competitor", value); else next.delete("competitor");
+      return next;
+    }, { replace: true });
+  }
+
+  function setSelectedCampaignType(value: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set("campaign", value); else next.delete("campaign");
+      return next;
+    }, { replace: true });
+  }
+
+  function clearFilters() {
+    setSelectedCompetitor("");
+    setSelectedCampaignType("");
+  }
+
+  if (workspaceError) return <ErrorState title="Workspace unavailable" description={workspaceError} onRetry={() => void refetchWorkspace()} />;
+  if (wsLoading || (currentWorkspace && loading)) return <LoadingState />;
+  if (!currentWorkspace) return <EmptyWorkspaceState onCreate={() => navigate("/onboarding")} />;
+  if (snapshotError || !snapshot) return <ErrorState title="Dashboard failed to load" description={snapshotError || "Snapshot unavailable."} onRetry={() => void refetchSnapshot()} />;
+
+  const { stats, recentInbox, competitors, decisionModel, gmailConnected, usage, limits, unreadAlertCount } = snapshot;
+  const competitorNameById = new Map(competitors.map((c) => [c.id, c.name]));
+
+  const competitorOptions = Array.from(new Set([
+    ...competitors.map((c) => c.name),
+    ...decisionModel.prioritizedInsights.flatMap((i) => i.affected_competitors),
+  ].filter(Boolean))).sort((a, b) => a.localeCompare(b));
+
+  const campaignTypeOptions = Array.from(new Set(
+    decisionModel.prioritizedInsights.map((i) => i.campaign_type).filter((v) => typeof v === "string" && v.trim()),
+  )).sort((a, b) => a.localeCompare(b));
+
+  const matchesMeta = (list: string[] | undefined, sel: string) =>
+    !sel || !list || list.length === 0 || list.includes(sel);
+
+  const filteredHighlights = decisionModel.dailyHighlights.filter(
+    (h) => matchesMeta(h.competitors, selectedCompetitor) && matchesMeta(h.campaignTypes, selectedCampaignType),
+  );
+  const filteredInsights = decisionModel.prioritizedInsights.filter((i) => {
+    const competitorMatch = selectedCompetitor ? i.affected_competitors.includes(selectedCompetitor) : true;
+    const campaignMatch = selectedCampaignType ? i.campaign_type === selectedCampaignType : true;
+    return competitorMatch && campaignMatch;
   });
-  const [recentInbox, setRecentInbox] = useState<InboxItem[]>([]);
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const filteredActions = decisionModel.recommendedActions.filter(
+    (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
+  );
+  const filteredAnomalies = decisionModel.anomalies.filter(
+    (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
+  );
+  const filteredCompetitorSummary = selectedCompetitor
+    ? decisionModel.competitorSummary.filter((e) => e.competitor === selectedCompetitor)
+    : decisionModel.competitorSummary;
+  const filteredRecentInbox = recentInbox.filter((item) => {
+    if (!selectedCompetitor) return true;
+    const name = item.competitor_id ? competitorNameById.get(item.competitor_id) : null;
+    return name === selectedCompetitor;
+  });
 
-  useEffect(() => {
-    if (!currentWorkspace) return;
-    const wsId = currentWorkspace.id;
-    const fetchAll = async () => {
-      setLoading(true);
-      const [nlCount, compCount, analysesCount, metaCount, activeAdCount, inboxCount, insightCount, recentNl, comps] =
-        await Promise.all([
-          supabase.from("newsletter_entries").select("id", { count: "exact", head: true }).eq("workspace_id", wsId),
-          supabase.from("competitors").select("id", { count: "exact", head: true }).eq("workspace_id", wsId),
-          supabase.from("analyses").select("id", { count: "exact", head: true }).eq("workspace_id", wsId).eq("status", "completed"),
-          supabase.from("meta_ads").select("id", { count: "exact", head: true }).eq("workspace_id", wsId),
-          supabase.from("meta_ads").select("id", { count: "exact", head: true }).eq("workspace_id", wsId).eq("is_active", true),
-          supabase.from("newsletter_inbox").select("id", { count: "exact", head: true }).eq("workspace_id", wsId).eq("is_newsletter", true),
-          supabase.from("insights").select("id", { count: "exact", head: true }).eq("workspace_id", wsId),
-          supabase.from("newsletter_inbox").select("*").eq("workspace_id", wsId).eq("is_newsletter", true).order("received_at", { ascending: false }).limit(5),
-          supabase.from("competitors").select("*").eq("workspace_id", wsId).eq("is_monitored", true).order("name").limit(8),
-        ]);
+  const aiSummary: DashboardAISummary =
+    selectedCompetitor || selectedCampaignType
+      ? buildDashboardAiSummary({
+          highlights: filteredHighlights,
+          insights: filteredInsights,
+          anomalies: filteredAnomalies,
+          recommendedActions: filteredActions,
+          focus: { competitor: selectedCompetitor || null, campaignType: selectedCampaignType || null },
+        })
+      : decisionModel.aiSummary ?? buildDashboardAiSummary({
+          highlights: decisionModel.dailyHighlights,
+          insights: decisionModel.prioritizedInsights,
+          anomalies: decisionModel.anomalies,
+          recommendedActions: decisionModel.recommendedActions,
+        });
 
-      setStats({
-        newsletters: nlCount.count || 0,
-        competitors: compCount.count || 0,
-        completedAnalyses: analysesCount.count || 0,
-        metaAds: metaCount.count || 0,
-        activeAds: activeAdCount.count || 0,
-        inboxItems: inboxCount.count || 0,
-        insightCount: insightCount.count || 0,
-      });
-      setRecentInbox(recentNl.data || []);
-      setCompetitors(comps.data || []);
-      setLoading(false);
-    };
-    fetchAll();
-  }, [currentWorkspace]);
-
-  if (wsLoading || loading) {
-    return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-xs text-muted-foreground">Loading dashboard…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentWorkspace) {
-    return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-3">No workspace found.</p>
-          <Button onClick={() => navigate("/onboarding")}>Create workspace</Button>
-        </div>
-      </div>
-    );
-  }
-
+  const activeFilterCount = Number(Boolean(selectedCompetitor)) + Number(Boolean(selectedCampaignType));
   const hasData = stats.inboxItems > 0 || stats.competitors > 0 || stats.metaAds > 0;
-  const recentAlerts = alerts.filter((a) => !a.is_read).slice(0, 4);
-  const topInsights = insights.slice(0, 3);
+
+  const isAtLimit = (metric: keyof typeof usage) => {
+    const limit = { competitors: limits.competitors, newsletters_this_month: limits.newsletters_per_month, analyses_this_month: limits.analyses_per_month, seats_used: -1 }[metric];
+    if (limit === -1) return false;
+    return usage[metric] >= limit;
+  };
+
+  // Urgency pills for the command header
+  const urgentSignals: { label: string; count: number; href: string; tone: "red" | "amber" | "blue" }[] = [
+    ...(unreadAlertCount > 0 ? [{ label: "Unread alerts", count: unreadAlertCount, href: "/alerts", tone: "red" as const }] : []),
+    ...(filteredAnomalies.filter((a) => a.severity === "high").length > 0
+      ? [{ label: "Critical anomalies", count: filteredAnomalies.filter((a) => a.severity === "high").length, href: "/analytics", tone: "amber" as const }]
+      : []),
+    ...(filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length > 0
+      ? [{ label: "High-priority insights", count: filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length, href: "/insights", tone: "blue" as const }]
+      : []),
+  ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-5 animate-fade-in max-w-[1280px]">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">{currentWorkspace.name}</h1>
-          <p className="text-sm text-muted-foreground">Competitor intelligence command center</p>
+    <div className="max-w-[1360px] space-y-4 p-4 sm:p-5 lg:p-6 animate-fade-in">
+
+      {/* ── Zone 1: Command Header ──────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-semibold tracking-tight">{currentWorkspace.name}</h1>
+            {urgentSignals.map((s) => (
+              <button
+                key={s.label}
+                onClick={() => navigate(s.href)}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-80",
+                  s.tone === "red" && "bg-destructive/15 text-destructive",
+                  s.tone === "amber" && "bg-warning/15 text-warning",
+                  s.tone === "blue" && "bg-primary/15 text-primary",
+                )}
+              >
+                <span className={cn("h-1.5 w-1.5 rounded-full", s.tone === "red" && "bg-destructive", s.tone === "amber" && "bg-warning", s.tone === "blue" && "bg-primary")} />
+                {s.count} {s.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} · Intelligence feed
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/newsletters/new")}>
-            <Plus className="h-3 w-3" /> Import data
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => navigate("/newsletters/new")}>
+            <Plus className="h-3.5 w-3.5" />
+            Import data
           </Button>
-          <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/insights")}>
-            <Sparkles className="h-3 w-3" /> Generate insights
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => navigate("/insights")}>
+            <Sparkles className="h-3.5 w-3.5" />
+            Generate insights
           </Button>
         </div>
       </div>
 
-      {/* Onboarding — only shows if incomplete */}
       <OnboardingChecklist />
 
-      {/* ─── KPI Strip ─── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        <KpiCard icon={Newspaper} label="Competitor Inbox" value={stats.inboxItems} href="/inbox" sublabel="Observed" />
-        <KpiCard icon={Users} label="Competitors" value={stats.competitors} href="/competitors" sublabel="Tracked" />
-        <KpiCard icon={BarChart3} label="Analyses" value={stats.completedAnalyses} href="/analytics" sublabel="Completed" />
-        <KpiCard icon={Megaphone} label="Meta Ads" value={stats.metaAds} href="/meta-ads" sublabel={`${stats.activeAds} active`} />
-        <KpiCard icon={Lightbulb} label="Insights" value={stats.insightCount} href="/insights" sublabel="AI-derived" />
-        <KpiCard icon={Bell} label="Alerts" value={unreadCount} href="/alerts" sublabel="Unread" accent={unreadCount > 0} />
+      {/* ── Zone 2: KPI Strip ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <KpiStrip icon={Newspaper} label="Inbox" value={stats.inboxItems} sub="signals" href="/inbox" />
+        <KpiStrip icon={Users} label="Competitors" value={stats.competitors} sub="tracked" href="/competitors" />
+        <KpiStrip icon={TrendingUp} label="Analyses" value={stats.completedAnalyses} sub="done" href="/analytics" />
+        <KpiStrip icon={Megaphone} label="Meta Ads" value={stats.metaAds} sub={`${stats.activeAds} live`} href="/meta-ads" />
+        <KpiStrip icon={Lightbulb} label="Insights" value={stats.insightCount} sub="actionable" href="/insights" />
+        <KpiStrip icon={Bell} label="Alerts" value={unreadAlertCount} sub="unread" href="/alerts" accent={unreadAlertCount > 0} />
       </div>
 
-      {/* ─── Empty state if no data yet ─── */}
       {!hasData && (
-        <Card className="border-dashed border-2 bg-accent/20">
-          <CardContent className="p-6 sm:p-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mx-auto mb-4">
-              <Zap className="h-6 w-6 text-primary" />
-            </div>
-            <h2 className="text-base font-semibold text-foreground mb-1">Get started with competitor intelligence</h2>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-              Connect your data sources and add competitors to unlock automated competitive intelligence.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {!gmailConnected && (
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/settings")}>
-                  <Mail className="h-3.5 w-3.5" /> Connect Gmail
-                </Button>
-              )}
-              {stats.competitors === 0 && (
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/competitors")}>
-                  <Users className="h-3.5 w-3.5" /> Add competitors
-                </Button>
-              )}
-              <Button size="sm" className="gap-1.5" onClick={() => navigate("/newsletters/new")}>
-                <Newspaper className="h-3.5 w-3.5" /> Import competitor data
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyDecisionState gmailConnected={gmailConnected} competitorCount={stats.competitors} onNavigate={navigate} />
       )}
 
-      {/* ─── Main Grid: Insights + Alerts ─── */}
       {hasData && (
-        <div className="grid lg:grid-cols-5 gap-4">
-          {/* AI Insights — Wider */}
-          <Card className="border lg:col-span-3">
-            <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium flex items-center gap-1.5">
-                <Lightbulb className="h-3.5 w-3.5 text-primary" />
-                AI Insights
-                <MetricBadge label="AI-derived" />
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => navigate("/insights")}>
-                View all <ChevronRight className="h-3 w-3" />
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {topInsights.length === 0 ? (
-                <EmptySection
-                  icon={Lightbulb}
-                  title="No insights yet"
-                  desc="Add newsletters or competitor data to generate AI insights"
-                  action={{ label: "Generate insights", onClick: () => navigate("/insights") }}
-                />
+        <>
+          {/* ── Zone 3: Intelligence Command Panel ─────────────────────────── */}
+          <div className="rounded-xl border bg-gradient-to-br from-primary/[0.03] via-background to-background">
+            <div className="flex items-center gap-2 border-b px-4 py-2.5">
+              <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10">
+                <Sparkles className="h-3 w-3 text-primary" />
+              </div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Intelligence brief</p>
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-auto text-[10px]">
+                  Filtered · {activeFilterCount} active
+                </Badge>
+              )}
+            </div>
+            <div className="grid gap-0 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
+              <BriefColumn
+                icon={Activity}
+                label="What happened"
+                text={aiSummary.whatChangedToday}
+              />
+              <BriefColumn
+                icon={Target}
+                label="What matters"
+                text={aiSummary.whatMattersMost}
+                accent
+              />
+              <BriefColumn
+                icon={Zap}
+                label="What to do now"
+                text={filteredActions[0]
+                  ? `${filteredActions[0].title}. ${filteredActions[0].detail}`
+                  : "No immediate action required. Keep the data feed fresh."}
+                cta={filteredActions[0] ? { label: filteredActions[0].cta, href: filteredActions[0].path } : undefined}
+                onNavigate={navigate}
+              />
+            </div>
+          </div>
+
+          {/* ── Filter Strip (only if filters are meaningful) ───────────────── */}
+          {(competitorOptions.length > 0 || campaignTypeOptions.length > 0) && (
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Filter className="h-3 w-3" />
+                <span>Filter:</span>
+              </div>
+              {competitorOptions.length > 0 && (
+                <Select value={selectedCompetitor || ALL_COMPETITORS} onValueChange={(v) => setSelectedCompetitor(v === ALL_COMPETITORS ? "" : v)}>
+                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background border-dashed">
+                    <SelectValue placeholder="All competitors" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_COMPETITORS}>All competitors</SelectItem>
+                    {competitorOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              {campaignTypeOptions.length > 0 && (
+                <Select value={selectedCampaignType || ALL_CAMPAIGNS} onValueChange={(v) => setSelectedCampaignType(v === ALL_CAMPAIGNS ? "" : v)}>
+                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background border-dashed">
+                    <SelectValue placeholder="All campaigns" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_CAMPAIGNS}>All campaigns</SelectItem>
+                    {campaignTypeOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              {activeFilterCount > 0 && (
+                <button onClick={clearFilters} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="h-3 w-3" />
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ── Zone 4: Priority Action Queue ──────────────────────────────── */}
+          {filteredActions.length > 0 && (
+            <section className="space-y-2">
+              <SectionHeader
+                label="Action queue"
+                sub={`${filteredActions.length} prioritized next move${filteredActions.length !== 1 ? "s" : ""}`}
+              />
+              <div className="space-y-2">
+                {filteredActions.map((action, index) => (
+                  <ActionCard key={action.title} action={action} rank={index + 1} onNavigate={() => navigate(action.path)} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ── Zone 5: Top Insights + Competitor Pressure ─────────────────── */}
+          <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+
+            {/* Top insights: featured #1 + compact list */}
+            <section className="space-y-2">
+              <SectionHeader
+                label="Top insights"
+                sub={`${filteredInsights.length} prioritized by urgency and impact`}
+                action={filteredInsights.length > 3 ? { label: `View all ${filteredInsights.length}`, onClick: () => navigate("/insights") } : undefined}
+              />
+              {filteredInsights.length === 0 ? (
+                <EmptyZone icon={Lightbulb} title="No insights in scope" desc="Generate insights or remove filters." action={{ label: "Generate insights", onClick: () => navigate("/insights") }} />
               ) : (
                 <div className="space-y-2">
-                  {topInsights.map((insight) => (
-                    <button
-                      key={insight.id}
-                      onClick={() => navigate("/insights")}
-                      className="w-full text-left rounded-lg border p-3 hover:bg-accent/50 transition-colors group"
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                          {insight.title}
-                        </p>
-                        <Badge variant="outline" className="text-[9px] capitalize shrink-0">
-                          {insight.category.replace(/_/g, " ")}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{insight.what_is_happening}</p>
-                      {insight.confidence && (
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <Progress value={insight.confidence * 100} className="h-1 flex-1 max-w-20" />
-                          <span className="text-[10px] text-muted-foreground">{Math.round(insight.confidence * 100)}% confidence</span>
-                        </div>
-                      )}
-                    </button>
+                  {/* Featured insight */}
+                  <FeaturedInsightCard insight={filteredInsights[0]} onClick={() => navigate("/insights")} />
+                  {/* Compact remaining */}
+                  {filteredInsights.slice(1, 4).map((insight) => (
+                    <CompactInsightRow key={insight.id} insight={insight} onClick={() => navigate("/insights")} />
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </section>
 
-          {/* Alerts — Narrower */}
-          <Card className="border lg:col-span-2">
-            <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium flex items-center gap-1.5">
-                <Bell className="h-3.5 w-3.5" />
-                Alerts
-                {unreadCount > 0 && <Badge className="h-4 px-1.5 text-[10px]">{unreadCount}</Badge>}
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => navigate("/alerts")}>
-                View all <ChevronRight className="h-3 w-3" />
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {recentAlerts.length === 0 ? (
-                <EmptySection
-                  icon={Bell}
-                  title="All clear"
-                  desc="No unread alerts. Set up rules to monitor competitor activity."
-                  action={{ label: "Configure alerts", onClick: () => navigate("/alerts") }}
-                />
+            {/* Competitor pressure */}
+            <section className="space-y-2">
+              <SectionHeader
+                label="Competitor pressure"
+                sub="Signal intensity by tracked company"
+                action={{ label: "Compare", onClick: () => navigate("/analytics") }}
+              />
+              {filteredCompetitorSummary.length === 0 ? (
+                <EmptyZone icon={Users} title="No competitor data" desc="Import activity or remove filters." />
               ) : (
-                <div className="space-y-1">
-                  {recentAlerts.map((alert) => (
-                    <button
-                      key={alert.id}
-                      onClick={() => navigate("/alerts")}
-                      className="w-full flex items-start gap-2 rounded-md p-2 text-left hover:bg-muted/50 transition-colors"
-                    >
-                      <div className={cn(
-                        "mt-0.5 h-2 w-2 rounded-full shrink-0",
-                        alert.severity === "high" ? "bg-destructive" :
-                        alert.severity === "medium" ? "bg-warning" : "bg-muted-foreground/30"
-                      )} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium truncate">{alert.title}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">{alert.description}</p>
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                          {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </button>
+                <Card className="border divide-y">
+                  {filteredCompetitorSummary.map((entry) => (
+                    <CompetitorPressureRow key={entry.competitor} entry={entry} maxSignals={filteredCompetitorSummary[0].newsletters + filteredCompetitorSummary[0].ads} onClick={() => navigate("/competitors")} />
                   ))}
+                </Card>
+              )}
+            </section>
+          </div>
+
+          {/* ── Zone 6: Highlights | Anomalies | Inbox ─────────────────────── */}
+          <div className="grid gap-4 lg:grid-cols-3">
+
+            {/* Daily highlights */}
+            <section className="space-y-2">
+              <SectionHeader
+                label="Daily highlights"
+                sub="Top observed competitor moves"
+                action={{ label: "Analytics", onClick: () => navigate("/analytics") }}
+              />
+              {filteredHighlights.length === 0 ? (
+                <EmptyZone icon={Sparkles} title="No highlights" desc="Reset filters or import more data." />
+              ) : (
+                <div className="space-y-1.5">
+                  {filteredHighlights.map((h) => <HighlightCompactRow key={`${h.kind}-${h.title}`} highlight={h} />)}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </section>
 
-      {/* ─── Activity Row: Recent Newsletters + Competitors ─── */}
-      {hasData && (
-        <div className="grid lg:grid-cols-2 gap-4">
-          {/* Recent Newsletters */}
-          <Card className="border">
-            <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium flex items-center gap-1.5">
-                <Activity className="h-3.5 w-3.5" />
-                Recent Competitor Activity
-                <MetricBadge label="Observed" />
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => navigate("/inbox")}>
-                View inbox <ChevronRight className="h-3 w-3" />
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {recentInbox.length === 0 ? (
-                <EmptySection
+            {/* Anomaly radar */}
+            <section className="space-y-2">
+              <SectionHeader
+                label="Anomaly radar"
+                sub="Spikes, blind spots, pressure changes"
+              />
+              {filteredAnomalies.length === 0 ? (
+                <EmptyZone icon={Activity} title="No anomalies" desc="Feed looks stable." />
+              ) : (
+                <div className="space-y-1.5">
+                  {filteredAnomalies.map((a) => <AnomalyCompactRow key={a.title} anomaly={a} onNavigate={() => navigate(a.path)} />)}
+                </div>
+              )}
+            </section>
+
+            {/* Recent inbox */}
+            <section className="space-y-2">
+              <SectionHeader
+                label="Recent competitor activity"
+                sub="Latest inbox events"
+                action={{ label: "Open inbox", onClick: () => navigate("/inbox") }}
+              />
+              {filteredRecentInbox.length === 0 ? (
+                <EmptyZone
                   icon={Newspaper}
-                  title="No competitor activity yet"
-                  desc={gmailConnected ? "Activity will appear after your next sync" : "Connect data sources or import competitor data to start tracking"}
-                  action={gmailConnected ? undefined : { label: "Connect Gmail", onClick: () => navigate("/settings") }}
+                  title="No recent activity"
+                  desc={gmailConnected ? "Widen filters or wait for next sync." : "Connect Gmail to start tracking."}
+                  action={!gmailConnected ? { label: "Connect Gmail", onClick: () => navigate("/settings") } : undefined}
                 />
               ) : (
-                <div className="space-y-0.5">
-                  {recentInbox.map((item) => (
-                    <button
+                <div className="space-y-1.5">
+                  {filteredRecentInbox.slice(0, 6).map((item) => (
+                    <InboxCompactRow
                       key={item.id}
+                      item={item}
+                      competitorName={item.competitor_id ? (competitorNameById.get(item.competitor_id) ?? null) : null}
                       onClick={() => navigate(`/inbox/${item.id}`)}
-                      className="w-full flex items-center gap-3 rounded-md p-2 text-left hover:bg-muted/50 transition-colors group"
-                    >
-                      <div className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-md shrink-0 text-xs font-semibold",
-                        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
-                      )}>
-                        {(item.from_name || item.from_email || "?")[0].toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium truncate">{item.subject || "No subject"}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          {item.from_name || item.from_email || "Unknown sender"}
-                        </p>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground/60 shrink-0">
-                        {item.received_at ? formatDistanceToNow(new Date(item.received_at), { addSuffix: true }) : "—"}
-                      </span>
-                    </button>
+                    />
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </section>
+          </div>
 
-          {/* Competitor Tracker */}
-          <Card className="border">
-            <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium flex items-center gap-1.5">
-                <Eye className="h-3.5 w-3.5" />
-                Tracked Competitors
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => navigate("/competitors")}>
-                Manage <ChevronRight className="h-3 w-3" />
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {competitors.length === 0 ? (
-                <EmptySection
-                  icon={Users}
-                  title="No competitors yet"
-                  desc="Add competitors to start tracking their campaigns and activity"
-                  action={{ label: "Add competitor", onClick: () => navigate("/competitors") }}
-                />
-              ) : (
-                <div className="grid grid-cols-2 gap-1.5">
-                  {competitors.map((comp) => (
-                    <button
-                      key={comp.id}
-                      onClick={() => navigate("/competitors")}
-                      className="flex items-center gap-2 rounded-md border p-2.5 text-left hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-xs font-semibold text-accent-foreground shrink-0">
-                        {comp.name[0].toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium truncate">{comp.name}</p>
-                        {comp.website && (
-                          <p className="text-[10px] text-muted-foreground truncate">{comp.website.replace(/https?:\/\//, "")}</p>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+          {/* ── Zone 7: Tracked competitors grid ───────────────────────────── */}
+          {competitors.length > 0 && (
+            <section className="space-y-2">
+              <SectionHeader
+                label="Tracked companies"
+                sub={`${competitors.length} monitored competitor${competitors.length !== 1 ? "s" : ""}`}
+                action={{ label: "Manage", onClick: () => navigate("/competitors") }}
+              />
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {competitors.map((c) => (
+                  <CompetitorPreviewCard key={c.id} competitor={c} onClick={() => navigate("/competitors")} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
-      {/* ─── Upgrade nudge for free users near limits ─── */}
+      {/* ── Upgrade prompt ─────────────────────────────────────────────────── */}
       {(isAtLimit("competitors") || isAtLimit("newsletters_this_month") || isAtLimit("analyses_this_month")) && (
         <UpgradePrompt
-          reason={
-            isAtLimit("competitors") ? "competitor_limit" :
-            isAtLimit("newsletters_this_month") ? "newsletter_limit" : "analysis_limit"
-          }
+          reason={isAtLimit("competitors") ? "competitor_limit" : isAtLimit("newsletters_this_month") ? "newsletter_limit" : "analysis_limit"}
           variant="inline"
         />
       )}
 
-      {/* ─── System Health ─── */}
       <SystemHealthPanel />
 
-      {/* ─── Quick Actions ─── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {/* ── Quick nav ──────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {[
-          { icon: Newspaper, label: "Import Data", desc: "Paste or import", path: "/newsletters/new" },
-          { icon: Users, label: "Competitors", desc: "Add or manage", path: "/competitors" },
-          { icon: TrendingUp, label: "Analytics", desc: "Trends & patterns", path: "/analytics" },
-          { icon: Megaphone, label: "Meta Ads", desc: "Ad intelligence", path: "/meta-ads" },
+          { icon: Newspaper, label: "Import data", desc: "Paste or upload", path: "/newsletters/new" },
+          { icon: Users, label: "Competitors", desc: "Manage monitored rivals", path: "/competitors" },
+          { icon: TrendingUp, label: "Analytics", desc: "Activity trends", path: "/analytics" },
+          { icon: Megaphone, label: "Meta Ads", desc: "Paid intelligence", path: "/meta-ads" },
         ].map((a) => (
           <button
             key={a.path}
             onClick={() => navigate(a.path)}
-            className="flex items-center gap-2.5 rounded-lg border p-3 text-left hover:bg-accent/50 hover:border-primary/20 transition-all group"
+            className="flex items-center gap-2.5 rounded-lg border p-3 text-left transition-all hover:border-primary/20 hover:bg-accent/40"
           >
-            <a.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+            <a.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground">{a.label}</p>
+              <p className="text-xs font-medium">{a.label}</p>
               <p className="text-[10px] text-muted-foreground">{a.desc}</p>
             </div>
           </button>
@@ -403,66 +507,445 @@ export default function Dashboard() {
   );
 }
 
-/* ─── Sub-components ─── */
+// ─── Layout primitives ────────────────────────────────────────────────────────
 
-const KpiCard = memo(function KpiCard({
-  icon: Icon, label, value, href, sublabel, accent,
-}: {
-  icon: any; label: string; value: number; href: string; sublabel: string; accent?: boolean;
-}) {
-  const navigate = useNavigate();
-  return (
-    <Card
-      className={cn(
-        "border cursor-pointer hover:shadow-sm transition-all group",
-        accent && "border-primary/30 bg-primary/5"
-      )}
-      onClick={() => navigate(href)}
-    >
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between mb-1.5">
-          <Icon className={cn("h-3.5 w-3.5", accent ? "text-primary" : "text-muted-foreground")} />
-          <ArrowRight className="h-3 w-3 text-transparent group-hover:text-muted-foreground transition-colors" />
-        </div>
-        <p className={cn("text-lg font-semibold tracking-tight", accent && "text-primary")}>{value}</p>
-        <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
-        <p className="text-[9px] text-muted-foreground/60 mt-0.5">{sublabel}</p>
-      </CardContent>
-    </Card>
-  );
-});
-
-function MetricBadge({ label }: { label: string }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-medium text-accent-foreground cursor-help">
-          <Info className="h-2.5 w-2.5" /> {label}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs max-w-48">
-        {label === "Observed" && "Data collected directly from imported newsletters and emails"}
-        {label === "AI-derived" && "Generated by AI analysis of your competitive data"}
-        {label === "Estimated" && "Statistical estimate based on available data points"}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
-
-function EmptySection({ icon: Icon, title, desc, action }: {
-  icon: any; title: string; desc: string;
+function SectionHeader({ label, sub, action }: {
+  label: string;
+  sub?: string;
   action?: { label: string; onClick: () => void };
 }) {
   return (
-    <div className="py-6 text-center">
-      <Icon className="h-5 w-5 mx-auto text-muted-foreground/20 mb-2" />
-      <p className="text-xs font-medium text-muted-foreground">{title}</p>
-      <p className="text-[11px] text-muted-foreground/70 mt-0.5 max-w-48 mx-auto">{desc}</p>
+    <div className="flex items-end justify-between gap-3">
+      <div>
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
+      </div>
       {action && (
-        <Button variant="outline" size="sm" className="mt-3 h-7 text-xs gap-1" onClick={action.onClick}>
-          {action.label} <ArrowRight className="h-3 w-3" />
+        <button
+          onClick={action.onClick}
+          className="flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        >
+          {action.label}
+          <ChevronRight className="h-3 w-3" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function EmptyZone({ icon: Icon, title, desc, action }: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+  action?: { label: string; onClick: () => void };
+}) {
+  return (
+    <div className="rounded-xl border border-dashed bg-muted/10 py-7 text-center">
+      <Icon className="mx-auto mb-2 h-5 w-5 text-muted-foreground/30" />
+      <p className="text-xs font-medium text-muted-foreground">{title}</p>
+      <p className="mx-auto mt-0.5 max-w-[200px] text-[11px] text-muted-foreground/60">{desc}</p>
+      {action && (
+        <Button variant="outline" size="sm" className="mt-3 h-7 gap-1 text-xs" onClick={action.onClick}>
+          {action.label}
+          <ArrowRight className="h-3 w-3" />
         </Button>
       )}
     </div>
+  );
+}
+
+// ─── State components ─────────────────────────────────────────────────────────
+
+function LoadingState() {
+  return (
+    <div className="flex h-full items-center justify-center p-8">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="text-xs text-muted-foreground">Loading dashboard…</p>
+      </div>
+    </div>
+  );
+}
+
+function EmptyWorkspaceState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="flex h-full items-center justify-center p-8">
+      <div className="text-center">
+        <p className="mb-3 text-sm text-muted-foreground">No workspace found.</p>
+        <Button onClick={onCreate}>Create workspace</Button>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ title, description, onRetry }: { title: string; description: string; onRetry: () => void }) {
+  return (
+    <div className="flex h-full items-center justify-center p-8">
+      <Card className="w-full max-w-md border-destructive/20">
+        <CardContent className="space-y-4 p-6 text-center">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">{title}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+          </div>
+          <Button size="sm" onClick={onRetry}>Retry</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function EmptyDecisionState({ gmailConnected, competitorCount, onNavigate }: {
+  gmailConnected: boolean;
+  competitorCount: number;
+  onNavigate: ReturnType<typeof useNavigate>;
+}) {
+  return (
+    <Card className="border-2 border-dashed bg-accent/20">
+      <CardContent className="p-6 text-center sm:p-8">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+          <Zap className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="mb-1 text-base font-semibold">Build your first decision feed</h2>
+        <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
+          Connect data sources and add tracked competitors to unlock automated insights, anomalies, and recommended actions.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {!gmailConnected && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => onNavigate("/settings")}>
+              <Mail className="h-3.5 w-3.5" />Connect Gmail
+            </Button>
+          )}
+          {competitorCount === 0 && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => onNavigate("/competitors")}>
+              <Users className="h-3.5 w-3.5" />Add competitors
+            </Button>
+          )}
+          <Button size="sm" className="gap-1.5" onClick={() => onNavigate("/newsletters/new")}>
+            <Newspaper className="h-3.5 w-3.5" />Import competitor data
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── KPI Strip ────────────────────────────────────────────────────────────────
+
+const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, accent }: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  sub: string;
+  href: string;
+  accent?: boolean;
+}) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate(href)}
+      className={cn(
+        "group flex items-center gap-2.5 rounded-lg border p-3 text-left transition-all hover:shadow-sm",
+        accent ? "border-destructive/30 bg-destructive/5 hover:border-destructive/50" : "hover:border-primary/20 hover:bg-accent/30",
+      )}
+    >
+      <Icon className={cn("h-4 w-4 shrink-0", accent ? "text-destructive" : "text-muted-foreground")} />
+      <div className="min-w-0">
+        <p className={cn("text-base font-semibold leading-none tracking-tight", accent && "text-destructive")}>{value}</p>
+        <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{label}</p>
+        <p className="text-[9px] text-muted-foreground/50">{sub}</p>
+      </div>
+    </button>
+  );
+});
+
+// ─── Intelligence Brief columns ───────────────────────────────────────────────
+
+function BriefColumn({ icon: Icon, label, text, accent, cta, onNavigate }: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  text: string;
+  accent?: boolean;
+  cta?: { label: string; href: string };
+  onNavigate?: ReturnType<typeof useNavigate>;
+}) {
+  return (
+    <div className={cn("flex flex-col gap-3 p-4", accent && "bg-primary/[0.03]")}>
+      <div className="flex items-center gap-2">
+        <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded", accent ? "bg-primary/10" : "bg-muted")}>
+          <Icon className={cn("h-3.5 w-3.5", accent ? "text-primary" : "text-muted-foreground")} />
+        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      </div>
+      <p className="text-sm leading-6 text-foreground">{text}</p>
+      {cta && onNavigate && (
+        <div className="mt-auto pt-1">
+          <Button size="sm" className="h-7 gap-1 text-xs" onClick={() => onNavigate(cta.href)}>
+            {cta.label}
+            <ArrowRight className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Action Queue ─────────────────────────────────────────────────────────────
+
+function ActionCard({ action, rank, onNavigate }: {
+  action: DashboardRecommendedAction;
+  rank: number;
+  onNavigate: () => void;
+}) {
+  const priority = normalizeDashboardPriority(action.priority);
+  return (
+    <div className={cn("flex items-start gap-3 rounded-xl border border-l-[3px] bg-background p-3 transition-colors hover:bg-accent/20", PRIORITY_BORDER[priority])}>
+      <div className={cn("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white", priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-primary")}>
+        {rank}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-medium">{action.title}</p>
+          <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
+            {INSIGHT_PRIORITY_LABELS[priority]}
+          </Badge>
+        </div>
+        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{action.detail}</p>
+        {(action.competitors?.length || action.campaignTypes?.length) ? (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {action.competitors?.slice(0, 2).map((c) => (
+              <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+            ))}
+            {action.campaignTypes?.slice(0, 1).map((ct) => (
+              <Badge key={ct} variant="outline" className="text-[10px] capitalize">{fmt(ct, "campaign")}</Badge>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <Button size="sm" className="h-7 shrink-0 gap-1 text-xs" onClick={onNavigate}>
+        {action.cta}
+        <ArrowRight className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
+
+// ─── Insight Cards ────────────────────────────────────────────────────────────
+
+function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; onClick: () => void }) {
+  const priority = normalizeDashboardPriority(insight.priority_level);
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full rounded-xl border border-l-[3px] bg-background p-4 text-left transition-all hover:shadow-sm hover:bg-accent/20",
+        PRIORITY_BORDER[priority],
+      )}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
+              {INSIGHT_PRIORITY_LABELS[priority]}
+            </Badge>
+            <Badge variant="secondary" className="text-[10px] capitalize">{getImpactLabel(insight.impact_area)}</Badge>
+            {typeof insight.confidence === "number" && (
+              <span className="text-[10px] text-muted-foreground">{Math.round(insight.confidence * 100)}% confidence</span>
+            )}
+          </div>
+          <p className="text-sm font-semibold leading-snug">{insight.title}</p>
+          <p className="text-xs leading-5 text-muted-foreground">{insight.strategic_takeaway || insight.what_is_happening}</p>
+          {insight.why_it_matters && (
+            <div className="rounded-lg bg-muted/40 px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Why it matters</p>
+              <p className="mt-1 text-xs leading-5 text-foreground/80">{insight.why_it_matters}</p>
+            </div>
+          )}
+          {insight.affected_competitors.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {insight.affected_competitors.slice(0, 3).map((c) => (
+                <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex shrink-0 items-start gap-1.5">
+          <Badge variant="outline" className="text-[10px] capitalize whitespace-nowrap">{fmt(insight.campaign_type, "campaign")}</Badge>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; onClick: () => void }) {
+  const priority = normalizeDashboardPriority(insight.priority_level);
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-xl border border-l-[3px] bg-background px-3 py-2.5 text-left transition-colors hover:bg-accent/20",
+        PRIORITY_BORDER[priority],
+      )}
+    >
+      <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", PRIORITY_DOT[priority])} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{insight.title}</p>
+        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{insight.strategic_takeaway}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] text-muted-foreground capitalize">{getImpactLabel(insight.impact_area)}</span>
+          {typeof insight.confidence === "number" && (
+            <span className="text-[10px] text-muted-foreground">· {Math.round(insight.confidence * 100)}%</span>
+          )}
+          {insight.affected_competitors.slice(0, 1).map((c) => (
+            <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+          ))}
+        </div>
+      </div>
+      <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+    </button>
+  );
+}
+
+// ─── Competitor Pressure ──────────────────────────────────────────────────────
+
+function CompetitorPressureRow({ entry, maxSignals, onClick }: {
+  entry: DashboardCompetitorSummary;
+  maxSignals: number;
+  onClick: () => void;
+}) {
+  const total = entry.newsletters + entry.ads;
+  const pct = maxSignals > 0 ? Math.round((total / maxSignals) * 100) : 0;
+  return (
+    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-3 py-3 text-left transition-colors hover:bg-accent/20">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent text-[10px] font-semibold text-accent-foreground">
+            {entry.competitor.charAt(0).toUpperCase()}
+          </div>
+          <p className="truncate text-sm font-medium">{entry.competitor}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {entry.newsletters > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <Newspaper className="h-2.5 w-2.5" />{entry.newsletters}
+            </span>
+          )}
+          {entry.ads > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <Megaphone className="h-2.5 w-2.5" />{entry.ads}
+            </span>
+          )}
+        </div>
+      </div>
+      <Progress value={pct} className="h-1" />
+      {typeof entry.promoRate === "number" && entry.promoRate > 0 && (
+        <p className="text-[10px] text-muted-foreground">
+          {Math.round(entry.promoRate * 100)}% promo intensity
+        </p>
+      )}
+    </button>
+  );
+}
+
+// ─── Highlights (compact) ─────────────────────────────────────────────────────
+
+function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
+  const toneLeft: Record<DashboardHighlight["tone"], string> = {
+    positive: "border-l-primary",
+    warning: "border-l-warning",
+    neutral: "border-l-muted-foreground/30",
+  };
+  const kindDot: Record<DashboardHighlight["kind"], string> = {
+    competitor_action: "bg-muted-foreground",
+    promotion: "bg-warning",
+    campaign: "bg-primary",
+  };
+  return (
+    <div className={cn("rounded-lg border border-l-[3px] bg-background px-3 py-2.5", toneLeft[highlight.tone])}>
+      <div className="flex items-start gap-2">
+        <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", kindDot[highlight.kind])} />
+        <div className="min-w-0">
+          <p className="text-xs font-medium leading-snug">{highlight.title}</p>
+          <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{highlight.detail}</p>
+          {highlight.competitors?.slice(0, 1).map((c) => (
+            <Badge key={c} variant="secondary" className="mt-1 text-[10px]">{c}</Badge>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Anomaly (compact) ────────────────────────────────────────────────────────
+
+function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly; onNavigate: () => void }) {
+  const priority = normalizeDashboardPriority(anomaly.severity);
+  return (
+    <button
+      onClick={onNavigate}
+      className={cn("w-full rounded-lg border border-l-[3px] bg-background px-3 py-2.5 text-left transition-colors hover:bg-accent/20", PRIORITY_BORDER[priority])}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-medium">{anomaly.title}</p>
+          <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{anomaly.detail}</p>
+        </div>
+        <Badge variant="outline" className={cn("shrink-0 text-[10px] capitalize", PRIORITY_BADGE[priority])}>
+          {priority}
+        </Badge>
+      </div>
+    </button>
+  );
+}
+
+// ─── Inbox (compact) ─────────────────────────────────────────────────────────
+
+function InboxCompactRow({ item, competitorName, onClick }: {
+  item: DashboardInboxPreview;
+  competitorName: string | null;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-2.5 rounded-lg border bg-background px-3 py-2 text-left transition-colors hover:bg-accent/20"
+    >
+      <div className={cn(
+        "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] font-semibold",
+        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary",
+      )}>
+        {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-medium">{item.subject || "No subject"}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-[10px] text-muted-foreground">{item.from_name || item.from_email || "Unknown"}</p>
+          {competitorName && <Badge variant="outline" className="text-[9px]">{competitorName}</Badge>}
+        </div>
+      </div>
+      <span className="shrink-0 text-[10px] text-muted-foreground/60 whitespace-nowrap">
+        {item.received_at ? formatDistanceToNow(new Date(item.received_at), { addSuffix: true }) : "—"}
+      </span>
+    </button>
+  );
+}
+
+// ─── Competitor preview card ──────────────────────────────────────────────────
+
+function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardCompetitorPreview; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-2.5 rounded-lg border p-2.5 text-left transition-colors hover:bg-accent/40 hover:border-primary/20">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-accent text-xs font-semibold text-accent-foreground">
+        {competitor.name.charAt(0).toUpperCase()}
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-xs font-medium">{competitor.name}</p>
+        {competitor.website && (
+          <p className="truncate text-[10px] text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
+        )}
+      </div>
+    </button>
   );
 }

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Lock, Zap, TrendingUp, Users, Newspaper, Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UpgradePromptProps {
@@ -17,7 +18,7 @@ interface UpgradePromptProps {
   className?: string;
 }
 
-const REASON_CONFIG: Record<string, { icon: any; title: string; desc: string; plan: string }> = {
+const REASON_CONFIG: Record<string, { icon: LucideIcon; title: string; desc: string; plan: string }> = {
   competitor_limit: {
     icon: Users,
     title: "Competitor limit reached",

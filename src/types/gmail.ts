@@ -1,3 +1,5 @@
+import type { Json } from "@/integrations/supabase/types";
+
 export interface GmailConnection {
   id: string;
   workspace_id: string;
@@ -9,6 +11,22 @@ export interface GmailConnection {
   sync_status: string;
   sync_error: string | null;
   created_at: string;
+}
+
+export type GmailSyncStatus = "up_to_date" | "imported" | "completed_with_issues";
+
+export interface GmailSyncResult {
+  success: boolean;
+  status: GmailSyncStatus;
+  imported: number;
+  skipped: number;
+  errors: number;
+  attributed: number;
+  needs_review: number;
+  total: number;
+  sync_mode: "incremental" | "full";
+  synced_at: string;
+  message: string;
 }
 
 export interface NewsletterInboxItem {
@@ -57,7 +75,7 @@ export interface NewsletterExtraction {
   model_used: string | null;
   extraction_method: string | null;
   is_valid: boolean;
-  raw_extraction: any;
+  raw_extraction: Json;
   extracted_at: string;
   created_at: string;
 }

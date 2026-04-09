@@ -1,56 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { getErrorMessage } from "@/lib/errors";
+import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
-export interface MetaAd {
-  id: string;
-  workspace_id: string;
-  competitor_id: string | null;
-  meta_ad_id: string | null;
-  page_id: string | null;
-  page_name: string | null;
-  ad_snapshot_url: string | null;
-  ad_creative_bodies: string[];
-  ad_creative_link_titles: string[];
-  ad_creative_link_descriptions: string[];
-  ad_creative_link_captions: string[];
-  cta_type: string | null;
-  ad_delivery_start_time: string | null;
-  ad_delivery_stop_time: string | null;
-  is_active: boolean;
-  platforms: string[];
-  publisher_platforms: string[];
-  estimated_audience_size: any;
-  spend_range: any;
-  impressions_range: any;
-  currency: string | null;
-  languages: string[];
-  media_type: string | null;
-  media_url: string | null;
-  thumbnail_url: string | null;
-  first_seen_at: string | null;
-  last_seen_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MetaAdAnalysis {
-  id: string;
-  meta_ad_id: string;
-  message_angle: string | null;
-  offer_angle: string | null;
-  promo_language: string | null;
-  urgency_style: string | null;
-  audience_clues: string[];
-  funnel_intent: string | null;
-  creative_pattern: string | null;
-  product_category: string | null;
-  strategy_takeaways: string[];
-  confidence_scores: any;
-  overall_confidence: number | null;
-  model_used: string | null;
-  created_at: string;
-}
+export type MetaAd = Database["public"]["Tables"]["meta_ads"]["Row"];
+export type MetaAdAnalysis = Database["public"]["Tables"]["meta_ad_analyses"]["Row"];
 
 interface MetaAdsFilters {
   competitorId?: string;
@@ -94,20 +51,27 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
     if (filters.dateTo) query = query.lte("first_seen_at", filters.dateTo);
 
     const { data, count, error } = await query;
-    if (error) console.error("Meta ads fetch error:", error);
+    if (error) {
+      console.error("Meta ads fetch error:", error);
+      toast.error(getErrorMessage(error, "Failed to load Meta ads."));
+      setAds([]);
+      setTotalCount(0);
+      setLoading(false);
+      return;
+    }
 
     setAds((data as MetaAd[]) || []);
     setTotalCount(count || 0);
     setLoading(false);
   }, [currentWorkspace, page, filters.competitorId, filters.isActive, filters.search, filters.dateFrom, filters.dateTo]);
 
-  useEffect(() => { fetchAds(); }, [fetchAds]);
+  useEffect(() => { void fetchAds(); }, [fetchAds]);
 
   const fetchFromMeta = async (opts: { competitorId?: string; pageId?: string; searchTerms?: string }) => {
     if (!currentWorkspace) return;
     setFetching(true);
     try {
-      const res = await supabase.functions.invoke("fetch-meta-ads", {
+      const data = await invokeEdgeFunction("fetch-meta-ads", {
         body: {
           workspaceId: currentWorkspace.id,
           competitorId: opts.competitorId,
@@ -115,12 +79,6 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
           searchTerms: opts.searchTerms,
         },
       });
-      if (res.error) {
-        const body = res.data;
-        if (body?.error?.includes("Rate limit")) throw new Error(body.error);
-        throw res.error;
-      }
-      const data = res.data;
       await fetchAds();
       return data;
     } finally {
@@ -129,10 +87,9 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
   };
 
   const analyzeAd = async (metaAdId: string) => {
-    const { data, error } = await supabase.functions.invoke("analyze-meta-ad", {
+    const data = await invokeEdgeFunction("analyze-meta-ad", {
       body: { metaAdId },
     });
-    if (error) throw error;
     return data;
   };
 

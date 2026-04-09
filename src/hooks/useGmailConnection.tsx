@@ -1,34 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import type { GmailConnection } from "@/types/gmail";
+import type { GmailConnection, GmailSyncResult } from "@/types/gmail";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 export function useGmailConnection() {
-  const { user } = useAuth();
   const { currentWorkspace } = useWorkspace();
   const [connection, setConnection] = useState<GmailConnection | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchConnection = useCallback(async () => {
     if (!currentWorkspace) {
       setConnection(null);
       setLoading(false);
+      setError(null);
       return;
     }
-    const { data } = await supabase
+    setLoading(true);
+    setError(null);
+    const { data, error: connectionError } = await supabase
       .from("gmail_connections")
-      .select("*")
+      .select("id, workspace_id, user_id, email_address, connected_at, last_sync_at, sync_status, sync_error, last_history_id, created_at")
       .eq("workspace_id", currentWorkspace.id)
       .limit(1)
       .maybeSingle();
+
+    if (connectionError) {
+      console.error("Gmail connection fetch error:", connectionError);
+      setConnection(null);
+      setError(connectionError.message || "Failed to load Gmail connection.");
+      setLoading(false);
+      return;
+    }
+
     setConnection(data as GmailConnection | null);
     setLoading(false);
   }, [currentWorkspace]);
 
   useEffect(() => {
-    fetchConnection();
+    void fetchConnection();
   }, [fetchConnection]);
 
   // Check URL params for OAuth callback result
@@ -45,14 +57,13 @@ export function useGmailConnection() {
 
   const connect = async () => {
     if (!currentWorkspace) return;
-    const { data, error } = await supabase.functions.invoke("gmail-auth", {
+    const data = await invokeEdgeFunction<{ url?: string }>("gmail-auth", {
       body: {
         action: "initiate",
         workspaceId: currentWorkspace.id,
         redirectUrl: window.location.origin + "/settings",
       },
     });
-    if (error) throw error;
     if (data?.url) {
       window.location.href = data.url;
     }
@@ -60,7 +71,7 @@ export function useGmailConnection() {
 
   const disconnect = async () => {
     if (!connection || !currentWorkspace) return;
-    await supabase.functions.invoke("gmail-auth", {
+    await invokeEdgeFunction("gmail-auth", {
       body: {
         action: "disconnect",
         connectionId: connection.id,
@@ -74,10 +85,9 @@ export function useGmailConnection() {
     if (!connection) return;
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("gmail-sync", {
+      const data = await invokeEdgeFunction<GmailSyncResult>("gmail-sync", {
         body: { connectionId: connection.id, fullSync },
       });
-      if (error) throw error;
       await fetchConnection();
       return data;
     } finally {
@@ -89,6 +99,7 @@ export function useGmailConnection() {
     connection,
     loading,
     syncing,
+    error,
     connect,
     disconnect,
     sync,

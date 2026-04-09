@@ -1,14 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, RefreshCw, Unplug, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,38 +20,40 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function GmailConnect() {
-  const { connection, loading, syncing, connect, disconnect, sync, isConnected } = useGmailConnection();
+  const { connection, loading, syncing, error, connect, disconnect, sync, isConnected } = useGmailConnection();
   const { isAdmin } = useRoles();
   const { requireVerification } = useEmailVerification();
   const { toast } = useToast();
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
 
-  // Check URL params for OAuth result
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("gmail_connected") === "true") {
       toast({ title: "Gmail connected", description: "Your Gmail account has been connected successfully." });
     }
-    const error = params.get("gmail_error");
-    if (error) {
+
+    const gmailError = params.get("gmail_error");
+    if (gmailError) {
       toast({
         title: "Gmail connection failed",
-        description: error === "token_exchange_failed"
-          ? "Failed to exchange authorization code. Please try again."
-          : `Connection error: ${error}`,
+        description:
+          gmailError === "token_exchange_failed"
+            ? "Failed to exchange the authorization code. Please try again."
+            : `Connection error: ${gmailError}`,
         variant: "destructive",
       });
     }
-  }, []);
+  }, [toast]);
 
   const handleConnect = async () => {
     if (!requireVerification("connect Gmail")) return;
+
     setConnecting(true);
     try {
       await connect();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (connectError) {
+      toast({ title: "Error", description: getErrorMessage(connectError), variant: "destructive" });
       setConnecting(false);
     }
   };
@@ -61,8 +62,8 @@ export default function GmailConnect() {
     try {
       await disconnect();
       toast({ title: "Gmail disconnected" });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (disconnectError) {
+      toast({ title: "Error", description: getErrorMessage(disconnectError), variant: "destructive" });
     }
     setDisconnectOpen(false);
   };
@@ -72,19 +73,20 @@ export default function GmailConnect() {
       const result = await sync();
       if (result) {
         toast({
-          title: "Sync complete",
-          description: `Imported ${result.imported} newsletters, skipped ${result.skipped} duplicates.`,
+          title: result.status === "completed_with_issues" ? "Sync completed with issues" : "Sync complete",
+          description: result.message,
+          variant: result.status === "completed_with_issues" ? "destructive" : "default",
         });
       }
-    } catch (err: any) {
-      toast({ title: "Sync failed", description: err.message, variant: "destructive" });
+    } catch (syncError) {
+      toast({ title: "Sync failed", description: getErrorMessage(syncError), variant: "destructive" });
     }
   };
 
   if (loading) {
     return (
-      <Card className="shadow-raised border">
-        <CardContent className="p-4 flex items-center gap-2">
+      <Card className="border shadow-raised">
+        <CardContent className="flex items-center gap-2 p-4">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm text-muted-foreground">Loading Gmail status...</span>
         </CardContent>
@@ -94,7 +96,7 @@ export default function GmailConnect() {
 
   return (
     <>
-      <Card className="shadow-raised border">
+      <Card className="border shadow-raised">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -115,25 +117,21 @@ export default function GmailConnect() {
           {isConnected && connection ? (
             <>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Account</span>
                   <span className="font-medium">{connection.email_address}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Last synced</span>
-                  <span>
-                    {connection.last_sync_at
-                      ? new Date(connection.last_sync_at).toLocaleString()
-                      : "Never"}
-                  </span>
+                  <span>{connection.last_sync_at ? new Date(connection.last_sync_at).toLocaleString() : "Never"}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Status</span>
                   <span className="capitalize">{connection.sync_status}</span>
                 </div>
                 {connection.sync_error && (
                   <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
-                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     {connection.sync_error}
                   </div>
                 )}
@@ -165,14 +163,19 @@ export default function GmailConnect() {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Connect your Gmail to automatically import competitor newsletters.
-                We request <strong>read-only</strong> access — we never send emails or modify your inbox.
+                Connect your Gmail to automatically import competitor newsletters. We request{" "}
+                <strong>read-only</strong> access so the app never sends email or modifies your inbox.
               </p>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>• Read-only access to Gmail messages</p>
-                <p>• Newsletters are classified and organized automatically</p>
-                <p>• Disconnect anytime from settings</p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>- Read-only access to Gmail messages</p>
+                <p>- Newsletters are classified and organized automatically</p>
+                <p>- Disconnect anytime from settings</p>
               </div>
+              {error && (
+                <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+                  {error}
+                </div>
+              )}
               {isAdmin ? (
                 <Button onClick={handleConnect} disabled={connecting} className="gap-2">
                   <Mail className="h-4 w-4" />
@@ -191,13 +194,16 @@ export default function GmailConnect() {
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect Gmail?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the Gmail connection and stop importing new newsletters.
-              Previously imported newsletters will remain in your inbox.
+              This will remove the Gmail connection and stop importing new newsletters. Previously imported newsletters
+              will remain in your inbox.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDisconnect} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDisconnect}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Disconnect
             </AlertDialogAction>
           </AlertDialogFooter>

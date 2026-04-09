@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,8 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
+import { getErrorMessage } from "@/lib/errors";
+import { enqueueNewsletterAnalysis } from "@/lib/newsletter-analysis";
 
 type Analysis = Database["public"]["Tables"]["analyses"]["Row"];
 
@@ -20,6 +22,14 @@ interface AnalysisResult {
   recommendations?: string[];
 }
 
+function readValidationErrors(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+}
+
 export default function AnalysisView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -28,7 +38,7 @@ export default function AnalysisView() {
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
 
-  const fetchAnalysis = async () => {
+  const fetchAnalysis = useCallback(async () => {
     if (!id) return;
     const { data, error } = await supabase.from("analyses").select("*").eq("id", id).single();
     if (error) {
@@ -44,29 +54,26 @@ export default function AnalysisView() {
     } else {
       setPolling(false);
     }
-  };
+  }, [id, navigate, toast]);
 
   useEffect(() => {
-    fetchAnalysis();
-  }, [id]);
+    void fetchAnalysis();
+  }, [fetchAnalysis]);
 
   useEffect(() => {
     if (!polling) return;
     const interval = setInterval(fetchAnalysis, 3000);
     return () => clearInterval(interval);
-  }, [polling]);
+  }, [fetchAnalysis, polling]);
 
   const handleRetry = async () => {
     if (!analysis) return;
-    await supabase.from("analyses").update({ status: "pending", error_message: null }).eq("id", analysis.id);
-    const { error } = await supabase.functions.invoke("analyze-newsletter", {
-      body: { analysisId: analysis.id, newsletterEntryId: analysis.newsletter_entry_id },
-    });
-    if (error) {
-      toast({ title: "Retry failed", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      await enqueueNewsletterAnalysis({ analysisId: analysis.id });
       setPolling(true);
-      toast({ title: "Re-analyzing..." });
+      toast({ title: "Re-queued", description: "The AI analysis job was queued again in the background." });
+    } catch (error) {
+      toast({ title: "Retry failed", description: getErrorMessage(error), variant: "destructive" });
     }
   };
 
@@ -81,6 +88,7 @@ export default function AnalysisView() {
   if (!analysis) return null;
 
   const result = analysis.result as unknown as AnalysisResult | null;
+  const validationErrors = readValidationErrors(analysis.validation_errors);
 
   const confidenceLabel = (conf: string) => {
     switch (conf) {
@@ -122,6 +130,11 @@ export default function AnalysisView() {
             {analysis.model_used && (
               <span className="text-xs text-muted-foreground">Model: {analysis.model_used}</span>
             )}
+            {analysis.attempt_count > 0 && (
+              <span className="text-xs text-muted-foreground">
+                Attempt {analysis.attempt_count}/{analysis.max_attempts}
+              </span>
+            )}
           </div>
           {analysis.confidence && (
             <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-wider">
@@ -154,6 +167,23 @@ export default function AnalysisView() {
             {analysis.error_message && (
               <p className="text-xs text-muted-foreground mt-1">{analysis.error_message}</p>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {validationErrors.length > 0 && (
+        <Card className="shadow-raised border border-amber-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Validation notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-1">
+              {validationErrors.map((item) => (
+                <li key={item} className="text-xs text-muted-foreground">
+                  {item}
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       )}

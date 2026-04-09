@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart3, ArrowLeft } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -23,8 +24,8 @@ export default function ForgotPassword() {
       });
       if (error) throw error;
       setSent(true);
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
