@@ -722,7 +722,6 @@ async function buildActivitySpikeCandidates(
   const spikeMultiplier = getNumber(config.spike_multiplier) ?? 2;
   const minimumEvents = getNumber(config.minimum_events) ?? 3;
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const eventScoped = trigger.source !== "manual" && trigger.source !== "scheduled";
   const baselineStart = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
   const currentCounts = new Map<string, { actor: Actor; count: number }>();
 
@@ -889,6 +888,7 @@ export async function evaluateAlertRules(
   trigger: AlertEvaluationTrigger,
 ): Promise<AlertEvaluationSummary> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const eventScoped = trigger.source !== "manual" && trigger.source !== "scheduled";
   const newsletterIds = Array.from(new Set(trigger.newsletterIds ?? []));
   const extractionIds = Array.from(new Set(trigger.extractionIds ?? []));
   const metaAdIds = Array.from(new Set(trigger.metaAdIds ?? []));
