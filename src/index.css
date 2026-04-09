@@ -153,16 +153,42 @@
   }
 
   .page-title {
-    @apply text-xl font-semibold text-foreground tracking-tight;
+    @apply text-[1.125rem] font-semibold text-foreground tracking-tight leading-snug;
   }
 
   .page-description {
-    @apply text-sm text-muted-foreground;
+    @apply text-sm text-muted-foreground leading-relaxed;
   }
 
   /* Compact page wrapper — reduces default page padding for denser layouts */
   .page-compact {
     @apply p-4 sm:p-5 lg:p-6;
+  }
+
+  /* Section label — consistent uppercase eyebrow text */
+  .section-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  /* Stat value — tabular numerals for KPI displays */
+  .stat-value {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  /* Interactive card hover state */
+  .card-interactive {
+    @apply cursor-pointer transition-all duration-150 hover:shadow-md hover:-translate-y-px;
+  }
+
+  /* Interactive data row */
+  .data-row {
+    @apply cursor-pointer transition-colors duration-100 hover:bg-muted/40;
+  }
+
+  /* Pill badge — compact status labels */
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-none;
   }
 
   /* Scrollbar styling */
@@ -172,8 +198,8 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -184,11 +210,33 @@
     background-color: hsl(var(--border));
     border-radius: 3px;
   }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+  }
 }
 
 /* Smooth transitions for interactive elements */
 @layer base {
   button, a, [role="button"] {
     @apply transition-colors;
+  }
+}
+
+/* Slide-up entrance animation — for page sections and modals */
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .animate-slide-up {
+    animation: slide-up-fade 0.2s ease-out both;
   }
 }

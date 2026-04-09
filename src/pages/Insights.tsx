@@ -86,15 +86,15 @@ function SummaryCard({
   icon: ElementType;
 }) {
   return (
-    <Card className="border bg-card/70">
+    <Card className="border bg-card shadow-sm">
       <CardContent className="flex items-start justify-between gap-4 p-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{title}</p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+        <div className="space-y-1.5">
+          <p className="section-label">{title}</p>
+          <p className="stat-value text-2xl font-semibold leading-none tracking-tight text-foreground">{value}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">{detail}</p>
         </div>
-        <div className="rounded-xl bg-primary/10 p-2 text-primary">
-          <Icon className="h-5 w-5" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
         </div>
       </CardContent>
     </Card>
@@ -105,7 +105,7 @@ function EvidenceItemView({ evidence }: { evidence: InsightEvidence }) {
   return (
     <div className="rounded-xl border bg-muted/25 p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">{evidence.label}</p>
+        <p className="section-label text-foreground">{evidence.label}</p>
         {evidence.metric ? <Badge variant="secondary">{evidence.metric}</Badge> : null}
         {evidence.source ? (
           <Badge variant="outline" className="capitalize">
@@ -176,22 +176,22 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
             </div>
           </div>
 
-          <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:w-[260px]">
-            <div className="rounded-xl border bg-muted/20 p-3">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Confidence</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{confidenceValue}</p>
+          <div className="grid min-w-[220px] grid-cols-2 gap-2.5 lg:w-[260px]">
+            <div className="rounded-xl border bg-muted/30 p-3">
+              <p className="section-label">Confidence</p>
+              <p className="stat-value mt-1.5 text-lg font-semibold leading-none text-foreground">{confidenceValue}</p>
             </div>
-            <div className="rounded-xl border bg-muted/20 p-3">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Evidence</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{insight.supporting_evidence.length}</p>
+            <div className="rounded-xl border bg-muted/30 p-3">
+              <p className="section-label">Evidence</p>
+              <p className="stat-value mt-1.5 text-lg font-semibold leading-none text-foreground">{insight.supporting_evidence.length}</p>
             </div>
-            <div className="rounded-xl border bg-muted/20 p-3">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Impact</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{INSIGHT_IMPACT_LABELS[insight.impact_area]}</p>
+            <div className="rounded-xl border bg-muted/30 p-3">
+              <p className="section-label">Impact</p>
+              <p className="mt-1.5 text-xs font-semibold text-foreground">{INSIGHT_IMPACT_LABELS[insight.impact_area]}</p>
             </div>
-            <div className="rounded-xl border bg-muted/20 p-3">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Source</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{formatSourceLabel(insight.source_type)}</p>
+            <div className="rounded-xl border bg-muted/30 p-3">
+              <p className="section-label">Source</p>
+              <p className="mt-1.5 text-xs font-semibold text-foreground">{formatSourceLabel(insight.source_type)}</p>
             </div>
           </div>
         </div>
@@ -200,27 +200,27 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
       <CardContent className="space-y-6 pt-0">
         <div className="grid gap-4 xl:grid-cols-3">
           <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Why it matters</p>
+            <p className="section-label text-foreground">Why it matters</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.why_it_matters}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Strategic implication</p>
+            <p className="section-label text-foreground">Strategic implication</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.strategic_implication}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Recommended response</p>
+            <p className="section-label text-foreground">Recommended response</p>
             {responseSections ? (
               <div className="mt-2 space-y-3 text-sm leading-6 text-muted-foreground">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">Immediate</p>
+                  <p className="section-label text-foreground">Immediate</p>
                   <p>{responseSections.immediate || "Not specified"}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">Next 30 days</p>
+                  <p className="section-label text-foreground">Next 30 days</p>
                   <p>{responseSections.next30Days || "Not specified"}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">Measure</p>
+                  <p className="section-label text-foreground">Measure</p>
                   <p>{responseSections.measure || "Not specified"}</p>
                 </div>
               </div>
@@ -234,11 +234,11 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
 
         <div className="grid gap-4 xl:grid-cols-4">
           <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Offers</p>
+            <p className="section-label text-foreground">Offers</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{formatOfferSummary(insight)}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">CTA analysis</p>
+            <p className="section-label text-foreground">CTA analysis</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.cta_analysis}</p>
             {insight.cta_primary ? (
               <Badge variant="outline" className="mt-3">
@@ -247,18 +247,18 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
             ) : null}
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Positioning angle</p>
+            <p className="section-label text-foreground">Positioning angle</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.positioning_angle}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Strategic takeaway</p>
+            <p className="section-label text-foreground">Strategic takeaway</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.strategic_takeaway}</p>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 rounded-2xl border bg-muted/10 p-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Product categories</p>
+            <p className="section-label text-foreground">Product categories</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {insight.product_categories.map((category) => (
                 <Badge key={`${insight.id}-${category}`} variant="secondary">
@@ -268,7 +268,7 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
             </div>
           </div>
           <div className="md:max-w-xs">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">Campaign type</p>
+            <p className="section-label text-foreground">Campaign type</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.campaign_type}</p>
           </div>
         </div>

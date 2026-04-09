@@ -1,19 +1,38 @@
 import { useState } from "react";
 import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { TableShell, TableEmptyRow } from "@/components/ui/table-toolbar";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { RefreshCw, Unplug } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { AdminGmailConnection, AdminIntegrationsResponse } from "@/types/admin";
+
+function SyncStatusDot({ conn }: { conn: AdminGmailConnection }) {
+  const dotClass = conn.sync_error
+    ? "bg-destructive"
+    : conn.sync_status === "idle"
+    ? "bg-muted-foreground/40"
+    : "bg-primary";
+  const textClass = conn.sync_error
+    ? "text-destructive"
+    : "text-muted-foreground";
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass}`} />
+      <span className={`text-[12px] ${textClass}`}>{conn.sync_status}</span>
+    </div>
+  );
+}
 
 export default function AdminIntegrations() {
   const { data, loading, error, refetch } = useAdminData<AdminIntegrationsResponse>("integrations");
@@ -44,8 +63,23 @@ export default function AdminIntegrations() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mt-20" />
+      <div className="space-y-6 p-6 max-w-7xl">
+        <div className="space-y-1">
+          <Skeleton className="h-6 w-52" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <TableShell>
+          <div className="divide-y">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-2.5">
+                <Skeleton className="h-3.5 w-48" />
+                <Skeleton className="h-5 w-14" />
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-3.5 flex-1 max-w-sm" />
+              </div>
+            ))}
+          </div>
+        </TableShell>
       </div>
     );
   }
@@ -53,8 +87,8 @@ export default function AdminIntegrations() {
   if (error) {
     return (
       <div className="p-6">
-        <Card className="border-destructive">
-          <CardContent className="p-6 text-center text-destructive">{error}</CardContent>
+        <Card className="border-destructive/30">
+          <CardContent className="p-6 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
       </div>
     );
@@ -62,64 +96,76 @@ export default function AdminIntegrations() {
 
   const gmailConns = data?.gmailConnections || [];
   const rateLimits = data?.rateLimitsByEndpoint || {};
+  const sortedEndpoints = Object.entries(rateLimits).sort(([, a], [, b]) => b - a);
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl">
+    <div className="space-y-6 p-6 max-w-7xl">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold">Integrations Monitor</h1>
-        <p className="text-sm text-muted-foreground">Gmail connections and API usage</p>
+        <h1 className="page-title">Integrations Monitor</h1>
+        <p className="page-description">Gmail connections and API usage</p>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Gmail Connections ({gmailConns.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      {/* Gmail connections table */}
+      <section className="space-y-3">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-sm font-semibold text-foreground">Gmail Connections</h2>
+          <span className="stat-value text-xs text-muted-foreground">{gmailConns.length}</span>
+        </div>
+
+        <TableShell>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Sync</TableHead>
+                <TableHead className="w-[260px]">Account</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[130px]">Last sync</TableHead>
                 <TableHead>Error</TableHead>
-                <TableHead>Connected</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-[120px]">Connected</TableHead>
+                <TableHead className="w-[1%] whitespace-nowrap" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {gmailConns.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
-                    No Gmail connections
-                  </TableCell>
-                </TableRow>
+                <TableEmptyRow colSpan={6} message="No Gmail connections found." />
               )}
               {gmailConns.map((conn) => (
                 <TableRow key={conn.id}>
-                  <TableCell className="text-sm font-medium">{conn.email_address}</TableCell>
+                  {/* PRIMARY */}
+                  <TableCell className="text-[13px] font-medium text-foreground">
+                    {conn.email_address}
+                  </TableCell>
+
+                  {/* STATUS */}
                   <TableCell>
-                    <Badge
-                      variant={conn.sync_error ? "destructive" : conn.sync_status === "idle" ? "secondary" : "default"}
-                      className="text-[10px]"
-                    >
-                      {conn.sync_status}
-                    </Badge>
+                    <SyncStatusDot conn={conn} />
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {conn.last_sync_at ? format(new Date(conn.last_sync_at), "MMM d, HH:mm") : "Never"}
+
+                  {/* META: timestamps */}
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">
+                    {conn.last_sync_at
+                      ? format(new Date(conn.last_sync_at), "MMM d, HH:mm")
+                      : <span className="text-muted-foreground/40">Never</span>}
                   </TableCell>
-                  <TableCell className="max-w-48">
+
+                  {/* ERROR — destructive when present */}
+                  <TableCell className="max-w-[280px]">
                     {conn.sync_error ? (
-                      <span className="text-xs text-destructive line-clamp-2">{conn.sync_error}</span>
+                      <span className="line-clamp-2 text-xs leading-relaxed text-destructive">
+                        {conn.sync_error}
+                      </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-muted-foreground/40">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
+
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">
                     {format(new Date(conn.connected_at), "MMM d, yyyy")}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+
+                  {/* ACTIONS — hover-reveal */}
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -133,7 +179,7 @@ export default function AdminIntegrations() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs gap-1 text-destructive"
+                        className="h-7 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/5"
                         disabled={acting}
                         onClick={() => setDisconnectTarget(conn)}
                       >
@@ -146,31 +192,53 @@ export default function AdminIntegrations() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </TableShell>
+      </section>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">API Usage by Endpoint</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {Object.keys(rateLimits).length === 0 ? (
-            <p className="text-sm text-muted-foreground">No rate limit data</p>
-          ) : (
-            <div className="space-y-2">
-              {Object.entries(rateLimits)
-                .sort(([, a], [, b]) => b - a)
-                .map(([endpoint, count]) => (
-                  <div key={endpoint} className="flex items-center justify-between py-1.5 border-b last:border-0">
-                    <span className="text-sm font-mono">{endpoint}</span>
-                    <Badge variant="secondary">{count} calls</Badge>
-                  </div>
+      {/* API usage — structured list, sorted by call count */}
+      {sortedEndpoints.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">API Usage by Endpoint</h2>
+
+          <TableShell>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Endpoint</TableHead>
+                  <TableHead className="w-[100px] text-right">Calls</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedEndpoints.map(([endpoint, count], idx) => (
+                  <TableRow key={endpoint}>
+                    <TableCell>
+                      <span className={cn(
+                        "font-mono text-[12px]",
+                        idx === 0 ? "text-foreground font-medium" : "text-foreground/70",
+                      )}>
+                        {endpoint}
+                      </span>
+                    </TableCell>
+                    <TableCell className="stat-value text-right text-sm">
+                      <span className={cn(
+                        idx === 0 ? "font-semibold text-foreground" : "text-muted-foreground",
+                      )}>
+                        {count}
+                      </span>
+                    </TableCell>
+                  </TableRow>
                 ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </TableBody>
+            </Table>
+          </TableShell>
+        </section>
+      )}
 
+      {Object.keys(rateLimits).length === 0 && (
+        <p className="text-sm text-muted-foreground">No rate limit data available.</p>
+      )}
+
+      {/* Disconnect confirm */}
       <AlertDialog open={!!disconnectTarget} onOpenChange={() => setDisconnectTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

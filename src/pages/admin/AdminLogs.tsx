@@ -1,15 +1,74 @@
 import { useState } from "react";
 import { useAdminData } from "@/hooks/useAdmin";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { TableToolbar, TablePagination, TableShell, TableEmptyRow } from "@/components/ui/table-toolbar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import type { AdminLogEntry, AdminLogsResponse } from "@/types/admin";
+
+/** Render the metadata object as a readable compact string with tooltip for full value */
+function MetaCell({ metadata }: { metadata: Record<string, unknown> | null }) {
+  if (!metadata || Object.keys(metadata).length === 0) {
+    return <span className="text-muted-foreground/40">—</span>;
+  }
+
+  const entries = Object.entries(metadata);
+  const summary = entries
+    .slice(0, 2)
+    .map(([k, v]) => `${k}: ${String(v)}`)
+    .join("  ·  ");
+  const hasMore = entries.length > 2;
+  const full = JSON.stringify(metadata, null, 2);
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-default font-mono text-[11px] text-muted-foreground">
+            {summary}
+            {hasMore && (
+              <span className="ml-1 text-muted-foreground/50">+{entries.length - 2}</span>
+            )}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="left" className="max-w-xs">
+          <pre className="text-[10px] leading-relaxed whitespace-pre-wrap break-all">{full}</pre>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/** Short UUID display with full value on hover */
+function UuidCell({ value }: { value: string | null | undefined }) {
+  if (!value) return <span className="text-muted-foreground/40">—</span>;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-default font-mono text-[11px] text-muted-foreground/70">
+            {value.slice(0, 8)}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <span className="font-mono text-xs">{value}</span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 export default function AdminLogs() {
   const [page, setPage] = useState(1);
@@ -26,14 +85,31 @@ export default function AdminLogs() {
         (l: AdminLogEntry) =>
           l.action?.toLowerCase().includes(search.toLowerCase()) ||
           l.entity_type?.toLowerCase().includes(search.toLowerCase()) ||
-          l.entity_id?.toLowerCase().includes(search.toLowerCase())
+          l.entity_id?.toLowerCase().includes(search.toLowerCase()),
       )
     : logs;
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mt-20" />
+      <div className="space-y-4 p-6 max-w-7xl">
+        <div className="space-y-1">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <Skeleton className="h-8 w-72" />
+        <TableShell>
+          <div className="divide-y">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-2.5">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-3.5 w-20" />
+                <Skeleton className="h-3.5 w-16" />
+                <Skeleton className="h-3.5 flex-1 max-w-xs" />
+                <Skeleton className="h-3.5 w-24" />
+              </div>
+            ))}
+          </div>
+        </TableShell>
       </div>
     );
   }
@@ -41,111 +117,99 @@ export default function AdminLogs() {
   if (error) {
     return (
       <div className="p-6">
-        <Card className="border-destructive">
-          <CardContent className="p-6 text-center text-destructive">{error}</CardContent>
+        <Card className="border-destructive/30">
+          <CardContent className="p-6 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-4 max-w-7xl">
+    <div className="space-y-4 p-6 max-w-7xl">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold">Audit Logs</h1>
-        <p className="text-sm text-muted-foreground">{total} total entries</p>
+        <h1 className="page-title">Audit Logs</h1>
+        <p className="page-description">
+          <span className="stat-value font-semibold text-foreground">{total}</span> total entries
+        </p>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Filter by action or entity..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      {/* Toolbar */}
+      <TableToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Filter by action or entity…"
+      />
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead>Entity</TableHead>
-                <TableHead>Entity ID</TableHead>
-                <TableHead>User ID</TableHead>
-                <TableHead>Metadata</TableHead>
-                <TableHead>Timestamp</TableHead>
+      {/* Table — intentionally dense; this is a log, not a data entry form */}
+      <TableShell>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">Action</TableHead>
+              <TableHead className="w-[140px]">Entity</TableHead>
+              <TableHead className="w-[90px]">Entity ID</TableHead>
+              <TableHead className="w-[90px]">User ID</TableHead>
+              <TableHead>Metadata</TableHead>
+              <TableHead className="w-[130px] text-right">Timestamp</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 && (
+              <TableEmptyRow
+                colSpan={6}
+                message={search ? "No logs match your search." : "No log entries found."}
+              />
+            )}
+            {filtered.map((log) => (
+              <TableRow key={log.id}>
+                {/* PRIMARY: action badge */}
+                <TableCell>
+                  <Badge
+                    variant={log.action?.startsWith("admin.") ? "default" : "outline"}
+                    className="font-mono text-[10px]"
+                  >
+                    {log.action}
+                  </Badge>
+                </TableCell>
+
+                {/* SECONDARY: entity type */}
+                <TableCell className="text-[13px] text-foreground/80">
+                  {log.entity_type || <span className="text-muted-foreground/40">—</span>}
+                </TableCell>
+
+                {/* META: truncated UUIDs with tooltip */}
+                <TableCell>
+                  <UuidCell value={log.entity_id} />
+                </TableCell>
+                <TableCell>
+                  <UuidCell value={log.user_id} />
+                </TableCell>
+
+                {/* META: structured metadata preview */}
+                <TableCell className="max-w-[280px]">
+                  <MetaCell metadata={log.metadata as Record<string, unknown> | null} />
+                </TableCell>
+
+                {/* META: timestamp — right-aligned, tabular */}
+                <TableCell className="tabular-nums text-right text-xs text-muted-foreground">
+                  {format(new Date(log.created_at), "MMM d, HH:mm:ss")}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    No logs found
-                  </TableCell>
-                </TableRow>
-              )}
-              {filtered.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>
-                    <Badge
-                      variant={log.action?.startsWith("admin.") ? "default" : "outline"}
-                      className="text-xs font-mono"
-                    >
-                      {log.action}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{log.entity_type}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono">
-                    {log.entity_id?.slice(0, 8) || "-"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono">
-                    {log.user_id?.slice(0, 8)}
-                  </TableCell>
-                  <TableCell className="max-w-72">
-                    {log.metadata && Object.keys(log.metadata).length > 0 ? (
-                      <code className="line-clamp-2 rounded bg-muted px-2 py-1 text-[10px] text-muted-foreground">
-                        {JSON.stringify(log.metadata)}
-                      </code>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {format(new Date(log.created_at), "MMM d, HH:mm:ss")}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            ))}
+          </TableBody>
+        </Table>
+      </TableShell>
 
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            Page {page} of {totalPages}
-          </p>
-          <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <TablePagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={total}
+          perPage={perPage}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

@@ -111,19 +111,27 @@ const TopBar = memo(function TopBar() {
   }, [currentWorkspace, fetchUnread]);
 
   return (
-    <header className="h-12 flex items-center justify-between border-b bg-card px-3 shrink-0">
-      <SidebarTrigger className="h-8 w-8" />
-      <div className="flex items-center gap-1">
+    <header className="h-12 flex items-center justify-between border-b bg-card/95 backdrop-blur-sm px-3 shrink-0 sticky top-0 z-20">
+      <div className="flex items-center gap-2">
+        <SidebarTrigger className="h-8 w-8 shrink-0" />
+        {currentWorkspace && (
+          <span className="hidden sm:block text-[13px] font-medium text-muted-foreground/70 select-none truncate max-w-[200px]">
+            {currentWorkspace.name}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-0.5">
         <DarkModeToggle />
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8 relative"
           onClick={() => navigate("/alerts")}
+          aria-label="Alerts"
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[9px] flex items-center justify-center">
+            <Badge className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[9px] flex items-center justify-center leading-none">
               {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}

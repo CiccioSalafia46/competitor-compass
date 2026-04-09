@@ -518,27 +518,38 @@ export default function NewsletterInbox() {
         </div>
       )}
 
-      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        {/* Search */}
         <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by subject or sender..."
-            className="h-8 pl-9 text-sm"
+            placeholder="Search by subject or sender…"
+            className="h-8 pl-8 text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="h-8 w-32 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newsletters">Newsletters</SelectItem>
-              <SelectItem value="all">All emails</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
+
+        <div className="flex items-center gap-2">
+          {/* Segmented type control — 3 options, no point in a dropdown */}
+          <div className="flex rounded-lg border bg-muted/40 p-0.5 gap-0.5">
+            {(["newsletters", "all", "archived"] as const).map((value) => (
+              <button
+                key={value}
+                onClick={() => setTypeFilter(value)}
+                className={cn(
+                  "h-7 rounded-md px-3 text-xs font-medium transition-colors",
+                  typeFilter === value
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {value === "newsletters" ? "Newsletters" : value === "all" ? "All" : "Archived"}
+              </button>
+            ))}
+          </div>
+
+          {/* Competitor filter — keep as select since it has many options */}
           <Select value={competitorFilter} onValueChange={setCompetitorFilter}>
             <SelectTrigger className="h-8 w-40 text-xs">
               <SelectValue placeholder="All competitors" />
@@ -557,29 +568,30 @@ export default function NewsletterInbox() {
       </div>
 
       {loading ? (
-        <div className="overflow-hidden rounded-lg border">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3 border-b px-4 py-3 last:border-b-0">
-              <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
-              <Skeleton className="h-4 w-2 shrink-0" />
-              <Skeleton className="h-4 w-28 shrink-0" />
-              <Skeleton className="h-4 flex-1" />
-              <Skeleton className="h-4 w-16 shrink-0" />
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          {Array.from({ length: 7 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-3 border-b px-4 py-2.5 last:border-b-0">
+              <Skeleton className="h-3.5 w-3.5 shrink-0" />
+              <Skeleton className="h-1.5 w-1.5 shrink-0 rounded-full" />
+              <Skeleton className="h-3.5 w-32 shrink-0" />
+              <Skeleton className="h-3.5 flex-1" />
+              <Skeleton className="h-5 w-24 shrink-0" />
+              <Skeleton className="h-3.5 w-12 shrink-0" />
             </div>
           ))}
         </div>
       ) : displayItems.length === 0 ? (
-        <Card className="border">
-          <CardContent className="py-16 text-center">
-            <InboxIcon className="mx-auto mb-3 h-8 w-8 text-muted-foreground/30" />
-            <p className="text-sm font-medium text-foreground">No competitor activity found</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {isConnected ? "Try syncing again or adjusting your filters." : "Connect Gmail to start importing competitor data."}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-card py-16 text-center shadow-sm">
+          <InboxIcon className="mb-3 h-8 w-8 text-muted-foreground/20" />
+          <p className="text-sm font-medium text-foreground">No competitor activity found</p>
+          <p className="mt-1 text-xs text-muted-foreground max-w-xs">
+            {isConnected
+              ? "Try syncing again or adjusting your filters."
+              : "Connect Gmail to start importing competitor data."}
+          </p>
+        </div>
       ) : (
-        <div className="divide-y overflow-hidden rounded-lg border bg-card">
+        <div className="divide-y overflow-hidden rounded-xl border bg-card shadow-sm">
           {displayItems.map((item) => {
             const competitor = item.competitor_id ? competitorMap.get(item.competitor_id) : null;
 
@@ -588,44 +600,58 @@ export default function NewsletterInbox() {
                 key={item.id}
                 onClick={() => handleRowClick(item)}
                 className={cn(
-                  "flex cursor-pointer items-center gap-2 px-3 py-2.5 transition-colors sm:gap-3 sm:px-4",
-                  "hover:bg-muted/40 active:bg-muted/60",
-                  !item.is_read && "bg-accent/20",
+                  "group flex cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors duration-100 sm:gap-3",
+                  "hover:bg-muted/30",
+                  !item.is_read && "bg-accent/15",
                 )}
               >
+                {/* Star — always shown, faded unless active */}
                 <button
                   onClick={(event) => {
                     event.stopPropagation();
-                    if (!item.is_demo) {
-                      void toggleStar(item.id);
-                    }
+                    if (!item.is_demo) void toggleStar(item.id);
                   }}
                   className={cn(
                     "shrink-0 rounded p-0.5 transition-colors",
-                    item.is_starred ? "text-warning" : "text-muted-foreground/20 hover:text-muted-foreground/50",
+                    item.is_starred
+                      ? "text-warning"
+                      : "text-transparent group-hover:text-muted-foreground/40 hover:!text-muted-foreground/70",
                   )}
                   aria-label="Toggle star"
                 >
                   <Star className={cn("h-3.5 w-3.5", item.is_starred && "fill-current")} />
                 </button>
 
-                <div className="w-1.5 shrink-0">{!item.is_read && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}</div>
+                {/* Unread dot */}
+                <div className="w-1.5 shrink-0">
+                  {!item.is_read && (
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  )}
+                </div>
 
-                <div className="w-28 shrink-0 truncate sm:w-36">
-                  <p className={cn("truncate text-[13px]", !item.is_read ? "font-semibold text-foreground" : "font-medium text-foreground")}>
+                {/* Sender — fixed width, primary info */}
+                <div className="w-32 shrink-0 truncate sm:w-40">
+                  <p className={cn(
+                    "truncate text-[13px] leading-snug",
+                    !item.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80",
+                  )}>
                     {item.from_name || item.from_email || "Unknown"}
                   </p>
                 </div>
 
+                {/* Subject + competitor assignment */}
                 <div className="min-w-0 flex-1">
-                  <p className={cn("truncate text-[13px]", !item.is_read ? "font-semibold text-foreground" : "text-foreground")}>
+                  <p className={cn(
+                    "truncate text-[13px] leading-snug",
+                    !item.is_read ? "font-medium text-foreground" : "text-foreground/70",
+                  )}>
                     {item.subject || "No subject"}
                   </p>
                   {!item.is_demo && item.is_newsletter && (
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
                       {canManageCompetitors ? (
                         <div
-                          className="min-w-[170px] max-w-[220px]"
+                          className="min-w-[160px] max-w-[220px]"
                           onClick={(event) => event.stopPropagation()}
                           onPointerDownCapture={(event) => event.stopPropagation()}
                         >
@@ -636,7 +662,12 @@ export default function NewsletterInbox() {
                             }}
                             disabled={assigningInboxId === item.id}
                           >
-                            <SelectTrigger className="h-7 border-dashed px-2 text-[10px] font-medium">
+                            <SelectTrigger className={cn(
+                              "h-6 px-2 text-[10px] font-medium",
+                              item.competitor_id
+                                ? "border-primary/20 bg-primary/5 text-primary"
+                                : "border-dashed text-muted-foreground",
+                            )}>
                               <SelectValue placeholder="Assign competitor" />
                             </SelectTrigger>
                             <SelectContent>
@@ -663,33 +694,30 @@ export default function NewsletterInbox() {
                   )}
                 </div>
 
+                {/* Type badges — hidden on mobile */}
                 <div className="hidden shrink-0 items-center gap-1 md:flex">
                   {item.is_demo && (
-                    <Badge variant="outline" className="h-4 px-1.5 py-0 text-[9px]">
-                      Demo
-                    </Badge>
+                    <Badge variant="outline" className="h-4 px-1.5 py-0 text-[9px]">Demo</Badge>
                   )}
                   {item.is_newsletter && (
-                    <Badge variant="secondary" className="h-4 px-1.5 py-0 text-[9px]">
-                      Newsletter
-                    </Badge>
+                    <Badge variant="secondary" className="h-4 px-1.5 py-0 text-[9px]">Newsletter</Badge>
                   )}
                 </div>
 
-                <span className="w-14 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground sm:w-16">
+                {/* Date */}
+                <span className="w-12 shrink-0 text-right tabular-nums text-[11px] text-muted-foreground sm:w-16">
                   {item.received_at
                     ? new Date(item.received_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
                     : "—"}
                 </span>
 
+                {/* Archive — visible on hover only */}
                 <button
                   onClick={(event) => {
                     event.stopPropagation();
-                    if (!item.is_demo) {
-                      void archive(item.id);
-                    }
+                    if (!item.is_demo) void archive(item.id);
                   }}
-                  className="shrink-0 p-0.5 text-transparent transition-colors hover:text-muted-foreground"
+                  className="shrink-0 rounded p-0.5 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground"
                   title="Archive"
                   aria-label="Archive"
                 >
@@ -702,12 +730,22 @@ export default function NewsletterInbox() {
       )}
 
       {!showDemo && totalPages > 1 && (
-        <div className="flex items-center justify-between pt-1">
-          <p className="text-xs text-muted-foreground">
+        <div className="flex items-center justify-between">
+          <p className="tabular-nums text-xs text-muted-foreground">
             Page {page + 1} of {totalPages}
+            {totalCount > 0 && (
+              <span className="ml-1 text-muted-foreground/50">· {totalCount} total</span>
+            )}
           </p>
           <div className="flex gap-1">
-            <Button variant="outline" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(page - 1)}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              disabled={page === 0}
+              onClick={() => setPage(page - 1)}
+              aria-label="Previous page"
+            >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <Button
@@ -716,6 +754,7 @@ export default function NewsletterInbox() {
               className="h-7 w-7"
               disabled={page >= totalPages - 1}
               onClick={() => setPage(page + 1)}
+              aria-label="Next page"
             >
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>

@@ -21,11 +21,17 @@ import {
   BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut,
   Plus, Shield, Gauge, Inbox, Megaphone, Lightbulb, TrendingUp,
   Bell, CreditCard,
-  FileText, Sparkles,
+  FileText, Sparkles, ChevronsUpDown, Check,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { memo, useMemo, useCallback } from "react";
 
@@ -158,21 +164,37 @@ export const AppSidebar = memo(function AppSidebar() {
       </SidebarHeader>
 
       {!collapsed && currentWorkspace && (
-        <div className="px-3 pb-2">
-          <select
-            value={currentWorkspace.id}
-            onChange={(e) => {
-              const ws = workspaces.find((w) => w.id === e.target.value);
-              if (ws) setCurrentWorkspace(ws);
-            }}
-            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            {workspaces.map((ws) => (
-              <option key={ws.id} value={ws.id}>
-                {ws.name}
-              </option>
-            ))}
-          </select>
+        <div className="px-2 pb-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex w-full items-center gap-2 rounded-lg border bg-background px-2.5 py-2 text-left text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/15 text-[10px] font-bold uppercase text-primary">
+                  {currentWorkspace.name.charAt(0)}
+                </div>
+                <span className="flex-1 truncate text-[13px] font-medium text-foreground">
+                  {currentWorkspace.name}
+                </span>
+                <ChevronsUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {workspaces.map((ws) => (
+                <DropdownMenuItem
+                  key={ws.id}
+                  onSelect={() => setCurrentWorkspace(ws)}
+                  className="gap-2"
+                >
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/15 text-[10px] font-bold uppercase text-primary">
+                    {ws.name.charAt(0)}
+                  </div>
+                  <span className="flex-1 truncate">{ws.name}</span>
+                  {ws.id === currentWorkspace.id && (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
 
@@ -201,8 +223,11 @@ export const AppSidebar = memo(function AppSidebar() {
         <SidebarMenu>
           {!collapsed && roles[0] && (
             <SidebarMenuItem>
-              <div className="px-2 py-1">
-                <Badge variant="outline" className="capitalize text-[10px] font-normal">
+              <div className="flex items-center justify-between px-2 py-1">
+                <Badge
+                  variant="secondary"
+                  className="capitalize text-[10px] font-medium h-5 px-2"
+                >
                   {roles[0]}
                 </Badge>
               </div>
@@ -211,7 +236,7 @@ export const AppSidebar = memo(function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleSignOut}
-              className="gap-2.5 h-8 text-[13px] text-muted-foreground hover:text-foreground"
+              className="gap-2.5 h-8 text-[13px] text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>Sign out</span>}

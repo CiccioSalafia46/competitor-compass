@@ -289,7 +289,7 @@ export default function Dashboard() {
       <OnboardingChecklist />
 
       {/* ── Zone 2: KPI Strip ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <KpiStrip icon={Newspaper} label="Inbox" value={stats.inboxItems} sub="signals" href="/inbox" />
         <KpiStrip icon={Users} label="Competitors" value={stats.competitors} sub="tracked" href="/competitors" />
         <KpiStrip icon={TrendingUp} label="Analyses" value={stats.completedAnalyses} sub="done" href="/analytics" />
@@ -305,14 +305,14 @@ export default function Dashboard() {
       {hasData && (
         <>
           {/* ── Zone 3: Intelligence Command Panel ─────────────────────────── */}
-          <div className="rounded-xl border bg-gradient-to-br from-primary/[0.03] via-background to-background">
-            <div className="flex items-center gap-2 border-b px-4 py-2.5">
-              <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10">
+          <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2.5 border-b bg-muted/30 px-4 py-3">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/15">
                 <Sparkles className="h-3 w-3 text-primary" />
               </div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Intelligence brief</p>
+              <p className="section-label">Intelligence brief</p>
               {activeFilterCount > 0 && (
-                <Badge variant="secondary" className="ml-auto text-[10px]">
+                <Badge variant="secondary" className="ml-auto text-[10px] font-medium">
                   Filtered · {activeFilterCount} active
                 </Badge>
               )}
@@ -529,7 +529,7 @@ export default function Dashboard() {
       <SystemHealthPanel />
 
       {/* ── Quick nav ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
           { icon: Newspaper, label: "Import data", desc: "Paste or upload", path: "/newsletters/new" },
           { icon: Users, label: "Competitors", desc: "Manage monitored rivals", path: "/competitors" },
@@ -539,11 +539,13 @@ export default function Dashboard() {
           <button
             key={a.path}
             onClick={() => navigate(a.path)}
-            className="flex items-center gap-2.5 rounded-lg border p-3 text-left transition-all hover:border-primary/20 hover:bg-accent/40"
+            className="flex items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm transition-all hover:shadow-md hover:-translate-y-px hover:border-primary/25 hover:bg-accent/30"
           >
-            <a.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <a.icon className="h-3.5 w-3.5" />
+            </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium">{a.label}</p>
+              <p className="text-xs font-semibold">{a.label}</p>
               <p className="text-[10px] text-muted-foreground">{a.desc}</p>
             </div>
           </button>
@@ -561,15 +563,17 @@ function SectionHeader({ label, sub, action }: {
   action?: { label: string; onClick: () => void };
 }) {
   return (
-    <div className="flex items-end justify-between gap-3">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
+    <div className="flex items-center justify-between gap-3 pb-1">
+      <div className="flex items-baseline gap-2.5">
+        <p className="text-sm font-semibold tracking-tight text-foreground">{label}</p>
+        {sub && (
+          <p className="text-[11px] text-muted-foreground hidden sm:block">{sub}</p>
+        )}
       </div>
       {action && (
         <button
           onClick={action.onClick}
-          className="flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          className="flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors shrink-0"
         >
           {action.label}
           <ChevronRight className="h-3 w-3" />
@@ -693,15 +697,27 @@ const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, a
     <button
       onClick={() => navigate(href)}
       className={cn(
-        "group flex items-center gap-2.5 rounded-lg border p-3 text-left transition-all hover:shadow-sm",
-        accent ? "border-destructive/30 bg-destructive/5 hover:border-destructive/50" : "hover:border-primary/20 hover:bg-accent/30",
+        "group flex flex-col gap-2 rounded-xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md hover:-translate-y-px",
+        accent
+          ? "border-destructive/30 bg-destructive/5 hover:border-destructive/40"
+          : "hover:border-primary/20 hover:bg-accent/20",
       )}
     >
-      <Icon className={cn("h-4 w-4 shrink-0", accent ? "text-destructive" : "text-muted-foreground")} />
+      <div className={cn(
+        "flex h-7 w-7 items-center justify-center rounded-lg",
+        accent ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground",
+      )}>
+        <Icon className="h-3.5 w-3.5" />
+      </div>
       <div className="min-w-0">
-        <p className={cn("text-base font-semibold leading-none tracking-tight", accent && "text-destructive")}>{value}</p>
-        <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{label}</p>
-        <p className="text-[9px] text-muted-foreground/50">{sub}</p>
+        <p className={cn(
+          "stat-value text-xl font-semibold leading-none tracking-tight",
+          accent && "text-destructive",
+        )}>
+          {value}
+        </p>
+        <p className="mt-1 truncate text-[11px] font-medium text-foreground/80">{label}</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground/60">{sub}</p>
       </div>
     </button>
   );

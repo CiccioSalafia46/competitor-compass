@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import {
@@ -12,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   Select,
   SelectContent,
@@ -38,8 +38,6 @@ import {
 import {
   Activity,
   AlertTriangle,
-  ArrowDownRight,
-  ArrowUpRight,
   CircleAlert,
   Inbox,
   Lightbulb,
@@ -127,68 +125,17 @@ function ChartCard({
   className?: string;
 }) {
   return (
-    <Card className={cn("border shadow-sm", className)}>
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-        <div className="space-y-1">
-          <CardTitle className="text-sm font-medium text-foreground">{title}</CardTitle>
-          {description && <p className="text-xs leading-5 text-muted-foreground">{description}</p>}
+    <Card className={cn("border shadow-sm overflow-hidden", className)}>
+      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 border-b bg-muted/20 px-5 py-3.5">
+        <div className="space-y-0.5">
+          <CardTitle className="text-sm font-semibold text-foreground">{title}</CardTitle>
+          {description && (
+            <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
+          )}
         </div>
-        {action}
+        {action && <div className="shrink-0 text-muted-foreground mt-0.5">{action}</div>}
       </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
-  );
-}
-
-function MetricCard({
-  title,
-  value,
-  subtitle,
-  tone = "default",
-  icon: Icon,
-  trend,
-}: {
-  title: string;
-  value: string;
-  subtitle: string;
-  tone?: "default" | "positive" | "warning";
-  icon: ComponentType<{ className?: string }>;
-  trend?: number;
-}) {
-  return (
-    <Card className="border shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{title}</p>
-            <div className="flex items-end gap-2">
-              <p className="text-2xl font-semibold tracking-tight text-foreground">{value}</p>
-              {typeof trend === "number" && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                    trend >= 0 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive",
-                  )}
-                >
-                  {trend >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                  {formatGrowth(trend)}
-                </span>
-              )}
-            </div>
-            <p className="text-xs leading-5 text-muted-foreground">{subtitle}</p>
-          </div>
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-              tone === "positive" && "bg-primary/10 text-primary",
-              tone === "warning" && "bg-warning/10 text-warning",
-              tone === "default" && "bg-muted text-foreground/70",
-            )}
-          >
-            <Icon className="h-4 w-4" />
-          </div>
-        </div>
-      </CardContent>
+      <CardContent className="p-5">{children}</CardContent>
     </Card>
   );
 }
@@ -308,43 +255,43 @@ export default function Analytics() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <MetricCard
-          title="Newsletters"
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <StatCard
+          label="Newsletters"
           value={String(summary.totalNewslettersInRange)}
           subtitle={`Tracked in ${formatRangeLabel(summary.rangeDays).toLowerCase()}. Last inbox activity: ${formatDateTime(summary.lastInboxActivity)}`}
           icon={Inbox}
           trend={summary.newsletterGrowthRate}
         />
-        <MetricCard
-          title="Meta ads"
+        <StatCard
+          label="Meta ads"
           value={String(summary.totalAdsInRange)}
           subtitle={`Tracked in ${formatRangeLabel(summary.rangeDays).toLowerCase()}. Last ad activity: ${formatDateTime(summary.lastAdActivity)}`}
           icon={Megaphone}
           trend={summary.adGrowthRate}
         />
-        <MetricCard
-          title="Competitors active"
+        <StatCard
+          label="Competitors active"
           value={`${summary.activeCompetitorsInRange}/${summary.totalCompetitors}`}
           subtitle={`Tracked competitors with newsletter or ad activity in ${formatRangeLabel(summary.rangeDays).toLowerCase()}.`}
           icon={Users}
           tone="positive"
         />
-        <MetricCard
-          title="Attribution coverage"
+        <StatCard
+          label="Attribution coverage"
           value={formatPercent(attributionRate)}
           subtitle={`${summary.attributedNewslettersInRange} matched newsletters in-range. Backlog still open: ${summary.unattributedBacklog}.`}
           icon={MailSearch}
           tone={summary.unattributedBacklog > 0 ? "warning" : "positive"}
         />
-        <MetricCard
-          title="Promo pressure"
+        <StatCard
+          label="Promo pressure"
           value={formatPercent(summary.promotionRate)}
           subtitle={`Average detected discount ${summary.averageDiscount.toFixed(1)}%, max observed ${summary.maxDiscount.toFixed(0)}%.`}
           icon={Activity}
         />
-        <MetricCard
-          title="AI insights"
+        <StatCard
+          label="AI insights"
           value={String(summary.totalInsightsInRange)}
           subtitle={`${formatPercent(summary.urgencyRate)} of extracted newsletter campaigns used urgency tactics.`}
           icon={Lightbulb}
@@ -363,24 +310,39 @@ export default function Analytics() {
                 No urgent actions detected. Keep importing signals to maintain visibility.
               </div>
             ) : (
-              actionQueue.map((action) => (
-                <div key={action.title} className="rounded-xl border px-4 py-3">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">{action.title}</p>
-                        <Badge variant="outline" className={cn("text-[10px] font-medium capitalize", getPriorityBadgeClass(action.priority))}>
-                          {action.priority}
-                        </Badge>
+              <div className="space-y-2">
+                {actionQueue.map((action) => (
+                  <div
+                    key={action.title}
+                    className="rounded-lg border bg-card px-4 py-3 transition-shadow hover:shadow-sm"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold leading-snug text-foreground">
+                            {action.title}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] font-medium capitalize",
+                              getPriorityBadgeClass(action.priority),
+                            )}
+                          >
+                            {action.priority}
+                          </Badge>
+                        </div>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {action.detail}
+                        </p>
                       </div>
-                      <p className="mt-2 text-xs leading-5 text-muted-foreground">{action.detail}</p>
+                      <Button asChild size="sm" variant="outline" className="shrink-0 text-xs h-7">
+                        <Link to={action.path}>{action.cta}</Link>
+                      </Button>
                     </div>
-                    <Button asChild size="sm" variant="outline" className="shrink-0">
-                      <Link to={action.path}>{action.cta}</Link>
-                    </Button>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </ChartCard>
@@ -390,19 +352,22 @@ export default function Analytics() {
           description="This tells you whether the analytics layer is trustworthy enough for decisions or still needs cleanup."
           action={<ShieldAlert className="h-4 w-4 text-muted-foreground" />}
         >
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             {healthAudit.map((item) => (
-              <div key={item.label} className="space-y-2 rounded-xl border px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">{item.detail}</p>
+              <div key={item.label} className="space-y-2 rounded-lg border bg-card px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium leading-snug text-foreground">{item.label}</p>
+                    <p className="text-xs leading-relaxed text-muted-foreground">{item.detail}</p>
                   </div>
-                  <Badge variant="outline" className={cn("text-[10px] font-medium uppercase", getHealthBadgeClass(item.status))}>
+                  <Badge
+                    variant="outline"
+                    className={cn("shrink-0 text-[10px] font-semibold uppercase tracking-wide", getHealthBadgeClass(item.status))}
+                  >
                     {item.value}
                   </Badge>
                 </div>
-                <Progress value={item.progress} className="h-2.5" />
+                <Progress value={item.progress} className="h-1.5" />
               </div>
             ))}
           </div>

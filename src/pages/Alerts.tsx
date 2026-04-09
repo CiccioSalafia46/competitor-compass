@@ -444,46 +444,56 @@ export default function Alerts() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-1.5">
+            <div className="divide-y rounded-xl border bg-card shadow-sm overflow-hidden">
               {alerts.map((alert) => {
                 const severityStyle = SEVERITY_STYLES[alert.severity] || SEVERITY_STYLES.info;
                 const SeverityIcon = severityStyle.icon;
 
                 return (
-                  <Card key={alert.id} className={cn("border transition-colors", !alert.is_read && "bg-accent/30 border-accent")}>
-                    <CardContent className="p-3 flex items-start gap-2.5">
-                      <div className={cn("rounded-md p-1.5 mt-0.5 shrink-0", severityStyle.bg)}>
-                        <SeverityIcon className={cn("h-3.5 w-3.5", severityStyle.text)} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h3 className={cn("text-[13px]", !alert.is_read ? "font-semibold" : "font-medium")}>{alert.title}</h3>
-                          <Badge variant="outline" className="text-[9px] capitalize">
-                            {alert.category}
-                          </Badge>
-                        </div>
-                        {alert.description && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{alert.description}</p>
-                        )}
-                        <p className="text-[10px] text-muted-foreground/50 mt-1">{new Date(alert.created_at).toLocaleString()}</p>
-                      </div>
-                      <div className="flex gap-0.5 shrink-0">
+                  <div
+                    key={alert.id}
+                    className={cn(
+                      "flex items-start gap-3 px-4 py-3 transition-colors",
+                      !alert.is_read ? "bg-accent/25" : "hover:bg-muted/30",
+                    )}
+                  >
+                    <div className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", severityStyle.bg)}>
+                      <SeverityIcon className={cn("h-3.5 w-3.5", severityStyle.text)} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className={cn("text-[13px] leading-snug", !alert.is_read ? "font-semibold" : "font-medium text-foreground/80")}>
+                          {alert.title}
+                        </h3>
                         {!alert.is_read && (
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => void markRead(alert.id)}>
-                            <Check className="h-3 w-3" />
-                          </Button>
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground"
-                          onClick={() => void dismiss(alert.id)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {alert.category}
+                        </Badge>
                       </div>
-                    </CardContent>
-                  </Card>
+                      {alert.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{alert.description}</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground/50 mt-1">{new Date(alert.created_at).toLocaleString()}</p>
+                    </div>
+                    <div className="flex gap-0.5 shrink-0 mt-0.5">
+                      {!alert.is_read && (
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => void markRead(alert.id)} title="Mark read">
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        onClick={() => void dismiss(alert.id)}
+                        title="Dismiss"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -516,49 +526,54 @@ export default function Alerts() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y rounded-xl border bg-card shadow-sm overflow-hidden">
               {rules.map((rule) => {
                 const meta = getRuleTypeMeta(rule.rule_type);
                 const mode = ALERT_EVALUATION_MODES.find((entry) => entry.value === rule.evaluation_mode);
 
                 return (
-                  <Card key={rule.id} className="border">
-                    <CardContent className="p-3 flex items-start gap-3">
-                      <Switch checked={rule.is_active} onCheckedChange={(checked) => void updateRule(rule.id, { is_active: checked })} />
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h3 className="text-[13px] font-medium">{rule.name}</h3>
-                          <Badge variant="outline" className="text-[9px]">
-                            {meta?.label || rule.rule_type}
+                  <div key={rule.id} className="flex items-start gap-3 px-4 py-3.5">
+                    <Switch
+                      checked={rule.is_active}
+                      onCheckedChange={(checked) => void updateRule(rule.id, { is_active: checked })}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className={cn("text-sm font-medium leading-snug", !rule.is_active && "text-muted-foreground")}>
+                          {rule.name}
+                        </h3>
+                        <Badge variant="outline" className="text-[10px]">
+                          {meta?.label || rule.rule_type}
+                        </Badge>
+                        {mode && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            {mode.label}
                           </Badge>
-                          {mode && (
-                            <Badge variant="secondary" className="text-[9px]">
-                              {mode.label}
-                            </Badge>
-                          )}
-                          {rule.delivery_channels?.includes("email") && (
-                            <Badge variant="outline" className="text-[9px]">
-                              Email planned
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="grid gap-1 text-[11px] text-muted-foreground sm:grid-cols-2">
-                          <p>{getRuleConfigSummary(rule)}</p>
-                          <p>Last evaluated: {toRelativeDate(rule.last_evaluated_at)}</p>
-                          <p>Last triggered: {toRelativeDate(rule.last_triggered_at)}</p>
-                          <p>{meta?.description}</p>
-                        </div>
+                        )}
+                        {rule.delivery_channels?.includes("email") && (
+                          <Badge variant="outline" className="text-[10px]">
+                            Email planned
+                          </Badge>
+                        )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => void deleteRule(rule.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </CardContent>
-                  </Card>
+                      <div className="grid gap-0.5 text-xs text-muted-foreground sm:grid-cols-2">
+                        <p>{getRuleConfigSummary(rule)}</p>
+                        <p>Evaluated: {toRelativeDate(rule.last_evaluated_at)}</p>
+                        <p>Triggered: {toRelativeDate(rule.last_triggered_at)}</p>
+                        {meta?.description && <p className="text-muted-foreground/70">{meta.description}</p>}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+                      onClick={() => void deleteRule(rule.id)}
+                      title="Delete rule"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 );
               })}
             </div>
