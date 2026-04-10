@@ -161,10 +161,20 @@ function EmptyBlock({
 
 // ── Section divider ────────────────────────────────────────────────────────────
 
-function SectionDivider({ label }: { label: string }) {
+function SectionDivider({
+  label,
+  icon: Icon,
+}: {
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
   return (
     <div className="flex items-center gap-3 pt-2">
-      <span className="h-4 w-[3px] shrink-0 rounded-full bg-primary/50" />
+      {Icon ? (
+        <Icon className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+      ) : (
+        <span className="h-4 w-[3px] shrink-0 rounded-full bg-primary/50" />
+      )}
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70 shrink-0">
         {label}
       </p>
@@ -312,14 +322,25 @@ export default function Analytics() {
               Refresh
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground/70 sm:text-right">
-            Synced{" "}
-            <span className="font-medium text-foreground/80">
-              {formatDateTime(summary.lastGmailSyncAt)}
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[11px] text-muted-foreground/70">
+            <span>
+              Newsletters synced{" "}
+              <span className="font-medium text-foreground/80">
+                {formatDateTime(summary.lastInboxActivity)}
+              </span>
             </span>
-            {" · "}
-            {formatRangeLabel(summary.rangeDays)} window
-          </p>
+            <span className="text-border">·</span>
+            <span>
+              Ads synced{" "}
+              <span className="font-medium text-foreground/80">
+                {formatDateTime(summary.lastAdActivity)}
+              </span>
+            </span>
+            <span className="text-border">·</span>
+            <span className="font-medium text-foreground/60">
+              {formatRangeLabel(summary.rangeDays)} window
+            </span>
+          </div>
         </div>
       </div>
 
@@ -381,7 +402,7 @@ export default function Analytics() {
       </div>
 
       {/* ── Operational priorities ── */}
-      <SectionDivider label="Operational priorities" />
+      <SectionDivider label="Operational priorities" icon={Activity} />
 
       <div className="grid gap-4 xl:grid-cols-[1.25fr,1fr]">
         {/* Action queue */}
@@ -488,7 +509,7 @@ export default function Analytics() {
       </div>
 
       {/* ── Market pressure ── */}
-      <SectionDivider label="Market pressure" />
+      <SectionDivider label="Market pressure" icon={TrendingUp} />
 
       <div className="grid gap-4 xl:grid-cols-[1.15fr,1fr]">
         {/* Share of voice */}
@@ -571,6 +592,40 @@ export default function Analytics() {
           </div>
         </ChartCard>
       </div>
+
+      {/* Promo frequency per competitor */}
+      {data.promotionFrequency.some((d) => d.total > 0) && (
+        <ChartCard
+          title="Promo frequency by competitor"
+          description="How often each competitor uses promotions relative to total newsletter volume. Reveals aggressive discounting strategies at a glance."
+        >
+          <div className="h-[272px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={data.promotionFrequency.filter((d) => d.total > 0).slice(0, 8)}
+                layout="vertical"
+                barSize={15}
+                barGap={4}
+              >
+                <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" horizontal={false} />
+                <XAxis type="number" tick={chartAxisStyle} axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="competitor"
+                  tick={chartAxisStyle}
+                  width={128}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 12 }} iconType="circle" iconSize={8} />
+                <Bar dataKey="total" name="Total signals" fill="hsl(var(--chart-4))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="promos" name="Promos" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-[1.8fr,1fr]">
         {/* Weekly activity */}
@@ -807,7 +862,74 @@ export default function Analytics() {
       </div>
 
       {/* ── Coverage & quality ── */}
-      <SectionDivider label="Coverage & quality" />
+      <SectionDivider label="Coverage & quality" icon={ShieldAlert} />
+
+      {/* Intelligence quality — metrics not surfaced in the KPI row */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: "Newsletter extraction",
+            value: `${summary.extractedNewslettersInRange} / ${summary.totalNewslettersInRange}`,
+            rate: summary.extractionCoverageRate,
+            detail: `${summary.extractionCoverageRate.toFixed(1)}% analyzed by AI`,
+          },
+          {
+            label: "Ad analysis coverage",
+            value: `${summary.analyzedAdsInRange} / ${summary.totalAdsInRange}`,
+            rate: summary.adAnalysisCoverageRate,
+            detail: `${summary.adAnalysisCoverageRate.toFixed(1)}% with AI analysis`,
+          },
+          {
+            label: "Domains configured",
+            value: `${summary.competitorsWithDomains} / ${summary.totalCompetitors}`,
+            rate: summary.totalCompetitors > 0
+              ? (summary.competitorsWithDomains / summary.totalCompetitors) * 100
+              : 100,
+            detail: summary.competitorsMissingDomains > 0
+              ? `${summary.competitorsMissingDomains} missing attribution`
+              : "All competitors configured",
+          },
+          {
+            label: "Active in range",
+            value: `${summary.activeCompetitorsInRange} / ${summary.totalCompetitors}`,
+            rate: summary.totalCompetitors > 0
+              ? (summary.activeCompetitorsInRange / summary.totalCompetitors) * 100
+              : 100,
+            detail: summary.inactiveCompetitorsInRange > 0
+              ? `${summary.inactiveCompetitorsInRange} with no recent signals`
+              : "All competitors sending signals",
+          },
+        ].map((m) => {
+          const isGood = m.rate >= 80;
+          const isWarn = m.rate >= 40 && m.rate < 80;
+          return (
+            <div key={m.label} className="rounded-xl border bg-card p-4 shadow-sm">
+              <div className="mb-2.5 flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">
+                  {m.label}
+                </p>
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-full",
+                    isGood ? "bg-emerald-500" : isWarn ? "bg-amber-400" : "bg-destructive",
+                  )}
+                />
+              </div>
+              <p className="text-xl font-bold tabular-nums text-foreground">{m.value}</p>
+              <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{m.detail}</p>
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted/50">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    isGood ? "bg-emerald-500/60" : isWarn ? "bg-amber-400/60" : "bg-destructive/60",
+                  )}
+                  style={{ width: `${Math.min(100, m.rate)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr,1fr]">
         {/* Top sender domains */}
@@ -907,7 +1029,7 @@ export default function Analytics() {
       </div>
 
       {/* ── Signal intelligence ── */}
-      <SectionDivider label="Signal intelligence" />
+      <SectionDivider label="Signal intelligence" icon={Radar} />
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr,1fr]">
         {/* Discount posture */}
@@ -993,7 +1115,7 @@ export default function Analytics() {
         </ChartCard>
       </div>
 
-      {/* Bottom three */}
+      {/* Insight mix · product categories · urgency */}
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard
           title="Insight category mix"
@@ -1001,24 +1123,28 @@ export default function Analytics() {
         >
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data.insightCategoryDistribution}
-                  dataKey="count"
-                  nameKey="category"
-                  cx="50%"
-                  cy="44%"
-                  innerRadius={38}
-                  outerRadius={68}
-                  paddingAngle={2}
-                >
-                  {data.insightCategoryDistribution.map((item, index) => (
-                    <Cell key={item.category} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
+              <BarChart
+                data={data.insightCategoryDistribution.slice(0, 7)}
+                layout="vertical"
+                barSize={14}
+              >
+                <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" horizontal={false} />
+                <XAxis type="number" tick={chartAxisStyle} axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="category"
+                  tick={{ ...chartAxisStyle, fontSize: 10 }}
+                  width={96}
+                  axisLine={false}
+                  tickLine={false}
+                />
                 <Tooltip contentStyle={chartTooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 10, paddingTop: 6 }} iconType="circle" iconSize={7} />
-              </PieChart>
+                <Bar dataKey="count" radius={[0, 5, 5, 0]}>
+                  {data.insightCategoryDistribution.slice(0, 7).map((_, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </ChartCard>
@@ -1088,6 +1214,57 @@ export default function Analytics() {
                 />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Bar dataKey="count" fill="hsl(var(--chart-2))" radius={[0, 5, 5, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+      </div>
+
+      {/* Campaign types & CTA distribution */}
+      <div className="grid gap-4 xl:grid-cols-2">
+        <ChartCard
+          title="Campaign types"
+          description="How competitors categorize their newsletter campaigns — seasonal pushes, product launches, retention flows, and more."
+        >
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.campaignTypes.slice(0, 8)} layout="vertical" barSize={15}>
+                <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" horizontal={false} />
+                <XAxis type="number" tick={chartAxisStyle} axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="type"
+                  tick={chartAxisStyle}
+                  width={132}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar dataKey="count" fill="hsl(var(--chart-3))" radius={[0, 5, 5, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        <ChartCard
+          title="Call-to-action distribution"
+          description="CTA types extracted from competitor newsletters — reveals their primary conversion strategy and where they push customers hardest."
+        >
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.ctaDistribution.slice(0, 8)} layout="vertical" barSize={15}>
+                <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" horizontal={false} />
+                <XAxis type="number" tick={chartAxisStyle} axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="cta"
+                  tick={chartAxisStyle}
+                  width={132}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[0, 5, 5, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
