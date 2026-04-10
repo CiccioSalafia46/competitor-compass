@@ -1,3 +1,7 @@
+/**
+ * Plan feature limits. A value of -1 means unlimited — enforced in
+ * useUsage.tsx `limitFor()`. Do not use 0 for unlimited; use -1.
+ */
 export const PLAN_LIMITS = {
   free: {
     label: "Free",

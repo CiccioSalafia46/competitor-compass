@@ -314,23 +314,35 @@ export function useAlerts(options: UseAlertsOptions = {}) {
   }, [fetchAlerts]);
 
   const markRead = async (id: string) => {
-    await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+    const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+    if (error) {
+      toast.error(getErrorMessage(error, "Failed to mark alert as read"));
+      return;
+    }
     await fetchAlerts();
   };
 
   const markAllRead = async () => {
     if (!currentWorkspace) return;
-    await supabase
+    const { error } = await supabase
       .from("alerts")
       .update({ is_read: true })
       .eq("workspace_id", currentWorkspace.id)
       .eq("is_read", false)
       .eq("is_dismissed", false);
+    if (error) {
+      toast.error(getErrorMessage(error, "Failed to mark all alerts as read"));
+      return;
+    }
     await fetchAlerts();
   };
 
   const dismiss = async (id: string) => {
-    await supabase.from("alerts").update({ is_dismissed: true }).eq("id", id);
+    const { error } = await supabase.from("alerts").update({ is_dismissed: true }).eq("id", id);
+    if (error) {
+      toast.error(getErrorMessage(error, "Failed to dismiss alert"));
+      return;
+    }
     await fetchAlerts();
   };
 

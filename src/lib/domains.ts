@@ -2,21 +2,32 @@ function stripWrapping(value: string) {
   return value.trim().replace(/^['"]|['"]$/g, "");
 }
 
-export function normalizeDomain(value: string | null | undefined) {
+export function normalizeDomain(value: string | null | undefined): string | null {
   if (!value) return null;
 
-  let normalized = stripWrapping(value).toLowerCase();
-  if (!normalized) return null;
+  const cleaned = stripWrapping(value).toLowerCase().replace(/[<>]/g, "");
+  if (!cleaned) return null;
 
-  normalized = normalized.replace(/[<>]/g, "");
-  normalized = normalized.replace(/^[a-z]+:\/\//, "");
+  // Handle email addresses: extract only the domain portion after @
+  const atIdx = cleaned.indexOf("@");
+  const candidate = atIdx !== -1 ? (cleaned.slice(atIdx + 1) || "") : cleaned;
+  if (!candidate) return null;
 
-  if (normalized.includes("@")) {
-    const emailParts = normalized.split("@");
-    normalized = emailParts[emailParts.length - 1] ?? "";
+  // Use the URL API for robust parsing (handles protocols, ports, paths, queries, hashes)
+  const withProtocol = /^[a-z][a-z\d+\-.]*:\/\//.test(candidate)
+    ? candidate
+    : `https://${candidate}`;
+  try {
+    const { hostname } = new URL(withProtocol);
+    if (hostname) {
+      return hostname.replace(/^www\./, "").replace(/\.$/, "") || null;
+    }
+  } catch {
+    // URL parsing failed (invalid chars, malformed input) — fall through to manual parse
   }
 
-  normalized = normalized.split("/")[0] ?? normalized;
+  // Manual fallback for edge cases the URL constructor won't accept
+  let normalized = candidate.split("/")[0] ?? candidate;
   normalized = normalized.split("?")[0] ?? normalized;
   normalized = normalized.split("#")[0] ?? normalized;
   normalized = normalized.split(":")[0] ?? normalized;

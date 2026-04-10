@@ -68,7 +68,7 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
   useEffect(() => { void fetchAds(); }, [fetchAds]);
 
   const fetchFromMeta = async (opts: { competitorId?: string; pageId?: string; searchTerms?: string }) => {
-    if (!currentWorkspace) return;
+    if (!currentWorkspace) return null;
     setFetching(true);
     try {
       const data = await invokeEdgeFunction("fetch-meta-ads", {
@@ -81,6 +81,9 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
       });
       await fetchAds();
       return data;
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to fetch Meta ads"));
+      return null;
     } finally {
       setFetching(false);
     }
@@ -114,7 +117,11 @@ export function useMetaAdAnalysis(metaAdId: string | null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!metaAdId) { setAnalysis(null); setLoading(false); return; }
+    if (!metaAdId) {
+      setAnalysis(null);
+      setLoading(false);
+      return;
+    }
     supabase
       .from("meta_ad_analyses")
       .select("*")
@@ -122,8 +129,13 @@ export function useMetaAdAnalysis(metaAdId: string | null) {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => {
-        setAnalysis(data as MetaAdAnalysis | null);
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Meta ad analysis fetch error:", error);
+          setAnalysis(null);
+        } else {
+          setAnalysis(data as MetaAdAnalysis | null);
+        }
         setLoading(false);
       });
   }, [metaAdId]);

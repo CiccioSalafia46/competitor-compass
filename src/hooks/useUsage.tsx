@@ -100,24 +100,25 @@ export function useUsage() {
 
   const limits = PLAN_LIMITS[currentPlan];
 
-  const isAtLimit = (metric: keyof UsageSummary) => {
-    const limit = {
-      competitors: limits.competitors,
-      newsletters_this_month: limits.newsletters_per_month,
-      analyses_this_month: limits.analyses_per_month,
-      seats_used: limits.seats,
-    }[metric];
+  // -1 signals unlimited (used in plan-limits.ts). Centralize the mapping here
+  // so isAtLimit and getUsagePercent stay in sync without duplicating it.
+  const limitFor = (metric: keyof UsageSummary): number => {
+    switch (metric) {
+      case "competitors": return limits.competitors;
+      case "newsletters_this_month": return limits.newsletters_per_month;
+      case "analyses_this_month": return limits.analyses_per_month;
+      case "seats_used": return limits.seats;
+    }
+  };
+
+  const isAtLimit = (metric: keyof UsageSummary): boolean => {
+    const limit = limitFor(metric);
     if (limit === -1) return false; // unlimited
     return usage[metric] >= limit;
   };
 
-  const getUsagePercent = (metric: keyof UsageSummary) => {
-    const limit = {
-      competitors: limits.competitors,
-      newsletters_this_month: limits.newsletters_per_month,
-      analyses_this_month: limits.analyses_per_month,
-      seats_used: limits.seats,
-    }[metric];
+  const getUsagePercent = (metric: keyof UsageSummary): number => {
+    const limit = limitFor(metric);
     if (limit === -1) return 0;
     return Math.min(100, Math.round((usage[metric] / limit) * 100));
   };

@@ -61,6 +61,7 @@ export function useInsights(categoryFilter?: string, options: UseInsightsOptions
     const { data, error } = await query;
     if (error) {
       if (isTransientNavigationFetchError(error)) {
+        setLoading(false);
         return;
       }
       console.error("Insights fetch error:", error);
