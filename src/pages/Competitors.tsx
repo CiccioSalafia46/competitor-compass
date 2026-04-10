@@ -28,10 +28,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Activity, AlertTriangle, Brain, ChevronRight,
-  ExternalLink, Layers3, Lightbulb, Megaphone,
+  Activity, AlertTriangle, Brain, ChevronRight, CheckCircle2,
+  Clock, ExternalLink, Layers3, Lightbulb, Megaphone,
   Newspaper, Pencil, Plus, RefreshCcw, Target,
-  Trash2, TrendingDown, Upload, Users, X, Zap,
+  Trash2, TrendingDown, Upload, Users, X, XCircle, Zap,
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, CartesianGrid,
@@ -60,6 +60,11 @@ const priorityTone = (value: InsightPriorityLevel) =>
   value === "high" ? "border-destructive/20 bg-destructive/10 text-destructive" : value === "medium" ? "border-warning/20 bg-warning/10 text-warning" : "border-primary/20 bg-primary/10 text-primary";
 const impactTone = (value: InsightImpactArea) =>
   value === "conversion" ? "border-primary/20 bg-primary/10 text-primary" : value === "traffic" ? "border-chart-2/20 bg-chart-2/10 text-chart-2" : "border-muted bg-muted/60 text-foreground";
+const profileBadgeClass = (profile: string): string => {
+  if (profile === "aggressive") return "border-destructive/25 bg-destructive/10 text-destructive";
+  if (profile === "moderate") return "border-amber-400/30 bg-amber-50/60 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400";
+  return "border-emerald-500/25 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400";
+};
 
 // ─── Logo helpers ─────────────────────────────────────────────────────────────
 
@@ -136,11 +141,33 @@ function CompetitorLogo({ name, website, size = "md" }: CompetitorLogoProps) {
   );
 }
 
-function StrategicList({ title, items, empty }: { title: string; items: string[]; empty: string }) {
+function StrategicList({
+  title,
+  items,
+  empty,
+  tone,
+}: {
+  title: string;
+  items: string[];
+  empty: string;
+  tone?: "positive" | "warning";
+}) {
   return (
-    <Card className="border shadow-sm">
+    <Card className="border shadow-sm overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm">{title}</CardTitle>
+        <div className="flex items-center gap-2">
+          {tone === "positive" && (
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-500/12">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+            </div>
+          )}
+          {tone === "warning" && (
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-400/15">
+              <XCircle className="h-3.5 w-3.5 text-amber-500" />
+            </div>
+          )}
+          <CardTitle className="text-sm">{title}</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
@@ -149,7 +176,13 @@ function StrategicList({ title, items, empty }: { title: string; items: string[]
           <ul className="space-y-2.5">
             {items.map((item) => (
               <li key={`${title}-${item}`} className="flex gap-2.5">
-                <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
+                {tone === "positive" ? (
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500/70" />
+                ) : tone === "warning" ? (
+                  <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/70" />
+                ) : (
+                  <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
+                )}
                 <p className="text-sm leading-6 text-muted-foreground">{item}</p>
               </li>
             ))}
@@ -430,60 +463,128 @@ export default function Competitors() {
       ) : (
         <div className="grid gap-6 xl:grid-cols-[320px,minmax(0,1fr)]">
           <div className="space-y-4">
-            <Card className="border shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Tracked competitor set</CardTitle>
-                <CardDescription>{sortedCompetitors.length} companies in scope. Last refresh {generatedAt ? dateTime(generatedAt) : "not available"}.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                <div className="rounded-xl border bg-muted/20 p-3"><p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Tracked</p><p className="mt-1 text-xl font-semibold text-foreground">{sortedCompetitors.length}</p></div>
-                <div className="rounded-xl border bg-muted/20 p-3"><p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Signals</p><p className="mt-1 text-xl font-semibold text-foreground">{snapshots.reduce((sum, item) => sum + item.activity.totalSignals, 0)}</p></div>
-                <div className="rounded-xl border bg-muted/20 p-3"><p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Active ads</p><p className="mt-1 text-xl font-semibold text-foreground">{snapshots.reduce((sum, item) => sum + item.activity.activeAds, 0)}</p></div>
-              </CardContent>
-            </Card>
+            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+              <div className="flex items-center justify-between border-b bg-muted/20 px-4 py-3">
+                <div>
+                  <p className="text-[13px] font-semibold text-foreground">Tracked set</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {generatedAt ? `Refreshed ${dateTime(generatedAt)}` : "Intelligence not loaded yet"}
+                  </p>
+                </div>
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                  {sortedCompetitors.length} tracked
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 p-3">
+                <div className="rounded-lg border bg-card p-3 shadow-sm">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Total signals</p>
+                  <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.totalSignals, 0)}</p>
+                </div>
+                <div className="rounded-lg border bg-card p-3 shadow-sm">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Active ads</p>
+                  <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.activeAds, 0)}</p>
+                </div>
+              </div>
+            </div>
 
-            <div className="space-y-3">
-              {sortedCompetitors.map((competitor) => {
+            <div className="space-y-2.5">
+              {sortedCompetitors.map((competitor, index) => {
                 const snapshot = snapshotMap.get(competitor.id);
                 const selected = competitor.id === selectedCompetitor?.id;
                 return (
-                  <div key={competitor.id} className={cn("rounded-2xl border bg-card shadow-sm transition-all hover:border-primary/30", selected && "border-primary bg-primary/5 shadow-md")}>
-                    <div className="flex items-start justify-between gap-2 p-4">
-                      <button type="button" onClick={() => setSelectedCompetitorId(competitor.id)} className="min-w-0 flex-1 text-left">
-                        <div className="flex items-start gap-3">
+                  <div
+                    key={competitor.id}
+                    className={cn(
+                      "overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-150",
+                      "border-l-[3px]",
+                      selected
+                        ? "border-primary/40 border-l-primary bg-primary/[0.03] shadow-md"
+                        : index === 0
+                        ? "border-l-destructive/50 hover:shadow-md"
+                        : index === 1
+                        ? "border-l-amber-400/60 hover:shadow-md"
+                        : "border-l-border hover:border-primary/20 hover:shadow-md",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCompetitorId(competitor.id)}
+                      className="block w-full px-4 pb-0 pt-3.5 text-left"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
                           <CompetitorLogo name={competitor.name} website={competitor.website} size="sm" />
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="truncate text-sm font-semibold text-foreground">{competitor.name}</p>
-                              {snapshot ? <Badge variant="outline" className="text-[10px] font-medium">{snapshot.activity.totalSignals} signals</Badge> : null}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <p className="truncate text-[13px] font-semibold text-foreground">{competitor.name}</p>
+                              {snapshot && snapshot.activity.totalSignals > 0 && (
+                                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                  {snapshot.activity.totalSignals}
+                                </span>
+                              )}
                             </div>
-                            {competitor.website ? <p className="mt-1 text-xs text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p> : null}
-                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                              <span>{snapshot?.activity.newsletters ?? 0} newsletters</span>
-                              <span>{snapshot?.activity.ads ?? 0} ads</span>
-                              <span>{snapshot?.activity.insights ?? 0} insights</span>
-                            </div>
+                            {competitor.website && (
+                              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                                {competitor.website.replace(/^https?:\/\//, "")}
+                              </p>
+                            )}
                           </div>
                         </div>
-                      </button>
+                        <button
+                          onClick={(event) => { event.stopPropagation(); setDeleteTarget(competitor); }}
+                          className="shrink-0 rounded-md p-1 text-muted-foreground/40 transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
+                          disabled={!canManageCompetitors}
+                          aria-label={`Delete ${competitor.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="mb-3 mt-2.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Newspaper className="h-3 w-3" />
+                          {snapshot?.activity.newsletters ?? 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Megaphone className="h-3 w-3" />
+                          {snapshot?.activity.ads ?? 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Lightbulb className="h-3 w-3" />
+                          {snapshot?.activity.insights ?? 0}
+                        </span>
+                        {snapshot?.activity.lastActivityAt && (
+                          <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/60">
+                            <Clock className="h-2.5 w-2.5" />
+                            {dateTime(snapshot.activity.lastActivityAt)}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                    {snapshot && snapshot.activity.totalSignals > 0 ? (
                       <button
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setDeleteTarget(competitor);
-                        }}
-                        className="rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
-                        disabled={!canManageCompetitors}
-                        aria-label={`Delete ${competitor.name}`}
+                        type="button"
+                        onClick={() => setSelectedCompetitorId(competitor.id)}
+                        className="block w-full border-t px-4 pb-3 pt-2.5 text-left"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <div className="mb-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>Share of activity</span>
+                          <span className="font-semibold text-foreground/70">{percent(snapshot.activity.shareOfVoice)}</span>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-muted/50">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              index === 0 ? "bg-destructive/50" : index === 1 ? "bg-amber-400/60" : "bg-primary/50",
+                            )}
+                            style={{ width: `${Math.min(100, snapshot.activity.shareOfVoice * 100)}%` }}
+                          />
+                        </div>
                       </button>
-                    </div>
-                    {snapshot ? (
-                      <button type="button" onClick={() => setSelectedCompetitorId(competitor.id)} className="block w-full space-y-2 border-t px-4 pb-4 pt-3 text-left">
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground"><span>Share of visible activity</span><span>{percent(snapshot.activity.shareOfVoice)}</span></div>
-                        <Progress value={snapshot.activity.shareOfVoice * 100} className="h-2" />
-                      </button>
-                    ) : <button type="button" onClick={() => setSelectedCompetitorId(competitor.id)} className="block w-full border-t px-4 pb-4 pt-3 text-left text-xs text-muted-foreground">Intelligence profile will appear once signals are available.</button>}
+                    ) : (
+                      <div className="border-t px-4 py-2.5 text-[11px] text-muted-foreground/60">
+                        Add sender domains to start tracking signals.
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -606,7 +707,8 @@ function CompetitorDetail({
   return (
     <div className="space-y-4">
       {/* ── Header ── */}
-      <Card className="border shadow-sm">
+      <Card className="overflow-hidden border shadow-sm">
+        <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
         <CardHeader>
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="space-y-3 min-w-0">
@@ -616,9 +718,14 @@ function CompetitorDetail({
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle className="text-xl">{competitor.name}</CardTitle>
                     {snapshot && (
-                      <Badge variant="outline" className="capitalize">{snapshot.promoBehavior.profile} promo</Badge>
+                      <Badge
+                        variant="outline"
+                        className={cn("capitalize font-medium", profileBadgeClass(snapshot.promoBehavior.profile))}
+                      >
+                        {snapshot.promoBehavior.profile} promo
+                      </Badge>
                     )}
-                    {snapshot && (
+                    {snapshot && snapshot.activity.totalSignals > 0 && (
                       <Badge variant="secondary">{snapshot.activity.totalSignals} signals</Badge>
                     )}
                   </div>
@@ -688,16 +795,16 @@ function CompetitorDetail({
         </CardHeader>
 
         {/* KPI strip */}
-        <CardContent className="grid gap-3 sm:grid-cols-4">
+        <CardContent className="grid gap-3 border-t pt-4 sm:grid-cols-4">
           {[
             { label: "Newsletters", value: snapshot?.activity.newsletters ?? 0, sub: "email campaigns" },
             { label: "Meta Ads", value: snapshot?.activity.ads ?? 0, sub: `${snapshot?.activity.activeAds ?? 0} live` },
             { label: "Share of voice", value: percent(snapshot?.activity.shareOfVoice ?? 0), sub: "vs. tracked set" },
             { label: "AI signals", value: snapshot?.activity.insights ?? 0, sub: "strategic briefs" },
           ].map((kpi) => (
-            <div key={kpi.label} className="rounded-xl border bg-muted/10 p-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{kpi.label}</p>
-              <p className="mt-1.5 text-2xl font-semibold">{kpi.value}</p>
+            <div key={kpi.label} className="rounded-xl border bg-card p-4 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{kpi.label}</p>
+              <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{kpi.value}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{kpi.sub}</p>
             </div>
           ))}
@@ -727,11 +834,23 @@ function CompetitorDetail({
         </Card>
       ) : (
         <Tabs defaultValue="profile">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="strategy">Strategy</TabsTrigger>
-            <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+          <TabsList className="h-9 w-full justify-start gap-0.5 bg-muted/40">
+            <TabsTrigger value="profile" className="gap-1.5 text-xs">
+              <Activity className="h-3.5 w-3.5" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="gap-1.5 text-xs">
+              <Clock className="h-3.5 w-3.5" />
+              Timeline
+            </TabsTrigger>
+            <TabsTrigger value="strategy" className="gap-1.5 text-xs">
+              <Target className="h-3.5 w-3.5" />
+              Strategy
+            </TabsTrigger>
+            <TabsTrigger value="opportunities" className="gap-1.5 text-xs">
+              <Lightbulb className="h-3.5 w-3.5" />
+              Opportunities
+            </TabsTrigger>
           </TabsList>
 
           {/* ── Tab: Profile ── */}
@@ -774,17 +893,24 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-4">
-            {[
-              { label: "Promo rate", value: percent(promoBehavior.promoRate) },
-              { label: "Avg discount", value: `${Math.round(promoBehavior.averageDiscount)}%` },
-              { label: "Max discount", value: `${Math.round(promoBehavior.maxDiscount)}%` },
-              { label: "Profile", value: promoBehavior.profile, capitalize: true },
-            ].map((item) => (
-              <div key={item.label} className="rounded-xl border bg-muted/10 p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
-                <p className={cn("mt-1.5 text-xl font-semibold", item.capitalize && "capitalize")}>{item.value}</p>
-              </div>
-            ))}
+            <div className="rounded-xl border bg-card p-4 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Promo rate</p>
+              <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{percent(promoBehavior.promoRate)}</p>
+            </div>
+            <div className="rounded-xl border bg-card p-4 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Avg discount</p>
+              <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.averageDiscount)}%</p>
+            </div>
+            <div className="rounded-xl border bg-card p-4 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Max discount</p>
+              <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.maxDiscount)}%</p>
+            </div>
+            <div className={cn("rounded-xl border p-4", profileBadgeClass(promoBehavior.profile).includes("destructive") ? "border-destructive/20 bg-destructive/5" : promoBehavior.profile === "moderate" ? "border-amber-400/25 bg-amber-50/50 dark:bg-amber-950/15" : "border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/15")}>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Profile</p>
+              <p className={cn("mt-2 text-xl font-bold capitalize", promoBehavior.profile === "aggressive" ? "text-destructive" : promoBehavior.profile === "moderate" ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
+                {promoBehavior.profile}
+              </p>
+            </div>
           </div>
           <div className="space-y-3">
             {[
@@ -795,9 +921,17 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
               <div key={item.label} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{item.label}</span>
-                  <span>{percent(item.value)}</span>
+                  <span className="font-semibold text-foreground/70">{percent(item.value)}</span>
                 </div>
-                <Progress value={item.value * 100} className="h-2" />
+                <div className="h-2 overflow-hidden rounded-full bg-muted/50">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      item.value > 0.6 ? "bg-destructive/55" : item.value > 0.3 ? "bg-amber-400/65" : "bg-primary/55",
+                    )}
+                    style={{ width: `${item.value * 100}%` }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -842,24 +976,31 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
             {campaignClusters.length === 0 ? (
               <p className="text-sm text-muted-foreground">No campaign types detected yet.</p>
             ) : (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={campaignClusters} margin={{ top: 4, right: 4, bottom: 28, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={campaignClusters} margin={{ top: 4, right: 4, bottom: 32, left: 0 }}>
+                  <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis
                     dataKey="type"
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                     tickFormatter={(v: string) => v.replace(/_/g, " ").slice(0, 12)}
                     angle={-30}
                     textAnchor="end"
                     interval={0}
+                    axisLine={false}
+                    tickLine={false}
                   />
-                  <YAxis tick={{ fontSize: 10 }} width={28} />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    width={28}
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <RechartsTooltip
                     formatter={(value: number, name: string) => [value, name]}
                     labelFormatter={(label: string) => label.replace(/_/g, " ")}
-                    contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                    contentStyle={{ fontSize: 12, borderRadius: 8, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
                   />
-                  <Bar dataKey="count" name="signals" radius={[4, 4, 0, 0]} className="fill-primary" />
+                  <Bar dataKey="count" name="signals" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -923,7 +1064,7 @@ function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
           <CardDescription>Monthly signal volume across emails, ads and insights (last 6 months).</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={activityByMonth} margin={{ top: 4, right: 4, bottom: 4, left: 0 }}>
               <defs>
                 <linearGradient id="colorNewsletters" x1="0" y1="0" x2="0" y2="1">
@@ -935,10 +1076,10 @@ function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
                   <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} width={28} allowDecimals={false} />
-              <RechartsTooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+              <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={28} allowDecimals={false} axisLine={false} tickLine={false} />
+              <RechartsTooltip contentStyle={{ fontSize: 12, borderRadius: 8, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }} />
               <Area
                 type="monotone"
                 dataKey="newsletters"
@@ -1059,8 +1200,8 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
 
       {/* Strengths / Weaknesses */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <StrategicList title="Strengths" items={strengths} empty="No clear strengths detected yet." />
-        <StrategicList title="Weaknesses" items={weaknesses} empty="No obvious weaknesses have surfaced yet." />
+        <StrategicList title="Strengths" items={strengths} empty="No clear strengths detected yet." tone="positive" />
+        <StrategicList title="Weaknesses" items={weaknesses} empty="No obvious weaknesses have surfaced yet." tone="warning" />
       </div>
 
       {/* Recurring patterns */}
@@ -1097,9 +1238,19 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
           </CardHeader>
           <CardContent className="space-y-3">
             {snapshot.topSignals.map((signal) => (
-              <div key={`${signal.title}-${signal.takeaway}`} className="rounded-xl border bg-muted/10 p-3">
+              <div
+                key={`${signal.title}-${signal.takeaway}`}
+                className={cn(
+                  "rounded-xl border-l-[3px] bg-card p-4 shadow-sm",
+                  signal.priority === "high"
+                    ? "border-l-destructive bg-destructive/[0.02]"
+                    : signal.priority === "medium"
+                    ? "border-l-amber-400 bg-amber-50/30 dark:bg-amber-950/10"
+                    : "border-l-primary",
+                )}
+              >
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium">{signal.title}</p>
+                  <p className="text-[13px] font-semibold text-foreground">{signal.title}</p>
                   <Badge variant="outline" className={cn("text-[10px]", priorityTone(signal.priority))}>
                     {INSIGHT_PRIORITY_LABELS[signal.priority]}
                   </Badge>
