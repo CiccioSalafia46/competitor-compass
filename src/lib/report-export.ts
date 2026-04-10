@@ -253,6 +253,7 @@ function buildPrintMarkup(payload: GeneratedReportPayload) {
             }
           }
         </style>
+        <script>window.addEventListener('load', function() { window.print(); });</script>
       </head>
       <body>
         <div class="page">
@@ -305,5 +306,4 @@ export function printReport(payload: GeneratedReportPayload) {
   popup.document.write(buildPrintMarkup(payload));
   popup.document.close();
   popup.focus();
-  popup.print();
 }
