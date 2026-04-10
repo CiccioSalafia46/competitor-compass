@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { memo, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useRealtimeTable } from "@/hooks/useRealtimeTable";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { isTransientNavigationFetchError } from "@/lib/transient-network";
@@ -82,33 +83,16 @@ const TopBar = memo(function TopBar() {
   }, [currentWorkspace]);
 
   useEffect(() => {
-    // Initial fetch
     fetchUnread();
+  }, [fetchUnread]);
 
-    if (!currentWorkspace) return;
-
-    // Use Realtime instead of polling — subscribe to INSERT/UPDATE/DELETE on alerts for this workspace
-    const channel = supabase
-      .channel(`alerts-unread:${currentWorkspace.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "alerts",
-          filter: `workspace_id=eq.${currentWorkspace.id}`,
-        },
-        () => {
-          // Re-fetch the count on any change — keeps logic simple and avoids manual delta tracking
-          void fetchUnread();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [currentWorkspace, fetchUnread]);
+  useRealtimeTable({
+    channelName: `alerts-unread:${currentWorkspace?.id ?? "none"}`,
+    table: "alerts",
+    filter: currentWorkspace ? `workspace_id=eq.${currentWorkspace.id}` : undefined,
+    enabled: !!currentWorkspace,
+    onEvent: fetchUnread,
+  });
 
   return (
     <header className="h-12 flex items-center justify-between border-b bg-card/95 backdrop-blur-sm px-3 shrink-0 sticky top-0 z-20">

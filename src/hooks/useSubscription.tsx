@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, createContext, useContext } from "rea
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
-import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeTable } from "@/hooks/useRealtimeTable";
 import type { PlanTier } from "@/lib/subscription-plans";
 
 export type { PlanTier };
@@ -75,29 +75,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [checkSubscription]);
 
   // Subscribe to workspace_billing changes via Realtime instead of polling every 60s
-  useEffect(() => {
-    if (!workspaceId || !accessToken) return;
-
-    const channel = supabase
-      .channel(`workspace-billing:${workspaceId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "workspace_billing",
-          filter: `workspace_id=eq.${workspaceId}`,
-        },
-        () => {
-          void checkSubscription();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [workspaceId, accessToken, checkSubscription]);
+  useRealtimeTable({
+    channelName: `workspace-billing:${workspaceId ?? "none"}`,
+    table: "workspace_billing",
+    filter: workspaceId ? `workspace_id=eq.${workspaceId}` : undefined,
+    enabled: !!workspaceId && !!accessToken,
+    onEvent: checkSubscription,
+  });
 
   // Check on checkout return
   useEffect(() => {
@@ -141,17 +125,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       pendingWindow.close();
     }
   };
-
-  // Sync tier to sessionStorage so useUsage can read it without circular deps
-  useEffect(() => {
-    if (!workspaceId) return;
-    try {
-      sessionStorage.setItem(`subscription_tier:${workspaceId}`, tier);
-      sessionStorage.setItem("subscription_workspace_id", workspaceId);
-    } catch {
-      // Ignore storage write failures in restricted browser contexts.
-    }
-  }, [tier, workspaceId]);
 
   return (
     <SubscriptionContext.Provider

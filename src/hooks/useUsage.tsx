@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSubscription } from "@/hooks/useSubscription";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { PLAN_LIMITS, type PlanTier } from "@/lib/plan-limits";
+import { PLAN_LIMITS } from "@/lib/plan-limits";
 
 export { PLAN_LIMITS };
 
@@ -17,6 +18,7 @@ export interface UsageSummary {
 export function useUsage() {
   const { user } = useAuth();
   const { currentWorkspace } = useWorkspace();
+  const { tier: currentPlan } = useSubscription();
   const userId = user?.id ?? null;
   const workspaceId = currentWorkspace?.id ?? null;
   const [usage, setUsage] = useState<UsageSummary>({
@@ -26,33 +28,6 @@ export function useUsage() {
     seats_used: 0,
   });
   const [loading, setLoading] = useState(true);
-  // Derive from actual subscription state — imported lazily to avoid circular deps
-  const [currentPlan, setCurrentPlan] = useState<PlanTier>("free");
-
-  // Sync plan from subscription tier stored in sessionStorage by SubscriptionProvider
-  useEffect(() => {
-    const sync = () => {
-      if (!workspaceId) return;
-      try {
-        const stored = sessionStorage.getItem(`subscription_tier:${workspaceId}`);
-        if (stored && (stored === "free" || stored === "starter" || stored === "premium")) {
-          setCurrentPlan(stored as PlanTier);
-        }
-      } catch {
-        // Ignore storage read failures in restricted browser contexts.
-      }
-    };
-    sync();
-    // Listen for storage events from SubscriptionProvider
-    const handler = () => sync();
-    window.addEventListener("storage", handler);
-    // Also re-sync when component mounts and on a reasonable interval (30s not 2s)
-    const interval = setInterval(sync, 30_000);
-    return () => {
-      window.removeEventListener("storage", handler);
-      clearInterval(interval);
-    };
-  }, [workspaceId]);
 
   const fetchUsage = useCallback(async () => {
     if (!userId || !workspaceId) {

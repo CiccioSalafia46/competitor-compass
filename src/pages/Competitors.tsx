@@ -61,6 +61,81 @@ const priorityTone = (value: InsightPriorityLevel) =>
 const impactTone = (value: InsightImpactArea) =>
   value === "conversion" ? "border-primary/20 bg-primary/10 text-primary" : value === "traffic" ? "border-chart-2/20 bg-chart-2/10 text-chart-2" : "border-muted bg-muted/60 text-foreground";
 
+// ─── Logo helpers ─────────────────────────────────────────────────────────────
+
+function competitorDomain(website: string | null): string | null {
+  if (!website) return null;
+  try {
+    const url = website.startsWith("http") ? website : `https://${website}`;
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+interface CompetitorLogoProps {
+  name: string;
+  website: string | null;
+  size?: "sm" | "md";
+}
+
+function CompetitorLogo({ name, website, size = "md" }: CompetitorLogoProps) {
+  const domain = competitorDomain(website);
+  const [src, setSrc] = useState<string | null>(
+    domain ? `https://logo.clearbit.com/${domain}` : null,
+  );
+
+  useEffect(() => {
+    setSrc(domain ? `https://logo.clearbit.com/${domain}` : null);
+  }, [domain]);
+
+  const handleError = () => {
+    if (src?.includes("clearbit") && domain) {
+      setSrc(`https://www.google.com/s2/favicons?domain=${domain}&sz=64`);
+    } else {
+      setSrc(null);
+    }
+  };
+
+  const sizeClass = size === "sm" ? "h-8 w-8 rounded-lg" : "h-10 w-10 rounded-xl";
+
+  if (!src) {
+    return (
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-center border bg-muted/40",
+          sizeClass,
+        )}
+      >
+        <span
+          className={cn(
+            "font-semibold text-foreground/60",
+            size === "sm" ? "text-xs" : "text-sm",
+          )}
+        >
+          {name.charAt(0).toUpperCase()}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "shrink-0 overflow-hidden border bg-background shadow-sm",
+        sizeClass,
+      )}
+    >
+      <img
+        src={src}
+        alt={`${name} logo`}
+        className="h-full w-full object-contain p-1"
+        onError={handleError}
+      />
+    </div>
+  );
+}
+
 function StrategicList({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
     <Card className="border shadow-sm">
@@ -375,15 +450,20 @@ export default function Competitors() {
                   <div key={competitor.id} className={cn("rounded-2xl border bg-card shadow-sm transition-all hover:border-primary/30", selected && "border-primary bg-primary/5 shadow-md")}>
                     <div className="flex items-start justify-between gap-2 p-4">
                       <button type="button" onClick={() => setSelectedCompetitorId(competitor.id)} className="min-w-0 flex-1 text-left">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-sm font-semibold text-foreground">{competitor.name}</p>
-                          {snapshot ? <Badge variant="outline" className="text-[10px] font-medium">{snapshot.activity.totalSignals} signals</Badge> : null}
-                        </div>
-                        {competitor.website ? <p className="mt-1 text-xs text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p> : null}
-                        <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                          <span>{snapshot?.activity.newsletters ?? 0} newsletters</span>
-                          <span>{snapshot?.activity.ads ?? 0} ads</span>
-                          <span>{snapshot?.activity.insights ?? 0} insights</span>
+                        <div className="flex items-start gap-3">
+                          <CompetitorLogo name={competitor.name} website={competitor.website} size="sm" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="truncate text-sm font-semibold text-foreground">{competitor.name}</p>
+                              {snapshot ? <Badge variant="outline" className="text-[10px] font-medium">{snapshot.activity.totalSignals} signals</Badge> : null}
+                            </div>
+                            {competitor.website ? <p className="mt-1 text-xs text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p> : null}
+                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                              <span>{snapshot?.activity.newsletters ?? 0} newsletters</span>
+                              <span>{snapshot?.activity.ads ?? 0} ads</span>
+                              <span>{snapshot?.activity.insights ?? 0} insights</span>
+                            </div>
+                          </div>
                         </div>
                       </button>
                       <button
@@ -530,14 +610,19 @@ function CompetitorDetail({
         <CardHeader>
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="space-y-3 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-xl">{competitor.name}</CardTitle>
-                {snapshot && (
-                  <Badge variant="outline" className="capitalize">{snapshot.promoBehavior.profile} promo</Badge>
-                )}
-                {snapshot && (
-                  <Badge variant="secondary">{snapshot.activity.totalSignals} signals</Badge>
-                )}
+              <div className="flex items-start gap-3">
+                <CompetitorLogo name={competitor.name} website={competitor.website} size="md" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle className="text-xl">{competitor.name}</CardTitle>
+                    {snapshot && (
+                      <Badge variant="outline" className="capitalize">{snapshot.promoBehavior.profile} promo</Badge>
+                    )}
+                    {snapshot && (
+                      <Badge variant="secondary">{snapshot.activity.totalSignals} signals</Badge>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {editingDescription ? (
