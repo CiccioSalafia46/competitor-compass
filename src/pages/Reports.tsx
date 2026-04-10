@@ -12,15 +12,21 @@ import {
   YAxis,
 } from "recharts";
 import {
+  AlertTriangle,
+  ArrowRight,
   CalendarClock,
+  CheckCircle2,
   Download,
   FileBarChart,
   FileCog,
   FileText,
+  Info,
+  Lightbulb,
   PlayCircle,
   Printer,
   RefreshCcw,
   SlidersHorizontal,
+  TrendingUp,
   WandSparkles,
 } from "lucide-react";
 import { useReports } from "@/hooks/useReports";
@@ -63,7 +69,7 @@ const chartTooltipStyle = {
   background: "hsl(var(--card))",
   border: "1px solid hsl(var(--border))",
   borderRadius: 8,
-  boxShadow: "var(--shadow-md)",
+  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
 };
 
 const weekdayOptions = [
@@ -550,6 +556,18 @@ function ReportChartView({ chart }: { chart: ReportChart }) {
   );
 }
 
+function insightPriorityClass(level: string) {
+  if (level === "high") return "high" as const;
+  if (level === "medium") return "medium" as const;
+  return "low" as const;
+}
+
+function actionPriorityClass(priority: string) {
+  if (priority === "high") return "high" as const;
+  if (priority === "medium") return "medium" as const;
+  return "low" as const;
+}
+
 function ReportViewer({ run }: { run: ReportRunRecord }) {
   if (!run.payload) {
     return (
@@ -565,225 +583,312 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
   }
 
   const payload = run.payload as GeneratedReportPayload;
+  const insights = payload.insights ?? [];
+  const actions = payload.actions ?? [];
 
   return (
-    <div className="space-y-6">
-      <Card className="border shadow-sm">
-        <CardHeader className="gap-4">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="space-y-2">
-              <CardTitle className="text-2xl">{payload.title}</CardTitle>
-              <CardDescription className="max-w-3xl text-sm leading-6">
-                {payload.subtitle}
-              </CardDescription>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadReportJson(run)}>
-                <Download className="h-4 w-4" />
-                Export JSON
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => printReport(payload)}>
-                <Printer className="h-4 w-4" />
-                Print / PDF
-              </Button>
-            </div>
+    <div className="space-y-5">
+
+      {/* ── REPORT HEADER ── */}
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
+        <div className="flex flex-col gap-4 px-6 py-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">{payload.title}</h2>
+            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">{payload.subtitle}</p>
           </div>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="border shadow-none">
-            <CardContent className="p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Active competitors</p>
-              <p className="mt-2 text-2xl font-semibold">{payload.metadata.activeCompetitors}</p>
-            </CardContent>
-          </Card>
-          <Card className="border shadow-none">
-            <CardContent className="p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Tracked signals</p>
-              <p className="mt-2 text-2xl font-semibold">{payload.metadata.trackedSignals}</p>
-            </CardContent>
-          </Card>
-          <Card className="border shadow-none">
-            <CardContent className="p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Structured insights</p>
-              <p className="mt-2 text-2xl font-semibold">{payload.metadata.structuredInsights}</p>
-            </CardContent>
-          </Card>
-          <Card className="border shadow-none">
-            <CardContent className="p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Generated</p>
-              <p className="mt-2 text-sm font-semibold">{formatDateTime(payload.generatedAt)}</p>
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">What changed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-6 text-muted-foreground">{payload.summary.whatChanged}</p>
-          </CardContent>
-        </Card>
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">What matters most</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-6 text-muted-foreground">{payload.summary.whatMatters}</p>
-          </CardContent>
-        </Card>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadReportJson(run)}>
+              <Download className="h-4 w-4" />
+              Export JSON
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => printReport(payload)}>
+              <Printer className="h-4 w-4" />
+              Print / PDF
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t bg-muted/20 px-6 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Competitors</span>
+            <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.activeCompetitors}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Signals</span>
+            <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.trackedSignals}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Insights</span>
+            <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.structuredInsights}</span>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Generated</span>
+            <span className="text-xs font-medium text-muted-foreground">{formatDateTime(payload.generatedAt)}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        {payload.charts.map((chart) => (
-          <Card key={chart.id} className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{chart.title}</CardTitle>
-              {chart.description ? <CardDescription>{chart.description}</CardDescription> : null}
-            </CardHeader>
-            <CardContent>
-              <ReportChartView chart={chart} />
-            </CardContent>
-          </Card>
-        ))}
+      {/* ── EXECUTIVE BRIEF ── */}
+      <div className="overflow-hidden rounded-xl border bg-gradient-to-br from-primary/[0.04] to-transparent shadow-sm">
+        <div className="flex items-center gap-3 border-b px-6 py-4">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+            <TrendingUp className="h-4 w-4" />
+          </div>
+          <h3 className="text-[13px] font-semibold text-foreground">Executive Brief</h3>
+          <span className="ml-auto text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">Top-line summary</span>
+        </div>
+        <div className="grid gap-0 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
+          <div className="px-6 py-5">
+            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">What changed</p>
+            <p className="text-[13px] leading-7 text-foreground">{payload.summary.whatChanged}</p>
+          </div>
+          <div className="px-6 py-5">
+            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">What matters most</p>
+            <p className="text-[13px] leading-7 text-foreground">{payload.summary.whatMatters}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-4">
-        {payload.sections.map((section) => (
-          <Card key={section.id} className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{section.title}</CardTitle>
-              <CardDescription>{section.summary}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {section.metrics?.length ? (
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  {section.metrics.map((metric) => (
-                    <div key={`${section.id}-${metric.label}`} className="rounded-xl border bg-muted/20 p-4">
-                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
-                      <p className="mt-2 text-xl font-semibold text-foreground">{metric.value}</p>
-                      {metric.detail ? <p className="mt-1 text-xs text-muted-foreground">{metric.detail}</p> : null}
-                    </div>
-                  ))}
+      {/* ── CHARTS ── */}
+      {payload.charts.length > 0 && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {payload.charts.map((chart) => (
+            <Card key={chart.id} className="border shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[13px] font-semibold">{chart.title}</CardTitle>
+                {chart.description ? <CardDescription className="text-xs">{chart.description}</CardDescription> : null}
+              </CardHeader>
+              <CardContent>
+                <ReportChartView chart={chart} />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* ── SECTIONS ── */}
+      {payload.sections.length > 0 && (
+        <div className="space-y-4">
+          {payload.sections.map((section, sectionIndex) => (
+            <div key={section.id} className="overflow-hidden rounded-xl border bg-card shadow-sm">
+              {/* Section header */}
+              <div className="flex items-start gap-3 border-b bg-muted/15 px-6 py-4">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/12 text-[11px] font-bold text-primary">
+                  {sectionIndex + 1}
                 </div>
-              ) : null}
-
-              {section.callouts?.length ? (
-                <div className="grid gap-3 xl:grid-cols-2">
-                  {section.callouts.map((callout) => (
-                    <div
-                      key={`${section.id}-${callout.title}`}
-                      className={cn(
-                        "rounded-xl border px-4 py-3",
-                        callout.tone === "warning" && "border-warning/30 bg-warning/5",
-                        callout.tone === "positive" && "border-primary/20 bg-primary/5",
-                        (!callout.tone || callout.tone === "neutral") && "bg-muted/10",
-                      )}
-                    >
-                      <p className="text-sm font-semibold text-foreground">{callout.title}</p>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{callout.body}</p>
-                    </div>
-                  ))}
+                <div className="min-w-0">
+                  <h3 className="text-[13px] font-semibold text-foreground">{section.title}</h3>
+                  {section.summary && (
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{section.summary}</p>
+                  )}
                 </div>
-              ) : null}
+              </div>
 
-              {section.bullets?.length ? (
-                <ul className="space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
-                  {section.bullets.map((item) => (
-                    <li key={`${section.id}-${item}`}>{item}</li>
-                  ))}
-                </ul>
-              ) : null}
+              <div className="space-y-5 p-6">
+                {/* Metrics */}
+                {section.metrics?.length ? (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {section.metrics.map((metric) => (
+                      <div key={`${section.id}-${metric.label}`} className="rounded-lg border bg-card p-4 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
+                        <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{metric.value}</p>
+                        {metric.detail ? (
+                          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{metric.detail}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
 
-              {section.table ? (
-                <div className="overflow-x-auto rounded-xl border">
-                  <table className="w-full min-w-[640px] text-left text-sm">
-                    <thead className="bg-muted/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                      <tr>
-                        {section.table.columns.map((column) => (
-                          <th key={`${section.id}-${column}`} className="px-4 py-3 font-medium">
-                            {column}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {section.table.rows.map((row, rowIndex) => (
-                        <tr key={`${section.id}-row-${rowIndex}`} className="border-t">
-                          {section.table?.columns.map((column) => (
-                            <td key={`${section.id}-${rowIndex}-${column}`} className="px-4 py-3 text-muted-foreground">
-                              {String(row[column] ?? "")}
-                            </td>
+                {/* Callouts */}
+                {section.callouts?.length ? (
+                  <div className="grid gap-3 xl:grid-cols-2">
+                    {section.callouts.map((callout) => {
+                      const isWarning = callout.tone === "warning";
+                      const isPositive = callout.tone === "positive";
+                      return (
+                        <div
+                          key={`${section.id}-${callout.title}`}
+                          className={cn(
+                            "flex gap-3 rounded-lg border-l-4 bg-card px-4 py-4 shadow-sm",
+                            isWarning && "border-l-amber-400 bg-amber-50/60 dark:bg-amber-950/20",
+                            isPositive && "border-l-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20",
+                            !isWarning && !isPositive && "border-l-border bg-muted/20",
+                          )}
+                        >
+                          <div className="mt-0.5 shrink-0">
+                            {isWarning && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                            {isPositive && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                            {!isWarning && !isPositive && <Info className="h-4 w-4 text-muted-foreground/60" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className={cn(
+                              "text-[13px] font-semibold",
+                              isWarning && "text-amber-700 dark:text-amber-300",
+                              isPositive && "text-emerald-700 dark:text-emerald-300",
+                              !isWarning && !isPositive && "text-foreground",
+                            )}>
+                              {callout.title}
+                            </p>
+                            <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{callout.body}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {/* Bullets */}
+                {section.bullets?.length ? (
+                  <ul className="space-y-2.5">
+                    {section.bullets.map((item) => (
+                      <li key={`${section.id}-${item}`} className="flex items-start gap-2.5 text-sm leading-6 text-muted-foreground">
+                        <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary/50" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                {/* Table */}
+                {section.table ? (
+                  <div className="overflow-x-auto rounded-lg border">
+                    <table className="w-full min-w-[640px] text-left text-sm">
+                      <thead className="bg-muted/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                        <tr>
+                          {section.table.columns.map((column) => (
+                            <th key={`${section.id}-${column}`} className="px-4 py-3 font-medium">
+                              {column}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Prioritized insights</CardTitle>
-            <CardDescription>
-              Structured insight briefs ready for team review and stakeholder distribution.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {(payload.insights ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No prioritized insights were available for this run.</p>
-            ) : (
-              (payload.insights ?? []).map((insight) => (
-                <div key={insight.id} className="rounded-xl border bg-muted/10 px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-foreground">{insight.title}</p>
-                    <Badge variant="outline" className="capitalize">
-                      {insight.priorityLevel}
-                    </Badge>
-                    <Badge variant="secondary" className="capitalize">
-                      {insight.impactArea}
-                    </Badge>
+                      </thead>
+                      <tbody className="divide-y">
+                        {section.table.rows.map((row, rowIndex) => (
+                          <tr key={`${section.id}-row-${rowIndex}`} className="transition-colors hover:bg-muted/20">
+                            {section.table?.columns.map((column) => (
+                              <td key={`${section.id}-${rowIndex}-${column}`} className="px-4 py-3 text-muted-foreground">
+                                {String(row[column] ?? "")}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.takeaway}</p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Recommended actions</CardTitle>
-            <CardDescription>
-              Concrete follow-up moves derived from the highest-signal report findings.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {(payload.actions ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No follow-up actions were generated for this run.</p>
-            ) : (
-              (payload.actions ?? []).map((action) => (
-                <div key={action.title} className="rounded-xl border px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-foreground">{action.title}</p>
-                    <Badge variant="outline" className="capitalize">
-                      {action.priority}
-                    </Badge>
+      {/* ── PRIORITIZED INSIGHTS ── */}
+      {insights.length > 0 && (
+        <div className="overflow-hidden rounded-xl border shadow-sm">
+          <div className="flex items-center gap-3 border-b bg-muted/15 px-6 py-4">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Lightbulb className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-[13px] font-semibold text-foreground">Prioritized Insights</h3>
+              <p className="text-[11px] text-muted-foreground">
+                {insights.length} structured insight{insights.length !== 1 ? "s" : ""} ready for team review
+              </p>
+            </div>
+          </div>
+          <div className="divide-y">
+            {insights.map((insight, idx) => {
+              const p = insightPriorityClass(insight.priorityLevel);
+              return (
+                <div
+                  key={insight.id}
+                  className={cn(
+                    "flex gap-4 px-6 py-4",
+                    p === "high" && "bg-destructive/[0.03]",
+                    p === "medium" && "bg-amber-50/40 dark:bg-amber-950/10",
+                  )}
+                >
+                  <div className={cn(
+                    "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                    p === "high" && "bg-destructive/15 text-destructive",
+                    p === "medium" && "bg-amber-400/20 text-amber-600 dark:text-amber-400",
+                    p === "low" && "bg-muted text-muted-foreground",
+                  )}>
+                    {idx + 1}
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{action.detail}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-[13px] font-semibold text-foreground">{insight.title}</p>
+                      <span className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        p === "high" && "bg-destructive/10 text-destructive",
+                        p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
+                        p === "low" && "bg-muted text-muted-foreground",
+                      )}>
+                        {insight.priorityLevel}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] capitalize text-muted-foreground">
+                        {insight.impactArea}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{insight.takeaway}</p>
+                  </div>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── RECOMMENDED ACTIONS ── */}
+      {actions.length > 0 && (
+        <div className="overflow-hidden rounded-xl border shadow-sm">
+          <div className="flex items-center gap-3 border-b bg-muted/15 px-6 py-4">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ArrowRight className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-[13px] font-semibold text-foreground">Recommended Actions</h3>
+              <p className="text-[11px] text-muted-foreground">
+                Concrete follow-up moves derived from the highest-signal findings
+              </p>
+            </div>
+          </div>
+          <div className="divide-y">
+            {actions.map((action, idx) => {
+              const p = actionPriorityClass(action.priority);
+              return (
+                <div key={action.title} className="flex gap-4 px-6 py-4 transition-colors hover:bg-muted/20">
+                  <div className={cn(
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold",
+                    p === "high" && "bg-destructive/10 text-destructive",
+                    p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
+                    p === "low" && "bg-primary/10 text-primary",
+                  )}>
+                    {idx + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-[13px] font-semibold text-foreground">{action.title}</p>
+                      <span className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        p === "high" && "bg-destructive/10 text-destructive",
+                        p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
+                        p === "low" && "bg-emerald-400/15 text-emerald-600 dark:text-emerald-400",
+                      )}>
+                        {action.priority}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{action.detail}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
