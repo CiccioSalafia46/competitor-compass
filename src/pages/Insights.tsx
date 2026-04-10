@@ -79,11 +79,13 @@ function SummaryCard({
   value,
   detail,
   icon: Icon,
+  colorClass = "bg-primary/10 text-primary",
 }: {
   title: string;
   value: string;
   detail: string;
   icon: ElementType;
+  colorClass?: string;
 }) {
   return (
     <Card className="border bg-card shadow-sm">
@@ -93,7 +95,7 @@ function SummaryCard({
           <p className="stat-value text-2xl font-semibold leading-none tracking-tight text-foreground">{value}</p>
           <p className="text-xs leading-relaxed text-muted-foreground">{detail}</p>
         </div>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", colorClass)}>
           <Icon className="h-4 w-4" />
         </div>
       </CardContent>
@@ -102,9 +104,17 @@ function SummaryCard({
 }
 
 function EvidenceItemView({ evidence }: { evidence: InsightEvidence }) {
+  const SourceIcon =
+    evidence.source === "meta_ad"
+      ? Megaphone
+      : evidence.source === "cross_channel"
+        ? Layers
+        : Mail;
+
   return (
     <div className="rounded-xl border bg-muted/25 p-3">
       <div className="flex flex-wrap items-center gap-2">
+        <SourceIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
         <p className="section-label text-foreground">{evidence.label}</p>
         {evidence.metric ? <Badge variant="secondary">{evidence.metric}</Badge> : null}
         {evidence.source ? (
@@ -126,7 +136,8 @@ function EvidenceItemView({ evidence }: { evidence: InsightEvidence }) {
 const InsightCard = memo(function InsightCard({ insight }: { insight: Insight }) {
   const meta = CATEGORY_META[insight.category] || CATEGORY_META.pricing;
   const Icon = meta.icon;
-  const confidenceValue = insight.confidence != null ? `${Math.round(insight.confidence * 100)}%` : "N/A";
+  const confidence = insight.confidence;
+  const confidenceValue = confidence != null ? `${Math.round(confidence * 100)}%` : "N/A";
   const responseSections = parseRecommendedResponseSections(insight.recommended_response);
   const priorityTone: Record<InsightPriorityLevel, string> = {
     high: "border-destructive/20 bg-destructive/10 text-destructive",
@@ -134,8 +145,36 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
     low: "border-primary/20 bg-primary/10 text-primary",
   };
 
+  const confidenceLevel =
+    confidence != null && confidence >= 0.85
+      ? "high"
+      : confidence != null && confidence >= 0.7
+        ? "medium"
+        : "watch";
+
+  const confidenceBg =
+    confidenceLevel === "high"
+      ? "bg-emerald-500/10"
+      : confidenceLevel === "medium"
+        ? "bg-amber-400/10"
+        : "bg-muted/30";
+
+  const confidenceTextColor =
+    confidenceLevel === "high"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : confidenceLevel === "medium"
+        ? "text-amber-500 dark:text-amber-400"
+        : "text-foreground";
+
   return (
-    <Card className="border bg-card/80 shadow-sm transition-colors hover:border-primary/25">
+    <Card
+      className={cn(
+        "border-l-[3px] bg-card/80 shadow-sm transition-colors hover:shadow-md",
+        insight.priority_level === "high" && "border-l-destructive",
+        insight.priority_level === "medium" && "border-l-amber-400",
+        insight.priority_level === "low" && "border-l-primary/60",
+      )}
+    >
       <CardHeader className="space-y-4 pb-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-3">
@@ -177,9 +216,9 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
           </div>
 
           <div className="grid min-w-[220px] grid-cols-2 gap-2.5 lg:w-[260px]">
-            <div className="rounded-xl border bg-muted/30 p-3">
+            <div className={cn("rounded-xl border p-3", confidenceBg)}>
               <p className="section-label">Confidence</p>
-              <p className="stat-value mt-1.5 text-lg font-semibold leading-none text-foreground">{confidenceValue}</p>
+              <p className={cn("stat-value mt-1.5 text-lg font-semibold leading-none", confidenceTextColor)}>{confidenceValue}</p>
             </div>
             <div className="rounded-xl border bg-muted/30 p-3">
               <p className="section-label">Evidence</p>
@@ -347,6 +386,7 @@ export default function Insights() {
 
   return (
     <div className="max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+      <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-primary via-primary/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
       <div className="page-header">
         <div>
           <h1 className="page-title">Competitor Insights</h1>
@@ -368,35 +408,49 @@ export default function Insights() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard title="Signals" value={String(insights.length)} detail="Current insight briefs available" icon={Sparkles} />
+        <SummaryCard
+          title="Signals"
+          value={String(insights.length)}
+          detail="Current insight briefs available"
+          icon={Sparkles}
+        />
         <SummaryCard
           title="High Priority"
           value={String(priorityCounts.high)}
           detail={`${priorityCounts.medium} medium, ${priorityCounts.low} low-priority briefs`}
           icon={Target}
+          colorClass="bg-destructive/10 text-destructive"
         />
         <SummaryCard
           title="Evidence"
           value={String(evidenceCount)}
           detail="Supporting data points attached to insights"
           icon={BarChart3}
+          colorClass="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
         />
         <SummaryCard
           title="Coverage"
           value={String(competitorCount)}
           detail={`${impactCounts.conversion} conversion | ${impactCounts.traffic} traffic | ${impactCounts.branding} branding | ${averageConfidence} avg confidence`}
           icon={Layers}
+          colorClass="bg-violet-500/10 text-violet-600 dark:text-violet-400"
         />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex h-auto flex-wrap gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="all">All</TabsTrigger>
-          {INSIGHT_CATEGORIES.map((category) => (
-            <TabsTrigger key={category} value={category}>
-              {CATEGORY_META[category]?.label ?? category}
-            </TabsTrigger>
-          ))}
+          <TabsTrigger value="all" className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />All
+          </TabsTrigger>
+          {INSIGHT_CATEGORIES.map((category) => {
+            const CategoryIcon = CATEGORY_META[category]?.icon;
+            return (
+              <TabsTrigger key={category} value={category} className="gap-1.5">
+                {CategoryIcon && <CategoryIcon className="h-3.5 w-3.5" />}
+                {CATEGORY_META[category]?.label ?? category}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">

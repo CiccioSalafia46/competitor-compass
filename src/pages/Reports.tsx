@@ -985,6 +985,7 @@ export default function Reports() {
 
   return (
     <div className="max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+      <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-primary via-primary/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="page-title">Reports</h1>
@@ -1051,7 +1052,16 @@ export default function Reports() {
                 );
 
               return (
-                <div key={key} className="rounded-xl border overflow-hidden transition-shadow hover:shadow-md">
+                <div
+                  key={key}
+                  className={cn(
+                    "rounded-xl border border-l-[3px] overflow-hidden transition-shadow hover:shadow-md",
+                    key === "weekly_competitor_pulse" && "border-l-primary",
+                    key === "promo_digest" && "border-l-amber-400",
+                    key === "custom_report" && "border-l-violet-500",
+                    key !== "weekly_competitor_pulse" && key !== "promo_digest" && key !== "custom_report" && "border-l-emerald-500",
+                  )}
+                >
                   <div className="flex items-start gap-3 border-b bg-muted/20 px-4 py-3.5">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
                       {icon}
@@ -1101,9 +1111,14 @@ export default function Reports() {
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr,1.05fr]">
             <div className="rounded-xl border overflow-hidden">
-              <div className="border-b bg-muted/20 px-4 py-3">
-                <p className="text-[13px] font-semibold text-foreground">Saved schedules</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">Recurring templates that generate automatically for your team.</p>
+              <div className="flex items-center gap-2.5 border-b bg-muted/20 px-4 py-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <CalendarClock className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-foreground">Saved schedules</p>
+                  <p className="text-[11px] text-muted-foreground">Recurring templates that generate automatically for your team.</p>
+                </div>
               </div>
               <div className="divide-y">
                 {schedules.length === 0 ? (
@@ -1124,8 +1139,8 @@ export default function Reports() {
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="text-[13px] font-medium text-foreground">{schedule.name}</p>
                           <span className={cn(
-                            "inline-flex h-1.5 w-1.5 rounded-full",
-                            schedule.isActive ? "bg-primary" : "bg-muted-foreground/40",
+                            "inline-flex h-2 w-2 rounded-full",
+                            schedule.isActive ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.4)]" : "bg-muted-foreground/30",
                           )} />
                           <span className="text-[11px] text-muted-foreground">{REPORT_TEMPLATES[schedule.templateKey].label}</span>
                         </div>
@@ -1168,9 +1183,14 @@ export default function Reports() {
             </div>
 
             <div className="rounded-xl border overflow-hidden">
-              <div className="border-b bg-muted/20 px-4 py-3">
-                <p className="text-[13px] font-semibold text-foreground">Recent runs</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">Last generated reports — click to inspect the full briefing.</p>
+              <div className="flex items-center gap-2.5 border-b bg-muted/20 px-4 py-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <FileBarChart className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-foreground">Recent runs</p>
+                  <p className="text-[11px] text-muted-foreground">Last generated reports — click to inspect the full briefing.</p>
+                </div>
               </div>
               <div className="divide-y">
                 {recentRuns.length === 0 ? (
@@ -1194,8 +1214,14 @@ export default function Reports() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-[13px] font-medium text-foreground">{run.title}</p>
                         <Badge
-                          variant={run.status === "completed" ? "secondary" : "outline"}
-                          className="text-[10px] py-0"
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] py-0",
+                            run.status === "completed" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                            run.status === "running" && "border-amber-400/30 bg-amber-400/10 text-amber-600 dark:text-amber-400",
+                            run.status === "failed" && "border-destructive/30 bg-destructive/10 text-destructive",
+                            run.status !== "completed" && run.status !== "running" && run.status !== "failed" && "border-muted text-muted-foreground",
+                          )}
                         >
                           {run.status}
                         </Badge>
@@ -1214,9 +1240,9 @@ export default function Reports() {
           </div>
 
           <Tabs defaultValue="report" className="space-y-4">
-            <TabsList className="h-8 bg-muted/50 text-xs">
-              <TabsTrigger value="report" className="h-7 text-xs">Selected report</TabsTrigger>
-              <TabsTrigger value="process" className="h-7 text-xs">How it works</TabsTrigger>
+            <TabsList className="h-9 bg-muted/40 p-0.5 text-xs">
+              <TabsTrigger value="report" className="h-8 text-xs">Selected report</TabsTrigger>
+              <TabsTrigger value="process" className="h-8 text-xs">How it works</TabsTrigger>
             </TabsList>
             <TabsContent value="report">
               {selectedRun ? (
@@ -1236,13 +1262,16 @@ export default function Reports() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm leading-6 text-muted-foreground">
-                  <div className="rounded-xl border bg-muted/20 p-4">
+                  <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">1</div>
                     <p>On-demand generation: template to `reports-center` to analytics RPC + insights + competitor intelligence to persisted `report_runs.payload`.</p>
                   </div>
-                  <div className="rounded-xl border bg-muted/20 p-4">
+                  <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">2</div>
                     <p>Scheduled generation: saved `report_schedules` compute `next_run_at`; the due runner can generate all overdue schedules for the current workspace in one pass.</p>
                   </div>
-                  <div className="rounded-xl border bg-muted/20 p-4">
+                  <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">3</div>
                     <p>Exports: JSON for structured downstream use, plus a print-friendly view that can be saved as PDF from the browser.</p>
                   </div>
                 </CardContent>

@@ -337,6 +337,7 @@ export default function NewsletterInbox() {
 
   return (
     <div className="max-w-6xl space-y-4 p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-primary via-primary/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
       <div className="page-header">
         <div>
           <h1 className="page-title">Competitor Inbox</h1>
@@ -372,6 +373,30 @@ export default function NewsletterInbox() {
           )}
         </div>
       </div>
+
+      {!showDemo && !loading && (
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/60 px-5 py-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <InboxIcon className="h-3.5 w-3.5 text-muted-foreground/60" />
+            <span className="text-[13px] font-semibold tabular-nums text-foreground">{totalCount}</span>
+            <span className="text-xs text-muted-foreground">total</span>
+          </div>
+          <div className="h-3 w-px bg-border" />
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-primary" />
+            <span className="text-xs text-muted-foreground">Unread items tracked</span>
+          </div>
+          {isConnected && (
+            <>
+              <div className="h-3 w-px bg-border" />
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-xs text-muted-foreground">Gmail connected</span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {showDemo && (
         <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-sm">
@@ -410,25 +435,30 @@ export default function NewsletterInbox() {
 
             <div className="grid gap-3 lg:grid-cols-2">
               {suggestions.slice(0, 6).map((suggestion) => (
-                <div key={suggestion.senderDomain} className="rounded-xl border bg-background px-4 py-3 shadow-sm">
+                <div key={suggestion.senderDomain} className="rounded-xl border border-l-[3px] border-l-primary/40 bg-background px-4 py-3 shadow-sm transition-colors hover:border-l-primary/70">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">
-                          {suggestion.suggestedName ||
-                            inferCompetitorName({
-                              senderName: suggestion.senderName,
-                              senderDomain: suggestion.senderDomain,
-                            })}
-                        </p>
-                        <Badge variant="outline" className="text-[10px] font-medium">
-                          {suggestion.newsletterCount} email{suggestion.newsletterCount === 1 ? "" : "s"}
-                        </Badge>
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[12px] font-bold text-primary">
+                        {(suggestion.suggestedName || suggestion.senderDomain).charAt(0).toUpperCase()}
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{suggestion.senderDomain}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Latest seen {suggestion.latestReceivedAt ? new Date(suggestion.latestReceivedAt).toLocaleString() : "unknown"}
-                      </p>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-foreground">
+                            {suggestion.suggestedName ||
+                              inferCompetitorName({
+                                senderName: suggestion.senderName,
+                                senderDomain: suggestion.senderDomain,
+                              })}
+                          </p>
+                          <Badge variant="outline" className="text-[10px] font-medium">
+                            {suggestion.newsletterCount} email{suggestion.newsletterCount === 1 ? "" : "s"}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">{suggestion.senderDomain}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Latest seen {suggestion.latestReceivedAt ? new Date(suggestion.latestReceivedAt).toLocaleString() : "unknown"}
+                        </p>
+                      </div>
                     </div>
                     <Button
                       size="sm"
@@ -463,7 +493,7 @@ export default function NewsletterInbox() {
           <div className="flex min-w-0 gap-3">
             <div
               className={cn(
-                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
                 lastSyncResult.status === "completed_with_issues"
                   ? "bg-destructive/10 text-destructive"
                   : lastSyncResult.status === "imported"
@@ -518,7 +548,7 @@ export default function NewsletterInbox() {
         </div>
       )}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 rounded-xl border bg-muted/20 p-2 sm:flex-row sm:items-center">
         {/* Search */}
         <div className="relative min-w-0 flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -581,8 +611,10 @@ export default function NewsletterInbox() {
           ))}
         </div>
       ) : displayItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border bg-card py-16 text-center shadow-sm">
-          <InboxIcon className="mb-3 h-8 w-8 text-muted-foreground/20" />
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-card/80 py-20 text-center shadow-sm">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
+            <InboxIcon className="h-8 w-8 text-muted-foreground/20" />
+          </div>
           <p className="text-sm font-medium text-foreground">No competitor activity found</p>
           <p className="mt-1 text-xs text-muted-foreground max-w-xs">
             {isConnected
@@ -602,7 +634,7 @@ export default function NewsletterInbox() {
                 className={cn(
                   "group flex cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors duration-100 sm:gap-3",
                   "hover:bg-muted/30",
-                  !item.is_read && "bg-accent/15",
+                  !item.is_read && "bg-primary/[0.04] dark:bg-primary/[0.06]",
                 )}
               >
                 {/* Star — always shown, faded unless active */}
@@ -627,6 +659,14 @@ export default function NewsletterInbox() {
                   {!item.is_read && (
                     <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   )}
+                </div>
+
+                {/* Avatar */}
+                <div className={cn(
+                  "hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
+                  !item.is_read ? "bg-primary/12 text-primary" : "bg-muted/60 text-muted-foreground",
+                )}>
+                  {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
                 </div>
 
                 {/* Sender — fixed width, primary info */}

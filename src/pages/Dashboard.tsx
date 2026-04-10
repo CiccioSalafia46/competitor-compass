@@ -48,7 +48,6 @@ import { SystemHealthPanel } from "@/components/SystemHealthPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
@@ -530,8 +529,8 @@ export default function Dashboard() {
       <SystemHealthPanel />
 
       {/* ── Quick nav ──────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border bg-muted/20 p-1">
-        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+      <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-1">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
             { icon: Newspaper, label: "Import data", desc: "Paste or upload", path: "/newsletters/new" },
             { icon: Users, label: "Competitors", desc: "Manage monitored rivals", path: "/competitors" },
@@ -541,10 +540,10 @@ export default function Dashboard() {
             <button
               key={a.path}
               onClick={() => navigate(a.path)}
-              className="flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-background hover:shadow-sm"
+              className="group flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-background hover:shadow-sm"
             >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/15 text-primary shadow-sm">
-                <a.icon className="h-3.5 w-3.5" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/15 text-primary shadow-sm">
+                <a.icon className="h-3.5 w-3.5 group-hover:scale-105 transition-transform" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-foreground">{a.label}</p>
@@ -701,10 +700,10 @@ const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, a
     <button
       onClick={() => navigate(href)}
       className={cn(
-        "group relative flex flex-col gap-3 overflow-hidden rounded-xl border bg-card p-5 text-left shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md",
+        "group relative flex flex-col gap-3 overflow-hidden rounded-xl border border-t-2 bg-card p-5 text-left shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md",
         accent
-          ? "border-destructive/30 bg-destructive/5 hover:border-destructive/50"
-          : "hover:border-primary/25 hover:bg-card",
+          ? "border-destructive/30 border-t-destructive bg-destructive/5 hover:border-destructive/50"
+          : "border-t-primary/40 hover:border-primary/25 hover:bg-card",
       )}
     >
       {/* Accent bottom stripe */}
@@ -713,7 +712,7 @@ const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, a
         accent ? "bg-destructive/40 group-hover:bg-destructive/60" : "bg-transparent group-hover:bg-primary/30",
       )} />
       <div className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-lg",
+        "flex h-9 w-9 items-center justify-center rounded-lg",
         accent ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
       )}>
         <Icon className="h-4 w-4" />
@@ -743,7 +742,7 @@ function BriefColumn({ icon: Icon, label, text, accent, cta, onNavigate }: {
   onNavigate?: ReturnType<typeof useNavigate>;
 }) {
   return (
-    <div className={cn("flex flex-col gap-3.5 p-5", accent && "bg-primary/[0.025]")}>
+    <div className={cn("flex flex-col gap-3.5 p-5", accent && "bg-gradient-to-b from-primary/[0.04] to-transparent")}>
       <div className="flex items-center gap-2">
         <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
           <Icon className="h-3.5 w-3.5" />
@@ -811,8 +810,11 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
     <button
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border border-l-[3px] bg-card p-5 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:bg-accent/15",
+        "w-full rounded-xl border border-l-[3px] p-5 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:bg-accent/15",
         PRIORITY_BORDER[priority],
+        priority === "high" && "bg-gradient-to-br from-destructive/[0.03] to-transparent",
+        priority === "medium" && "bg-gradient-to-br from-amber-50/30 to-transparent dark:from-amber-950/10 dark:to-transparent",
+        priority === "low" && "bg-card",
       )}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -910,7 +912,15 @@ function CompetitorPressureRow({ entry, maxSignals, onClick }: {
           )}
         </div>
       </div>
-      <Progress value={pct} className="h-1" />
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all",
+            pct > 60 ? "bg-destructive/70" : pct > 30 ? "bg-amber-400/80" : "bg-primary/70",
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
       {typeof entry.promoRate === "number" && entry.promoRate > 0 && (
         <p className="text-[10px] text-muted-foreground">
           {Math.round(entry.promoRate * 100)}% promo intensity
@@ -940,9 +950,14 @@ function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
         <div className="min-w-0">
           <p className="text-xs font-semibold leading-snug text-foreground">{highlight.title}</p>
           <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground">{highlight.detail}</p>
-          {highlight.competitors?.slice(0, 1).map((c) => (
-            <Badge key={c} variant="secondary" className="mt-1.5 text-[10px]">{c}</Badge>
-          ))}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {highlight.competitors?.slice(0, 1).map((c) => (
+              <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+            ))}
+            <span className="text-[9px] uppercase tracking-wide text-muted-foreground/50">
+              {highlight.kind === "competitor_action" ? "Move" : highlight.kind === "promotion" ? "Promo" : "Campaign"}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -959,7 +974,15 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
       className={cn("w-full rounded-xl border border-l-[3px] bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md", PRIORITY_BORDER[priority])}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+        {(() => {
+          const AnomalyIcon = priority === "high" ? AlertCircle : priority === "medium" ? Activity : CheckCircle;
+          return (
+            <div className={cn("mt-0.5 shrink-0", priority === "high" && "text-destructive", priority === "medium" && "text-warning", "text-muted-foreground")}>
+              <AnomalyIcon className="h-3.5 w-3.5" />
+            </div>
+          );
+        })()}
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-foreground">{anomaly.title}</p>
           <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground">{anomaly.detail}</p>
         </div>
@@ -985,7 +1008,7 @@ function InboxCompactRow({ item, competitorName, onClick }: {
     >
       <div className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
-        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/12 text-primary ring-1 ring-primary/20",
+        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/15 text-primary ring-1 ring-primary/20 shadow-sm",
       )}>
         {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
       </div>
@@ -1011,13 +1034,16 @@ function InboxCompactRow({ item, competitorName, onClick }: {
 function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardCompetitorPreview; onClick: () => void }) {
   return (
     <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/8 text-sm font-bold text-primary">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/8 text-base font-bold text-primary">
         {competitor.name.charAt(0).toUpperCase()}
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-foreground">{competitor.name}</p>
         {competitor.website && (
           <p className="truncate text-[11px] text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
+        )}
+        {!competitor.is_monitored && (
+          <span className="text-[10px] text-muted-foreground/50">Not monitored</span>
         )}
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-primary/50" />
