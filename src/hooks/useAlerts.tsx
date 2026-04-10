@@ -38,6 +38,7 @@ export type AlertRuleConfig = {
   min_ads?: number;
   known_categories?: string[];
   cooldown_hours?: number;
+  competitor_ids?: string[];
 };
 
 export const RULE_TYPES: AlertRuleOption[] = [
@@ -122,7 +123,7 @@ type EvaluateAlertsResponse = {
   message: string;
 };
 
-function normalizeRuleConfig(config: Json): AlertRuleConfig {
+export function normalizeRuleConfig(config: Json): AlertRuleConfig {
   if (!config || typeof config !== "object" || Array.isArray(config)) {
     return {};
   }
@@ -144,6 +145,9 @@ function normalizeRuleConfig(config: Json): AlertRuleConfig {
       ? record.known_categories.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
       : undefined,
     cooldown_hours: typeof record.cooldown_hours === "number" ? record.cooldown_hours : undefined,
+    competitor_ids: Array.isArray(record.competitor_ids)
+      ? record.competitor_ids.filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+      : undefined,
   };
 }
 
@@ -423,4 +427,72 @@ export function useAlertTriggerLogs(options: UseTriggerLogsOptions = {}) {
   }, [fetchLogs]);
 
   return { logs, loading, refetch: fetchLogs };
+}
+
+export type AlertStats = {
+  activeRules: number;
+  alertsThisWeek: number;
+  triggeredThisWeek: number;
+  lastEvaluatedAt: string | null;
+};
+
+export function useAlertStats() {
+  const { currentWorkspace } = useWorkspace();
+  const [stats, setStats] = useState<AlertStats>({
+    activeRules: 0,
+    alertsThisWeek: 0,
+    triggeredThisWeek: 0,
+    lastEvaluatedAt: null,
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = useCallback(async () => {
+    if (!currentWorkspace) {
+      setLoading(false);
+      return;
+    }
+
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [rulesResult, alertsResult, triggeredResult] = await Promise.all([
+      supabase
+        .from("alert_rules")
+        .select("last_evaluated_at")
+        .eq("workspace_id", currentWorkspace.id)
+        .eq("is_active", true),
+      supabase
+        .from("alerts")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", currentWorkspace.id)
+        .eq("is_dismissed", false)
+        .gte("created_at", oneWeekAgo),
+      supabase
+        .from("alert_trigger_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", currentWorkspace.id)
+        .eq("status", "triggered")
+        .gte("created_at", oneWeekAgo),
+    ]);
+
+    const activeRulesData = rulesResult.data ?? [];
+    const lastEvaluatedAt = activeRulesData.reduce((latest, rule) => {
+      if (!rule.last_evaluated_at) return latest;
+      if (!latest) return rule.last_evaluated_at;
+      return rule.last_evaluated_at > latest ? rule.last_evaluated_at : latest;
+    }, null as string | null);
+
+    setStats({
+      activeRules: activeRulesData.length,
+      alertsThisWeek: alertsResult.count ?? 0,
+      triggeredThisWeek: triggeredResult.count ?? 0,
+      lastEvaluatedAt,
+    });
+    setLoading(false);
+  }, [currentWorkspace]);
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
+
+  return { stats, loading, refetch: fetchStats };
 }

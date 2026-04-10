@@ -523,9 +523,18 @@ function buildDiscountCandidates(
   competitors: Map<string, string>,
 ): AlertCandidate[] {
   const threshold = getNumber(asObject(rule.config).threshold) ?? 30;
+  const allowedCompetitorIds = getStringArray(asObject(rule.config).competitor_ids);
 
   return extractions
-    .filter((extraction) => typeof extraction.discount_percentage === "number" && extraction.discount_percentage >= threshold)
+    .filter((extraction) => {
+      if (typeof extraction.discount_percentage !== "number" || extraction.discount_percentage < threshold) return false;
+      if (allowedCompetitorIds.length > 0) {
+        const newsletter = newslettersById.get(extraction.newsletter_inbox_id);
+        if (!newsletter?.competitor_id) return false;
+        if (!allowedCompetitorIds.includes(newsletter.competitor_id)) return false;
+      }
+      return true;
+    })
     .map((extraction) => {
       const newsletter = newslettersById.get(extraction.newsletter_inbox_id);
       const actor = newsletter
@@ -570,8 +579,12 @@ function buildKeywordCandidates(
   if (keywords.length === 0) {
     return [];
   }
+  const allowedCompetitorIds = getStringArray(asObject(rule.config).competitor_ids);
 
   return newsletters.flatMap((newsletter) => {
+    if (allowedCompetitorIds.length > 0 && (!newsletter.competitor_id || !allowedCompetitorIds.includes(newsletter.competitor_id))) {
+      return [];
+    }
     const searchableText = normalizeText(
       `${newsletter.subject || ""} ${newsletter.text_content || ""} ${newsletter.from_name || ""} ${newsletter.from_email || ""}`,
     ).toLowerCase();
@@ -615,6 +628,7 @@ function buildCampaignLaunchCandidates(
 ): AlertCandidate[] {
   const config = asObject(rule.config);
   const allowedCampaignTypes = uniqueStrings(getStringArray(config.campaign_types));
+  const allowedCompetitorIds = getStringArray(config.competitor_ids ?? []);
   const dateBucket = new Date().toISOString().slice(0, 10);
   const extractionGroups = new Map<
     string,
@@ -634,6 +648,7 @@ function buildCampaignLaunchCandidates(
     const actor = newsletter
       ? getNewsletterActor(newsletter, competitors)
       : { key: "unknown", label: "Tracked competitor", competitorId: null };
+    if (allowedCompetitorIds.length > 0 && !allowedCompetitorIds.includes(actor.competitorId ?? "")) continue;
     const groupKey = `${actor.key}:${campaignType}`;
     const current = extractionGroups.get(groupKey);
     if (current) {
@@ -670,6 +685,7 @@ function buildCampaignLaunchCandidates(
   const adGroups = new Map<string, { metaAd: MetaAdRow; actor: Actor; count: number }>();
   for (const metaAd of metaAds) {
     const actor = getMetaAdActor(metaAd, competitors);
+    if (allowedCompetitorIds.length > 0 && !allowedCompetitorIds.includes(actor.competitorId ?? "")) continue;
     const current = adGroups.get(actor.key);
     if (current) {
       current.count += 1;
@@ -721,6 +737,7 @@ async function buildActivitySpikeCandidates(
   const config = asObject(rule.config);
   const spikeMultiplier = getNumber(config.spike_multiplier) ?? 2;
   const minimumEvents = getNumber(config.minimum_events) ?? 3;
+  const allowedCompetitorIds = getStringArray(config.competitor_ids ?? []);
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const baselineStart = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
   const currentCounts = new Map<string, { actor: Actor; count: number }>();
@@ -748,6 +765,7 @@ async function buildActivitySpikeCandidates(
   const candidates: AlertCandidate[] = [];
 
   for (const { actor, count } of currentCounts.values()) {
+    if (allowedCompetitorIds.length > 0 && (!actor.competitorId || !allowedCompetitorIds.includes(actor.competitorId))) continue;
     const [newsletterBaseline, metaAdBaseline] = await Promise.all([
       supabase
         .from("newsletter_inbox")
