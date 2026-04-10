@@ -259,13 +259,13 @@ export default function Dashboard() {
                 key={s.label}
                 onClick={() => navigate(s.href)}
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-80",
-                  s.tone === "red" && "bg-destructive/15 text-destructive",
-                  s.tone === "amber" && "bg-warning/15 text-warning",
-                  s.tone === "blue" && "bg-primary/15 text-primary",
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all hover:opacity-90 hover:shadow-sm",
+                  s.tone === "red" && "border-destructive/25 bg-destructive/10 text-destructive",
+                  s.tone === "amber" && "border-warning/25 bg-warning/10 text-warning",
+                  s.tone === "blue" && "border-primary/25 bg-primary/10 text-primary",
                 )}
               >
-                <span className={cn("h-1.5 w-1.5 rounded-full", s.tone === "red" && "bg-destructive", s.tone === "amber" && "bg-warning", s.tone === "blue" && "bg-primary")} />
+                <span className={cn("h-1.5 w-1.5 animate-pulse rounded-full", s.tone === "red" && "bg-destructive", s.tone === "amber" && "bg-warning", s.tone === "blue" && "bg-primary")} />
                 {s.count} {s.label}
               </button>
             ))}
@@ -275,11 +275,11 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => navigate("/newsletters/new")}>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/newsletters/new")}>
             <Plus className="h-3.5 w-3.5" />
             Import data
           </Button>
-          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => navigate("/insights")}>
+          <Button size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/insights")}>
             <Sparkles className="h-3.5 w-3.5" />
             Generate insights
           </Button>
@@ -307,7 +307,7 @@ export default function Dashboard() {
           {/* ── Zone 3: Intelligence Command Panel ─────────────────────────── */}
           <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
             <div className="flex items-center gap-2.5 border-b bg-muted/40 px-5 py-3.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/15">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
               </div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground/70">Intelligence brief</p>
@@ -343,14 +343,15 @@ export default function Dashboard() {
 
           {/* ── Filter Strip (only if filters are meaningful) ───────────────── */}
           {(competitorOptions.length > 0 || campaignTypeOptions.length > 0) && (
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <Filter className="h-3 w-3" />
-                <span>Filter:</span>
+                <span>Filter</span>
               </div>
+              <Separator orientation="vertical" className="h-4" />
               {competitorOptions.length > 0 && (
                 <Select value={selectedCompetitor || ALL_COMPETITORS} onValueChange={(v) => setSelectedCompetitor(v === ALL_COMPETITORS ? "" : v)}>
-                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background border-dashed">
+                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background">
                     <SelectValue placeholder="All competitors" />
                   </SelectTrigger>
                   <SelectContent>
@@ -361,7 +362,7 @@ export default function Dashboard() {
               )}
               {campaignTypeOptions.length > 0 && (
                 <Select value={selectedCampaignType || ALL_CAMPAIGNS} onValueChange={(v) => setSelectedCampaignType(v === ALL_CAMPAIGNS ? "" : v)}>
-                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background border-dashed">
+                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background">
                     <SelectValue placeholder="All campaigns" />
                   </SelectTrigger>
                   <SelectContent>
@@ -371,9 +372,9 @@ export default function Dashboard() {
                 </Select>
               )}
               {activeFilterCount > 0 && (
-                <button onClick={clearFilters} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <button onClick={clearFilters} className="ml-auto flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground">
                   <X className="h-3 w-3" />
-                  Clear
+                  Clear filters
                 </button>
               )}
             </div>
@@ -428,7 +429,7 @@ export default function Dashboard() {
               {filteredCompetitorSummary.length === 0 ? (
                 <EmptyZone icon={Users} title="No competitor data" desc="Import activity or remove filters." />
               ) : (
-                <Card className="border divide-y">
+                <Card className="border shadow-sm divide-y">
                   {filteredCompetitorSummary.map((entry) => (
                     <CompetitorPressureRow key={entry.competitor} entry={entry} maxSignals={filteredCompetitorSummary[0].newsletters + filteredCompetitorSummary[0].ads} onClick={() => navigate("/competitors")} />
                   ))}
@@ -542,7 +543,7 @@ export default function Dashboard() {
               onClick={() => navigate(a.path)}
               className="flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-background hover:shadow-sm"
             >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background border text-muted-foreground shadow-sm">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/15 text-primary shadow-sm">
                 <a.icon className="h-3.5 w-3.5" />
               </div>
               <div className="min-w-0">
@@ -567,7 +568,7 @@ function SectionHeader({ label, sub, action }: {
   return (
     <div className="flex items-center justify-between gap-3 pb-2">
       <div className="flex items-center gap-2.5">
-        <span className="h-4 w-[3px] rounded-full bg-primary/60 shrink-0" />
+        <span className="h-4 w-[3px] rounded-full bg-primary/50 shrink-0" />
         <p className="text-sm font-semibold tracking-tight text-foreground">{label}</p>
         {sub && (
           <p className="text-[11px] text-muted-foreground/70 hidden sm:block">{sub}</p>
@@ -713,7 +714,7 @@ const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, a
       )} />
       <div className={cn(
         "flex h-8 w-8 items-center justify-center rounded-lg",
-        accent ? "bg-destructive/10 text-destructive" : "bg-primary/8 text-primary",
+        accent ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
       )}>
         <Icon className="h-4 w-4" />
       </div>
@@ -744,7 +745,7 @@ function BriefColumn({ icon: Icon, label, text, accent, cta, onNavigate }: {
   return (
     <div className={cn("flex flex-col gap-3.5 p-5", accent && "bg-primary/[0.025]")}>
       <div className="flex items-center gap-2">
-        <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent ? "bg-primary/12 text-primary" : "bg-muted text-muted-foreground")}>
+        <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
           <Icon className="h-3.5 w-3.5" />
         </div>
         <p className={cn("text-[10px] font-semibold uppercase tracking-[0.16em]", accent ? "text-primary/70" : "text-muted-foreground")}>{label}</p>
@@ -771,13 +772,13 @@ function ActionCard({ action, rank, onNavigate }: {
 }) {
   const priority = normalizeDashboardPriority(action.priority);
   return (
-    <div className={cn("flex items-start gap-3 rounded-xl border border-l-[3px] bg-background p-3 transition-colors hover:bg-accent/20", PRIORITY_BORDER[priority])}>
-      <div className={cn("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white", priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-primary")}>
+    <div className={cn("flex items-start gap-3.5 rounded-xl border border-l-[3px] bg-background p-4 transition-all duration-200 hover:bg-accent/20 hover:shadow-md hover:-translate-y-0.5", PRIORITY_BORDER[priority])}>
+      <div className={cn("mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white shadow-sm", priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-primary")}>
         {rank}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-medium">{action.title}</p>
+          <p className="text-sm font-semibold">{action.title}</p>
           <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
             {INSIGHT_PRIORITY_LABELS[priority]}
           </Badge>
@@ -810,7 +811,7 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
     <button
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border border-l-[3px] bg-card p-5 text-left shadow-sm transition-all duration-150 hover:shadow-md hover:-translate-y-px hover:bg-accent/15",
+        "w-full rounded-xl border border-l-[3px] bg-card p-5 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:bg-accent/15",
         PRIORITY_BORDER[priority],
       )}
     >
@@ -855,13 +856,13 @@ function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; on
     <button
       onClick={onClick}
       className={cn(
-        "flex w-full items-start gap-3 rounded-xl border border-l-[3px] bg-background px-3 py-2.5 text-left transition-colors hover:bg-accent/20",
+        "flex w-full items-start gap-3 rounded-xl border border-l-[3px] bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md",
         PRIORITY_BORDER[priority],
       )}
     >
       <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", PRIORITY_DOT[priority])} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{insight.title}</p>
+        <p className="truncate text-sm font-semibold">{insight.title}</p>
         <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{insight.strategic_takeaway}</p>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <span className="text-[10px] text-muted-foreground capitalize">{getImpactLabel(insight.impact_area)}</span>
@@ -888,10 +889,10 @@ function CompetitorPressureRow({ entry, maxSignals, onClick }: {
   const total = entry.newsletters + entry.ads;
   const pct = maxSignals > 0 ? Math.round((total / maxSignals) * 100) : 0;
   return (
-    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-3 py-3 text-left transition-colors hover:bg-accent/20">
+    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-4 py-3.5 text-left transition-colors hover:bg-accent/20">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent text-[10px] font-semibold text-accent-foreground">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border bg-background text-[11px] font-bold text-foreground shadow-sm">
             {entry.competitor.charAt(0).toUpperCase()}
           </div>
           <p className="truncate text-sm font-medium">{entry.competitor}</p>
@@ -933,14 +934,14 @@ function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
     campaign: "bg-primary",
   };
   return (
-    <div className={cn("rounded-lg border border-l-[3px] bg-background px-3 py-2.5", toneLeft[highlight.tone])}>
-      <div className="flex items-start gap-2">
+    <div className={cn("rounded-xl border border-l-[3px] bg-card px-4 py-3 shadow-sm", toneLeft[highlight.tone])}>
+      <div className="flex items-start gap-2.5">
         <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", kindDot[highlight.kind])} />
         <div className="min-w-0">
-          <p className="text-xs font-medium leading-snug">{highlight.title}</p>
-          <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{highlight.detail}</p>
+          <p className="text-xs font-semibold leading-snug text-foreground">{highlight.title}</p>
+          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground">{highlight.detail}</p>
           {highlight.competitors?.slice(0, 1).map((c) => (
-            <Badge key={c} variant="secondary" className="mt-1 text-[10px]">{c}</Badge>
+            <Badge key={c} variant="secondary" className="mt-1.5 text-[10px]">{c}</Badge>
           ))}
         </div>
       </div>
@@ -955,12 +956,12 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
   return (
     <button
       onClick={onNavigate}
-      className={cn("w-full rounded-lg border border-l-[3px] bg-background px-3 py-2.5 text-left transition-colors hover:bg-accent/20", PRIORITY_BORDER[priority])}
+      className={cn("w-full rounded-xl border border-l-[3px] bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md", PRIORITY_BORDER[priority])}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs font-medium">{anomaly.title}</p>
-          <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{anomaly.detail}</p>
+          <p className="text-xs font-semibold text-foreground">{anomaly.title}</p>
+          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground">{anomaly.detail}</p>
         </div>
         <Badge variant="outline" className={cn("shrink-0 text-[10px] capitalize", PRIORITY_BADGE[priority])}>
           {priority}
@@ -980,17 +981,20 @@ function InboxCompactRow({ item, competitorName, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-2.5 rounded-lg border bg-background px-3 py-2 text-left transition-colors hover:bg-accent/20"
+      className="flex w-full items-center gap-3 rounded-xl border bg-card px-3.5 py-2.5 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md"
     >
       <div className={cn(
-        "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] font-semibold",
-        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary",
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
+        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/12 text-primary ring-1 ring-primary/20",
       )}>
         {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-medium">{item.subject || "No subject"}</p>
         <div className="flex items-center gap-1.5">
+          <p className={cn("truncate text-xs font-medium", !item.is_read && "font-semibold text-foreground")}>{item.subject || "No subject"}</p>
+          {!item.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+        </div>
+        <div className="flex items-center gap-1.5 mt-0.5">
           <p className="truncate text-[10px] text-muted-foreground">{item.from_name || item.from_email || "Unknown"}</p>
           {competitorName && <Badge variant="outline" className="text-[9px]">{competitorName}</Badge>}
         </div>
@@ -1006,16 +1010,17 @@ function InboxCompactRow({ item, competitorName, onClick }: {
 
 function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardCompetitorPreview; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-2.5 rounded-lg border p-2.5 text-left transition-colors hover:bg-accent/40 hover:border-primary/20">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-accent text-xs font-semibold text-accent-foreground">
+    <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/8 text-sm font-bold text-primary">
         {competitor.name.charAt(0).toUpperCase()}
       </div>
-      <div className="min-w-0">
-        <p className="truncate text-xs font-medium">{competitor.name}</p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-foreground">{competitor.name}</p>
         {competitor.website && (
-          <p className="truncate text-[10px] text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
+          <p className="truncate text-[11px] text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
         )}
       </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-primary/50" />
     </button>
   );
 }

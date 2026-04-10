@@ -39,7 +39,7 @@ export const StatCard = memo(function StatCard({
   className,
 }: StatCardProps) {
   const iconClass = cn(
-    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
     tone === "positive" && "bg-primary/10 text-primary",
     tone === "warning"  && "bg-warning/10 text-warning",
     tone === "negative" && "bg-destructive/10 text-destructive",
@@ -51,7 +51,7 @@ export const StatCard = memo(function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card p-4 shadow-sm transition-shadow duration-150",
+        "rounded-xl border bg-card p-4 shadow-sm transition-all duration-200 hover:border-primary/20 hover:shadow-md hover:-translate-y-0.5",
         className,
       )}
     >
@@ -61,7 +61,7 @@ export const StatCard = memo(function StatCard({
           <p className="section-label truncate">{label}</p>
 
           <div className="flex items-end gap-2">
-            <p className="stat-value text-2xl font-semibold leading-none tracking-tight text-foreground">
+            <p className="stat-value text-[1.65rem] font-bold leading-none tracking-tight text-foreground tabular-nums">
               {value}
             </p>
 
@@ -86,13 +86,13 @@ export const StatCard = memo(function StatCard({
           </div>
 
           {subtitle && (
-            <p className="text-xs leading-relaxed text-muted-foreground">{subtitle}</p>
+            <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{subtitle}</p>
           )}
         </div>
 
         {/* Right: icon */}
         <div className={iconClass}>
-          <Icon className="h-4 w-4" />
+          <Icon className="h-5 w-5" />
         </div>
       </div>
     </div>
