@@ -590,10 +590,10 @@ const RuleCard = memo(function RuleCard({
             onCheckedChange={onToggle}
             className="scale-90"
           />
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={onEdit}>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={onEdit} aria-label="Edit alert rule">
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/5" onClick={onDelete}>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/5" onClick={onDelete} aria-label="Delete alert rule">
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
