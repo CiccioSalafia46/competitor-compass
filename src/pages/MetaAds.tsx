@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DOMPurify from "dompurify";
 import { useTranslation } from "react-i18next";
 import { MetaAdCard } from "@/components/meta-ads/MetaAdCard";
 import { AdAnalysisPanel } from "@/components/meta-ads/AdAnalysisPanel";
@@ -77,7 +78,7 @@ export default function MetaAdsPage() {
             {!isUnlocked && (
               <p
                 className="text-xs text-muted-foreground mt-2"
-                dangerouslySetInnerHTML={{ __html: t("betaNotice.premiumNote") }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t("betaNotice.premiumNote"), { ALLOWED_TAGS: ["strong", "em", "b", "a"], ALLOWED_ATTR: ["href"] }) }}
               />
             )}
           </div>
