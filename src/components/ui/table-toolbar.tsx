@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, type ComponentType } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -108,22 +108,22 @@ export function TableShell({ children, className }: { children: ReactNode; class
 }
 
 /**
- * TableEmptyRow — reusable "no data" row.
+ * TableEmptyRow — reusable "no data" row with optional icon.
  */
 export function TableEmptyRow({
   colSpan,
   message = "No data found",
+  icon: Icon,
 }: {
   colSpan: number;
   message?: string;
+  icon?: ComponentType<{ className?: string }>;
 }) {
   return (
     <tr>
-      <td
-        colSpan={colSpan}
-        className="px-4 py-12 text-center text-sm text-muted-foreground"
-      >
-        {message}
+      <td colSpan={colSpan} className="px-4 py-14 text-center">
+        {Icon && <Icon className="mx-auto mb-2.5 h-8 w-8 text-muted-foreground/25" />}
+        <p className="text-sm text-muted-foreground">{message}</p>
       </td>
     </tr>
   );

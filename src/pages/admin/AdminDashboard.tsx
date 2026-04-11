@@ -15,10 +15,10 @@ import {
   ScrollText, Plug, KeyRound, UserX, RotateCcw,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
 import type { AdminOverviewData } from "@/types/admin";
 
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
 
       {/* ── Alert banner ───────────────────────────────────────────── */}
       {totalIssues > 0 && (
-        <div className="flex items-start justify-between gap-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3.5">
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-l-[3px] border-destructive/20 border-l-destructive bg-destructive/[0.04] px-4 py-3.5">
           <div className="flex items-start gap-2.5">
             <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
             <div className="space-y-0.5">
@@ -250,35 +250,35 @@ export default function AdminDashboard() {
         <CardContent className="p-5">
           <div className="flex items-center gap-6 flex-wrap">
             {/* Health score */}
-            <div className="flex items-center gap-4 min-w-[180px]">
+            <div className="flex items-center gap-4 min-w-[200px]">
               <div className={cn(
-                "text-4xl font-black tabular-nums leading-none",
-                health?.tone === "healthy" ? "text-emerald-600 dark:text-emerald-400"
-                  : health?.tone === "fair" ? "text-amber-600 dark:text-amber-400"
-                  : "text-destructive",
+                "flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-2xl font-black tabular-nums shadow-sm",
+                health?.tone === "healthy"
+                  ? "bg-success/10 text-success"
+                  : health?.tone === "fair"
+                  ? "bg-warning/10 text-warning"
+                  : "bg-destructive/10 text-destructive",
               )}>
                 {health?.score}
               </div>
-              <div className="flex-1 min-w-[100px]">
-                <div className="flex items-center gap-2 mb-1.5">
+              <div className="flex-1 min-w-[110px]">
+                <div className="flex items-center justify-between mb-1.5">
                   <p className="text-xs font-semibold text-foreground">Platform Health</p>
-                  <Badge
-                    variant={health?.tone === "healthy" ? "outline" : health?.tone === "fair" ? "secondary" : "destructive"}
-                    className={cn(
-                      "text-[10px] px-1.5",
-                      health?.tone === "healthy" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-                      health?.tone === "fair" && "border-warning/40 bg-warning/10 text-warning",
-                    )}
-                  >
+                  <span className={cn(
+                    "text-[10px] font-medium",
+                    health?.tone === "healthy" ? "text-success"
+                      : health?.tone === "fair" ? "text-warning"
+                      : "text-destructive",
+                  )}>
                     {health?.label}
-                  </Badge>
+                  </span>
                 </div>
                 <Progress
                   value={health?.score}
                   className={cn(
                     "h-1.5",
-                    health?.tone === "healthy" && "[&>div]:bg-emerald-500",
-                    health?.tone === "fair" && "[&>div]:bg-amber-500",
+                    health?.tone === "healthy" && "[&>div]:bg-success",
+                    health?.tone === "fair" && "[&>div]:bg-warning",
                     health?.tone === "critical" && "[&>div]:bg-destructive",
                   )}
                 />
@@ -368,21 +368,40 @@ export default function AdminDashboard() {
                       <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v: string) => format(parseISO(v), "d MMM")}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
-                    labelStyle={{ fontWeight: 600 }}
+                    contentStyle={{
+                      fontSize: 12,
+                      borderRadius: 8,
+                      border: "1px solid hsl(var(--border))",
+                      background: "hsl(var(--card))",
+                      boxShadow: "0 4px 12px hsl(var(--foreground) / 0.08)",
+                    }}
+                    labelStyle={{ fontWeight: 600, marginBottom: 2 }}
+                    labelFormatter={(v: string) => format(parseISO(v), "EEEE, MMM d")}
+                    cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
                   />
                   <Area
                     type="monotone"
                     dataKey="count"
                     name="Signups"
                     stroke="hsl(var(--primary))"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     fill="url(#signupGradient)"
-                    dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                    dot={false}
+                    activeDot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--card))" }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -404,34 +423,36 @@ export default function AdminDashboard() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-1 max-h-[215px] overflow-y-auto">
+          <CardContent className="space-y-0.5 max-h-[215px] overflow-y-auto scrollbar-thin">
             {(!data.recentActivity || data.recentActivity.length === 0) ? (
               <div className="py-8 text-center">
                 <Activity className="mx-auto h-5 w-5 text-muted-foreground/30 mb-2" />
                 <p className="text-xs text-muted-foreground">No recent activity</p>
               </div>
             ) : (
-              data.recentActivity.map((log) => (
-                <div key={log.id} className="flex items-start justify-between gap-3 rounded-lg px-2.5 py-2 hover:bg-muted/40 transition-colors">
-                  <div className="min-w-0 flex-1">
-                    <Badge
-                      variant={log.action?.startsWith("admin.") ? "default" : "outline"}
-                      className="font-mono text-[10px] mb-0.5"
-                    >
-                      {log.action}
-                    </Badge>
-                    {log.entity_type && (
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {log.entity_type}
-                        {log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""}
+              data.recentActivity.map((log) => {
+                const isAdmin = log.action?.startsWith("admin.");
+                const dotColor = isAdmin ? "bg-primary" : "bg-muted-foreground/40";
+                return (
+                  <div key={log.id} className="flex items-start justify-between gap-2.5 rounded-md px-2.5 py-1.5 hover:bg-muted/40 transition-colors">
+                    <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-mono text-foreground/80 truncate leading-snug">
+                        {log.action}
                       </p>
-                    )}
+                      {log.entity_type && (
+                        <p className="text-[11px] text-muted-foreground/60 truncate">
+                          {log.entity_type}
+                          {log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-muted-foreground/50 shrink-0 tabular-nums">
+                      {format(new Date(log.created_at), "HH:mm")}
+                    </span>
                   </div>
-                  <span className="text-[11px] text-muted-foreground/60 shrink-0 tabular-nums">
-                    {format(new Date(log.created_at), "HH:mm")}
-                  </span>
-                </div>
-              ))
+                );
+              })
             )}
           </CardContent>
         </Card>

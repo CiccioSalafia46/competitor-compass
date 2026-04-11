@@ -12,11 +12,67 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
-import { CheckCircle, XCircle, Ban, Trash2, ShieldOff } from "lucide-react";
+import { ShieldOff, Ban, Trash2, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { AdminUserRecord, AdminUsersResponse } from "@/types/admin";
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
+const AVATAR_PALETTE = [
+  "bg-blue-500", "bg-violet-500", "bg-emerald-500",
+  "bg-amber-500", "bg-rose-500", "bg-sky-500", "bg-indigo-500",
+] as const;
+
+function UserAvatar({ name, email }: { name: string | null; email: string | null }) {
+  const label = name || email || "?";
+  const initial = label[0].toUpperCase();
+  const bg = AVATAR_PALETTE[label.charCodeAt(0) % AVATAR_PALETTE.length];
+  return (
+    <div className={cn(
+      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white",
+      bg,
+    )}>
+      {initial}
+    </div>
+  );
+}
+
+// ─── Status indicator ─────────────────────────────────────────────────────────
+
+function UserStatusDot({
+  verified,
+  banned,
+}: {
+  verified: boolean;
+  banned: boolean;
+}) {
+  if (banned) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
+        <span className="text-[12px] font-medium text-destructive">Disabled</span>
+      </div>
+    );
+  }
+  if (verified) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
+        <span className="text-[12px] text-muted-foreground">Verified</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" />
+      <span className="text-[12px] text-muted-foreground">Pending</span>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AdminUsers() {
   const [page, setPage] = useState(1);
@@ -71,13 +127,14 @@ export default function AdminUsers() {
           <div className="divide-y">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <Skeleton className="h-7 w-7 rounded-full shrink-0" />
                 <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-3.5 w-40" />
-                  <Skeleton className="h-3 w-56" />
+                  <Skeleton className="h-3.5 w-36" />
+                  <Skeleton className="h-3 w-52" />
                 </div>
-                <Skeleton className="h-5 w-16" />
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-3 w-20" />
               </div>
             ))}
           </div>
@@ -103,7 +160,7 @@ export default function AdminUsers() {
         <div>
           <h1 className="page-title">User Management</h1>
           <p className="page-description">
-            <span className="stat-value font-semibold text-foreground">{total}</span> registered users
+            <span className="font-semibold text-foreground">{total}</span> registered users
           </p>
         </div>
       </div>
@@ -120,56 +177,61 @@ export default function AdminUsers() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[260px]">User</TableHead>
-              <TableHead className="w-[100px]">Status</TableHead>
+              <TableHead className="w-[280px]">User</TableHead>
+              <TableHead className="w-[110px]">Status</TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Workspaces</TableHead>
               <TableHead className="w-[130px]">Last sign in</TableHead>
               <TableHead className="w-[110px]">Joined</TableHead>
-              {/* Actions column — invisible header, right-aligned */}
               <TableHead className="w-[1%] whitespace-nowrap" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 && (
-              <TableEmptyRow colSpan={7} message={search ? "No users match your search." : "No users found."} />
+              <TableEmptyRow
+                colSpan={7}
+                message={search ? "No users match your search." : "No users found."}
+                icon={Users}
+              />
             )}
             {filtered.map((user) => (
-              <TableRow key={user.id}>
-                {/* PRIMARY: user identity */}
+              <TableRow key={user.id} className="group">
+                {/* PRIMARY: avatar + user identity */}
                 <TableCell>
-                  <div className="space-y-0.5">
-                    <p className="text-[13px] font-medium leading-snug text-foreground">
-                      {user.display_name || "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <div className="flex items-center gap-2.5">
+                    <UserAvatar name={user.display_name} email={user.email} />
+                    <div className="space-y-0.5 min-w-0">
+                      <p className="text-[13px] font-medium leading-snug text-foreground truncate">
+                        {user.display_name || "—"}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
                   </div>
                 </TableCell>
 
                 {/* SECONDARY: verification + ban state */}
                 <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    {user.email_confirmed_at ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
-                    ) : (
-                      <XCircle className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                    )}
-                    {user.banned && (
-                      <Badge variant="destructive" className="text-[10px] py-0">
-                        Disabled
-                      </Badge>
-                    )}
-                  </div>
+                  <UserStatusDot
+                    verified={Boolean(user.email_confirmed_at)}
+                    banned={user.banned}
+                  />
                 </TableCell>
 
                 {/* SECONDARY: roles */}
                 <TableCell>
                   {user.roles?.length > 0 ? (
-                    <span className="text-[12px] text-muted-foreground">
-                      {user.roles.map((r) => r.role).join(" · ")}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {user.roles.slice(0, 2).map((r) => (
+                        <Badge key={r.workspace_id + r.role} variant="secondary" className="text-[10px] py-0">
+                          {r.role}
+                        </Badge>
+                      ))}
+                      {user.roles.length > 2 && (
+                        <span className="text-[11px] text-muted-foreground/60">+{user.roles.length - 2}</span>
+                      )}
+                    </div>
                   ) : (
-                    <span className="text-muted-foreground/40">—</span>
+                    <span className="text-muted-foreground/40 text-xs">—</span>
                   )}
                 </TableCell>
 
@@ -191,7 +253,7 @@ export default function AdminUsers() {
                         )}
                       </>
                     ) : (
-                      <span className="text-xs text-muted-foreground/50">None</span>
+                      <span className="text-xs text-muted-foreground/40">None</span>
                     )}
                   </div>
                 </TableCell>
@@ -224,7 +286,7 @@ export default function AdminUsers() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={cn("h-7 text-xs gap-1", !user.banned && "text-warning hover:text-warning")}
+                        className={cn("h-7 text-xs gap-1 text-warning hover:text-warning hover:bg-warning/5")}
                         disabled={acting}
                         onClick={() => setConfirmAction({ type: "ban", user })}
                       >

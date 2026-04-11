@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { Download } from "lucide-react";
+import { Download, ScrollText } from "lucide-react";
 import { exportToCSV } from "@/lib/export-csv";
 import type { AdminLogEntry, AdminLogsResponse } from "@/types/admin";
 
@@ -209,6 +209,7 @@ export default function AdminLogs() {
             {filtered.length === 0 && (
               <TableEmptyRow
                 colSpan={6}
+                icon={ScrollText}
                 message={search ? "No logs match your search." : "No log entries found."}
               />
             )}

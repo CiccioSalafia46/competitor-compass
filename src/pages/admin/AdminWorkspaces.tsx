@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Trash2, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import type { AdminWorkspaceRecord, AdminWorkspacesResponse } from "@/types/admin";
 
@@ -116,11 +116,12 @@ export default function AdminWorkspaces() {
             {filtered.length === 0 && (
               <TableEmptyRow
                 colSpan={8}
+                icon={Building2}
                 message={search ? "No workspaces match your search." : "No workspaces found."}
               />
             )}
             {filtered.map((ws) => (
-              <TableRow key={ws.id}>
+              <TableRow key={ws.id} className="group">
                 {/* PRIMARY */}
                 <TableCell>
                   <div className="space-y-0.5">

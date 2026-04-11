@@ -1,7 +1,6 @@
 import { useAdminData } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   CheckCircle, XCircle, AlertTriangle, HelpCircle, RefreshCw,
@@ -14,22 +13,25 @@ const STATUS_CONFIG = {
   healthy: {
     label: "Healthy",
     icon: CheckCircle,
-    color: "text-primary",
-    bg: "bg-primary/10",
-    bar: "bg-primary",
+    color: "text-success",
+    bg: "bg-success/10",
+    cardBg: "bg-success/[0.04] border-success/15",
+    bar: "bg-success",
   },
   warning: {
     label: "Warning",
     icon: AlertTriangle,
-    color: "text-yellow-500",
-    bg: "bg-yellow-500/10",
-    bar: "bg-yellow-500",
+    color: "text-warning",
+    bg: "bg-warning/10",
+    cardBg: "bg-warning/[0.04] border-warning/15",
+    bar: "bg-warning",
   },
   critical: {
     label: "Critical",
     icon: XCircle,
     color: "text-destructive",
     bg: "bg-destructive/10",
+    cardBg: "bg-destructive/[0.04] border-destructive/15",
     bar: "bg-destructive",
   },
   unknown: {
@@ -37,14 +39,15 @@ const STATUS_CONFIG = {
     icon: HelpCircle,
     color: "text-muted-foreground",
     bg: "bg-muted/50",
+    cardBg: "bg-muted/30 border-border",
     bar: "bg-muted-foreground/40",
   },
 } as const;
 
 function healthLabel(score: number): { text: string; color: string } {
-  if (score >= 90) return { text: "Excellent", color: "text-primary" };
-  if (score >= 75) return { text: "Good", color: "text-primary" };
-  if (score >= 50) return { text: "Degraded", color: "text-yellow-500" };
+  if (score >= 90) return { text: "Excellent", color: "text-success" };
+  if (score >= 75) return { text: "Good", color: "text-success" };
+  if (score >= 50) return { text: "Degraded", color: "text-warning" };
   return { text: "Critical", color: "text-destructive" };
 }
 
@@ -52,7 +55,7 @@ function CheckCard({ check }: { check: AdminHealthCheck }) {
   const cfg = STATUS_CONFIG[check.status];
   const Icon = cfg.icon;
   return (
-    <div className={cn("flex items-start gap-3 rounded-lg border p-4", cfg.bg + "/50")}>
+    <div className={cn("flex items-start gap-3 rounded-lg border p-4", cfg.cardBg)}>
       <div className={cn("rounded-lg p-1.5 shrink-0", cfg.bg)}>
         <Icon className={cn("h-4 w-4", cfg.color)} />
       </div>
@@ -60,7 +63,9 @@ function CheckCard({ check }: { check: AdminHealthCheck }) {
         <div className="flex items-center justify-between gap-2">
           <p className="text-[13px] font-medium text-foreground">{check.name}</p>
           {check.value != null && (
-            <span className="tabular-nums text-xs text-muted-foreground font-mono">{check.value}</span>
+            <span className={cn("tabular-nums text-xs font-mono font-medium", cfg.color)}>
+              {check.value}
+            </span>
           )}
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">{check.message}</p>
@@ -82,24 +87,42 @@ function StatStrip({
   sub?: string;
   tone?: "ok" | "warn" | "bad" | "neutral";
 }) {
-  const valueClass = {
-    ok: "text-primary",
-    warn: "text-yellow-500",
+  const valueCls = {
+    ok: "text-success",
+    warn: "text-warning",
     bad: "text-destructive",
     neutral: "text-foreground",
   }[tone ?? "neutral"];
 
+  const iconBg = {
+    ok: "bg-success/10",
+    warn: "bg-warning/10",
+    bad: "bg-destructive/10",
+    neutral: "bg-muted/60",
+  }[tone ?? "neutral"];
+
+  const iconCls = {
+    ok: "text-success",
+    warn: "text-warning",
+    bad: "text-destructive",
+    neutral: "text-muted-foreground",
+  }[tone ?? "neutral"];
+
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
-      <div className="rounded-md bg-muted/60 p-2 shrink-0">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] text-muted-foreground/70 uppercase tracking-[0.08em]">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums", valueClass)}>{value}</p>
-        {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
-      </div>
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <div className={cn("rounded-lg p-2 shrink-0", iconBg)}>
+            <Icon className={cn("h-4 w-4", iconCls)} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">{label}</p>
+            <p className={cn("mt-1 text-2xl font-bold tabular-nums", valueCls)}>{value}</p>
+            {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/70">{sub}</p>}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -150,7 +173,7 @@ export default function AdminSystemHealth() {
   const warningChecks = checks.filter((c) => c.status === "warning");
 
   // Score progress color
-  const progressColor = score >= 90 ? "bg-primary" : score >= 75 ? "bg-primary" : score >= 50 ? "bg-yellow-500" : "bg-destructive";
+  const progressColor = score >= 75 ? "bg-success" : score >= 50 ? "bg-warning" : "bg-destructive";
 
   return (
     <div className="space-y-6 p-6 max-w-5xl">
@@ -174,9 +197,9 @@ export default function AdminSystemHealth() {
             <div className="flex flex-col items-center shrink-0">
               <div className={cn(
                 "flex h-16 w-16 items-center justify-center rounded-full border-4 text-2xl font-bold tabular-nums",
-                score >= 90 ? "border-primary text-primary" :
-                score >= 50 ? "border-yellow-500 text-yellow-500" :
-                "border-destructive text-destructive",
+                score >= 90 ? "border-success/50 bg-success/10 text-success" :
+                score >= 50 ? "border-warning/50 bg-warning/10 text-warning" :
+                "border-destructive/50 bg-destructive/10 text-destructive",
               )}>
                 {score}
               </div>
@@ -199,7 +222,7 @@ export default function AdminSystemHealth() {
               </div>
 
               {criticalChecks.length > 0 && (
-                <div className="flex items-center gap-1.5 rounded-md bg-destructive/8 border border-destructive/15 px-3 py-1.5">
+                <div className="flex items-center gap-1.5 rounded-md border border-destructive/20 bg-destructive/[0.06] px-3 py-1.5">
                   <XCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
                   <p className="text-xs text-destructive">
                     {criticalChecks.length} critical issue{criticalChecks.length > 1 ? "s" : ""} require attention
@@ -207,17 +230,17 @@ export default function AdminSystemHealth() {
                 </div>
               )}
               {criticalChecks.length === 0 && warningChecks.length > 0 && (
-                <div className="flex items-center gap-1.5 rounded-md bg-yellow-500/8 border border-yellow-500/15 px-3 py-1.5">
-                  <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                <div className="flex items-center gap-1.5 rounded-md border border-warning/20 bg-warning/[0.06] px-3 py-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
+                  <p className="text-xs text-warning">
                     {warningChecks.length} warning{warningChecks.length > 1 ? "s" : ""} detected
                   </p>
                 </div>
               )}
               {criticalChecks.length === 0 && warningChecks.length === 0 && (
-                <div className="flex items-center gap-1.5 rounded-md bg-primary/8 border border-primary/15 px-3 py-1.5">
-                  <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <p className="text-xs text-primary">All systems operating normally</p>
+                <div className="flex items-center gap-1.5 rounded-md border border-success/20 bg-success/[0.06] px-3 py-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 text-success shrink-0" />
+                  <p className="text-xs text-success">All systems operating normally</p>
                 </div>
               )}
             </div>

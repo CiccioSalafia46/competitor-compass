@@ -12,24 +12,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { RefreshCw, Unplug } from "lucide-react";
+import { RefreshCw, Unplug, Plug } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { AdminGmailConnection, AdminIntegrationsResponse } from "@/types/admin";
 
 function SyncStatusDot({ conn }: { conn: AdminGmailConnection }) {
-  const dotClass = conn.sync_error
-    ? "bg-destructive"
-    : conn.sync_status === "idle"
-    ? "bg-muted-foreground/40"
-    : "bg-primary";
-  const textClass = conn.sync_error
-    ? "text-destructive"
-    : "text-muted-foreground";
+  const hasError = Boolean(conn.sync_error);
+  const isActive = conn.sync_status === "syncing" || conn.sync_status === "active";
+  const dotClass = hasError ? "bg-destructive" : isActive ? "bg-success" : "bg-muted-foreground/40";
+  const textClass = hasError ? "text-destructive font-medium" : "text-muted-foreground";
   return (
     <div className="flex items-center gap-1.5">
-      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass}`} />
-      <span className={`text-[12px] ${textClass}`}>{conn.sync_status}</span>
+      <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", dotClass)} />
+      <span className={cn("text-[12px]", textClass)}>{conn.sync_status}</span>
     </div>
   );
 }
@@ -127,10 +123,10 @@ export default function AdminIntegrations() {
             </TableHeader>
             <TableBody>
               {gmailConns.length === 0 && (
-                <TableEmptyRow colSpan={6} message="No Gmail connections found." />
+                <TableEmptyRow colSpan={6} icon={Plug} message="No Gmail connections found." />
               )}
               {gmailConns.map((conn) => (
-                <TableRow key={conn.id}>
+                <TableRow key={conn.id} className="group">
                   {/* PRIMARY */}
                   <TableCell className="text-[13px] font-medium text-foreground">
                     {conn.email_address}

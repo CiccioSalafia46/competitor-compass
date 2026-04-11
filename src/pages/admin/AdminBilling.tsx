@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useAdminData } from "@/hooks/useAdmin";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -14,27 +13,23 @@ import type { AdminBillingResponse, AdminWorkspaceBilling } from "@/types/admin"
 
 const STATUS_CONFIG: Record<string, {
   label: string;
-  variant: "default" | "secondary" | "destructive" | "outline";
-  className?: string;
+  className: string;
 }> = {
-  active: { label: "Active", variant: "default" },
-  trialing: { label: "Trialing", variant: "secondary", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  past_due: { label: "Past Due", variant: "destructive" },
-  canceled: { label: "Canceled", variant: "outline", className: "text-muted-foreground" },
-  unpaid: { label: "Unpaid", variant: "destructive" },
-  incomplete: { label: "Incomplete", variant: "outline" },
+  active: { label: "Active", className: "border-success/25 bg-success/10 text-success" },
+  trialing: { label: "Trialing", className: "border-primary/25 bg-primary/10 text-primary" },
+  past_due: { label: "Past Due", className: "border-destructive/25 bg-destructive/10 text-destructive" },
+  canceled: { label: "Canceled", className: "border-border bg-muted/50 text-muted-foreground" },
+  unpaid: { label: "Unpaid", className: "border-destructive/25 bg-destructive/10 text-destructive" },
+  incomplete: { label: "Incomplete", className: "border-warning/25 bg-warning/10 text-warning" },
 };
 
 function StripeStatusBadge({ status }: { status: string | null }) {
   if (!status) return <span className="text-muted-foreground/40 text-xs">—</span>;
-  const cfg = STATUS_CONFIG[status] ?? { label: status, variant: "outline" as const };
+  const cfg = STATUS_CONFIG[status] ?? { label: status, className: "border-border bg-muted/50 text-muted-foreground" };
   return (
-    <Badge
-      variant={cfg.variant}
-      className={cn("text-[10px]", cfg.className)}
-    >
+    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium", cfg.className)}>
       {cfg.label}
-    </Badge>
+    </span>
   );
 }
 
@@ -43,23 +38,27 @@ function KpiCard({
   label,
   value,
   sub,
+  tone = "default",
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number | string;
   sub?: string;
+  tone?: "default" | "success" | "warning" | "destructive";
 }) {
+  const iconBg = tone === "success" ? "bg-success/10" : tone === "warning" ? "bg-warning/10" : tone === "destructive" ? "bg-destructive/10" : "bg-muted/60";
+  const iconColor = tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : tone === "destructive" ? "text-destructive" : "text-muted-foreground";
   return (
     <Card>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground/70 font-medium uppercase tracking-[0.08em]">{label}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">{label}</p>
             <p className="mt-1.5 text-2xl font-bold tabular-nums text-foreground">{value}</p>
-            {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
+            {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/70">{sub}</p>}
           </div>
-          <div className="rounded-lg bg-primary/8 p-2 shrink-0">
-            <Icon className="h-4 w-4 text-primary" />
+          <div className={cn("rounded-lg p-2 shrink-0", iconBg)}>
+            <Icon className={cn("h-4 w-4", iconColor)} />
           </div>
         </div>
       </CardContent>
@@ -154,13 +153,15 @@ export default function AdminBilling() {
           label="Active"
           value={activeCount}
           sub={activeCount > 0 ? `${Math.round(activeCount / Math.max(subscriptions.length, 1) * 100)}% of total` : undefined}
+          tone="success"
         />
-        <KpiCard icon={Clock} label="Trialing" value={trialingCount} />
+        <KpiCard icon={Clock} label="Trialing" value={trialingCount} tone={trialingCount > 0 ? "default" : "default"} />
         <KpiCard
           icon={issueCount > 0 ? XCircle : TrendingUp}
           label="Issues"
           value={issueCount}
           sub={issueCount > 0 ? "past due or unpaid" : "none"}
+          tone={issueCount > 0 ? "destructive" : "default"}
         />
       </div>
 
@@ -204,10 +205,10 @@ export default function AdminBilling() {
           </TableHeader>
           <TableBody>
             {filtered.length === 0 && (
-              <TableEmptyRow colSpan={6} message="No subscriptions match the current filter." />
+              <TableEmptyRow colSpan={6} icon={CreditCard} message="No subscriptions match the current filter." />
             )}
             {filtered.map((sub: AdminWorkspaceBilling) => (
-              <TableRow key={sub.workspace_id}>
+              <TableRow key={sub.workspace_id} className="group">
                 <TableCell>
                   <div className="space-y-0.5">
                     <p className="text-[13px] font-medium text-foreground">{sub.workspace_name}</p>
