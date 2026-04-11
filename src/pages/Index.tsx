@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -87,6 +88,7 @@ export default function Index() {
             ))}
           </nav>
           <div className="flex items-center gap-1.5">
+            <LanguageSelector />
             <DarkModeToggle />
             {user ? (
               <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => navigate("/dashboard")}>
