@@ -118,5 +118,4 @@ CREATE INDEX IF NOT EXISTS idx_analyses_workspace_created
 
 -- report_runs: reports page listing
 CREATE INDEX IF NOT EXISTS idx_report_runs_workspace_created
-  ON public.report_runs (workspace_id, created_at DESC)
-  WHERE deleted_at IS NULL;
+  ON public.report_runs (workspace_id, created_at DESC);
