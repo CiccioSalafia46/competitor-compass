@@ -97,10 +97,11 @@ export default function NewsletterInbox() {
   const {
     items,
     loading,
-    page,
-    setPage,
     totalCount,
-    totalPages,
+    hasNextPage,
+    hasPreviousPage,
+    goToNextPage,
+    goToPrevPage,
     markRead,
     toggleStar,
     archive,
@@ -190,11 +191,7 @@ export default function NewsletterInbox() {
 
       setLastSyncResult(result);
 
-      if (page === 0) {
-        await refetch();
-      } else if (result.imported > 0) {
-        setPage(0);
-      }
+      await refetch();
 
       if (currentWorkspace && competitors.length > 0) {
         const attribution = await syncWorkspaceInboxAttribution(currentWorkspace.id);
@@ -769,12 +766,11 @@ export default function NewsletterInbox() {
         </div>
       )}
 
-      {!showDemo && totalPages > 1 && (
+      {!showDemo && (hasNextPage || hasPreviousPage) && (
         <div className="flex items-center justify-between">
           <p className="tabular-nums text-xs text-muted-foreground">
-            Page {page + 1} of {totalPages}
             {totalCount > 0 && (
-              <span className="ml-1 text-muted-foreground/50">· {totalCount} total</span>
+              <span className="text-muted-foreground/50">{totalCount} total</span>
             )}
           </p>
           <div className="flex gap-1">
@@ -782,8 +778,8 @@ export default function NewsletterInbox() {
               variant="outline"
               size="icon"
               className="h-7 w-7"
-              disabled={page === 0}
-              onClick={() => setPage(page - 1)}
+              disabled={!hasPreviousPage}
+              onClick={goToPrevPage}
               aria-label="Previous page"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -792,8 +788,8 @@ export default function NewsletterInbox() {
               variant="outline"
               size="icon"
               className="h-7 w-7"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage(page + 1)}
+              disabled={!hasNextPage}
+              onClick={goToNextPage}
               aria-label="Next page"
             >
               <ChevronRight className="h-3.5 w-3.5" />
