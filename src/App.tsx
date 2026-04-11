@@ -116,7 +116,7 @@ const App = () => (
                     <Route path="/reports" element={<RouteGuard requireVerified><Reports /></RouteGuard>} />
                     <Route path="/alerts" element={<RouteGuard><Alerts /></RouteGuard>} />
                     <Route path="/analyses/:id" element={<RouteGuard requireVerified><AnalysisView /></RouteGuard>} />
-                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/settings" element={<RouteGuard><SettingsPage /></RouteGuard>} />
                     <Route path="/settings/team" element={<RouteGuard minimumRole="admin"><TeamManagement /></RouteGuard>} />
                     <Route path="/settings/usage" element={<RouteGuard minimumRole="admin"><UsageDashboard /></RouteGuard>} />
                     <Route path="/settings/billing" element={<RouteGuard minimumRole="admin"><Billing /></RouteGuard>} />

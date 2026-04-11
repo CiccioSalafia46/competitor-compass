@@ -9,16 +9,23 @@ type BillingPlanConfig = {
   priceId: string;
 };
 
+const starterPriceId = Deno.env.get("STRIPE_PRICE_STARTER");
+const premiumPriceId = Deno.env.get("STRIPE_PRICE_PREMIUM");
+
+if (!starterPriceId || !premiumPriceId) {
+  console.error("[billing] STRIPE_PRICE_STARTER or STRIPE_PRICE_PREMIUM is not set. Checkout will fail.");
+}
+
 const BILLING_PLAN_CONFIG: Record<BillingPlan, BillingPlanConfig> = {
   starter: {
     plan: "starter",
     label: "Starter",
-    priceId: Deno.env.get("STRIPE_PRICE_STARTER") || "price_1THG2Z1A6XiCCUbzrdMuP3Xj",
+    priceId: starterPriceId ?? "",
   },
   premium: {
     plan: "premium",
     label: "Premium",
-    priceId: Deno.env.get("STRIPE_PRICE_PREMIUM") || "price_1THG2r1A6XiCCUbz0FlpAOGa",
+    priceId: premiumPriceId ?? "",
   },
 };
 
