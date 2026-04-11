@@ -226,7 +226,7 @@ export default function Dashboard() {
           : []),
       ];
     },
-    [snapshot?.unreadAlertCount, filteredAnomalies, filteredInsights],
+    [snapshot?.unreadAlertCount, filteredAnomalies, filteredInsights, t],
   );
 
   // ── Early returns after all hooks ────────────────────────────────────────────

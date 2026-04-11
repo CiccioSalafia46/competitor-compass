@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { getErrorMessage } from "@/lib/errors";
-import { getCurrentLanguage } from "@/hooks/useLanguage";
+import { getCurrentLanguage } from "@/lib/i18n";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 

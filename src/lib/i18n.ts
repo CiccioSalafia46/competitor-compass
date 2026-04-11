@@ -30,6 +30,15 @@ export function isSupportedLanguage(lang: string): lang is SupportedLanguage {
   return SUPPORTED_LANGUAGES.includes(lang as SupportedLanguage);
 }
 
+/**
+ * Returns the current i18next language without requiring the React context.
+ * Safe to call outside the React tree (e.g. in edge function call utilities).
+ */
+export function getCurrentLanguage(): SupportedLanguage {
+  const lang = i18n.language;
+  return isSupportedLanguage(lang) ? lang : DEFAULT_LANGUAGE;
+}
+
 // Read initial language from localStorage before i18next initializes to avoid flash
 function getInitialLanguage(): string {
   try {

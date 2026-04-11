@@ -61,16 +61,20 @@ export function useOnboarding() {
   useEffect(() => {
     if (!currentWorkspace) return;
     const fetch = async () => {
-      const [comp, inbox, insights] = await Promise.all([
-        supabase.from("competitors").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
-        supabase.from("newsletter_inbox").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
-        supabase.from("insights").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
-      ]);
-      setCompetitorCount(comp.count || 0);
-      setInboxCount(inbox.count || 0);
-      setInsightCount(insights.count || 0);
+      try {
+        const [comp, inbox, insights] = await Promise.all([
+          supabase.from("competitors").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
+          supabase.from("newsletter_inbox").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
+          supabase.from("insights").select("id", { count: "exact", head: true }).eq("workspace_id", currentWorkspace.id),
+        ]);
+        setCompetitorCount(comp.count || 0);
+        setInboxCount(inbox.count || 0);
+        setInsightCount(insights.count || 0);
+      } catch (err) {
+        console.error("[useOnboarding] failed to fetch counts", err);
+      }
     };
-    fetch();
+    void fetch();
   }, [currentWorkspace]);
 
   const persist = useCallback(

@@ -83,11 +83,3 @@ export function useLanguage(): LanguageContextType {
   return ctx;
 }
 
-/**
- * Returns the current language without requiring the context.
- * Safe to call outside the React tree (e.g. in edge function call utilities).
- */
-export function getCurrentLanguage(): SupportedLanguage {
-  const lang = i18n.language;
-  return isSupportedLanguage(lang) ? lang : DEFAULT_LANGUAGE;
-}

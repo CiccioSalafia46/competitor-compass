@@ -27,6 +27,7 @@ export default tseslint.config(
     files: [
       "src/components/ui/**/*.{ts,tsx}",
       "src/hooks/useAuth.tsx",
+      "src/hooks/useLanguage.tsx",
       "src/hooks/useSubscription.tsx",
       "src/hooks/useWorkspace.tsx",
     ],

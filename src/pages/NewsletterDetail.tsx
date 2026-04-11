@@ -30,36 +30,41 @@ export default function NewsletterDetail() {
     if (!id) return;
     const fetch = async () => {
       setLoading(true);
-      const { data: entryData, error } = await supabase
-        .from("newsletter_entries")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error || !entryData) {
-        toast({ title: "Not found", description: "Newsletter entry not found", variant: "destructive" });
-        navigate("/newsletters");
-        return;
-      }
-
-      setEntry(entryData);
-
-      const [analysesRes, competitorRes] = await Promise.all([
-        supabase
-          .from("analyses")
+      try {
+        const { data: entryData, error } = await supabase
+          .from("newsletter_entries")
           .select("*")
-          .eq("newsletter_entry_id", id)
-          .order("created_at", { ascending: false }),
-        entryData.competitor_id
-          ? supabase.from("competitors").select("*").eq("id", entryData.competitor_id).single()
-          : Promise.resolve({ data: null }),
-      ]);
+          .eq("id", id)
+          .single();
 
-      setAnalyses(analysesRes.data || []);
-      setCompetitor(competitorRes.data);
-      setLoading(false);
+        if (error || !entryData) {
+          toast({ title: "Not found", description: "Newsletter entry not found", variant: "destructive" });
+          navigate("/newsletters");
+          return;
+        }
+
+        setEntry(entryData);
+
+        const [analysesRes, competitorRes] = await Promise.all([
+          supabase
+            .from("analyses")
+            .select("*")
+            .eq("newsletter_entry_id", id)
+            .order("created_at", { ascending: false }),
+          entryData.competitor_id
+            ? supabase.from("competitors").select("*").eq("id", entryData.competitor_id).single()
+            : Promise.resolve({ data: null }),
+        ]);
+
+        setAnalyses(analysesRes.data || []);
+        setCompetitor(competitorRes.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("[NewsletterDetail] failed to load entry", err);
+        setLoading(false);
+      }
     };
-    fetch();
+    void fetch();
   }, [id, navigate, toast]);
 
   const handleAnalyze = async () => {

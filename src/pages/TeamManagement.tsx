@@ -39,37 +39,42 @@ export default function TeamManagement() {
     if (!currentWorkspace) return;
     const fetchMembers = async () => {
       setLoading(true);
-      const { data: workspaceMembers } = await supabase
-        .from("workspace_members")
-        .select("user_id, role")
-        .eq("workspace_id", currentWorkspace.id);
+      try {
+        const { data: workspaceMembers } = await supabase
+          .from("workspace_members")
+          .select("user_id, role")
+          .eq("workspace_id", currentWorkspace.id);
 
-      if (!workspaceMembers) {
+        if (!workspaceMembers) {
+          setLoading(false);
+          return;
+        }
+
+        const userIds = workspaceMembers.map((m) => m.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", userIds);
+
+        const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+
+        const enriched: MemberInfo[] = workspaceMembers.map((m) => ({
+          user_id: m.user_id,
+          role: m.role,
+          display_name: profileMap.get(m.user_id)?.display_name || null,
+          roles: memberRoles
+            .filter((r) => r.user_id === m.user_id)
+            .map((r) => ({ id: r.id, role: r.role as AppRole })),
+        }));
+
+        setMembers(enriched);
         setLoading(false);
-        return;
+      } catch (err) {
+        console.error("[TeamManagement] failed to fetch members", err);
+        setLoading(false);
       }
-
-      const userIds = workspaceMembers.map((m) => m.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name")
-        .in("user_id", userIds);
-
-      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
-
-      const enriched: MemberInfo[] = workspaceMembers.map((m) => ({
-        user_id: m.user_id,
-        role: m.role,
-        display_name: profileMap.get(m.user_id)?.display_name || null,
-        roles: memberRoles
-          .filter((r) => r.user_id === m.user_id)
-          .map((r) => ({ id: r.id, role: r.role as AppRole })),
-      }));
-
-      setMembers(enriched);
-      setLoading(false);
     };
-    fetchMembers();
+    void fetchMembers();
   }, [currentWorkspace, memberRoles]);
 
   const handleInvite = async () => {

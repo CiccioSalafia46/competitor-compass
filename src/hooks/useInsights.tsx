@@ -4,7 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { getErrorMessage } from "@/lib/errors";
-import { getCurrentLanguage } from "@/hooks/useLanguage";
+import { getCurrentLanguage } from "@/lib/i18n";
 import { isTransientNavigationFetchError } from "@/lib/transient-network";
 import type { InsightPriorityLevel } from "@/lib/insight-priority";
 import {

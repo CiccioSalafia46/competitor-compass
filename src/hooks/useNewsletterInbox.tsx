@@ -7,7 +7,7 @@ import { getErrorMessage } from "@/lib/errors";
 import type { NewsletterInboxItem, NewsletterExtraction } from "@/types/gmail";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { fetchNewsletterCompetitorSuggestions, type CompetitorSuggestion } from "@/lib/competitor-attribution";
-import { getCurrentLanguage } from "@/hooks/useLanguage";
+import { getCurrentLanguage } from "@/lib/i18n";
 
 interface InboxFilters {
   competitorId?: string;
