@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,15 +81,10 @@ export default function AdminWorkspaces() {
   }
 
   return (
-    <div className="space-y-4 p-6 max-w-7xl">
-      {/* Page header */}
-      <div>
-        <h1 className="page-title">Workspace Management</h1>
-        <p className="page-description">
-          <span className="stat-value font-semibold text-foreground">{workspaces.length}</span> total workspaces
-        </p>
-      </div>
-
+    <AdminPageLayout
+      title="Workspace Management"
+      description={<><span className="font-semibold text-foreground">{workspaces.length}</span> total workspaces</>}
+    >
       {/* Toolbar */}
       <TableToolbar
         search={search}
@@ -194,6 +190,6 @@ export default function AdminWorkspaces() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminPageLayout>
   );
 }

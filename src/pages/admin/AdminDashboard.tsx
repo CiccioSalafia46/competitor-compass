@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,7 @@ function KpiCard({ icon: Icon, label, value, sub, href, tone = "default" }: KpiC
           "flex h-8 w-8 items-center justify-center rounded-lg",
           tone === "destructive" ? "bg-destructive/10 text-destructive"
             : tone === "warning" ? "bg-warning/10 text-warning"
-            : "bg-primary/10 text-primary",
+            : "bg-muted/60 text-muted-foreground",
         )}>
           <Icon className="h-4 w-4" />
         </div>
@@ -185,17 +186,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-[1400px]">
-
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Platform Overview</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {format(new Date(), "EEEE, MMMM d")} · Real-time metrics
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+    <AdminPageLayout
+      title="Platform Overview"
+      description={`${format(new Date(), "EEEE, MMMM d")} · Real-time metrics`}
+      actions={
+        <>
           {totalIssues > 0 && (
             <Button
               variant="destructive"
@@ -216,9 +211,10 @@ export default function AdminDashboard() {
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh
           </Button>
-        </div>
-      </div>
-
+        </>
+      }
+      maxWidth="max-w-[1400px]"
+    >
       {/* ── Alert banner ───────────────────────────────────────────── */}
       {totalIssues > 0 && (
         <div className="flex items-start justify-between gap-4 rounded-xl border border-l-[3px] border-destructive/20 border-l-destructive bg-destructive/[0.04] px-4 py-3.5">
@@ -535,6 +531,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-    </div>
+    </AdminPageLayout>
   );
 }

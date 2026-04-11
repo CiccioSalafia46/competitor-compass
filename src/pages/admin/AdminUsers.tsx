@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -154,17 +155,10 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="space-y-4 p-6 max-w-7xl">
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="page-title">User Management</h1>
-          <p className="page-description">
-            <span className="font-semibold text-foreground">{total}</span> registered users
-          </p>
-        </div>
-      </div>
-
+    <AdminPageLayout
+      title="User Management"
+      description={<><span className="font-semibold text-foreground">{total}</span> registered users</>}
+    >
       {/* Toolbar */}
       <TableToolbar
         search={search}
@@ -361,6 +355,6 @@ export default function AdminUsers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminPageLayout>
   );
 }

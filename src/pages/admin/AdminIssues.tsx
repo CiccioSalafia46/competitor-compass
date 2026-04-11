@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,14 +46,14 @@ const SEVERITY_CONFIG: Record<IssueSeverity, {
   },
   high: {
     label: "High",
-    barColor: "bg-orange-500",
-    chipClass: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+    barColor: "bg-warning",
+    chipClass: "bg-warning/10 text-warning border-warning/20",
     icon: AlertCircle,
   },
   medium: {
     label: "Medium",
-    barColor: "bg-yellow-500",
-    chipClass: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+    barColor: "bg-warning/60",
+    chipClass: "bg-warning/10 text-warning/80 border-warning/20",
     icon: AlertTriangle,
   },
   low: {
@@ -206,33 +207,27 @@ export default function AdminIssues() {
   const filteredTotal = filteredSync.length + filteredAnalysis.length;
 
   return (
-    <div className="space-y-5 p-6 max-w-5xl">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="page-title">Issues & Incidents</h1>
-          <p className="page-description">
-            {totalIssues === 0 ? (
-              "No active issues"
-            ) : (
-              <>
-                <span className="font-semibold text-foreground">{totalIssues}</span> active
-                {criticalCount > 0 && (
-                  <> — <span className="font-medium text-destructive">{criticalCount} critical</span></>
-                )}
-                {highCount > 0 && (
-                  <>, <span className="font-medium text-orange-500">{highCount} high</span></>
-                )}
-              </>
-            )}
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={refetch} className="gap-1.5 shrink-0">
+    <AdminPageLayout
+      title="Issues & Incidents"
+      description={totalIssues === 0 ? "No active issues" : (
+        <>
+          <span className="font-semibold text-foreground">{totalIssues}</span> active
+          {criticalCount > 0 && (
+            <> — <span className="font-medium text-destructive">{criticalCount} critical</span></>
+          )}
+          {highCount > 0 && (
+            <>, <span className="font-medium text-warning">{highCount} high</span></>
+          )}
+        </>
+      )}
+      actions={
+        <Button variant="outline" size="sm" onClick={refetch} className="h-8 gap-1.5 text-xs">
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh
         </Button>
-      </div>
-
+      }
+      maxWidth="max-w-5xl"
+    >
       {/* Severity summary pills */}
       {totalIssues > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -243,7 +238,7 @@ export default function AdminIssues() {
             </span>
           )}
           {highCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-orange-500/20 bg-orange-500/10 px-2.5 py-1 text-xs font-medium text-orange-500">
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-warning/20 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
               <AlertCircle className="h-3 w-3" />
               {highCount} High
             </span>
@@ -387,6 +382,6 @@ export default function AdminIssues() {
           ))}
         </section>
       )}
-    </div>
+    </AdminPageLayout>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,13 +96,10 @@ export default function AdminIntegrations() {
   const sortedEndpoints = Object.entries(rateLimits).sort(([, a], [, b]) => b - a);
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl">
-      {/* Page header */}
-      <div>
-        <h1 className="page-title">Integrations Monitor</h1>
-        <p className="page-description">Gmail connections and API usage</p>
-      </div>
-
+    <AdminPageLayout
+      title="Integrations Monitor"
+      description="Gmail connections and API usage"
+    >
       {/* Gmail connections table */}
       <section className="space-y-3">
         <div className="flex items-baseline gap-2">
@@ -254,6 +252,6 @@ export default function AdminIntegrations() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminPageLayout>
   );
 }

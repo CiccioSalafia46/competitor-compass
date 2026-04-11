@@ -1,4 +1,5 @@
 import { useAdminData } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -176,19 +177,17 @@ export default function AdminSystemHealth() {
   const progressColor = score >= 75 ? "bg-success" : score >= 50 ? "bg-warning" : "bg-destructive";
 
   return (
-    <div className="space-y-6 p-6 max-w-5xl">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="page-title">System Health</h1>
-          <p className="page-description">Real-time platform diagnostics and integration status</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={refetch} className="gap-1.5 shrink-0">
+    <AdminPageLayout
+      title="System Health"
+      description="Real-time platform diagnostics and integration status"
+      actions={
+        <Button variant="outline" size="sm" onClick={refetch} className="h-8 gap-1.5 text-xs">
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh
         </Button>
-      </div>
-
+      }
+      maxWidth="max-w-5xl"
+    >
       {/* Overall score card */}
       <Card>
         <CardContent className="p-6">
@@ -302,6 +301,6 @@ export default function AdminSystemHealth() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </AdminPageLayout>
   );
 }

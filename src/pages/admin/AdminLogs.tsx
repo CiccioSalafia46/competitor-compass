@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAdminData } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -152,15 +153,10 @@ export default function AdminLogs() {
   }
 
   return (
-    <div className="space-y-4 p-6 max-w-7xl">
-      {/* Page header */}
-      <div>
-        <h1 className="page-title">Audit Logs</h1>
-        <p className="page-description">
-          <span className="stat-value font-semibold text-foreground">{total}</span> total entries
-        </p>
-      </div>
-
+    <AdminPageLayout
+      title="Audit Logs"
+      description={<><span className="font-semibold text-foreground">{total}</span> total entries</>}
+    >
       {/* Toolbar */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex-1 min-w-[200px]">
@@ -263,6 +259,6 @@ export default function AdminLogs() {
           onPageChange={setPage}
         />
       )}
-    </div>
+    </AdminPageLayout>
   );
 }

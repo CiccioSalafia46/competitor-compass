@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAdminData } from "@/hooks/useAdmin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -133,18 +134,15 @@ export default function AdminBilling() {
   const tierEntries = Object.entries(tierCounts).sort(([, a], [, b]) => b - a);
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl">
-      {/* Header */}
-      <div>
-        <h1 className="page-title">Billing & Subscriptions</h1>
-        <p className="page-description">
-          <span className="font-semibold text-foreground">{subscriptions.length}</span> workspaces tracked
-          {tierEntries.length > 0 && (
-            <> · {tierEntries.map(([tier, n]) => `${n} ${tier}`).join(", ")}</>
-          )}
-        </p>
-      </div>
-
+    <AdminPageLayout
+      title="Billing & Subscriptions"
+      description={<>
+        <span className="font-semibold text-foreground">{subscriptions.length}</span> workspaces tracked
+        {tierEntries.length > 0 && (
+          <> · {tierEntries.map(([tier, n]) => `${n} ${tier}`).join(", ")}</>
+        )}
+      </>}
+    >
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard icon={CreditCard} label="Total Tracked" value={subscriptions.length} />
@@ -253,6 +251,6 @@ export default function AdminBilling() {
           </TableBody>
         </Table>
       </TableShell>
-    </div>
+    </AdminPageLayout>
   );
 }

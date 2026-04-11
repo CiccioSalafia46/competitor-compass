@@ -101,7 +101,12 @@ export function TablePagination({
  */
 export function TableShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("rounded-xl border bg-card overflow-hidden", className)}>
+    <div className={cn(
+      "rounded-xl border bg-card overflow-hidden",
+      "[&_thead_tr]:border-b [&_thead_tr]:bg-muted/30",
+      "[&_thead_th]:text-[11px] [&_thead_th]:font-medium [&_thead_th]:tracking-wide [&_thead_th]:text-muted-foreground/70",
+      className,
+    )}>
       {children}
     </div>
   );
