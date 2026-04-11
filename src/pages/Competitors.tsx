@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { useTranslation } from "react-i18next";
 import UpgradePrompt from "@/components/UpgradePrompt";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -625,7 +626,7 @@ export default function Competitors() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("deleteCompetitor")}</AlertDialogTitle>
-            <AlertDialogDescription dangerouslySetInnerHTML={{ __html: t("deleteConfirm", { name: deleteTarget?.name ?? "" }) }} />
+            <AlertDialogDescription dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t("deleteConfirm", { name: deleteTarget?.name ?? "" })) }} />
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("cancel", { ns: "common", defaultValue: "Cancel" })}</AlertDialogCancel>
@@ -643,7 +644,7 @@ export default function Competitors() {
           <div className="space-y-4">
             <p
               className="text-sm text-muted-foreground"
-              dangerouslySetInnerHTML={{ __html: t("csvImportPreview", { count: csvRows.length }) }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t("csvImportPreview", { count: csvRows.length })) }}
             />
             <div className="max-h-64 overflow-y-auto rounded-md border">
               <table className="w-full text-xs">

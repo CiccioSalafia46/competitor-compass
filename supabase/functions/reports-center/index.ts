@@ -225,6 +225,7 @@ serve(async (req) => {
 
     if (action === "run_due") {
       await assertWorkspaceAnalyst(supabase, user.id, workspaceId);
+      await assertActiveSubscription(supabase, workspaceId);
 
       const dueResult = await supabase
         .from<ReportScheduleRow>("report_schedules")

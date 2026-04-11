@@ -53,6 +53,17 @@ serve(async (req) => {
     await assertWorkspaceAnalyst(supabase, user.id, workspaceId);
     await assertActiveSubscription(supabase, workspaceId);
 
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _user_id: user.id,
+      _workspace_id: workspaceId,
+      _endpoint: "generate-weekly-briefing",
+      _max_per_hour: 3,
+    });
+
+    if (!allowed) {
+      return jsonResponse({ error: "Rate limit reached. Weekly briefings can be regenerated up to 3 times per hour." }, 429);
+    }
+
     const { weekStart, weekEnd } = getWeekBounds(new Date());
 
     // Check for existing ready briefing unless forced
