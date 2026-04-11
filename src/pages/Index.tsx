@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,8 +23,13 @@ export default function Index() {
   const ctaShort = user ? t("nav.dashboard") : t("hero.ctaShort");
 
   // ── Typewriter ──────────────────────────────────────────────────────────────
-  const typewriterPhrases = t("typewriter", { returnObjects: true }) as string[];
-  const [typeText, setTypeText] = useState(typewriterPhrases[0]);
+  const rawPhrases = t("typewriter", { returnObjects: true });
+  const typewriterPhrases = useMemo<string[]>(
+    () => (Array.isArray(rawPhrases) ? rawPhrases : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(rawPhrases)],
+  );
+  const [typeText, setTypeText] = useState(typewriterPhrases[0] ?? "");
   const [typePhrase, setTypePhrase] = useState(0);
   const [typeMode, setTypeMode] = useState<"typing" | "waiting" | "deleting">("waiting");
   const [cursorOn, setCursorOn] = useState(true);
@@ -35,6 +40,7 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
+    if (typewriterPhrases.length === 0) return;
     const phrase = typewriterPhrases[typePhrase];
     if (typeMode === "waiting") {
       const id = setTimeout(() => setTypeMode("deleting"), 2000);
