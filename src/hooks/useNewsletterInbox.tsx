@@ -60,7 +60,11 @@ export function useNewsletterInbox(filters: InboxFilters = {}) {
     }
 
     if (filters.search) {
-      query = query.or(`subject.ilike.%${filters.search}%,from_email.ilike.%${filters.search}%,from_name.ilike.%${filters.search}%`);
+      // Escape LIKE special chars so user input can't alter the filter logic
+      const safe = filters.search.replace(/[%_\\]/g, "\\$&").slice(0, 200);
+      query = query.or(
+        `subject.ilike.%${safe}%,from_email.ilike.%${safe}%,from_name.ilike.%${safe}%`,
+      );
     }
 
     if (filters.dateFrom) {
