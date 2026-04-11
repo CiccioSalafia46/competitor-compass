@@ -4,6 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { TableToolbar, TablePagination, TableShell, TableEmptyRow } from "@/components/ui/table-toolbar";
@@ -15,6 +18,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { Download } from "lucide-react";
+import { exportToCSV } from "@/lib/export-csv";
 import type { AdminLogEntry, AdminLogsResponse } from "@/types/admin";
 
 /** Render the metadata object as a readable compact string with tooltip for full value */
@@ -70,24 +75,46 @@ function UuidCell({ value }: { value: string | null | undefined }) {
   );
 }
 
+type ActionPrefix = "all" | "admin" | "other";
+
 export default function AdminLogs() {
   const [page, setPage] = useState(1);
   const perPage = 50;
   const { data, loading, error } = useAdminData<AdminLogsResponse>("logs", { page, perPage });
   const [search, setSearch] = useState("");
+  const [actionPrefix, setActionPrefix] = useState<ActionPrefix>("all");
 
   const logs = data?.logs || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / perPage);
 
-  const filtered = search
-    ? logs.filter(
-        (l: AdminLogEntry) =>
-          l.action?.toLowerCase().includes(search.toLowerCase()) ||
-          l.entity_type?.toLowerCase().includes(search.toLowerCase()) ||
-          l.entity_id?.toLowerCase().includes(search.toLowerCase()),
-      )
-    : logs;
+  const filtered = logs.filter((l: AdminLogEntry) => {
+    const matchesSearch = !search || (
+      l.action?.toLowerCase().includes(search.toLowerCase()) ||
+      l.entity_type?.toLowerCase().includes(search.toLowerCase()) ||
+      l.entity_id?.toLowerCase().includes(search.toLowerCase())
+    );
+    const matchesPrefix =
+      actionPrefix === "all" ||
+      (actionPrefix === "admin" && l.action?.startsWith("admin.")) ||
+      (actionPrefix === "other" && !l.action?.startsWith("admin."));
+    return matchesSearch && matchesPrefix;
+  });
+
+  function handleExport() {
+    exportToCSV(
+      filtered.map((l) => ({
+        id: l.id,
+        action: l.action,
+        entity_type: l.entity_type ?? "",
+        entity_id: l.entity_id ?? "",
+        user_id: l.user_id ?? "",
+        metadata: l.metadata ? JSON.stringify(l.metadata) : "",
+        created_at: l.created_at,
+      })),
+      `audit-logs-${format(new Date(), "yyyy-MM-dd")}`,
+    );
+  }
 
   if (loading) {
     return (
@@ -135,11 +162,35 @@ export default function AdminLogs() {
       </div>
 
       {/* Toolbar */}
-      <TableToolbar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Filter by action or entity…"
-      />
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex-1 min-w-[200px]">
+          <TableToolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Filter by action or entity…"
+          />
+        </div>
+        <Select value={actionPrefix} onValueChange={(v) => setActionPrefix(v as ActionPrefix)}>
+          <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">All actions</SelectItem>
+            <SelectItem value="admin" className="text-xs">Admin actions</SelectItem>
+            <SelectItem value="other" className="text-xs">User actions</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          disabled={filtered.length === 0}
+          onClick={handleExport}
+        >
+          <Download className="h-3.5 w-3.5" />
+          Export CSV
+        </Button>
+      </div>
 
       {/* Table — intentionally dense; this is a log, not a data entry form */}
       <TableShell>

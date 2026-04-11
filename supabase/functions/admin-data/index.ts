@@ -101,6 +101,11 @@ serve(async (req) => {
 
     switch (action) {
       case "overview": {
+        const now = Date.now();
+        const weekAgo = new Date(now - 7 * 86400000).toISOString();
+        const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+        const thirtyDaysAgo = new Date(now - 30 * 86400000).toISOString();
+
         const [
           { count: totalUsers },
           { count: totalWorkspaces },
@@ -111,6 +116,9 @@ serve(async (req) => {
           { count: totalAnalyses },
           { count: totalMetaAds },
           { count: rateLimitHits },
+          { count: recentSignups },
+          { count: newUsersToday },
+          { count: failedAnalysesCount },
         ] = await Promise.all([
           supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
           supabaseAdmin.from("workspaces").select("id", { count: "exact", head: true }),
@@ -121,6 +129,9 @@ serve(async (req) => {
           supabaseAdmin.from("analyses").select("id", { count: "exact", head: true }),
           supabaseAdmin.from("meta_ads").select("id", { count: "exact", head: true }),
           supabaseAdmin.from("rate_limits").select("id", { count: "exact", head: true }),
+          supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
+          supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", todayStart),
+          supabaseAdmin.from("analyses").select("id", { count: "exact", head: true }).eq("status", "failed"),
         ]);
 
         const { data: recentActivity } = await supabaseAdmin
@@ -131,16 +142,38 @@ serve(async (req) => {
 
         const { data: syncErrors } = await supabaseAdmin
           .from("gmail_connections")
-          .select("id, email_address, sync_status, sync_error, last_sync_at")
+          .select("id, email_address, sync_status, sync_error, last_sync_at, workspace_id")
           .not("sync_error", "is", null)
           .limit(10);
 
-        // Recent signups (last 7 days)
-        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-        const { count: recentSignups } = await supabaseAdmin
+        // Active workspaces: distinct workspace_ids from analyses or insights in last 30 days
+        const { data: activeWsData } = await supabaseAdmin
+          .from("analyses")
+          .select("workspace_id")
+          .gte("created_at", thirtyDaysAgo)
+          .not("workspace_id", "is", null);
+        const activeWorkspaces = new Set(
+          (activeWsData ?? []).map((r: { workspace_id: string }) => r.workspace_id)
+        ).size;
+
+        // 7-day signup trend: profiles created in last 7 days, grouped by day
+        const { data: trendProfiles } = await supabaseAdmin
           .from("profiles")
-          .select("id", { count: "exact", head: true })
-          .gte("created_at", weekAgo);
+          .select("created_at")
+          .gte("created_at", weekAgo)
+          .order("created_at", { ascending: true });
+
+        const dayCounts: Record<string, number> = {};
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now - i * 86400000);
+          const key = d.toISOString().slice(0, 10);
+          dayCounts[key] = 0;
+        }
+        (trendProfiles ?? []).forEach((p: { created_at: string }) => {
+          const key = p.created_at.slice(0, 10);
+          if (key in dayCounts) dayCounts[key]++;
+        });
+        const signupTrend = Object.entries(dayCounts).map(([day, count]) => ({ day, count }));
 
         return jsonResponse({
           totalUsers: totalUsers || 0,
@@ -153,8 +186,12 @@ serve(async (req) => {
           totalMetaAds: totalMetaAds || 0,
           rateLimitHits: rateLimitHits || 0,
           recentSignups: recentSignups || 0,
+          newUsersToday: newUsersToday || 0,
+          activeWorkspaces,
+          failedAnalysesCount: failedAnalysesCount || 0,
           recentActivity: recentActivity || [],
           syncErrors: syncErrors || [],
+          signupTrend,
         });
       }
 
@@ -628,6 +665,156 @@ serve(async (req) => {
 
         await auditLog("admin.toggle_flag", "feature_flag", flag_key, { enabled });
         return jsonResponse({ success: true });
+      }
+
+      case "billing": {
+        const [
+          { data: billingRows },
+          { data: workspaceRows },
+          { data: memberRows },
+        ] = await Promise.all([
+          supabaseAdmin
+            .from("workspace_billing")
+            .select("workspace_id, stripe_customer_id, stripe_subscription_id, stripe_status, plan_key, current_period_end"),
+          supabaseAdmin.from("workspaces").select("id, name"),
+          supabaseAdmin.from("workspace_members").select("workspace_id, user_id"),
+        ]);
+
+        const wsMap: Record<string, { name: string }> = {};
+        ((workspaceRows ?? []) as { id: string; name: string }[]).forEach((w) => {
+          wsMap[w.id] = { name: w.name };
+        });
+
+        const memberCounts: Record<string, number> = {};
+        ((memberRows ?? []) as { workspace_id: string; user_id: string }[]).forEach((m) => {
+          memberCounts[m.workspace_id] = (memberCounts[m.workspace_id] || 0) + 1;
+        });
+
+        type BillingRow = {
+          workspace_id: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          stripe_status: string | null;
+          plan_key: string | null;
+          current_period_end: string | null;
+        };
+
+        const subscriptions = ((billingRows ?? []) as BillingRow[]).map((b) => ({
+          workspace_id: b.workspace_id,
+          workspace_name: wsMap[b.workspace_id]?.name || b.workspace_id?.slice(0, 8) || "",
+          member_count: memberCounts[b.workspace_id] || 0,
+          stripe_status: b.stripe_status,
+          plan_key: b.plan_key,
+          current_period_end: b.current_period_end,
+          stripe_customer_id: b.stripe_customer_id,
+          stripe_subscription_id: b.stripe_subscription_id,
+        }));
+
+        const tierCounts: Record<string, number> = {};
+        const statusCounts: Record<string, number> = {};
+        subscriptions.forEach((s) => {
+          const tier = s.plan_key || "free";
+          tierCounts[tier] = (tierCounts[tier] || 0) + 1;
+          const status = s.stripe_status || "unknown";
+          statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+
+        const totalPaid = statusCounts["active"] || 0;
+        return jsonResponse({ subscriptions, tierCounts, statusCounts, totalPaid });
+      }
+
+      case "system_health": {
+        const [
+          { count: totalGmail },
+          { count: gmailErrors },
+          { count: totalAnalyses },
+          { count: failedAnalyses },
+          { data: tokenData },
+          { data: recentErrors },
+        ] = await Promise.all([
+          supabaseAdmin.from("gmail_connections").select("id", { count: "exact", head: true }),
+          supabaseAdmin.from("gmail_connections").select("id", { count: "exact", head: true }).not("sync_error", "is", null),
+          supabaseAdmin.from("analyses").select("id", { count: "exact", head: true }),
+          supabaseAdmin.from("analyses").select("id", { count: "exact", head: true }).eq("status", "failed"),
+          supabaseAdmin.from("gmail_tokens").select("id, token_expires_at").limit(200),
+          supabaseAdmin.from("audit_log").select("id").gte("created_at", new Date(Date.now() - 86400000).toISOString()),
+        ]);
+
+        const now = new Date();
+        const expiredTokenCount = ((tokenData ?? []) as TokenRow[]).filter(
+          (t) => Boolean(t.token_expires_at) && new Date(t.token_expires_at as string) < now
+        ).length;
+
+        const gmailHealthPct = totalGmail && totalGmail > 0
+          ? Math.round((1 - (gmailErrors || 0) / totalGmail) * 100)
+          : 100;
+
+        const analysisSuccessRate = totalAnalyses && totalAnalyses > 0
+          ? Math.round((1 - (failedAnalyses || 0) / totalAnalyses) * 100)
+          : 100;
+
+        const recentErrorCount = recentErrors?.length || 0;
+
+        // Build health checks
+        const checks: { name: string; status: "healthy" | "warning" | "critical" | "unknown"; message: string; value?: number | string | null }[] = [];
+
+        checks.push({
+          name: "Database",
+          status: "healthy",
+          message: "PostgreSQL responding normally",
+        });
+
+        checks.push({
+          name: "Gmail Connections",
+          status: gmailHealthPct >= 90 ? "healthy" : gmailHealthPct >= 70 ? "warning" : "critical",
+          message: `${gmailErrors || 0} of ${totalGmail || 0} connections have errors`,
+          value: `${gmailHealthPct}%`,
+        });
+
+        checks.push({
+          name: "OAuth Tokens",
+          status: expiredTokenCount === 0 ? "healthy" : expiredTokenCount < 5 ? "warning" : "critical",
+          message: expiredTokenCount === 0 ? "All tokens valid" : `${expiredTokenCount} token(s) expired`,
+          value: expiredTokenCount > 0 ? expiredTokenCount : null,
+        });
+
+        checks.push({
+          name: "AI Analysis Pipeline",
+          status: analysisSuccessRate >= 90 ? "healthy" : analysisSuccessRate >= 70 ? "warning" : "critical",
+          message: `${failedAnalyses || 0} failed out of ${totalAnalyses || 0} total analyses`,
+          value: `${analysisSuccessRate}%`,
+        });
+
+        checks.push({
+          name: "Audit Activity",
+          status: recentErrorCount < 50 ? "healthy" : "warning",
+          message: `${recentErrorCount} entries in last 24h`,
+          value: recentErrorCount,
+        });
+
+        // Compute overall score
+        let score = 100;
+        const syncErrRate = (gmailErrors || 0) / Math.max(totalGmail || 1, 1);
+        if (syncErrRate >= 0.5) score -= 30;
+        else if (syncErrRate >= 0.2) score -= 15;
+        else if (syncErrRate > 0) score -= 5;
+
+        const failRate = (failedAnalyses || 0) / Math.max(totalAnalyses || 1, 1);
+        if (failRate >= 0.3) score -= 25;
+        else if (failRate >= 0.1) score -= 12;
+        else if (failRate > 0) score -= 4;
+
+        if (expiredTokenCount > 10) score -= 15;
+        else if (expiredTokenCount > 0) score -= 5;
+
+        return jsonResponse({
+          overallScore: Math.max(0, Math.round(score)),
+          checks,
+          gmailHealthPct,
+          analysisSuccessRate,
+          recentErrorCount,
+          expiredTokenCount,
+        });
       }
 
       default:

@@ -1,151 +1,519 @@
-import { useAdminData } from "@/hooks/useAdmin";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users, Building2, Mail, Newspaper, Lightbulb, Target,
-  AlertTriangle, Activity, BarChart3, Megaphone, TrendingUp,
+  AlertTriangle, Activity, BarChart3, Megaphone,
+  RefreshCw, ArrowRight, CheckCircle, XCircle, AlertCircle,
+  TrendingUp, TrendingDown, Zap, Server, CreditCard,
+  ScrollText, Plug, KeyRound, UserX, RotateCcw,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
+import type { AdminOverviewData } from "@/types/admin";
 
-type AdminOverviewActivity = {
-  id: string;
-  action: string;
-  entity_type: string | null;
-  entity_id: string | null;
-  created_at: string;
-};
+// ─── Health score ──────────────────────────────────────────────────────────────
 
-type AdminOverviewSyncError = {
-  id: string;
-  email_address: string;
-  sync_status: string;
-  sync_error: string | null;
-};
+function computeHealth(data: AdminOverviewData) {
+  let score = 100;
 
-type AdminOverviewData = {
-  recentSignups: number;
-  totalUsers: number;
-  totalWorkspaces: number;
-  gmailConnections: number;
-  totalNewsletters: number;
-  totalInsights: number;
-  totalCompetitors: number;
-  totalAnalyses: number;
-  totalMetaAds: number;
-  rateLimitHits: number;
-  recentActivity?: AdminOverviewActivity[];
-  syncErrors?: AdminOverviewSyncError[];
-};
+  // Penalise for gmail sync errors
+  const syncErrorRate = (data.syncErrors?.length || 0) / Math.max(data.gmailConnections, 1);
+  if (syncErrorRate >= 0.5) score -= 30;
+  else if (syncErrorRate >= 0.2) score -= 15;
+  else if (syncErrorRate > 0) score -= 5;
 
-function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
+  // Penalise for failed analyses
+  const failRate = (data.failedAnalysesCount || 0) / Math.max(data.totalAnalyses, 1);
+  if (failRate >= 0.3) score -= 25;
+  else if (failRate >= 0.1) score -= 12;
+  else if (failRate > 0) score -= 4;
+
+  const s = Math.max(0, Math.round(score));
+  return {
+    score: s,
+    label: s >= 90 ? "Healthy" : s >= 70 ? "Fair" : s >= 50 ? "Degraded" : "Critical",
+    tone: s >= 90 ? "healthy" : s >= 70 ? "fair" : "critical",
+  } as const;
+}
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+interface KpiCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: number | string;
+  sub?: string;
+  href?: string;
+  tone?: "default" | "destructive" | "warning";
+}
+
+function KpiCard({ icon: Icon, label, value, sub, href, tone = "default" }: KpiCardProps) {
+  const navigate = useNavigate();
   return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
-          <Icon className="h-5 w-5" />
+    <button
+      onClick={href ? () => navigate(href) : undefined}
+      className={cn(
+        "group w-full rounded-xl border bg-card p-4 text-left transition-all duration-150",
+        href && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20",
+        !href && "cursor-default",
+        tone === "destructive" && "border-destructive/25 bg-destructive/5",
+        tone === "warning" && "border-warning/25 bg-warning/5",
+      )}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-lg",
+          tone === "destructive" ? "bg-destructive/10 text-destructive"
+            : tone === "warning" ? "bg-warning/10 text-warning"
+            : "bg-primary/10 text-primary",
+        )}>
+          <Icon className="h-4 w-4" />
         </div>
-        <div>
-          <p className="text-2xl font-bold">{value.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      <p className={cn(
+        "text-2xl font-bold tabular-nums leading-none tracking-tight",
+        tone === "destructive" ? "text-destructive"
+          : tone === "warning" ? "text-warning"
+          : "text-foreground",
+      )}>
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </p>
+      <p className="mt-1.5 text-xs font-medium text-foreground/70">{label}</p>
+      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/60">{sub}</p>}
+    </button>
   );
 }
 
-export default function AdminDashboard() {
-  const { data, loading, error } = useAdminData<AdminOverviewData>("overview");
-
-  if (loading) {
-    return (
-      <div className="p-6">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mt-20" />
+function QuickAction({ icon: Icon, label, desc, href, variant = "outline" }: {
+  icon: LucideIcon;
+  label: string;
+  desc: string;
+  href: string;
+  variant?: "outline" | "default";
+}) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate(href)}
+      className="group flex items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-all hover:border-primary/20 hover:bg-accent/50 hover:shadow-sm"
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15">
+        <Icon className="h-3.5 w-3.5" />
       </div>
-    );
-  }
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold text-foreground">{label}</p>
+        <p className="text-[11px] text-muted-foreground/70 truncate">{desc}</p>
+      </div>
+      <ArrowRight className="h-3 w-3 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
+    </button>
+  );
+}
 
-  if (error) {
+// ─── Loading skeleton ──────────────────────────────────────────────────────────
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 p-6 max-w-[1400px]">
+      <div className="flex justify-between items-start">
+        <div className="space-y-1.5">
+          <Skeleton className="h-6 w-44" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+      </div>
+      <Skeleton className="h-20 w-full rounded-xl" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+      </div>
+      <div className="grid md:grid-cols-2 gap-6">
+        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
+
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const { data, loading, error, refetch } = useAdminData<AdminOverviewData>("overview");
+  const { execute, acting } = useAdminAction();
+
+  const health = useMemo(() => data ? computeHealth(data) : null, [data]);
+
+  const totalIssues = useMemo(
+    () => (data?.syncErrors?.length || 0) + (data?.failedAnalysesCount || 0),
+    [data],
+  );
+
+  const analysisSuccessRate = useMemo(() => {
+    if (!data || !data.totalAnalyses) return 100;
+    const failed = data.failedAnalysesCount || 0;
+    return Math.round(((data.totalAnalyses - failed) / data.totalAnalyses) * 100);
+  }, [data]);
+
+  if (loading) return <DashboardSkeleton />;
+
+  if (error || !data) {
     return (
       <div className="p-6">
-        <Card className="border-destructive">
-          <CardContent className="p-6 text-center text-destructive">{error}</CardContent>
+        <Card className="border-destructive/30">
+          <CardContent className="p-8 text-center">
+            <XCircle className="mx-auto h-8 w-8 text-destructive mb-3" />
+            <p className="text-sm font-medium text-destructive">Failed to load dashboard</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => void refetch()}>Retry</Button>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-6 max-w-[1400px]">
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold">Platform Overview</h1>
-          <p className="text-sm text-muted-foreground">Real-time platform metrics and activity</p>
+          <h1 className="text-xl font-semibold text-foreground">Platform Overview</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {format(new Date(), "EEEE, MMMM d")} · Real-time metrics
+          </p>
         </div>
-        <Badge variant="outline" className="text-xs">
-          <TrendingUp className="h-3 w-3 mr-1" />
-          {data.recentSignups} new users this week
-        </Badge>
+        <div className="flex items-center gap-2">
+          {totalIssues > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => navigate("/admin/issues")}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {totalIssues} Active Issue{totalIssues > 1 ? "s" : ""}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => void refetch()}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <StatCard icon={Users} label="Total Users" value={data.totalUsers} />
-        <StatCard icon={Building2} label="Workspaces" value={data.totalWorkspaces} />
-        <StatCard icon={Mail} label="Gmail Connections" value={data.gmailConnections} />
-        <StatCard icon={Newspaper} label="Newsletters" value={data.totalNewsletters} />
-        <StatCard icon={Lightbulb} label="Insights" value={data.totalInsights} />
-        <StatCard icon={Target} label="Competitors" value={data.totalCompetitors} />
-        <StatCard icon={BarChart3} label="Analyses" value={data.totalAnalyses} />
-        <StatCard icon={Megaphone} label="Meta Ads" value={data.totalMetaAds} />
-        <StatCard icon={Activity} label="Rate Limit Entries" value={data.rateLimitHits} />
-        <StatCard icon={AlertTriangle} label="Sync Errors" value={data.syncErrors?.length || 0} />
+      {/* ── Alert banner ───────────────────────────────────────────── */}
+      {totalIssues > 0 && (
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3.5">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium text-destructive">
+                {[
+                  (data.syncErrors?.length || 0) > 0 && `${data.syncErrors.length} Gmail sync error${data.syncErrors.length > 1 ? "s" : ""}`,
+                  (data.failedAnalysesCount || 0) > 0 && `${data.failedAnalysesCount} failed analysis job${data.failedAnalysesCount > 1 ? "s" : ""}`,
+                ].filter(Boolean).join(" · ")}
+              </p>
+              <p className="text-xs text-destructive/70">These issues require immediate attention.</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1 border-destructive/30 text-destructive hover:bg-destructive/10 shrink-0"
+            onClick={() => navigate("/admin/issues")}
+          >
+            Investigate <ArrowRight className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+
+      {/* ── Health + key metrics bar ────────────────────────────────── */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-6 flex-wrap">
+            {/* Health score */}
+            <div className="flex items-center gap-4 min-w-[180px]">
+              <div className={cn(
+                "text-4xl font-black tabular-nums leading-none",
+                health?.tone === "healthy" ? "text-emerald-600 dark:text-emerald-400"
+                  : health?.tone === "fair" ? "text-amber-600 dark:text-amber-400"
+                  : "text-destructive",
+              )}>
+                {health?.score}
+              </div>
+              <div className="flex-1 min-w-[100px]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <p className="text-xs font-semibold text-foreground">Platform Health</p>
+                  <Badge
+                    variant={health?.tone === "healthy" ? "outline" : health?.tone === "fair" ? "secondary" : "destructive"}
+                    className={cn(
+                      "text-[10px] px-1.5",
+                      health?.tone === "healthy" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+                      health?.tone === "fair" && "border-warning/40 bg-warning/10 text-warning",
+                    )}
+                  >
+                    {health?.label}
+                  </Badge>
+                </div>
+                <Progress
+                  value={health?.score}
+                  className={cn(
+                    "h-1.5",
+                    health?.tone === "healthy" && "[&>div]:bg-emerald-500",
+                    health?.tone === "fair" && "[&>div]:bg-amber-500",
+                    health?.tone === "critical" && "[&>div]:bg-destructive",
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator orientation="vertical" className="h-10 hidden sm:block" />
+
+            {/* Platform summary */}
+            <div className="flex items-center gap-6 flex-wrap flex-1">
+              {[
+                { label: "Total Users", value: data.totalUsers.toLocaleString(), icon: Users },
+                { label: "Workspaces", value: data.totalWorkspaces.toLocaleString(), icon: Building2 },
+                { label: "Active Workspaces", value: (data.activeWorkspaces || 0).toLocaleString(), icon: Activity },
+                { label: "New This Week", value: data.recentSignups.toLocaleString(), icon: TrendingUp },
+                {
+                  label: "Analysis Success",
+                  value: `${analysisSuccessRate}%`,
+                  icon: analysisSuccessRate >= 90 ? CheckCircle : AlertCircle,
+                },
+              ].map(({ label, value, icon: Icon }) => (
+                <div key={label} className="text-center min-w-[72px]">
+                  <p className="text-lg font-bold tabular-nums leading-none text-foreground">{value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── KPI grid ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <KpiCard icon={Users} label="Total Users" value={data.totalUsers} sub={`${data.newUsersToday || 0} today`} href="/admin/users" />
+        <KpiCard icon={Building2} label="Workspaces" value={data.totalWorkspaces} sub={`${data.activeWorkspaces || 0} active (30d)`} href="/admin/workspaces" />
+        <KpiCard icon={Mail} label="Gmail Connections" value={data.gmailConnections}
+          sub={data.syncErrors?.length ? `${data.syncErrors.length} with errors` : "All healthy"}
+          tone={data.syncErrors?.length ? "destructive" : "default"}
+          href="/admin/integrations"
+        />
+        <KpiCard icon={Newspaper} label="Newsletters" value={data.totalNewsletters} sub="Ingested total" href="/admin/workspaces" />
+        <KpiCard icon={Target} label="Competitors" value={data.totalCompetitors} sub="Monitored" />
+        <KpiCard icon={BarChart3} label="Total Analyses" value={data.totalAnalyses} sub="Completed jobs" />
+        <KpiCard
+          icon={AlertTriangle}
+          label="Failed Analyses"
+          value={data.failedAnalysesCount || 0}
+          sub={`${100 - analysisSuccessRate}% failure rate`}
+          tone={(data.failedAnalysesCount || 0) > 0 ? "warning" : "default"}
+          href="/admin/issues"
+        />
+        <KpiCard icon={Lightbulb} label="Insights" value={data.totalInsights} sub="AI-generated" />
+        <KpiCard icon={Megaphone} label="Meta Ads" value={data.totalMetaAds} sub="Tracked" />
+        <KpiCard icon={Activity} label="Rate Limit Hits" value={data.rateLimitHits}
+          tone={(data.rateLimitHits || 0) > 100 ? "warning" : "default"}
+          sub="API calls logged"
+          href="/admin/integrations"
+        />
+        <KpiCard icon={Users} label="New This Week" value={data.recentSignups} sub="User signups" />
+        <KpiCard
+          icon={(data.syncErrors?.length || 0) === 0 ? CheckCircle : XCircle}
+          label="Sync Status"
+          value={(data.syncErrors?.length || 0) === 0 ? "Healthy" : `${data.syncErrors.length} Errors`}
+          tone={(data.syncErrors?.length || 0) > 0 ? "destructive" : "default"}
+          href="/admin/issues"
+        />
       </div>
 
+      {/* ── Trend + activity ─────────────────────────────────────────── */}
       <div className="grid md:grid-cols-2 gap-6">
+
+        {/* 7-day signup trend */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Recent Activity</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">User Signups — Last 7 Days</CardTitle>
+              <Badge variant="secondary" className="text-[10px]">{data.recentSignups} this week</Badge>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-2 max-h-80 overflow-auto">
-            {data.recentActivity?.length === 0 && (
-              <p className="text-sm text-muted-foreground">No recent activity</p>
-            )}
-            {data.recentActivity?.map((log) => (
-              <div key={log.id} className="flex items-start justify-between border-b pb-2 last:border-0">
-                <div>
-                  <p className="text-sm font-medium">{log.action}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {log.entity_type}{log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""}
-                  </p>
-                </div>
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {format(new Date(log.created_at), "MMM d, HH:mm")}
-                </span>
+          <CardContent>
+            {data.signupTrend && data.signupTrend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={data.signupTrend} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="signupGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                    labelStyle={{ fontWeight: 600 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    name="Signups"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fill="url(#signupGradient)"
+                    dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[180px] flex items-center justify-center rounded-lg bg-muted/20 border border-dashed">
+                <p className="text-xs text-muted-foreground">No signup data available</p>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
+        {/* Recent activity feed */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Integration Issues</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
+              <Button variant="ghost" size="sm" className="h-6 text-[11px] gap-1 text-muted-foreground" onClick={() => navigate("/admin/logs")}>
+                View all <ArrowRight className="h-3 w-3" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-2 max-h-80 overflow-auto">
-            {data.syncErrors?.length === 0 && (
-              <p className="text-sm text-muted-foreground">No active issues</p>
-            )}
-            {data.syncErrors?.map((conn) => (
-              <div key={conn.id} className="border rounded-md p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium">{conn.email_address}</span>
-                  <Badge variant="destructive" className="text-[10px]">{conn.sync_status}</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">{conn.sync_error}</p>
+          <CardContent className="space-y-1 max-h-[215px] overflow-y-auto">
+            {(!data.recentActivity || data.recentActivity.length === 0) ? (
+              <div className="py-8 text-center">
+                <Activity className="mx-auto h-5 w-5 text-muted-foreground/30 mb-2" />
+                <p className="text-xs text-muted-foreground">No recent activity</p>
               </div>
-            ))}
+            ) : (
+              data.recentActivity.map((log) => (
+                <div key={log.id} className="flex items-start justify-between gap-3 rounded-lg px-2.5 py-2 hover:bg-muted/40 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <Badge
+                      variant={log.action?.startsWith("admin.") ? "default" : "outline"}
+                      className="font-mono text-[10px] mb-0.5"
+                    >
+                      {log.action}
+                    </Badge>
+                    {log.entity_type && (
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {log.entity_type}
+                        {log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-muted-foreground/60 shrink-0 tabular-nums">
+                    {format(new Date(log.created_at), "HH:mm")}
+                  </span>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Integration issues ───────────────────────────────────────── */}
+      {(data.syncErrors?.length || 0) > 0 && (
+        <Card className="border-destructive/25">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                Gmail Sync Errors
+                <Badge variant="destructive" className="text-[10px]">{data.syncErrors.length}</Badge>
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/5"
+                onClick={() => navigate("/admin/issues")}
+              >
+                Manage Issues <ArrowRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {data.syncErrors.slice(0, 3).map((conn) => (
+                <div key={conn.id} className="flex items-start justify-between gap-3 rounded-lg border border-destructive/15 bg-destructive/5 px-3.5 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[13px] font-medium text-foreground">{conn.email_address}</span>
+                      <Badge variant="destructive" className="text-[10px]">{conn.sync_status}</Badge>
+                    </div>
+                    {conn.sync_error && (
+                      <p className="text-[11px] font-mono text-destructive/80 line-clamp-1">{conn.sync_error}</p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 text-[11px] gap-1 shrink-0"
+                    disabled={acting}
+                    onClick={async () => {
+                      await execute("force_resync", { connection_id: conn.id });
+                      void refetch();
+                    }}
+                  >
+                    <RotateCcw className="h-2.5 w-2.5" />
+                    Retry
+                  </Button>
+                </div>
+              ))}
+              {data.syncErrors.length > 3 && (
+                <p className="text-xs text-muted-foreground text-center pt-1">
+                  +{data.syncErrors.length - 3} more —{" "}
+                  <button className="text-primary hover:underline" onClick={() => navigate("/admin/issues")}>
+                    view all
+                  </button>
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Quick actions ────────────────────────────────────────────── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Quick Actions</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          <QuickAction icon={Users} label="Manage Users" desc="View and moderate" href="/admin/users" />
+          <QuickAction icon={Building2} label="Workspaces" desc="Inspect and manage" href="/admin/workspaces" />
+          <QuickAction icon={AlertTriangle} label="Issues" desc="Triage incidents" href="/admin/issues" />
+          <QuickAction icon={Plug} label="Integrations" desc="Connection health" href="/admin/integrations" />
+          <QuickAction icon={CreditCard} label="Billing" desc="Plans & subscriptions" href="/admin/billing" />
+          <QuickAction icon={ScrollText} label="Audit Logs" desc="Platform activity" href="/admin/logs" />
+        </div>
+      </div>
+
     </div>
   );
 }
