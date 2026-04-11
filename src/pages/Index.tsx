@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, Sparkles, Zap, ArrowRight, Check, Users,
   Lightbulb, TrendingUp, Bell, ChevronDown, Brain, LineChart,
-  Target, Search, ShieldCheck, Clock, Eye, Layers, BarChart,
+  Target, Search, ShieldCheck, Clock, Eye, Layers, BarChart, Menu, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -21,6 +21,7 @@ export default function Index() {
   const cta = user ? "/dashboard" : "/auth";
   const ctaLabel = user ? t("hero.ctaDashboard") : t("hero.ctaStart");
   const ctaShort = user ? t("nav.dashboard") : t("hero.ctaShort");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ── Typewriter ──────────────────────────────────────────────────────────────
   const rawPhrases = t("typewriter", { returnObjects: true });
@@ -97,28 +98,74 @@ export default function Index() {
             <LanguageSelector />
             <DarkModeToggle />
             {user ? (
-              <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => navigate("/dashboard")}>
+              <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => navigate("/dashboard")}>
                 {t("nav.dashboard")} <ArrowRight className="h-3 w-3" />
               </Button>
             ) : (
               <>
-                <Button variant="ghost" size="sm" className="h-8 text-xs hidden sm:inline-flex" onClick={() => navigate("/auth")}>
+                <Button variant="ghost" size="sm" className="h-8 text-xs hidden md:inline-flex" onClick={() => navigate("/auth")}>
                   {t("nav.signIn")}
                 </Button>
-                <Button size="sm" className="h-8 text-xs gap-1.5 shadow-sm" onClick={() => navigate("/auth")}>
+                <Button size="sm" className="h-8 text-xs gap-1.5 shadow-sm hidden sm:inline-flex" onClick={() => navigate("/auth")}>
                   {t("nav.startFree")} <ArrowRight className="h-3 w-3" />
                 </Button>
               </>
             )}
+            <button
+              className="md:hidden flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent transition-colors"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t bg-background/98 backdrop-blur-xl">
+            <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-1">
+              {[
+                { href: "#why", label: t("nav.whyTracklyze") },
+                { href: "#how", label: t("nav.howItWorks") },
+                { href: "#platform", label: t("nav.platform") },
+                { href: "#pricing", label: t("nav.pricing") },
+              ].map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {l.label}
+                </a>
+              ))}
+              <div className="mt-3 pt-3 border-t border-border/50 flex flex-col gap-2">
+                {user ? (
+                  <Button className="gap-1.5 font-medium" onClick={() => { navigate("/dashboard"); setMobileMenuOpen(false); }}>
+                    {t("nav.dashboard")} <ArrowRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={() => { navigate("/auth"); setMobileMenuOpen(false); }}>
+                      {t("nav.signIn")}
+                    </Button>
+                    <Button className="gap-1.5 font-medium shadow-sm" onClick={() => { navigate("/auth"); setMobileMenuOpen(false); }}>
+                      {t("nav.startFree")} <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.05] via-primary/[0.02] to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[560px] w-[900px] rounded-full bg-primary/[0.04] blur-3xl pointer-events-none" />
+        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[300px] sm:h-[560px] w-[100vw] sm:w-[900px] rounded-full bg-primary/[0.04] blur-3xl pointer-events-none" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-20 sm:pb-28 relative">
           <div className="max-w-3xl mx-auto text-center">
             {/* Badge */}
@@ -201,7 +248,7 @@ export default function Index() {
       <section className="border-y bg-muted/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-            <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-widest shrink-0">{t("builtFor.label")}</p>
+            <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-widest shrink-0">{t("builtFor.label")}</p>
             {[
               { icon: TrendingUp, label: t("builtFor.growthTeams") },
               { icon: Target, label: t("builtFor.marketingTeams") },
@@ -378,7 +425,7 @@ export default function Index() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl border bg-gradient-to-br from-accent/70 to-accent/30 p-8 min-h-[280px] flex items-center justify-center">
+            <div className="rounded-2xl border bg-gradient-to-br from-accent/70 to-accent/30 p-8 min-h-[200px] sm:min-h-[280px] flex items-center justify-center">
               <div className="w-full max-w-[280px] space-y-3">
                 <div className="flex items-center gap-2 mb-5">
                   <div className="h-2 w-2 rounded-full bg-primary/40 animate-pulse" />
@@ -405,7 +452,7 @@ export default function Index() {
 
           {/* Feature 2 */}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1 rounded-2xl border bg-gradient-to-br from-accent/70 to-accent/30 p-8 min-h-[280px] flex items-center justify-center">
+            <div className="order-2 lg:order-1 rounded-2xl border bg-gradient-to-br from-accent/70 to-accent/30 p-8 min-h-[200px] sm:min-h-[280px] flex items-center justify-center">
               <div className="w-full max-w-[260px] space-y-3">
                 <div className="flex items-center gap-2 mb-5">
                   <div className="h-2 w-2 rounded-full bg-primary/40 animate-pulse" />
@@ -484,7 +531,7 @@ export default function Index() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl border bg-gradient-to-br from-accent/70 to-accent/30 p-8 min-h-[280px] flex items-center justify-center">
+            <div className="rounded-2xl border bg-gradient-to-br from-accent/70 to-accent/30 p-8 min-h-[200px] sm:min-h-[280px] flex items-center justify-center">
               <div className="w-full max-w-[280px] space-y-3">
                 <div className="flex items-center gap-2 mb-5">
                   <div className="h-2 w-2 rounded-full bg-destructive/50 animate-pulse" />
@@ -763,8 +810,8 @@ export default function Index() {
             </div>
           </div>
           <div className="border-t mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-[11px] text-muted-foreground">{t("footer.copyright", { year: new Date().getFullYear() })}</p>
-            <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">{t("footer.copyright", { year: new Date().getFullYear() })}</p>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <a href="/privacy" className="hover:text-foreground transition-colors">{t("footer.privacyPolicy")}</a>
               <a href="/terms" className="hover:text-foreground transition-colors">{t("footer.termsOfService")}</a>
             </div>
@@ -795,7 +842,7 @@ function PricingCard({
     <div className={cn(
       "relative rounded-xl border flex flex-col transition-all duration-200",
       highlighted
-        ? "border-primary shadow-xl ring-1 ring-primary/20 scale-[1.02] bg-card"
+        ? "border-primary shadow-xl ring-1 ring-primary/20 sm:scale-[1.02] bg-card"
         : "bg-card hover:border-primary/20 hover:shadow-md",
     )}>
       {highlighted && (

@@ -299,7 +299,7 @@ export default function Analytics() {
         <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
           <div className="flex items-center gap-1.5">
             <Select value={rangeDays} onValueChange={setRangeDays}>
-              <SelectTrigger className="h-8 w-[148px] bg-background text-xs font-medium">
+              <SelectTrigger className="h-8 w-full sm:w-[148px] bg-background text-xs font-medium">
                 <SelectValue placeholder={t("timeRange")} />
               </SelectTrigger>
               <SelectContent>

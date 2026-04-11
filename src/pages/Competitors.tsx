@@ -646,8 +646,8 @@ export default function Competitors() {
               className="text-sm text-muted-foreground"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t("csvImportPreview", { count: csvRows.length })) }}
             />
-            <div className="max-h-64 overflow-y-auto rounded-md border">
-              <table className="w-full text-xs">
+            <div className="max-h-64 overflow-x-auto overflow-y-auto rounded-md border">
+              <table className="w-full min-w-[360px] text-xs">
                 <thead className="sticky top-0 bg-muted/80">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">{t("csvColumnName")}</th>

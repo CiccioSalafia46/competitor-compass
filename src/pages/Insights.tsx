@@ -241,7 +241,7 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
             </div>
           </div>
 
-          <div className="grid min-w-[220px] grid-cols-2 gap-2.5 lg:w-[260px]">
+          <div className="grid w-full grid-cols-2 gap-2.5 sm:w-auto sm:min-w-[220px] lg:w-[260px]">
             <div className={cn("rounded-xl border p-3", confidenceBg)}>
               <p className="section-label">Confidence</p>
               <p className={cn("stat-value mt-1.5 text-lg font-semibold leading-none", confidenceTextColor)}>{confidenceValue}</p>
@@ -263,7 +263,7 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
       </CardHeader>
 
       <CardContent className="space-y-6 pt-0">
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">Why it matters</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.why_it_matters}</p>

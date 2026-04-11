@@ -829,7 +829,7 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setReadFilter(v)}
                   className={cn(
-                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors",
+                    "h-7 rounded px-2.5 text-xs font-medium transition-colors",
                     readFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -844,7 +844,7 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setSeverityFilter(v)}
                   className={cn(
-                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors",
+                    "h-7 rounded px-2.5 text-xs font-medium transition-colors",
                     severityFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -1068,7 +1068,7 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setLogStatusFilter(v)}
                   className={cn(
-                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors",
+                    "h-7 rounded px-2.5 text-xs font-medium transition-colors",
                     logStatusFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >

@@ -349,7 +349,7 @@ export default function Dashboard() {
                 <Filter className="h-3 w-3" />
                 <span>{t("filter")}</span>
               </div>
-              <Separator orientation="vertical" className="h-4" />
+              <Separator orientation="vertical" className="hidden sm:block h-4" />
               {competitorOptions.length > 0 && (
                 <Select value={selectedCompetitor || ALL_COMPETITORS} onValueChange={(v) => setSelectedCompetitor(v === ALL_COMPETITORS ? "" : v)}>
                   <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background">
@@ -397,7 +397,7 @@ export default function Dashboard() {
           )}
 
           {/* ── Zone 5: Top Insights + Competitor Pressure ─────────────────── */}
-          <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+          <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[1.6fr_1fr]">
 
             {/* Top insights: featured #1 + compact list */}
             <section className="space-y-2">
@@ -440,7 +440,7 @@ export default function Dashboard() {
           </div>
 
           {/* ── Zone 6: Highlights | Anomalies | Inbox ─────────────────────── */}
-          <div className="grid gap-5 lg:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
 
             {/* Daily highlights */}
             <section className="space-y-2">
@@ -510,7 +510,7 @@ export default function Dashboard() {
                 sub={competitors.length !== 1 ? t("trackedCompaniesSubPlural", { count: competitors.length }) : t("trackedCompaniesSub", { count: competitors.length })}
                 action={{ label: t("manage"), onClick: () => navigate("/competitors") }}
               />
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {competitors.map((c) => (
                   <CompetitorPreviewCard key={c.id} competitor={c} onClick={() => navigate("/competitors")} />
                 ))}
