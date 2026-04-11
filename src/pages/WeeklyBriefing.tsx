@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useWeeklyBriefing, type WeeklyBriefingAction } from "@/hooks/useWeeklyBriefing";
+import { useSubscription } from "@/hooks/useSubscription";
+import UpgradePrompt from "@/components/UpgradePrompt";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,13 +53,14 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: number
 
 export default function WeeklyBriefingPage() {
   const { t } = useTranslation("weekly");
+  const { subscribed } = useSubscription();
   const { briefing, loading, error, generate } = useWeeklyBriefing();
 
-  // Auto-generate on first mount
+  // Auto-generate on first mount — only for subscribed workspaces
   useEffect(() => {
-    void generate(false);
+    if (subscribed) void generate(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [subscribed]);
 
   const weekLabel = briefing
     ? `${format(new Date(briefing.week_start), "MMM d")} – ${format(new Date(briefing.week_end), "MMM d, yyyy")}`
@@ -77,12 +80,14 @@ export default function WeeklyBriefingPage() {
           size="sm"
           className="gap-1.5"
           onClick={() => generate(true)}
-          disabled={loading}
+          disabled={loading || !subscribed}
         >
           <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           {loading ? t("generating") : t("regenerate")}
         </Button>
       </div>
+
+      {!subscribed && <UpgradePrompt reason="feature_locked" variant="card" />}
 
       {error && (
         <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">

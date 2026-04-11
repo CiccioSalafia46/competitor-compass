@@ -359,10 +359,10 @@ export default function Billing() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">{t("billing.feature")}</th>
-                  <th className={cn("text-center px-3 py-2 font-medium", tier === "free" && "text-primary")}>Free</th>
-                  <th className={cn("text-center px-3 py-2 font-medium", tier === "starter" && "text-primary")}>Starter</th>
-                  <th className={cn("text-center px-3 py-2 font-medium", tier === "premium" && "text-primary")}>Premium</th>
+                  <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">{t("billing.feature")}</th>
+                  <th scope="col" className={cn("text-center px-3 py-2 font-medium", tier === "free" && "text-primary")}>Free</th>
+                  <th scope="col" className={cn("text-center px-3 py-2 font-medium", tier === "starter" && "text-primary")}>Starter</th>
+                  <th scope="col" className={cn("text-center px-3 py-2 font-medium", tier === "premium" && "text-primary")}>Premium</th>
                 </tr>
               </thead>
               <tbody>
