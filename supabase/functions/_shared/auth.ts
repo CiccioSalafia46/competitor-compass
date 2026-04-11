@@ -48,6 +48,12 @@ function normalizeOrigins(rawValue: string | undefined | null) {
     .filter(Boolean);
 }
 
+// Parse PLATFORM_ADMIN_EMAILS once at module load instead of on every request.
+// Deno modules are long-lived per isolate, so this Set persists across calls.
+const PLATFORM_ADMIN_EMAIL_SET: Set<string> = new Set(
+  normalizeOrigins(Deno.env.get("PLATFORM_ADMIN_EMAILS")).map(normalizeEmail),
+);
+
 export async function requireAuthenticatedUser(supabase: SupabaseClientLike, req: Request) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -142,10 +148,8 @@ export async function assertVerifiedUser(user: AuthenticatedUser | null) {
 
 export async function isPlatformAdmin(supabase: SupabaseClientLike, user: AuthenticatedUser) {
   const email = normalizeEmail(user?.email);
-  const envAdmins = normalizeOrigins(Deno.env.get("PLATFORM_ADMIN_EMAILS"))
-    .map((entry) => normalizeEmail(entry));
 
-  if (email && envAdmins.includes(email)) {
+  if (email && PLATFORM_ADMIN_EMAIL_SET.has(email)) {
     return true;
   }
 

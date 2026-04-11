@@ -43,6 +43,21 @@ serve(async (req) => {
     }
 
     await assertWorkspaceAnalyst(supabase, user.id, workspaceId);
+
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _user_id: user.id,
+      _workspace_id: workspaceId,
+      _endpoint: "analyze-newsletter",
+      _max_per_hour: 50,
+    });
+
+    if (!allowed) {
+      return jsonResponse(
+        { error: "Rate limit reached. You can analyze up to 50 newsletters per hour." },
+        429,
+      );
+    }
+
     await processNewsletterAnalysisJob(supabase, { analysisId, newsletterEntryId });
 
     return jsonResponse({ success: true, analysisId, status: "completed" });

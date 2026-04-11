@@ -34,6 +34,10 @@ export type OpenAiChatCompletionResult = OpenAiSuccess | OpenAiFailure;
 const OPENAI_CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions";
 const MODEL_FALLBACK_PATTERN = /(model|does not exist|unsupported|not found|access denied|permission)/i;
 
+// Hard timeout per request — keeps edge functions well under the 150 s wall-clock
+// limit even when OpenAI is slow or rate-limiting.
+const OPENAI_REQUEST_TIMEOUT_MS = 90_000;
+
 function getOpenAiHeaders(clientRequestId?: string) {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) {
@@ -69,19 +73,41 @@ export async function createOpenAiChatCompletion(
 
   for (let index = 0; index < options.modelCandidates.length; index += 1) {
     const model = options.modelCandidates[index];
-    const response = await fetch(OPENAI_CHAT_COMPLETIONS_URL, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), OPENAI_REQUEST_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(OPENAI_CHAT_COMPLETIONS_URL, {
+        method: "POST",
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify({
+          model,
+          messages: options.messages,
+          temperature: options.temperature ?? 0.2,
+          ...(options.tools ? { tools: options.tools } : {}),
+          ...(options.toolChoice ? { tool_choice: options.toolChoice } : {}),
+          ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
+          ...(options.maxCompletionTokens ? { max_completion_tokens: options.maxCompletionTokens } : {}),
+        }),
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      const isTimeout =
+        fetchError instanceof DOMException && fetchError.name === "AbortError";
+      return {
+        ok: false,
+        status: isTimeout ? 504 : 500,
+        errorText: isTimeout
+          ? `OpenAI request timed out after ${OPENAI_REQUEST_TIMEOUT_MS / 1000}s`
+          : String(fetchError),
         model,
-        messages: options.messages,
-        temperature: options.temperature ?? 0.2,
-        ...(options.tools ? { tools: options.tools } : {}),
-        ...(options.toolChoice ? { tool_choice: options.toolChoice } : {}),
-        ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
-        ...(options.maxCompletionTokens ? { max_completion_tokens: options.maxCompletionTokens } : {}),
-      }),
-    });
+        requestId: null,
+      };
+    }
+    clearTimeout(timeoutId);
 
     const requestId = response.headers.get("x-request-id");
 
