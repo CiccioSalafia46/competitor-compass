@@ -7,7 +7,6 @@ import { useOnboarding, type OnboardingStep } from "@/hooks/useOnboarding";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
 import { useRoles } from "@/hooks/useRoles";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
