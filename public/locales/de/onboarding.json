@@ -6,6 +6,7 @@
   "steps": {
     "welcome": { "title": "Willkommen", "subtitle": "Loslegen" },
     "workspace": { "title": "Arbeitsbereich", "subtitle": "Dein Team-Hub" },
+    "verify": { "title": "E-Mail bestätigen", "subtitle": "Identität bestätigen" },
     "competitors": { "title": "Wettbewerber", "subtitle": "Rivalen verfolgen" },
     "gmail": { "title": "Gmail", "subtitle": "E-Mails importieren" },
     "import": { "title": "Import", "subtitle": "Deine Daten" },
@@ -42,6 +43,20 @@
     "errorRls": "Etwas ist schiefgelaufen. Versuche, dich ab- und wieder anzumelden.",
     "errorDuplicate": "Ein Arbeitsbereich mit diesem Namen existiert bereits.",
     "errorGeneric": "Arbeitsbereich konnte nicht erstellt werden."
+  },
+  "verify": {
+    "title": "E-Mail-Adresse bestätigen",
+    "subtitle": "Einige Funktionen erfordern eine verifizierte E-Mail-Adresse",
+    "sentTo": "Ein Bestätigungslink wurde gesendet an:",
+    "resend": "E-Mail erneut senden",
+    "skipForNow": "Jetzt überspringen",
+    "resentTitle": "E-Mail gesendet",
+    "resentDesc": "Prüfe deinen Posteingang auf den Bestätigungslink.",
+    "features": {
+      "inbox": "Zugriff auf den Newsletter-Posteingang",
+      "newsletter": "KI-Newsletter-Analyse",
+      "meta": "Meta Ads Intelligence"
+    }
   },
   "competitors": {
     "title": "Wettbewerber hinzufügen",

@@ -7,6 +7,7 @@ import { useOnboarding, type OnboardingStep } from "@/hooks/useOnboarding";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
 import { useRoles } from "@/hooks/useRoles";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   BarChart3, Loader2, ArrowRight, ArrowLeft, Check, Plus, Trash2,
   Mail, Users, Lightbulb, Newspaper, Sparkles, Inbox,
-  CheckCircle, SkipForward, Rocket,
+  CheckCircle, SkipForward, Rocket, ShieldCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -148,6 +149,9 @@ function OnboardingContent() {
           )}
           {activeStep === "workspace" && (
             <WorkspaceStep onComplete={() => handleComplete("workspace")} />
+          )}
+          {activeStep === "verify" && (
+            <VerifyEmailStep onComplete={() => handleComplete("verify")} onSkip={handleSkip} />
           )}
           {activeStep === "competitors" && (
             <CompetitorStep onComplete={() => handleComplete("competitors")} onSkip={handleSkip} />
@@ -381,7 +385,7 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
                 />
               </div>
               {competitors.length > 1 && (
-                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground" onClick={() => removeRow(i)}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground" onClick={() => removeRow(i)} aria-label="Remove competitor">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               )}
@@ -405,6 +409,70 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
               {t("competitors.continue")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function VerifyEmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
+  const { t } = useTranslation("onboarding");
+  const { user } = useAuth();
+  const { isVerified, resendVerification, resending } = useEmailVerification();
+  const { toast } = useToast();
+
+  // Auto-advance if already verified
+  useEffect(() => {
+    if (isVerified) onComplete();
+  }, [isVerified, onComplete]);
+
+  const handleResend = async () => {
+    await resendVerification();
+    toast({ title: t("verify.resentTitle"), description: t("verify.resentDesc") });
+  };
+
+  return (
+    <div>
+      <div className="text-center mb-6">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent mx-auto mb-3">
+          <ShieldCheck className="h-5 w-5 text-accent-foreground" />
+        </div>
+        <h2 className="text-xl font-semibold text-foreground">{t("verify.title")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("verify.subtitle")}</p>
+      </div>
+
+      <Card className="border">
+        <CardContent className="p-5 space-y-4">
+          <div className="rounded-md bg-accent/50 p-3 text-sm">
+            <p className="text-muted-foreground">
+              {t("verify.sentTo")}{" "}
+              <span className="font-medium text-foreground">{user?.email}</span>
+            </p>
+          </div>
+
+          <div className="space-y-2 text-sm">
+            {(["inbox", "newsletter", "meta"] as const).map((key) => (
+              <div key={key} className="flex items-start gap-2.5 rounded-md bg-accent/30 p-2.5">
+                <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <p className="text-muted-foreground">{t(`verify.features.${key}`)}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" onClick={onSkip} className="flex-1 gap-1.5">
+              <SkipForward className="h-3.5 w-3.5" /> {t("verify.skipForNow")}
+            </Button>
+            <Button
+              onClick={handleResend}
+              disabled={resending}
+              variant="outline"
+              className="flex-1 gap-1.5"
+            >
+              {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+              {t("verify.resend")}
             </Button>
           </div>
         </CardContent>

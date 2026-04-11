@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type OnboardingStep =
   | "welcome"
   | "workspace"
+  | "verify"
   | "competitors"
   | "gmail"
   | "import"
@@ -15,6 +17,7 @@ export type OnboardingStep =
 const STEP_ORDER: OnboardingStep[] = [
   "welcome",
   "workspace",
+  "verify",
   "competitors",
   "gmail",
   "import",
@@ -45,8 +48,10 @@ function saveState(state: OnboardingState, workspaceId?: string) {
 }
 
 export function useOnboarding() {
+  const { user } = useAuth();
   const { currentWorkspace, workspaces } = useWorkspace();
   const { isConnected: gmailConnected } = useGmailConnection();
+  const emailVerified = !!user?.email_confirmed_at;
   const [state, setState] = useState<OnboardingState>(() => loadState(currentWorkspace?.id));
   const [competitorCount, setCompetitorCount] = useState<number | null>(null);
   const [inboxCount, setInboxCount] = useState<number | null>(null);
@@ -113,12 +118,13 @@ export function useOnboarding() {
   const autoCompleted = useMemo(() => {
     const auto: OnboardingStep[] = [];
     if (workspaces.length > 0) auto.push("workspace");
+    if (emailVerified) auto.push("verify");
     if ((competitorCount ?? 0) > 0) auto.push("competitors");
     if (gmailConnected) auto.push("gmail");
     if ((inboxCount ?? 0) > 0) auto.push("import");
     if ((insightCount ?? 0) > 0) auto.push("insights");
     return auto;
-  }, [workspaces, competitorCount, gmailConnected, inboxCount, insightCount]);
+  }, [workspaces, emailVerified, competitorCount, gmailConnected, inboxCount, insightCount]);
 
   const allCompleted = useMemo(
     () => [...new Set([...state.completedSteps, ...autoCompleted])],
@@ -150,6 +156,7 @@ export function useOnboarding() {
   const checklist = useMemo(
     () => [
       { key: "workspace" as const, label: "Create workspace", done: isStepComplete("workspace") },
+      { key: "verify" as const, label: "Verify email", done: isStepComplete("verify") },
       { key: "competitors" as const, label: "Add competitors", done: isStepComplete("competitors") },
       { key: "gmail" as const, label: "Connect Gmail", done: isStepComplete("gmail") },
       { key: "import" as const, label: "Import newsletters", done: isStepComplete("import") },

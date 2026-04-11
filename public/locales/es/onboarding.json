@@ -6,6 +6,7 @@
   "steps": {
     "welcome": { "title": "Bienvenido", "subtitle": "Comenzar" },
     "workspace": { "title": "Espacio de trabajo", "subtitle": "Tu hub de equipo" },
+    "verify": { "title": "Verificar correo", "subtitle": "Confirma tu identidad" },
     "competitors": { "title": "Competidores", "subtitle": "Rastrear rivales" },
     "gmail": { "title": "Gmail", "subtitle": "Importar correos" },
     "import": { "title": "Importar", "subtitle": "Tus datos" },
@@ -42,6 +43,20 @@
     "errorRls": "Algo salió mal. Intenta cerrar sesión y volver a entrar.",
     "errorDuplicate": "Ya existe un espacio de trabajo con ese nombre.",
     "errorGeneric": "No se pudo crear el espacio de trabajo."
+  },
+  "verify": {
+    "title": "Verifica tu correo electrónico",
+    "subtitle": "Algunas funciones requieren una dirección de correo verificada",
+    "sentTo": "Se envió un enlace de verificación a:",
+    "resend": "Reenviar correo",
+    "skipForNow": "Omitir por ahora",
+    "resentTitle": "Correo enviado",
+    "resentDesc": "Revisa tu bandeja de entrada para el enlace de verificación.",
+    "features": {
+      "inbox": "Acceder a la bandeja de entrada de newsletters",
+      "newsletter": "Análisis IA de newsletters",
+      "meta": "Inteligencia de Meta Ads"
+    }
   },
   "competitors": {
     "title": "Añade tus competidores",

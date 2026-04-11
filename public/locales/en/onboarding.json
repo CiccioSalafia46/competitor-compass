@@ -6,6 +6,7 @@
   "steps": {
     "welcome": { "title": "Welcome", "subtitle": "Get started" },
     "workspace": { "title": "Workspace", "subtitle": "Your team hub" },
+    "verify": { "title": "Verify email", "subtitle": "Confirm your identity" },
     "competitors": { "title": "Competitors", "subtitle": "Track rivals" },
     "gmail": { "title": "Gmail", "subtitle": "Import emails" },
     "import": { "title": "Import", "subtitle": "Your data" },
@@ -42,6 +43,20 @@
     "errorRls": "Something went wrong. Please try signing out and back in.",
     "errorDuplicate": "A workspace with that name already exists.",
     "errorGeneric": "Failed to create workspace."
+  },
+  "verify": {
+    "title": "Verify your email",
+    "subtitle": "Some features require a verified email address",
+    "sentTo": "A verification link was sent to:",
+    "resend": "Resend email",
+    "skipForNow": "Skip for now",
+    "resentTitle": "Email sent",
+    "resentDesc": "Check your inbox for the verification link.",
+    "features": {
+      "inbox": "Access the newsletter inbox",
+      "newsletter": "AI newsletter analysis",
+      "meta": "Meta Ads intelligence"
+    }
   },
   "competitors": {
     "title": "Add your competitors",

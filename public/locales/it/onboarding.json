@@ -6,6 +6,7 @@
   "steps": {
     "welcome": { "title": "Benvenuto", "subtitle": "Inizia" },
     "workspace": { "title": "Workspace", "subtitle": "Il tuo hub" },
+    "verify": { "title": "Verifica email", "subtitle": "Conferma la tua identità" },
     "competitors": { "title": "Competitor", "subtitle": "Monitora i rivali" },
     "gmail": { "title": "Gmail", "subtitle": "Importa email" },
     "import": { "title": "Importa", "subtitle": "I tuoi dati" },
@@ -42,6 +43,20 @@
     "errorRls": "Qualcosa è andato storto. Prova a disconnetterti e ad accedere di nuovo.",
     "errorDuplicate": "Esiste già un workspace con questo nome.",
     "errorGeneric": "Impossibile creare il workspace."
+  },
+  "verify": {
+    "title": "Verifica la tua email",
+    "subtitle": "Alcune funzionalità richiedono un indirizzo email verificato",
+    "sentTo": "Un link di verifica è stato inviato a:",
+    "resend": "Reinvia email",
+    "skipForNow": "Salta per ora",
+    "resentTitle": "Email inviata",
+    "resentDesc": "Controlla la tua casella per il link di verifica.",
+    "features": {
+      "inbox": "Accedi alla casella newsletter",
+      "newsletter": "Analisi AI delle newsletter",
+      "meta": "Intelligence Meta Ads"
+    }
   },
   "competitors": {
     "title": "Aggiungi i tuoi competitor",
