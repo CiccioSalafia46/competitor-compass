@@ -24,5 +24,92 @@
   "workspaceName": "Nom de l'espace de travail",
   "plan": "Forfait",
   "currentPlan": "Forfait actuel",
-  "manageBilling": "Gérer la facturation"
+  "manageBilling": "Gérer la facturation",
+  "email": "E-mail",
+  "yourRoles": "Vos rôles",
+  "noRolesAssigned": "Aucun rôle attribué",
+  "name": "Nom",
+  "slug": "Slug",
+  "manageTeam": "Gérer l'équipe",
+  "planUsage": "Forfait et utilisation",
+  "billingPeriodUsage": "Utilisation sur la période de facturation en cours",
+  "seats": "Licences",
+  "competitors": "Concurrents",
+  "dataImports": "Importations de données",
+  "analyses": "Analyses",
+  "viewFullUsage": "Voir l'utilisation complète",
+  "security": "Sécurité",
+  "appearanceDesc": "Basculez entre le mode clair et sombre grâce au bouton ci-dessus.",
+  "downloadWorkspaceData": "Téléchargez les données de votre espace de travail en CSV",
+  "exporting": "Exportation en cours…",
+
+  "team": {
+    "title": "Équipe",
+    "subtitle": "Gérez les membres et les rôles de l'espace de travail",
+    "inviteTitle": "Inviter un membre",
+    "inviteSubtitle": "Ajoutez un membre à cet espace de travail",
+    "inviteEmailPlaceholder": "collegue@entreprise.com",
+    "inviteButton": "Inviter",
+    "inviting": "Invitation en cours…",
+    "membersTitle": "Membres ({{count}})",
+    "noRoleAssigned": "Aucun rôle attribué",
+    "rolePermissionsTitle": "Permissions des rôles",
+    "roles": {
+      "admin": "Administrateur",
+      "analyst": "Analyste",
+      "viewer": "Observateur"
+    },
+    "roleDescriptions": {
+      "admin": "Gérer l'espace de travail, les membres, la facturation, les intégrations, les alertes, les rapports",
+      "analyst": "Gérer la surveillance des concurrents, les tags, les analyses, les rapports",
+      "viewer": "Accès en lecture seule aux tableaux de bord, analyses et rapports"
+    },
+    "roleUpdated": "Rôle mis à jour",
+    "invitationFlow": "Flux d'invitation",
+    "invitationFlowDesc": "Les invitations d'équipe nécessitent une infrastructure e-mail. Bientôt disponible."
+  },
+
+  "billing": {
+    "title": "Forfaits & Facturation",
+    "subtitle": "Vous êtes sur le forfait",
+    "plan": "forfait",
+    "manageSubscription": "Gérer l'abonnement",
+    "refresh": "Actualiser",
+    "billingPeriodEnds": "La période de facturation actuelle se termine le {{date}}",
+    "cancelAtPeriodEnd": "et l'abonnement est programmé pour être annulé en fin de période.",
+    "usageTitle": "Utilisation actuelle ce mois-ci",
+    "upgradeToIncrease": "Passer à un forfait supérieur pour augmenter la limite",
+    "unlimited": "∞ Illimité",
+    "yourPlan": "Votre forfait",
+    "recommended": "Recommandé",
+    "bestValue": "Meilleur rapport qualité-prix",
+    "upgrade": "Passer à",
+    "switch": "Changer pour",
+    "to": "vers",
+    "currentPlanLabel": "Forfait actuel",
+    "comparisonsTitle": "Comparaison complète des fonctionnalités",
+    "feature": "Fonctionnalité",
+    "comingSoon": "Bientôt",
+    "ctaFreeTitle": "Prêt à prendre la veille concurrentielle au sérieux ?",
+    "ctaFreeDesc": "Starter vous offre 10× plus de capacité, une extraction IA complète et la collaboration en équipe.",
+    "ctaPremiumTitle": "Débloquez l'avantage stratégique complet",
+    "ctaPremiumDesc": "Premium débloque les concurrents illimités, des insights avancés et Meta Ads Intelligence.",
+    "upgradeButton": "Passer à {{plan}}",
+    "loadingBilling": "Chargement de la facturation…",
+    "checkoutError": "Erreur de paiement",
+    "plans": {
+      "free": {
+        "tagline": "Explorez la plateforme",
+        "targetUser": "Pour les personnes qui débutent"
+      },
+      "starter": {
+        "tagline": "Votre avantage concurrentiel",
+        "targetUser": "Pour les équipes qui surveillent activement les concurrents"
+      },
+      "premium": {
+        "tagline": "Avantage stratégique",
+        "targetUser": "Pour les équipes ayant besoin d'une intelligence complète"
+      }
+    }
+  }
 }

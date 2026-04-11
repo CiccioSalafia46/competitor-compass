@@ -47,5 +47,9 @@
   "viewAll": "Vedi tutti",
   "learnMore": "Scopri di più",
   "getStarted": "Inizia",
-  "upgrade": "Aggiorna piano"
+  "upgrade": "Aggiorna piano",
+  "verifyEmailTitle": "Verifica la tua email",
+  "verifyEmailUnlock": "per sbloccare tutte le funzionalità. Controlla la tua casella per il link di verifica.",
+  "resend": "Reinvia",
+  "resending": "Invio in corso…"
 }

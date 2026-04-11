@@ -1,0 +1,182 @@
+{
+  "title": "Alert-Center",
+  "subtitle": "Verfolgen Sie Konkurrentenbewegungen mit regelbasierten Echtzeit- und geplanten Intelligenzwarnungen.",
+  "criticalBadge": "{{count}} kritisch",
+
+  "stats": {
+    "activeRules": "Aktive Regeln",
+    "activeRulesDetail": "wird überwacht",
+    "unread": "Ungelesen",
+    "unreadDetail": "Benachrichtigungen",
+    "alertsThisWeek": "Warnungen diese Woche",
+    "alertsThisWeekDetail": "generiert",
+    "triggersFired": "Auslöser aktiviert",
+    "lastScan": "Letzter Scan {{when}}",
+    "noScansYet": "Noch keine Scans"
+  },
+
+  "actions": {
+    "scheduledScan": "Geplanter Scan",
+    "checkNow": "Jetzt prüfen",
+    "checking": "Wird geprüft…"
+  },
+
+  "tabs": {
+    "notifications": "Benachrichtigungen",
+    "rules": "Regeln",
+    "activityLog": "Aktivitätsprotokoll"
+  },
+
+  "filters": {
+    "all": "Alle",
+    "unread": "Ungelesen",
+    "read": "Gelesen",
+    "high": "Hoch",
+    "medium": "Mittel",
+    "info": "Info",
+    "allCategories": "Alle Kategorien",
+    "markAllRead": "Alle als gelesen markieren",
+    "allRules": "Alle Regeln",
+    "entries": "{{filtered}} von {{total}} Einträgen"
+  },
+
+  "logStatus": {
+    "all": "Alle",
+    "triggered": "Ausgelöst",
+    "suppressed": "Unterdrückt",
+    "failed": "Fehlgeschlagen"
+  },
+
+  "severity": {
+    "high": "Hoch",
+    "medium": "Mittel",
+    "info": "Info",
+    "low": "Niedrig",
+    "critical": "Kritisch"
+  },
+
+  "notifications": {
+    "emptyTitle": "Noch keine Warnungen",
+    "emptyTitleFiltered": "Keine Warnungen entsprechen Ihren Filtern",
+    "emptyDescription": "Erstellen Sie Regeln und führen Sie einen Scan durch, um Konkurrenz-Intelligenzwarnungen zu erhalten.",
+    "emptyDescriptionFiltered": "Versuchen Sie, Filter zu löschen, um alle Warnungen zu sehen.",
+    "clearFilters": "Filter löschen",
+    "markRead": "Als gelesen markieren",
+    "dismiss": "Schließen"
+  },
+
+  "rules": {
+    "quickPresetsTitle": "Schnellvorlagen",
+    "quickPresetsSubtitle": "Ein-Klick-Regelvorlagen für gängige Überwachungsszenarien",
+    "customRule": "Benutzerdefinierte Regel",
+    "useThisPreset": "Diese Vorlage verwenden",
+    "noRulesTitle": "Noch keine Alarmregeln",
+    "noRulesDescription": "Verwenden Sie eine Vorlage oben oder erstellen Sie eine benutzerdefinierte Regel, um die Konkurrenzaktivität zu überwachen.",
+    "emailPlanned": "E-Mail geplant",
+    "checked": "Geprüft {{when}}",
+    "triggered": "Ausgelöst {{when}}",
+    "neverTriggered": "Nie ausgelöst"
+  },
+
+  "log": {
+    "noActivityTitle": "Keine Auslöseraktivität",
+    "noActivityDescription": "Protokolle erscheinen, wenn Regeln ausgelöst werden, unterdrückt werden oder fehlschlagen.",
+    "noActivityDescriptionFiltered": "Keine Einträge entsprechen Ihren aktuellen Filtern."
+  },
+
+  "presets": {
+    "deepDiscount": {
+      "label": "Tiefer Rabatt",
+      "description": "Warnung, wenn ein Konkurrent die Preise um ≥ 40% senkt"
+    },
+    "campaignLaunch": {
+      "label": "Kampagnenstart",
+      "description": "Warnung bei jedem neuen Kampagnenstart eines Konkurrenten"
+    },
+    "activitySpike": {
+      "label": "Aktivitätsspitze",
+      "description": "Warnung, wenn die Konkurrenzaktivität um das 2-Fache steigt"
+    },
+    "pricingSignal": {
+      "label": "Preissignal",
+      "description": "Warnung bei Erwähnungen von \"Preis\", \"Rabatt\", \"Angebot\", \"Kosten\""
+    }
+  },
+
+  "ruleTypes": {
+    "discount_threshold": "Rabattschwelle",
+    "keyword_detection": "Schlüsselworterkennung",
+    "new_campaign_launch": "Neuer Kampagnenstart",
+    "activity_spike": "Ungewöhnliche Aktivitätsspitze",
+    "keyword_match": "Schlüsselwortabgleich (legacy)",
+    "new_competitor_ad": "Neue Konkurrenzanzeigen (legacy)",
+    "new_category": "Neue Kategorie erkannt (legacy)"
+  },
+
+  "evaluationModes": {
+    "both": "Echtzeit + geplant",
+    "event": "Nur Echtzeit",
+    "scheduled": "Nur geplante Scans"
+  },
+
+  "dialog": {
+    "createTitle": "Alarmregel erstellen",
+    "editTitle": "Alarmregel bearbeiten",
+    "createDescription": "Regeln werten automatisch Konkurrenten-Newsletter, Extraktionen und Anzeigen aus.",
+    "editDescription": "Aktualisieren Sie die Regelkonfiguration unten.",
+    "ruleName": "Regelname",
+    "ruleNamePlaceholder": "z. B. Tiefer Rabatt erkannt",
+    "ruleType": "Regeltyp",
+    "evaluationMode": "Auswertungsmodus",
+    "cooldownLabel": "Abklingzeit (Stunden)",
+    "cooldownHint": "Unterdrückt wiederholte Warnungen für diese Regel innerhalb dieses Zeitfensters.",
+    "discountThresholdLabel": "Rabattschwelle (%)",
+    "discountThresholdHint": "Auslösen, wenn ein Konkurrentenrabatt diesen Prozentwert erreicht oder überschreitet.",
+    "keywordsLabel": "Schlüsselwörter (kommagetrennt)",
+    "keywordsPlaceholder": "Start, neue Preise, Black Friday",
+    "keywordsHint": "Warnung, wenn eines dieser Schlüsselwörter in Konkurrenten-Newslettern erscheint.",
+    "campaignTypesLabel": "Kampagnentypen (optional)",
+    "campaignTypesPlaceholder": "Produktstart, Werbeaktion, Ankündigung",
+    "campaignTypesHint": "Leer lassen, um jede neu erkannte Kampagne zu überwachen.",
+    "spikeMultiplierLabel": "Spitzenmultiplikator",
+    "minimumEventsLabel": "Mindestzahl Ereignisse",
+    "spikeHint": "Auslösen, wenn die 24h-Aktivitätszahl ≥ {{multiplier}}× des 7-Tage-Durchschnitts und ≥ {{events}} Ereignisse beträgt.",
+    "competitorScope": "Konkurrenzbereich (optional)",
+    "competitorScopeHint": "Alle abwählen, um jeden verfolgten Konkurrenten zu überwachen.",
+    "notificationChannels": "Benachrichtigungskanäle",
+    "inAppAlways": "In-App (immer aktiv)",
+    "emailFuture": "E-Mail (für spätere Zustellung gespeichert)",
+    "cancel": "Abbrechen",
+    "saving": "Wird gespeichert…",
+    "saveChanges": "Änderungen speichern",
+    "createRule": "Regel erstellen"
+  },
+
+  "relative": {
+    "never": "Nie",
+    "justNow": "Gerade eben",
+    "minutesAgo": "vor {{count}}m",
+    "hoursAgo": "vor {{count}}h",
+    "daysAgo": "vor {{count}}d"
+  },
+
+  "toast": {
+    "ruleCreated": "Alarmregel erstellt",
+    "ruleDeleted": "Regel gelöscht",
+    "alertsTriggered_one": "{{count}} Warnung ausgelöst",
+    "alertsTriggered_other": "{{count}} Warnungen ausgelöst",
+    "noNewAlerts": "Regeln geprüft, keine neuen Warnungen",
+    "suppressedInfo_one": "{{count}} doppelter Auslöser wurde unterdrückt",
+    "suppressedInfo_other": "{{count}} doppelte Auslöser wurden unterdrückt",
+    "failedLoadRules": "Alarmregeln konnten nicht geladen werden",
+    "failedCreateRule": "Alarmregel konnte nicht erstellt werden",
+    "failedUpdateRule": "Alarmregel konnte nicht aktualisiert werden",
+    "failedDeleteRule": "Alarmregel konnte nicht gelöscht werden",
+    "failedLoadAlerts": "Warnungen konnten nicht geladen werden",
+    "failedMarkRead": "Warnung konnte nicht als gelesen markiert werden",
+    "failedMarkAllRead": "Alle Warnungen konnten nicht als gelesen markiert werden",
+    "failedDismiss": "Warnung konnte nicht geschlossen werden",
+    "failedEvaluate": "Warnungen konnten nicht ausgewertet werden",
+    "failedLoadLog": "Auslöserprotokoll konnte nicht geladen werden"
+  }
+}

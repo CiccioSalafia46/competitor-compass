@@ -17,6 +17,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAnalyticsTracker, ANALYTICS_EVENTS } from "@/hooks/useAnalyticsTracker";
 import { getErrorMessage } from "@/lib/errors";
+import { useTranslation } from "react-i18next";
 
 /** Value buckets for clear feature packaging */
 const PLAN_VALUE_BUCKETS: Record<PlanTier, {
@@ -149,6 +150,7 @@ export default function Billing() {
   const { usage, limits, getUsagePercent } = useUsage();
   const { toast } = useToast();
   const { track } = useAnalyticsTracker();
+  const { t } = useTranslation("settings");
 
   const handleCheckout = async (plan: PlanTier) => {
     if (plan === "free") return;
@@ -156,7 +158,7 @@ export default function Billing() {
     try {
       await checkout(plan);
     } catch (error) {
-      toast({ title: "Checkout error", description: getErrorMessage(error), variant: "destructive" });
+      toast({ title: t("billing.checkoutError"), description: getErrorMessage(error), variant: "destructive" });
     }
   };
 
@@ -172,7 +174,7 @@ export default function Billing() {
     return (
       <div className="p-6 lg:p-8 flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm text-muted-foreground">Loading billing…</span>
+        <span className="text-sm text-muted-foreground">{t("billing.loadingBilling")}</span>
       </div>
     );
   }
@@ -182,34 +184,34 @@ export default function Billing() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">Plans & Billing</h1>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">{t("billing.title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            You're on the <Badge variant={tier === "free" ? "secondary" : "default"} className="mx-1 text-xs capitalize">{tier}</Badge> plan
+            {t("billing.subtitle")} <Badge variant={tier === "free" ? "secondary" : "default"} className="mx-1 text-xs capitalize">{tier}</Badge> {t("billing.plan")}
           </p>
         </div>
         <div className="flex gap-2">
           {subscribed && (
             <Button variant="outline" size="sm" onClick={handlePortal} className="gap-1.5 text-xs h-8">
-              <ExternalLink className="h-3 w-3" /> Manage subscription
+              <ExternalLink className="h-3 w-3" /> {t("billing.manageSubscription")}
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => checkSubscription()} className="gap-1.5 text-xs h-8">
-            <CreditCard className="h-3 w-3" /> Refresh
+            <CreditCard className="h-3 w-3" /> {t("billing.refresh")}
           </Button>
         </div>
       </div>
 
       {subscriptionEnd && (
         <p className="text-xs text-muted-foreground">
-          Current billing period ends {new Date(subscriptionEnd).toLocaleDateString()}
-          {cancelAtPeriodEnd ? " and the subscription is set to cancel at period end." : ""}
+          {t("billing.billingPeriodEnds", { date: new Date(subscriptionEnd).toLocaleDateString() })}
+          {cancelAtPeriodEnd ? ` ${t("billing.cancelAtPeriodEnd")}` : ""}
         </p>
       )}
 
       {/* Current Usage Summary */}
       <Card className="border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Current Usage This Month</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("billing.usageTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -239,10 +241,10 @@ export default function Billing() {
                       )}
                     />
                   ) : (
-                    <p className="text-[10px] text-primary font-medium">∞ Unlimited</p>
+                    <p className="text-[10px] text-primary font-medium">{t("billing.unlimited")}</p>
                   )}
                   {pct >= 90 && !isUnlimited && (
-                    <p className="text-[10px] text-destructive mt-0.5 font-medium">Upgrade to increase limit</p>
+                    <p className="text-[10px] text-destructive mt-0.5 font-medium">{t("billing.upgradeToIncrease")}</p>
                   )}
                 </div>
               );
@@ -270,26 +272,26 @@ export default function Billing() {
               )}
             >
               {isCurrent && (
-                <Badge className="absolute -top-2.5 left-4 text-[10px]">Your Plan</Badge>
+                <Badge className="absolute -top-2.5 left-4 text-[10px]">{t("billing.yourPlan")}</Badge>
               )}
               {isRecommended && !isCurrent && (
                 <Badge className="absolute -top-2.5 left-4 text-[10px] bg-primary">
-                  <Zap className="h-2.5 w-2.5 mr-0.5" /> Recommended
+                  <Zap className="h-2.5 w-2.5 mr-0.5" /> {t("billing.recommended")}
                 </Badge>
               )}
               {isBestValue && !isCurrent && (
                 <Badge className="absolute -top-2.5 left-4 text-[10px] bg-primary">
-                  <TrendingUp className="h-2.5 w-2.5 mr-0.5" /> Best Value
+                  <TrendingUp className="h-2.5 w-2.5 mr-0.5" /> {t("billing.bestValue")}
                 </Badge>
               )}
               <CardHeader className="pb-3">
                 <CardTitle className="text-base capitalize">{STRIPE_PLANS[plan].label}</CardTitle>
-                <p className="text-xs text-muted-foreground">{value.targetUser}</p>
+                <p className="text-xs text-muted-foreground">{t(`billing.plans.${plan}.targetUser`)}</p>
                 <div className="flex items-baseline gap-0.5 mt-2">
                   <span className="text-3xl font-bold text-foreground">{price.amount}</span>
                   <span className="text-sm text-muted-foreground">{price.period}</span>
                 </div>
-                <p className="text-[10px] text-primary font-medium mt-0.5">{value.tagline}</p>
+                <p className="text-[10px] text-primary font-medium mt-0.5">{t(`billing.plans.${plan}.tagline`)}</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Value buckets */}
@@ -329,17 +331,17 @@ export default function Billing() {
                     className={cn("w-full gap-1.5", (isRecommended || isBestValue) && "bg-primary shadow-sm")}
                     onClick={() => handleCheckout(plan)}
                   >
-                    {tier === "free" ? "Upgrade" : "Switch"} to {STRIPE_PLANS[plan].label}
+                    {tier === "free" ? t("billing.upgrade") : t("billing.switch")} {t("billing.to")} {STRIPE_PLANS[plan].label}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 )}
                 {isCurrent && plan !== "free" && (
                   <Button variant="outline" className="w-full" onClick={handlePortal}>
-                    Manage subscription
+                    {t("billing.manageSubscription")}
                   </Button>
                 )}
                 {isCurrent && plan === "free" && (
-                  <p className="text-center text-xs text-muted-foreground">Current plan</p>
+                  <p className="text-center text-xs text-muted-foreground">{t("billing.currentPlanLabel")}</p>
                 )}
               </CardContent>
             </Card>
@@ -350,14 +352,14 @@ export default function Billing() {
       {/* Feature Comparison Table */}
       <Card className="border overflow-hidden">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Full Feature Comparison</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("billing.comparisonsTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Feature</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">{t("billing.feature")}</th>
                   <th className={cn("text-center px-3 py-2 font-medium", tier === "free" && "text-primary")}>Free</th>
                   <th className={cn("text-center px-3 py-2 font-medium", tier === "starter" && "text-primary")}>Starter</th>
                   <th className={cn("text-center px-3 py-2 font-medium", tier === "premium" && "text-primary")}>Premium</th>
@@ -380,7 +382,7 @@ export default function Billing() {
                             <X className="h-3 w-3 text-muted-foreground/30 mx-auto" />
                           ) : isComingSoon ? (
                             <Badge variant="outline" className="text-[9px] px-1.5 py-0">
-                              <Clock className="h-2.5 w-2.5 mr-0.5" /> Soon
+                              <Clock className="h-2.5 w-2.5 mr-0.5" /> {t("billing.comingSoon")}
                             </Badge>
                           ) : (
                             <span className={cn("text-foreground", plan === tier && "font-semibold text-primary")}>{val}</span>
@@ -405,19 +407,17 @@ export default function Billing() {
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h3 className="text-sm font-semibold text-foreground">
-                {tier === "free" ? "Ready to get serious about competitive intelligence?" : "Unlock the full strategic advantage"}
+                {tier === "free" ? t("billing.ctaFreeTitle") : t("billing.ctaPremiumTitle")}
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {tier === "free"
-                  ? "Starter gives you 10x more capacity, full AI extraction, and team collaboration."
-                  : "Premium unlocks unlimited competitors, advanced insights, and Meta Ads intelligence."}
+                {tier === "free" ? t("billing.ctaFreeDesc") : t("billing.ctaPremiumDesc")}
               </p>
             </div>
             <Button
               className="gap-1.5 shrink-0"
               onClick={() => handleCheckout(tier === "free" ? "starter" : "premium")}
             >
-              Upgrade to {tier === "free" ? "Starter" : "Premium"} <ArrowRight className="h-3.5 w-3.5" />
+              {t("billing.upgradeButton", { plan: tier === "free" ? "Starter" : "Premium" })} <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </CardContent>
         </Card>

@@ -1,0 +1,71 @@
+{
+  "title": "Meta Ads Intelligence",
+  "titleBadge": "Beta · Próximamente",
+  "subtitle": "Monitorea los medios de pago de competidores en Facebook e Instagram",
+
+  "betaNotice": {
+    "title": "Meta Ads Intelligence está en beta",
+    "description": "Estamos finalizando la integración con Meta Ad Library. A continuación puede previsualizar la experiencia con datos de muestra. Cuando la integración esté en vivo, podrá rastrear anuncios reales de competidores, analizar estrategias de mensajería y monitorear patrones de gasto automáticamente.",
+    "premiumNote": "Esta función estará disponible en el <strong>plan Premium</strong> cuando se lance."
+  },
+
+  "upgradeCard": {
+    "title": "Obtenga acceso anticipado a Meta Ads Intelligence",
+    "description": "Los usuarios Premium serán los primeros en acceder al seguimiento real de anuncios y al análisis de IA cuando se lance esta función.",
+    "features": {
+      "adCreativeAnalysis": "Análisis de creativos de anuncios",
+      "spendMonitoring": "Monitoreo de gasto",
+      "messagingPatterns": "Patrones de mensajería",
+      "competitiveBenchmarks": "Benchmarks competitivos"
+    },
+    "upgradeButton": "Actualizar a Premium"
+  },
+
+  "samplePreview": {
+    "title": "Vista previa de anuncios de muestra",
+    "badge": "Datos demo",
+    "disclaimer": "Estos son anuncios de muestra solo con fines de vista previa. No se están obteniendo ni mostrando datos reales."
+  },
+
+  "featureList": {
+    "title": "Cuando Meta Ads Intelligence se lance, podrá:",
+    "trackAds": {
+      "title": "Rastrear anuncios de competidores",
+      "desc": "Importar automáticamente anuncios desde Meta Ad Library"
+    },
+    "aiAnalysis": {
+      "title": "Análisis con IA",
+      "desc": "Analizar ángulos de mensajería, ofertas y patrones de urgencia"
+    },
+    "spendMonitoring": {
+      "title": "Monitoreo de gasto",
+      "desc": "Rastrear rangos de gasto estimados de competidores"
+    },
+    "sideComparison": {
+      "title": "Comparación lado a lado",
+      "desc": "Comparar estrategias de anuncios entre competidores"
+    }
+  },
+
+  "adDetail": {
+    "title": "Detalles del anuncio",
+    "demoBadge": "Demo",
+    "adCopy": "Texto del anuncio",
+    "observedData": "Datos observados",
+    "firstSeen": "Primera vez visto",
+    "lastSeen": "Última vez visto",
+    "cta": "CTA",
+    "media": "Medio",
+    "estimatedMetrics": "Métricas estimadas",
+    "sampleRanges": "Rangos de muestra",
+    "aiAnalysisNote": "El análisis de IA estará disponible cuando se lance la integración de Meta Ads.",
+    "spend": "Gasto",
+    "impressions": "Impresiones",
+    "audienceSize": "Tamaño de audiencia"
+  },
+
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  }
+}

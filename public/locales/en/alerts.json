@@ -1,0 +1,182 @@
+{
+  "title": "Alert Center",
+  "subtitle": "Monitor competitor moves with rule-based, real-time and scheduled intelligence alerts.",
+  "criticalBadge": "{{count}} critical",
+
+  "stats": {
+    "activeRules": "Active rules",
+    "activeRulesDetail": "currently monitoring",
+    "unread": "Unread",
+    "unreadDetail": "notifications",
+    "alertsThisWeek": "Alerts this week",
+    "alertsThisWeekDetail": "generated",
+    "triggersFired": "Triggers fired",
+    "lastScan": "Last scan {{when}}",
+    "noScansYet": "No scans yet"
+  },
+
+  "actions": {
+    "scheduledScan": "Scheduled scan",
+    "checkNow": "Check now",
+    "checking": "Checking…"
+  },
+
+  "tabs": {
+    "notifications": "Notifications",
+    "rules": "Rules",
+    "activityLog": "Activity log"
+  },
+
+  "filters": {
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "high": "High",
+    "medium": "Medium",
+    "info": "Info",
+    "allCategories": "All categories",
+    "markAllRead": "Mark all read",
+    "allRules": "All rules",
+    "entries": "{{filtered}} of {{total}} entries"
+  },
+
+  "logStatus": {
+    "all": "All",
+    "triggered": "Triggered",
+    "suppressed": "Suppressed",
+    "failed": "Failed"
+  },
+
+  "severity": {
+    "high": "High",
+    "medium": "Medium",
+    "info": "Info",
+    "low": "Low",
+    "critical": "Critical"
+  },
+
+  "notifications": {
+    "emptyTitle": "No alerts yet",
+    "emptyTitleFiltered": "No alerts match your filters",
+    "emptyDescription": "Create rules and run a scan to start receiving competitor intelligence alerts.",
+    "emptyDescriptionFiltered": "Try clearing filters to see all alerts.",
+    "clearFilters": "Clear filters",
+    "markRead": "Mark read",
+    "dismiss": "Dismiss"
+  },
+
+  "rules": {
+    "quickPresetsTitle": "Quick presets",
+    "quickPresetsSubtitle": "One-click rule templates for common monitoring scenarios",
+    "customRule": "Custom rule",
+    "useThisPreset": "Use this preset",
+    "noRulesTitle": "No alert rules yet",
+    "noRulesDescription": "Use a preset above or create a custom rule to start monitoring competitor activity.",
+    "emailPlanned": "Email planned",
+    "checked": "Checked {{when}}",
+    "triggered": "Triggered {{when}}",
+    "neverTriggered": "Never triggered"
+  },
+
+  "log": {
+    "noActivityTitle": "No trigger activity",
+    "noActivityDescription": "Logs appear when rules fire, get suppressed, or fail.",
+    "noActivityDescriptionFiltered": "No entries match your current filters."
+  },
+
+  "presets": {
+    "deepDiscount": {
+      "label": "Deep discount",
+      "description": "Alert when a competitor drops prices ≥ 40%"
+    },
+    "campaignLaunch": {
+      "label": "Campaign launch",
+      "description": "Alert on any new competitor campaign launch"
+    },
+    "activitySpike": {
+      "label": "Activity spike",
+      "description": "Alert when competitor activity jumps 2× baseline"
+    },
+    "pricingSignal": {
+      "label": "Pricing signal",
+      "description": "Alert on mentions of \"price\", \"discount\", \"offer\", \"cost\""
+    }
+  },
+
+  "ruleTypes": {
+    "discount_threshold": "Discount threshold",
+    "keyword_detection": "Keyword detection",
+    "new_campaign_launch": "New campaign launch",
+    "activity_spike": "Unusual activity spike",
+    "keyword_match": "Keyword match (legacy)",
+    "new_competitor_ad": "New competitor ads (legacy)",
+    "new_category": "New category detected (legacy)"
+  },
+
+  "evaluationModes": {
+    "both": "Real-time + scheduled",
+    "event": "Real-time only",
+    "scheduled": "Scheduled scans only"
+  },
+
+  "dialog": {
+    "createTitle": "Create alert rule",
+    "editTitle": "Edit alert rule",
+    "createDescription": "Rules evaluate competitor newsletters, extractions, and ads automatically.",
+    "editDescription": "Update the rule configuration below.",
+    "ruleName": "Rule name",
+    "ruleNamePlaceholder": "e.g. Deep discount detected",
+    "ruleType": "Rule type",
+    "evaluationMode": "Evaluation mode",
+    "cooldownLabel": "Cooldown (hours)",
+    "cooldownHint": "Suppress repeated alerts for this rule within this window.",
+    "discountThresholdLabel": "Discount threshold (%)",
+    "discountThresholdHint": "Fire when a competitor discount reaches or exceeds this percentage.",
+    "keywordsLabel": "Keywords (comma-separated)",
+    "keywordsPlaceholder": "launch, new pricing, Black Friday",
+    "keywordsHint": "Alert when any of these keywords appear in competitor newsletters.",
+    "campaignTypesLabel": "Campaign types (optional)",
+    "campaignTypesPlaceholder": "product_launch, promotional, announcement",
+    "campaignTypesHint": "Leave empty to monitor every new campaign detected.",
+    "spikeMultiplierLabel": "Spike multiplier",
+    "minimumEventsLabel": "Minimum events",
+    "spikeHint": "Fire when the 24h activity count is ≥ {{multiplier}}× the 7-day average and ≥ {{events}} events.",
+    "competitorScope": "Competitor scope (optional)",
+    "competitorScopeHint": "Leave all unselected to monitor every tracked competitor.",
+    "notificationChannels": "Notification channels",
+    "inAppAlways": "In-app (always active)",
+    "emailFuture": "Email (saved for future delivery)",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "createRule": "Create rule"
+  },
+
+  "relative": {
+    "never": "Never",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+
+  "toast": {
+    "ruleCreated": "Alert rule created",
+    "ruleDeleted": "Rule deleted",
+    "alertsTriggered_one": "{{count}} alert triggered",
+    "alertsTriggered_other": "{{count}} alerts triggered",
+    "noNewAlerts": "Rules checked with no new alerts",
+    "suppressedInfo_one": "{{count}} duplicate trigger was suppressed",
+    "suppressedInfo_other": "{{count}} duplicate triggers were suppressed",
+    "failedLoadRules": "Failed to load alert rules",
+    "failedCreateRule": "Failed to create alert rule",
+    "failedUpdateRule": "Failed to update alert rule",
+    "failedDeleteRule": "Failed to delete alert rule",
+    "failedLoadAlerts": "Failed to load alerts",
+    "failedMarkRead": "Failed to mark alert as read",
+    "failedMarkAllRead": "Failed to mark all alerts as read",
+    "failedDismiss": "Failed to dismiss alert",
+    "failedEvaluate": "Failed to evaluate alerts",
+    "failedLoadLog": "Failed to load alert trigger log"
+  }
+}

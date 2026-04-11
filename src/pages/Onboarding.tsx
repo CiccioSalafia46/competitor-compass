@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useOnboarding, type OnboardingStep } from "@/hooks/useOnboarding";
@@ -10,13 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   BarChart3, Loader2, ArrowRight, ArrowLeft, Check, Plus, Trash2,
-  Mail, Users, Lightbulb, Newspaper, Sparkles, Inbox, Globe,
+  Mail, Users, Lightbulb, Newspaper, Sparkles, Inbox,
   CheckCircle, SkipForward, Rocket,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -33,17 +33,8 @@ export default function Onboarding() {
   return <OnboardingContent />;
 }
 
-const STEP_META: Record<OnboardingStep, { title: string; subtitle: string; icon: LucideIcon }> = {
-  welcome: { title: "Welcome", subtitle: "Get started", icon: Sparkles },
-  workspace: { title: "Workspace", subtitle: "Your team hub", icon: BarChart3 },
-  competitors: { title: "Competitors", subtitle: "Track rivals", icon: Users },
-  gmail: { title: "Gmail", subtitle: "Import emails", icon: Mail },
-  import: { title: "Import", subtitle: "Your data", icon: Inbox },
-  insights: { title: "Insights", subtitle: "AI analysis", icon: Lightbulb },
-  done: { title: "Ready", subtitle: "All set", icon: Rocket },
-};
-
 function OnboardingContent() {
+  const { t } = useTranslation("onboarding");
   const navigate = useNavigate();
   const { workspaces, currentWorkspace } = useWorkspace();
   const {
@@ -105,18 +96,17 @@ function OnboardingContent() {
               <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
                 <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
-              <span className="text-sm font-semibold text-foreground">Tracklyze</span>
+              <span className="text-sm font-semibold text-foreground">{t("appName")}</span>
             </div>
             {workspaces.length > 0 && (
               <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/dashboard")}>
-                Skip setup →
+                {t("skipSetup")}
               </Button>
             )}
           </div>
           <Progress value={progress} className="h-1.5" />
           <div className="flex items-center gap-1 mt-2 overflow-x-auto pb-1">
             {visibleSteps.map((step, i) => {
-              const meta = STEP_META[step];
               const done = isStepComplete(step);
               const active = step === activeStep;
               return (
@@ -139,7 +129,7 @@ function OnboardingContent() {
                       {i + 1}
                     </span>
                   )}
-                  {meta.title}
+                  {t(`steps.${step}.title`)}
                 </button>
               );
             })}
@@ -185,10 +175,10 @@ function OnboardingContent() {
         <div className="border-t bg-card">
           <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={goBack} disabled={!canGoBack} className="gap-1.5 text-xs">
-              <ArrowLeft className="h-3 w-3" /> Back
+              <ArrowLeft className="h-3 w-3" /> {t("back")}
             </Button>
             <span className="text-[11px] text-muted-foreground">
-              Step {stepIndex + 1} of {visibleSteps.length}
+              {t("stepOf", { current: stepIndex + 1, total: visibleSteps.length })}
             </span>
             <div />
           </div>
@@ -201,10 +191,12 @@ function OnboardingContent() {
 /* ============ STEP COMPONENTS ============ */
 
 function WelcomeStep({ onNext }: { onNext: () => void }) {
-  const features = [
-    { icon: Newspaper, title: "Competitor Monitoring", desc: "Import and analyze competitor campaigns automatically" },
-    { icon: Users, title: "Competitive Tracking", desc: "Monitor rivals' messaging, offers, and strategies" },
-    { icon: Lightbulb, title: "AI Insights", desc: "Get strategic recommendations from your competitive data" },
+  const { t } = useTranslation("onboarding");
+
+  const features: { icon: LucideIcon; key: "monitoring" | "tracking" | "insights" }[] = [
+    { icon: Newspaper, key: "monitoring" },
+    { icon: Users, key: "tracking" },
+    { icon: Lightbulb, key: "insights" },
   ];
 
   return (
@@ -212,33 +204,34 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary mx-auto mb-4">
         <Sparkles className="h-6 w-6 text-primary-foreground" />
       </div>
-      <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Tracklyze</h1>
+      <h1 className="text-2xl font-semibold text-foreground mb-2">{t("welcome.title")}</h1>
       <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
-        Your competitor intelligence platform. We'll help you set up in just a few minutes.
+        {t("welcome.subtitle")}
       </p>
 
       <div className="grid gap-3 mb-8 text-left">
         {features.map((f) => (
-          <div key={f.title} className="flex items-start gap-3 rounded-lg border p-3.5">
+          <div key={f.key} className="flex items-start gap-3 rounded-lg border p-3.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent shrink-0">
               <f.icon className="h-4 w-4 text-accent-foreground" />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">{f.title}</p>
-              <p className="text-xs text-muted-foreground">{f.desc}</p>
+              <p className="text-sm font-medium text-foreground">{t(`welcome.features.${f.key}.title`)}</p>
+              <p className="text-xs text-muted-foreground">{t(`welcome.features.${f.key}.desc`)}</p>
             </div>
           </div>
         ))}
       </div>
 
       <Button onClick={onNext} size="lg" className="gap-2 w-full">
-        Get started <ArrowRight className="h-4 w-4" />
+        {t("welcome.getStarted")} <ArrowRight className="h-4 w-4" />
       </Button>
     </div>
   );
 }
 
 function WorkspaceStep({ onComplete }: { onComplete: () => void }) {
+  const { t } = useTranslation("onboarding");
   const [name, setName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const submittingRef = useRef(false);
@@ -262,11 +255,11 @@ function WorkspaceStep({ onComplete }: { onComplete: () => void }) {
       submittingRef.current = false;
       const raw = getErrorMessage(error, "");
       const msg = raw.includes("row-level security") || raw.includes("violates")
-        ? "Something went wrong. Please try signing out and back in."
+        ? t("workspace.errorRls")
         : raw.includes("duplicate key")
-        ? "A workspace with that name already exists."
-        : raw || "Failed to create workspace.";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+        ? t("workspace.errorDuplicate")
+        : raw || t("workspace.errorGeneric");
+      toast({ title: t("workspace.errorGeneric"), description: msg, variant: "destructive" });
     } finally {
       setIsCreating(false);
     }
@@ -278,34 +271,32 @@ function WorkspaceStep({ onComplete }: { onComplete: () => void }) {
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent mx-auto mb-3">
           <BarChart3 className="h-5 w-5 text-accent-foreground" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground">Create your workspace</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          A workspace organizes your team's competitive intelligence
-        </p>
+        <h2 className="text-xl font-semibold text-foreground">{t("workspace.title")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("workspace.subtitle")}</p>
       </div>
 
       <Card className="border">
         <CardContent className="p-5">
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="workspace">Workspace name</Label>
+              <Label htmlFor="workspace">{t("workspace.label")}</Label>
               <Input
                 id="workspace"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Acme Marketing"
+                placeholder={t("workspace.placeholder")}
                 autoFocus
                 required
               />
               <p className="text-[11px] text-muted-foreground">
-                Typically your company or team name
+                {t("workspace.hint")}
               </p>
             </div>
             <Button type="submit" className="w-full gap-2" disabled={isCreating || !name.trim()}>
               {isCreating ? (
-                <><Loader2 className="h-4 w-4 animate-spin" />Creating…</>
+                <><Loader2 className="h-4 w-4 animate-spin" />{t("workspace.creating")}</>
               ) : (
-                <>Create workspace <ArrowRight className="h-4 w-4" /></>
+                <>{t("workspace.create")} <ArrowRight className="h-4 w-4" /></>
               )}
             </Button>
           </form>
@@ -316,6 +307,7 @@ function WorkspaceStep({ onComplete }: { onComplete: () => void }) {
 }
 
 function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
+  const { t } = useTranslation("onboarding");
   const { currentWorkspace } = useWorkspace();
   const { toast } = useToast();
   const [competitors, setCompetitors] = useState<{ name: string; website: string }[]>([
@@ -351,10 +343,11 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
         }))
       );
       if (error) throw error;
-      toast({ title: `Added ${validCompetitors.length} competitor${validCompetitors.length > 1 ? "s" : ""}` });
+      const key = validCompetitors.length === 1 ? "competitors.addedSingle" : "competitors.addedMultiple";
+      toast({ title: t(key, { count: validCompetitors.length }) });
       onComplete();
     } catch (error) {
-      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
+      toast({ title: t("workspace.errorGeneric"), description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -366,10 +359,8 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent mx-auto mb-3">
           <Users className="h-5 w-5 text-accent-foreground" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground">Add your competitors</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Who are you tracking? You can always add more later.
-        </p>
+        <h2 className="text-xl font-semibold text-foreground">{t("competitors.title")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("competitors.subtitle")}</p>
       </div>
 
       <Card className="border">
@@ -378,13 +369,13 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
             <div key={i} className="flex items-start gap-2">
               <div className="flex-1 grid grid-cols-2 gap-2">
                 <Input
-                  placeholder="Company name"
+                  placeholder={t("competitors.namePlaceholder")}
                   value={comp.name}
                   onChange={(e) => updateCompetitor(i, "name", e.target.value)}
                   autoFocus={i === 0}
                 />
                 <Input
-                  placeholder="Website (optional)"
+                  placeholder={t("competitors.websitePlaceholder")}
                   value={comp.website}
                   onChange={(e) => updateCompetitor(i, "website", e.target.value)}
                 />
@@ -399,13 +390,13 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
 
           {competitors.length < 10 && (
             <Button variant="outline" size="sm" className="gap-1.5 text-xs w-full" onClick={addRow}>
-              <Plus className="h-3 w-3" /> Add another competitor
+              <Plus className="h-3 w-3" /> {t("competitors.addAnother")}
             </Button>
           )}
 
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={onSkip} className="flex-1 gap-1.5">
-              <SkipForward className="h-3.5 w-3.5" /> Skip for now
+              <SkipForward className="h-3.5 w-3.5" /> {t("competitors.skipForNow")}
             </Button>
             <Button
               onClick={handleSave}
@@ -413,7 +404,7 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
               className="flex-1 gap-1.5"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-              Continue
+              {t("competitors.continue")}
             </Button>
           </div>
         </CardContent>
@@ -423,6 +414,7 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
 }
 
 function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
+  const { t } = useTranslation("onboarding");
   const { isConnected, connect, loading } = useGmailConnection();
   const { isAdmin } = useRoles();
   const { isVerified, requireVerification } = useEmailVerification();
@@ -433,10 +425,10 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("gmail_connected") === "true") {
-      toast({ title: "Gmail connected!" });
+      toast({ title: t("gmail.connected") });
       onComplete();
     }
-  }, [onComplete, toast]);
+  }, [onComplete, toast, t]);
 
   // If already connected
   useEffect(() => {
@@ -451,7 +443,7 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
     try {
       await connect();
     } catch (error) {
-      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
+      toast({ title: t("workspace.errorGeneric"), description: getErrorMessage(error), variant: "destructive" });
       setConnecting(false);
     }
   };
@@ -462,41 +454,27 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent mx-auto mb-3">
           <Mail className="h-5 w-5 text-accent-foreground" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground">Connect Gmail</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Automatically import competitor newsletters from your inbox
-        </p>
+        <h2 className="text-xl font-semibold text-foreground">{t("gmail.title")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("gmail.subtitle")}</p>
       </div>
 
       <Card className="border">
         <CardContent className="p-5 space-y-4">
           <div className="space-y-2 text-sm">
-            <div className="flex items-start gap-2.5 rounded-md bg-accent/50 p-3">
-              <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="font-medium text-foreground">Read-only access</p>
-                <p className="text-xs text-muted-foreground">We never send emails or modify your inbox</p>
+            {(["readOnly", "smartClassification", "disconnect"] as const).map((key) => (
+              <div key={key} className="flex items-start gap-2.5 rounded-md bg-accent/50 p-3">
+                <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium text-foreground">{t(`gmail.${key}.title`)}</p>
+                  <p className="text-xs text-muted-foreground">{t(`gmail.${key}.desc`)}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-2.5 rounded-md bg-accent/50 p-3">
-              <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="font-medium text-foreground">Smart classification</p>
-                <p className="text-xs text-muted-foreground">AI identifies newsletters vs regular emails</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5 rounded-md bg-accent/50 p-3">
-              <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="font-medium text-foreground">Disconnect anytime</p>
-                <p className="text-xs text-muted-foreground">Revoke access from settings whenever you want</p>
-              </div>
-            </div>
+            ))}
           </div>
 
           <div className="flex gap-2 pt-1">
             <Button variant="outline" onClick={onSkip} className="flex-1 gap-1.5">
-              <SkipForward className="h-3.5 w-3.5" /> Skip for now
+              <SkipForward className="h-3.5 w-3.5" /> {t("gmail.skipForNow")}
             </Button>
             {isAdmin ? (
               <Button
@@ -505,16 +483,16 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
                 className="flex-1 gap-1.5"
               >
                 {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                {connecting ? "Redirecting…" : "Connect Gmail"}
+                {connecting ? t("gmail.connecting") : t("gmail.connect")}
               </Button>
             ) : (
               <div className="flex-1 flex items-center justify-center">
-                <p className="text-xs text-muted-foreground">Ask a workspace admin to connect Gmail</p>
+                <p className="text-xs text-muted-foreground">{t("gmail.askAdmin")}</p>
               </div>
             )}
           </div>
           {!isVerified && (
-            <p className="text-xs text-muted-foreground">Verify your email before connecting Gmail.</p>
+            <p className="text-xs text-muted-foreground">{t("gmail.verifyFirst")}</p>
           )}
         </CardContent>
       </Card>
@@ -523,7 +501,21 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
 }
 
 function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
+  const { t } = useTranslation("onboarding");
   const navigate = useNavigate();
+
+  const options: { icon: LucideIcon; key: "gmailSync" | "pasteContent"; action: () => void }[] = [
+    {
+      icon: Mail,
+      key: "gmailSync",
+      action: () => { onComplete(); },
+    },
+    {
+      icon: Newspaper,
+      key: "pasteContent",
+      action: () => navigate("/newsletters/new"),
+    },
+  ];
 
   return (
     <div>
@@ -531,42 +523,23 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent mx-auto mb-3">
           <Inbox className="h-5 w-5 text-accent-foreground" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground">Import your first data</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Choose how to get competitor data into the platform
-        </p>
+        <h2 className="text-xl font-semibold text-foreground">{t("import.title")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("import.subtitle")}</p>
       </div>
 
       <div className="grid gap-3">
-        {[
-          {
-            icon: Mail,
-            title: "Gmail sync",
-            desc: "If you connected Gmail, competitor communications will appear automatically in your inbox",
-            action: () => { onComplete(); },
-            label: "Continue",
-            disabled: false,
-          },
-          {
-            icon: Newspaper,
-            title: "Paste competitor content",
-            desc: "Manually paste competitor email or campaign content for immediate analysis",
-            action: () => navigate("/newsletters/new"),
-            label: "Import data",
-            disabled: false,
-          },
-        ].map((opt) => (
-          <Card key={opt.title} className="border cursor-pointer hover:shadow-sm transition-shadow">
+        {options.map((opt) => (
+          <Card key={opt.key} className="border cursor-pointer hover:shadow-sm transition-shadow">
             <CardContent className="p-4 flex items-start gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-md bg-accent shrink-0">
                 <opt.icon className="h-4 w-4 text-accent-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{opt.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                <p className="text-sm font-medium text-foreground">{t(`import.${opt.key}.title`)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t(`import.${opt.key}.desc`)}</p>
               </div>
-              <Button size="sm" variant="outline" className="shrink-0 text-xs" onClick={opt.action} disabled={opt.disabled}>
-                {opt.label}
+              <Button size="sm" variant="outline" className="shrink-0 text-xs" onClick={opt.action}>
+                {t(`import.${opt.key}.label`)}
               </Button>
             </CardContent>
           </Card>
@@ -575,7 +548,7 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
 
       <div className="flex justify-center mt-4">
         <Button variant="ghost" size="sm" onClick={onSkip} className="gap-1.5 text-xs text-muted-foreground">
-          <SkipForward className="h-3 w-3" /> Skip for now
+          <SkipForward className="h-3 w-3" /> {t("import.skipForNow")}
         </Button>
       </div>
     </div>
@@ -583,34 +556,38 @@ function ImportStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: ()
 }
 
 function InsightsStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) {
+  const { t } = useTranslation("onboarding");
+
+  const bullets: { icon: LucideIcon; key: "insights" | "analytics" | "tracking" }[] = [
+    { icon: Lightbulb, key: "insights" },
+    { icon: BarChart3, key: "analytics" },
+    { icon: Users, key: "tracking" },
+  ];
+
   return (
     <div className="text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary mx-auto mb-4">
         <Rocket className="h-6 w-6 text-primary-foreground" />
       </div>
-      <h2 className="text-2xl font-semibold text-foreground mb-2">You're all set!</h2>
+      <h2 className="text-2xl font-semibold text-foreground mb-2">{t("insights.title")}</h2>
       <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-        Your workspace is ready. As data flows in, AI will generate insights, alerts, and strategic recommendations automatically.
+        {t("insights.subtitle")}
       </p>
 
       <div className="grid gap-3 mb-6 text-left max-w-sm mx-auto">
-        {[
-          { icon: Lightbulb, label: "AI insights generated from competitor patterns" },
-          { icon: BarChart3, label: "Analytics dashboards updated in real-time" },
-          { icon: Users, label: "Competitor activity tracked continuously" },
-        ].map((item) => (
-          <div key={item.label} className="flex items-center gap-2.5 text-sm">
+        {bullets.map((item) => (
+          <div key={item.key} className="flex items-center gap-2.5 text-sm">
             <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-muted-foreground">{item.label}</span>
+            <span className="text-muted-foreground">{t(`insights.bullets.${item.key}`)}</span>
           </div>
         ))}
       </div>
 
       <Button onClick={onComplete} size="lg" className="gap-2 w-full max-w-sm">
-        Go to Dashboard <ArrowRight className="h-4 w-4" />
+        {t("insights.goToDashboard")} <ArrowRight className="h-4 w-4" />
       </Button>
       <Button variant="ghost" size="sm" onClick={onSkip} className="mt-2 text-xs text-muted-foreground">
-        I'll explore on my own
+        {t("insights.exploreOwn")}
       </Button>
     </div>
   );

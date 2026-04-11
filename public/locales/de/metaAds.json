@@ -1,0 +1,71 @@
+{
+  "title": "Meta Ads Intelligence",
+  "titleBadge": "Beta · Demnächst verfügbar",
+  "subtitle": "Überwachen Sie bezahlte Medien von Wettbewerbern auf Facebook und Instagram",
+
+  "betaNotice": {
+    "title": "Meta Ads Intelligence befindet sich in der Beta",
+    "description": "Wir schließen die Integration der Meta Ad Library ab. Unten können Sie die Erfahrung mit Beispieldaten in der Vorschau sehen. Wenn die Integration live ist, können Sie echte Wettbewerberanzeigen verfolgen, Messaging-Strategien analysieren und Ausgabenmuster automatisch überwachen.",
+    "premiumNote": "Diese Funktion wird beim Start im <strong>Premium-Plan</strong> verfügbar sein."
+  },
+
+  "upgradeCard": {
+    "title": "Erhalten Sie frühzeitigen Zugang zu Meta Ads Intelligence",
+    "description": "Premium-Nutzer erhalten als erste Zugang zum echten Anzeigen-Tracking und zur KI-Analyse, wenn diese Funktion startet.",
+    "features": {
+      "adCreativeAnalysis": "Anzeigen-Creative-Analyse",
+      "spendMonitoring": "Ausgabenüberwachung",
+      "messagingPatterns": "Messaging-Muster",
+      "competitiveBenchmarks": "Wettbewerbs-Benchmarks"
+    },
+    "upgradeButton": "Auf Premium upgraden"
+  },
+
+  "samplePreview": {
+    "title": "Vorschau der Beispielanzeigen",
+    "badge": "Demo-Daten",
+    "disclaimer": "Dies sind Beispielanzeigen nur zur Vorschau. Es werden keine echten Daten abgerufen oder angezeigt."
+  },
+
+  "featureList": {
+    "title": "Wenn Meta Ads Intelligence startet, werden Sie in der Lage sein:",
+    "trackAds": {
+      "title": "Wettbewerberanzeigen verfolgen",
+      "desc": "Anzeigen automatisch aus der Meta Ad Library importieren"
+    },
+    "aiAnalysis": {
+      "title": "KI-gestützte Analyse",
+      "desc": "Messaging-Winkel, Angebote und Dringlichkeitsmuster analysieren"
+    },
+    "spendMonitoring": {
+      "title": "Ausgabenüberwachung",
+      "desc": "Geschätzte Ausgabenbereiche der Wettbewerber verfolgen"
+    },
+    "sideComparison": {
+      "title": "Direktvergleich",
+      "desc": "Anzeigenstrategien zwischen Wettbewerbern vergleichen"
+    }
+  },
+
+  "adDetail": {
+    "title": "Anzeigendetails",
+    "demoBadge": "Demo",
+    "adCopy": "Anzeigentext",
+    "observedData": "Beobachtete Daten",
+    "firstSeen": "Zuerst gesehen",
+    "lastSeen": "Zuletzt gesehen",
+    "cta": "CTA",
+    "media": "Medien",
+    "estimatedMetrics": "Geschätzte Metriken",
+    "sampleRanges": "Beispielbereiche",
+    "aiAnalysisNote": "KI-Analyse wird verfügbar sein, wenn die Meta Ads-Integration startet.",
+    "spend": "Ausgaben",
+    "impressions": "Impressionen",
+    "audienceSize": "Zielgruppengröße"
+  },
+
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "title": "Meta Ads Intelligence",
+  "titleBadge": "Beta · Coming Soon",
+  "subtitle": "Monitor competitor paid media across Facebook and Instagram",
+
+  "betaNotice": {
+    "title": "Meta Ads Intelligence is in beta",
+    "description": "We're finalizing the Meta Ad Library integration. Below you can preview the experience with sample data. When the integration is live, you'll be able to track real competitor ads, analyze messaging strategies, and monitor spend patterns automatically.",
+    "premiumNote": "This feature will be available on the <strong>Premium plan</strong> when launched."
+  },
+
+  "upgradeCard": {
+    "title": "Get early access to Meta Ads Intelligence",
+    "description": "Premium users will be the first to access real ad tracking and AI analysis when this feature launches.",
+    "features": {
+      "adCreativeAnalysis": "Ad creative analysis",
+      "spendMonitoring": "Spend monitoring",
+      "messagingPatterns": "Messaging patterns",
+      "competitiveBenchmarks": "Competitive benchmarks"
+    },
+    "upgradeButton": "Upgrade to Premium"
+  },
+
+  "samplePreview": {
+    "title": "Sample Ads Preview",
+    "badge": "Demo Data",
+    "disclaimer": "These are sample ads for preview purposes only. No real data is being fetched or displayed."
+  },
+
+  "featureList": {
+    "title": "When Meta Ads Intelligence launches, you'll be able to:",
+    "trackAds": {
+      "title": "Track competitor ads",
+      "desc": "Automatically import ads from Meta Ad Library"
+    },
+    "aiAnalysis": {
+      "title": "AI-powered analysis",
+      "desc": "Analyze messaging angles, offers, and urgency patterns"
+    },
+    "spendMonitoring": {
+      "title": "Spend monitoring",
+      "desc": "Track estimated spend ranges across competitors"
+    },
+    "sideComparison": {
+      "title": "Side-by-side comparison",
+      "desc": "Compare ad strategies between competitors"
+    }
+  },
+
+  "adDetail": {
+    "title": "Ad Details",
+    "demoBadge": "Demo",
+    "adCopy": "Ad Copy",
+    "observedData": "Observed Data",
+    "firstSeen": "First seen",
+    "lastSeen": "Last seen",
+    "cta": "CTA",
+    "media": "Media",
+    "estimatedMetrics": "Estimated Metrics",
+    "sampleRanges": "Sample Ranges",
+    "aiAnalysisNote": "AI analysis will be available when the Meta Ads integration launches.",
+    "spend": "Spend",
+    "impressions": "Impressions",
+    "audienceSize": "Audience Size"
+  },
+
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  }
+}

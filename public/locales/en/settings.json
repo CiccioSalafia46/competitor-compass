@@ -24,5 +24,92 @@
   "workspaceName": "Workspace name",
   "plan": "Plan",
   "currentPlan": "Current plan",
-  "manageBilling": "Manage billing"
+  "manageBilling": "Manage billing",
+  "email": "Email",
+  "yourRoles": "Your roles",
+  "noRolesAssigned": "No roles assigned",
+  "name": "Name",
+  "slug": "Slug",
+  "manageTeam": "Manage team",
+  "planUsage": "Plan & Usage",
+  "billingPeriodUsage": "Current billing period usage",
+  "seats": "Seats",
+  "competitors": "Competitors",
+  "dataImports": "Data Imports",
+  "analyses": "Analyses",
+  "viewFullUsage": "View full usage",
+  "security": "Security",
+  "appearanceDesc": "Toggle between light and dark mode using the button above.",
+  "downloadWorkspaceData": "Download your workspace data as CSV",
+  "exporting": "Exporting…",
+
+  "team": {
+    "title": "Team",
+    "subtitle": "Manage workspace members and roles",
+    "inviteTitle": "Invite member",
+    "inviteSubtitle": "Add a team member to this workspace",
+    "inviteEmailPlaceholder": "teammate@company.com",
+    "inviteButton": "Invite",
+    "inviting": "Inviting…",
+    "membersTitle": "Members ({{count}})",
+    "noRoleAssigned": "No role assigned",
+    "rolePermissionsTitle": "Role Permissions",
+    "roles": {
+      "admin": "Admin",
+      "analyst": "Analyst",
+      "viewer": "Viewer"
+    },
+    "roleDescriptions": {
+      "admin": "Manage workspace, members, billing, integrations, alerts, reports",
+      "analyst": "Manage competitor monitoring, tagging, analysis, reports",
+      "viewer": "Read-only access to dashboards, analyses, and reports"
+    },
+    "roleUpdated": "Role updated",
+    "invitationFlow": "Invitation flow",
+    "invitationFlowDesc": "Team invitations require email infrastructure. Coming soon."
+  },
+
+  "billing": {
+    "title": "Plans & Billing",
+    "subtitle": "You're on the",
+    "plan": "plan",
+    "manageSubscription": "Manage subscription",
+    "refresh": "Refresh",
+    "billingPeriodEnds": "Current billing period ends {{date}}",
+    "cancelAtPeriodEnd": "and the subscription is set to cancel at period end.",
+    "usageTitle": "Current Usage This Month",
+    "upgradeToIncrease": "Upgrade to increase limit",
+    "unlimited": "∞ Unlimited",
+    "yourPlan": "Your Plan",
+    "recommended": "Recommended",
+    "bestValue": "Best Value",
+    "upgrade": "Upgrade",
+    "switch": "Switch",
+    "to": "to",
+    "currentPlanLabel": "Current plan",
+    "comparisonsTitle": "Full Feature Comparison",
+    "feature": "Feature",
+    "comingSoon": "Soon",
+    "ctaFreeTitle": "Ready to get serious about competitive intelligence?",
+    "ctaFreeDesc": "Starter gives you 10x more capacity, full AI extraction, and team collaboration.",
+    "ctaPremiumTitle": "Unlock the full strategic advantage",
+    "ctaPremiumDesc": "Premium unlocks unlimited competitors, advanced insights, and Meta Ads intelligence.",
+    "upgradeButton": "Upgrade to {{plan}}",
+    "loadingBilling": "Loading billing…",
+    "checkoutError": "Checkout error",
+    "plans": {
+      "free": {
+        "tagline": "Explore the platform",
+        "targetUser": "For individuals getting started"
+      },
+      "starter": {
+        "tagline": "Your competitive edge",
+        "targetUser": "For teams actively monitoring competitors"
+      },
+      "premium": {
+        "tagline": "Strategic advantage",
+        "targetUser": "For teams that need comprehensive intelligence"
+      }
+    }
+  }
 }

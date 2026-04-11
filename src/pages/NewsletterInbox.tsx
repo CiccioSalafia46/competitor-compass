@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
@@ -44,6 +45,7 @@ const UNASSIGNED_FILTER = "__unassigned__";
 const NO_COMPETITOR_ASSIGNMENT = "__none__";
 
 export default function NewsletterInbox() {
+  const { t } = useTranslation("inbox");
   const { currentWorkspace } = useWorkspace();
   const { canManageCompetitors } = useRoles();
   const { isConnected, sync, syncing } = useGmailConnection();
@@ -166,8 +168,8 @@ export default function NewsletterInbox() {
         if (result.matched > 0) {
           await Promise.all([refetch(), refetchSuggestions()]);
           toast({
-            title: "Inbox auto-matched",
-            description: `Matched ${result.matched} existing ${result.matched === 1 ? "email" : "emails"} to tracked competitors based on sender domains.`,
+            title: t("inboxAutoMatched"),
+            description: t("autoMatchedDesc", { count: result.matched }),
           });
         }
       } catch (error) {
@@ -175,7 +177,7 @@ export default function NewsletterInbox() {
         autoMatchKeyRef.current = null;
       }
     })();
-  }, [autoMatchKey, currentWorkspace, refetch, refetchSuggestions, showDemo, toast]);
+  }, [autoMatchKey, currentWorkspace, refetch, refetchSuggestions, showDemo, t, toast]);
 
   const handleRowClick = (item: NewsletterInboxItem) => {
     if (!item.is_demo && !item.is_read) {
@@ -197,7 +199,7 @@ export default function NewsletterInbox() {
         const attribution = await syncWorkspaceInboxAttribution(currentWorkspace.id);
         if (attribution.matched > 0) {
           toast({
-            title: "Inbox attribution updated",
+            title: t("attributionUpdated"),
             description: `Matched ${attribution.matched} existing ${attribution.matched === 1 ? "email" : "emails"} to tracked competitors.`,
           });
         }
@@ -206,13 +208,13 @@ export default function NewsletterInbox() {
       await Promise.all([fetchCompetitors(), refetchSuggestions()]);
 
       toast({
-        title: result.status === "completed_with_issues" ? "Sync completed with issues" : "Sync complete",
+        title: result.status === "completed_with_issues" ? t("syncWithIssues") : t("syncComplete"),
         description: result.message,
         variant: result.status === "completed_with_issues" ? "destructive" : "default",
       });
     } catch (error) {
       toast({
-        title: "Sync failed",
+        title: t("syncFailed"),
         description: getErrorMessage(error, "Gmail sync failed."),
         variant: "destructive",
       });
@@ -227,7 +229,7 @@ export default function NewsletterInbox() {
       const result = await syncWorkspaceInboxAttribution(currentWorkspace.id);
       await Promise.all([refetch(), refetchSuggestions(), fetchCompetitors()]);
       toast({
-        title: "Competitor matching refreshed",
+        title: t("competitorMatchingRefreshed"),
         description:
           result.matched > 0
             ? `Matched ${result.matched} existing inbox ${result.matched === 1 ? "email" : "emails"} across ${result.competitorsProcessed || competitors.length} competitors.`
@@ -235,7 +237,7 @@ export default function NewsletterInbox() {
       });
     } catch (error) {
       toast({
-        title: "Attribution sync failed",
+        title: t("attributionSyncFailed"),
         description: getErrorMessage(error, "Unable to refresh competitor attribution."),
         variant: "destructive",
       });
@@ -255,8 +257,8 @@ export default function NewsletterInbox() {
       );
       if (alreadyCovered) {
         toast({
-          title: "Already tracked",
-          description: `A competitor already covers domain ${suggestion.senderDomain}. Try "Match competitors" to re-attribute inbox emails.`,
+          title: t("alreadyTracked"),
+          description: t("alreadyTrackedDesc", { domain: suggestion.senderDomain }),
         });
         return;
       }
@@ -290,7 +292,7 @@ export default function NewsletterInbox() {
       await Promise.all([refetch(), refetchSuggestions(), fetchCompetitors()]);
 
       toast({
-        title: "Competitor created",
+        title: t("competitorCreated"),
         description:
           attribution.matched > 0
             ? `${data.name} created and ${attribution.matched} inbox ${attribution.matched === 1 ? "email was" : "emails were"} linked automatically.`
@@ -298,7 +300,7 @@ export default function NewsletterInbox() {
       });
     } catch (error) {
       toast({
-        title: "Suggestion failed",
+        title: t("suggestionFailed"),
         description: getErrorMessage(error, "Unable to create competitor from this sender."),
         variant: "destructive",
       });
@@ -316,14 +318,14 @@ export default function NewsletterInbox() {
       const competitorName = competitorId ? competitorMap.get(competitorId)?.name ?? "competitor" : null;
 
       toast({
-        title: competitorId ? "Competitor assigned" : "Competitor cleared",
+        title: competitorId ? t("competitorAssigned") : t("competitorCleared"),
         description: competitorId
           ? `This email is now attributed to ${competitorName}.`
           : "This email now needs competitor review.",
       });
     } catch (error) {
       toast({
-        title: "Assignment failed",
+        title: t("assignmentFailed"),
         description: getErrorMessage(error, "Unable to update competitor attribution."),
         variant: "destructive",
       });
@@ -337,11 +339,11 @@ export default function NewsletterInbox() {
       <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-primary via-primary/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
       <div className="page-header">
         <div>
-          <h1 className="page-title">Competitor Inbox</h1>
+          <h1 className="page-title">{t("competitorInbox")}</h1>
           <p className="page-description">
             {showDemo
-              ? "Demo mode — connect Gmail to import real competitor data"
-              : `${totalCount} inbox ${totalCount === 1 ? "item" : "items"} tracked`}
+              ? t("demoModeSubtitle")
+              : t("itemsTracked", { count: totalCount })}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -354,18 +356,18 @@ export default function NewsletterInbox() {
               className="h-8 gap-1.5 text-xs"
             >
               <Link2 className={cn("h-3.5 w-3.5", matchingInbox && "animate-pulse")} />
-              Match competitors
+              {t("matchCompetitors")}
             </Button>
           )}
           {isConnected ? (
             <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing} className="h-8 gap-1.5 text-xs">
               <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
-              Sync
+              {t("syncButton")}
             </Button>
           ) : (
             <Button size="sm" onClick={() => navigate("/settings")} className="h-8 gap-1.5 text-xs">
               <Mail className="h-3.5 w-3.5" />
-              Connect Gmail
+              {t("connectGmail")}
             </Button>
           )}
         </div>
@@ -376,19 +378,19 @@ export default function NewsletterInbox() {
           <div className="flex items-center gap-2">
             <InboxIcon className="h-3.5 w-3.5 text-muted-foreground/60" />
             <span className="text-[13px] font-semibold tabular-nums text-foreground">{totalCount}</span>
-            <span className="text-xs text-muted-foreground">total</span>
+            <span className="text-xs text-muted-foreground">{t("totalItems")}</span>
           </div>
           <div className="h-3 w-px bg-border" />
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="text-xs text-muted-foreground">Unread items tracked</span>
+            <span className="text-xs text-muted-foreground">{t("unreadItemsTracked")}</span>
           </div>
           {isConnected && (
             <>
               <div className="h-3 w-px bg-border" />
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="text-xs text-muted-foreground">Gmail connected</span>
+                <span className="text-xs text-muted-foreground">{t("gmailConnected")}</span>
               </div>
             </>
           )}
@@ -399,13 +401,13 @@ export default function NewsletterInbox() {
         <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-sm">
           <Lightbulb className="h-4 w-4 shrink-0 text-warning" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">Demo Mode</p>
+            <p className="text-sm font-medium">{t("demoModeTitle")}</p>
             <p className="text-xs text-muted-foreground">
-              Sample data for preview. Connect Gmail to import real competitor activity.
+              {t("demoModeDesc")}
             </p>
           </div>
           <Badge variant="outline" className="shrink-0 text-[10px]">
-            Sample
+            {t("demoSample")}
           </Badge>
         </div>
       )}
@@ -419,14 +421,14 @@ export default function NewsletterInbox() {
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">Competitor suggestions from your inbox</p>
+                  <p className="text-sm font-semibold text-foreground">{t("competitorSuggestionsTitle")}</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    We found newsletter senders that are active in your inbox but still not mapped to a tracked competitor.
+                    {t("competitorSuggestionsDesc")}
                   </p>
                 </div>
               </div>
               <Badge variant="secondary" className="h-fit text-[10px] font-medium">
-                {suggestions.length} suggestion{suggestions.length === 1 ? "" : "s"}
+                {t("suggestionCount", { count: suggestions.length })}
               </Badge>
             </div>
 
@@ -448,12 +450,14 @@ export default function NewsletterInbox() {
                               })}
                           </p>
                           <Badge variant="outline" className="text-[10px] font-medium">
-                            {suggestion.newsletterCount} email{suggestion.newsletterCount === 1 ? "" : "s"}
+                            {t("emailBadge", { count: suggestion.newsletterCount })}
                           </Badge>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">{suggestion.senderDomain}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Latest seen {suggestion.latestReceivedAt ? new Date(suggestion.latestReceivedAt).toLocaleString() : "unknown"}
+                          {suggestion.latestReceivedAt
+                            ? t("latestSeen", { date: new Date(suggestion.latestReceivedAt).toLocaleString() })
+                            : t("latestSeenUnknown")}
                         </p>
                       </div>
                     </div>
@@ -466,7 +470,7 @@ export default function NewsletterInbox() {
                       }}
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      {creatingSuggestionDomain === suggestion.senderDomain ? "Creating..." : "Create competitor"}
+                      {creatingSuggestionDomain === suggestion.senderDomain ? t("creating") : t("createCompetitor")}
                     </Button>
                   </div>
                 </div>
@@ -509,36 +513,36 @@ export default function NewsletterInbox() {
             <div className="min-w-0">
               <p className="text-sm font-medium">
                 {lastSyncResult.status === "completed_with_issues"
-                  ? "Sync completed with issues"
+                  ? t("syncWithIssues")
                   : lastSyncResult.status === "imported"
-                    ? "New competitor emails imported"
-                    : "Sync completed"}
+                    ? t("newEmailsImported")
+                    : t("syncCompleted")}
               </p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{lastSyncResult.message}</p>
               <p className="mt-1 text-[11px] text-muted-foreground/80">
-                {lastSyncResult.sync_mode === "full" ? "Full sync" : "Incremental sync"} · {new Date(lastSyncResult.synced_at).toLocaleString()}
+                {lastSyncResult.sync_mode === "full" ? t("fullSync") : t("incrementalSync")} · {new Date(lastSyncResult.synced_at).toLocaleString()}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="text-[11px]">
-              Checked {lastSyncResult.total}
+              {t("checked", { count: lastSyncResult.total })}
             </Badge>
             <Badge variant="outline" className="text-[11px]">
-              Imported {lastSyncResult.imported}
+              {t("imported", { count: lastSyncResult.imported })}
             </Badge>
             <Badge variant="outline" className="text-[11px]">
-              Matched {lastSyncResult.attributed}
+              {t("matched", { count: lastSyncResult.attributed })}
             </Badge>
             <Badge variant="outline" className="text-[11px]">
-              Needs review {lastSyncResult.needs_review}
+              {t("needsReview", { count: lastSyncResult.needs_review })}
             </Badge>
             <Badge variant="outline" className="text-[11px]">
-              Skipped {lastSyncResult.skipped}
+              {t("skipped", { count: lastSyncResult.skipped })}
             </Badge>
             {lastSyncResult.errors > 0 && (
               <Badge variant="outline" className="border-destructive/20 bg-destructive/10 text-[11px] text-destructive">
-                Errors {lastSyncResult.errors}
+                {t("errors", { count: lastSyncResult.errors })}
               </Badge>
             )}
           </div>
@@ -552,7 +556,7 @@ export default function NewsletterInbox() {
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by subject or sender…"
+            placeholder={t("searchPlaceholder")}
             className="h-8 pl-8 text-sm"
           />
         </div>
@@ -571,7 +575,7 @@ export default function NewsletterInbox() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {value === "newsletters" ? "Newsletters" : value === "all" ? "All" : "Archived"}
+                {value === "newsletters" ? t("newslettersFilter") : value === "all" ? t("allFilter") : t("archivedFilter")}
               </button>
             ))}
           </div>
@@ -579,11 +583,11 @@ export default function NewsletterInbox() {
           {/* Competitor filter — keep as select since it has many options */}
           <Select value={competitorFilter} onValueChange={setCompetitorFilter}>
             <SelectTrigger className="h-8 w-40 text-xs">
-              <SelectValue placeholder="All competitors" />
+              <SelectValue placeholder={t("filterByCompetitor")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All competitors</SelectItem>
-              <SelectItem value={UNASSIGNED_FILTER}>Needs competitor</SelectItem>
+              <SelectItem value="all">{t("allCompetitors")}</SelectItem>
+              <SelectItem value={UNASSIGNED_FILTER}>{t("needsCompetitorFilter")}</SelectItem>
               {competitors.map((competitor) => (
                 <SelectItem key={competitor.id} value={competitor.id}>
                   {competitor.name}
@@ -612,11 +616,11 @@ export default function NewsletterInbox() {
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
             <InboxIcon className="h-8 w-8 text-muted-foreground/20" />
           </div>
-          <p className="text-sm font-medium text-foreground">No competitor activity found</p>
+          <p className="text-sm font-medium text-foreground">{t("noActivityFound")}</p>
           <p className="mt-1 text-xs text-muted-foreground max-w-xs">
             {isConnected
-              ? "Try syncing again or adjusting your filters."
-              : "Connect Gmail to start importing competitor data."}
+              ? t("noActivityFoundConnected")
+              : t("noActivityFoundDisconnected")}
           </p>
         </div>
       ) : (
@@ -646,7 +650,7 @@ export default function NewsletterInbox() {
                       ? "text-warning"
                       : "text-transparent group-hover:text-muted-foreground/40 hover:!text-muted-foreground/70",
                   )}
-                  aria-label="Toggle star"
+                  aria-label={t("toggleStar")}
                 >
                   <Star className={cn("h-3.5 w-3.5", item.is_starred && "fill-current")} />
                 </button>
@@ -672,7 +676,7 @@ export default function NewsletterInbox() {
                     "truncate text-[13px] leading-snug",
                     !item.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80",
                   )}>
-                    {item.from_name || item.from_email || "Unknown"}
+                    {item.from_name || item.from_email || t("unknownSender")}
                   </p>
                 </div>
 
@@ -682,7 +686,7 @@ export default function NewsletterInbox() {
                     "truncate text-[13px] leading-snug",
                     !item.is_read ? "font-medium text-foreground" : "text-foreground/70",
                   )}>
-                    {item.subject || "No subject"}
+                    {item.subject || t("noSubject")}
                   </p>
                   {!item.is_demo && item.is_newsletter && (
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -705,10 +709,10 @@ export default function NewsletterInbox() {
                                 ? "border-primary/20 bg-primary/5 text-primary"
                                 : "border-dashed text-muted-foreground",
                             )}>
-                              <SelectValue placeholder="Assign competitor" />
+                              <SelectValue placeholder={t("assignCompetitorPlaceholder")} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value={NO_COMPETITOR_ASSIGNMENT}>No competitor</SelectItem>
+                              <SelectItem value={NO_COMPETITOR_ASSIGNMENT}>{t("noCompetitorOption")}</SelectItem>
                               {competitors.map((availableCompetitor) => (
                                 <SelectItem key={availableCompetitor.id} value={availableCompetitor.id}>
                                   {availableCompetitor.name}
@@ -724,7 +728,7 @@ export default function NewsletterInbox() {
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="h-5 border-warning/30 bg-warning/5 text-[10px] font-medium text-warning">
-                          Needs competitor
+                          {t("needsCompetitorBadge")}
                         </Badge>
                       )}
                     </div>
@@ -734,10 +738,10 @@ export default function NewsletterInbox() {
                 {/* Type badges — hidden on mobile */}
                 <div className="hidden shrink-0 items-center gap-1 md:flex">
                   {item.is_demo && (
-                    <Badge variant="outline" className="h-4 px-1.5 py-0 text-[9px]">Demo</Badge>
+                    <Badge variant="outline" className="h-4 px-1.5 py-0 text-[9px]">{t("demoBadge")}</Badge>
                   )}
                   {item.is_newsletter && (
-                    <Badge variant="secondary" className="h-4 px-1.5 py-0 text-[9px]">Newsletter</Badge>
+                    <Badge variant="secondary" className="h-4 px-1.5 py-0 text-[9px]">{t("newsletterBadge")}</Badge>
                   )}
                 </div>
 
@@ -755,8 +759,8 @@ export default function NewsletterInbox() {
                     if (!item.is_demo) void archive(item.id);
                   }}
                   className="shrink-0 rounded p-0.5 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground"
-                  title="Archive"
-                  aria-label="Archive"
+                  title={t("archiveAction")}
+                  aria-label={t("archiveAction")}
                 >
                   <Archive className="h-3.5 w-3.5" />
                 </button>

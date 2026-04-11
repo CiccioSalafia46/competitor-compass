@@ -1,0 +1,173 @@
+{
+  "title": "Berichte",
+  "description": "Strukturierte Briefings, wiederkehrende Zeitpläne und exportfertige Unterlagen für Stakeholder.",
+  "readOnly": "Nur-Lesen — Analyst- oder Admin-Zugriff erforderlich.",
+  "unavailable": "Berichte sind nicht verfügbar, bis Sie einem Workspace mit Datenzugriff beigetreten sind.",
+
+  "buttons": {
+    "refresh": "Aktualisieren",
+    "runDue": "Fällige ausführen",
+    "runDueCount": "Fällige ausführen ({{count}})",
+    "running": "Wird ausgeführt…",
+    "schedule": "Planen",
+    "generate": "Generieren",
+    "generating": "Wird generiert…",
+    "buildReport": "Bericht erstellen",
+    "exportJson": "JSON exportieren",
+    "printPdf": "Drucken / PDF",
+    "cancel": "Abbrechen",
+    "createSchedule": "Zeitplan erstellen",
+    "updateSchedule": "Zeitplan aktualisieren",
+    "saving": "Wird gespeichert…",
+    "edit": "Bearbeiten",
+    "delete": "Löschen"
+  },
+
+  "templates": {
+    "weekly_competitor_pulse": {
+      "label": "Wöchentlicher Wettbewerber-Pulse",
+      "description": "Führungskräfte-Snapshot der wichtigsten Wettbewerberbewegungen, Signale und empfohlenen Antworten."
+    },
+    "promo_digest": {
+      "label": "Promo-Digest",
+      "description": "Aktionsorientierte Übersicht über Rabattverhalten, Dringlichkeitstaktiken und Angebotsdruck."
+    },
+    "messaging_analysis": {
+      "label": "Messaging-Analyse",
+      "description": "Änderungen in Narrativ, CTA, Kategorie und Positionierung über die beobachteten Wettbewerber hinweg."
+    },
+    "custom_report": {
+      "label": "Benutzerdefinierter Bericht",
+      "description": "Erstellen Sie ein maßgeschneidertes Briefing, indem Sie genau die Abschnitte, Wettbewerber und den Zeitraum auswählen."
+    }
+  },
+
+  "defaultRange": "Standard: letzte {{count}} Tag",
+  "defaultRange_plural": "Standard: letzte {{count}} Tage",
+  "configurableRange": "Konfigurierbarer Zeitraum",
+
+  "schedules": {
+    "title": "Gespeicherte Zeitpläne",
+    "subtitle": "Wiederkehrende Vorlagen, die automatisch für Ihr Team generiert werden.",
+    "empty": "Noch keine Zeitpläne gespeichert.",
+    "weekly": "Wöchentlich am {{day}}",
+    "daily": "Täglich",
+    "at": "um",
+    "next": "Nächste",
+    "last": "Letzte",
+    "notScheduled": "Nicht geplant",
+    "activeSchedule": "Aktiver Zeitplan",
+    "activeScheduleDesc": "Inaktive Zeitpläne bleiben gespeichert, werden aber vom Ausführer ignoriert."
+  },
+
+  "weekdays": {
+    "0": "Sonntag",
+    "1": "Montag",
+    "2": "Dienstag",
+    "3": "Mittwoch",
+    "4": "Donnerstag",
+    "5": "Freitag",
+    "6": "Samstag"
+  },
+
+  "rangeOptions": {
+    "7": "7 Tage",
+    "14": "14 Tage",
+    "30": "30 Tage",
+    "90": "90 Tage"
+  },
+
+  "recentRuns": {
+    "title": "Letzte Ausführungen",
+    "subtitle": "Zuletzt generierte Berichte — klicken Sie, um das vollständige Briefing zu inspizieren.",
+    "empty": "Noch keine Berichte generiert."
+  },
+
+  "status": {
+    "pending": "Ausstehend",
+    "running": "Wird ausgeführt",
+    "completed": "Abgeschlossen",
+    "failed": "Fehlgeschlagen"
+  },
+
+  "scheduleDialog": {
+    "createTitle": "Berichtszeitplan erstellen",
+    "editTitle": "Berichtszeitplan bearbeiten",
+    "description": "Speichern Sie wiederkehrende Berichtseinstellungen für diesen Workspace. Fällige Zeitpläne können jetzt manuell generiert und später mit einem Cron-Runner verknüpft werden.",
+    "namePlaceholder": "Montag Wettbewerber-Pulse",
+    "nameLabel": "Name",
+    "templateLabel": "Vorlage",
+    "frequencyLabel": "Häufigkeit",
+    "daily": "Täglich",
+    "weekly": "Wöchentlich",
+    "weekdayLabel": "Wochentag",
+    "hourLabel": "Stunde (0–23)",
+    "minuteLabel": "Minute (0–59)",
+    "coverageLabel": "Abdeckungszeitraum",
+    "timezoneLabel": "Zeitzone",
+    "timezonePlaceholder": "Europe/Berlin"
+  },
+
+  "builderDialog": {
+    "title": "Benutzerdefinierter Berichtsgenerator",
+    "description": "Wählen Sie die einzuschließenden Abschnitte, den Datumszeitraum und optionale Wettbewerberfilter.",
+    "reportTitleLabel": "Berichtstitel",
+    "reportTitlePlaceholder": "Benutzerdefinierter Bericht",
+    "sectionsLabel": "Einzuschließende Abschnitte",
+    "sectionsSelected": "{{count}} von {{total}} Abschnitten ausgewählt",
+    "coverageLabel": "Abdeckungszeitraum",
+    "competitorFilterLabel": "Wettbewerberfilter",
+    "competitorFilterPlaceholder": "Acme, Globex (optional)",
+    "competitorFilterHint": "Kommagetrennte Namen. Leer lassen, um alle einzuschließen.",
+    "previewLabel": "Vorschau",
+    "previewLastDays": "Letzte {{count}} Tage",
+    "previewAllCompetitors": "Alle Wettbewerber",
+    "previewFiltered": "Gefiltert: {{names}}",
+    "noSectionsWarning": "Wählen Sie mindestens einen Abschnitt, um einen Bericht zu generieren."
+  },
+
+  "sections": {
+    "executive_summary": "Zusammenfassung für Führungskräfte",
+    "competitor_activity": "Wettbewerberaktivität",
+    "promo_behavior": "Aktionsverhalten",
+    "messaging_evolution": "Messaging-Entwicklung",
+    "category_focus": "Kategorie- und Kampagnenfokus",
+    "insights": "Priorisierte Erkenntnisse",
+    "opportunities": "Strategische Chancen",
+    "actions": "Empfohlene Maßnahmen"
+  },
+
+  "viewer": {
+    "failed": "Diese Berichtsausführung ist fehlgeschlagen",
+    "failedDesc": "Die Berichtsausführung ist fehlgeschlagen, bevor ein Payload gespeichert werden konnte.",
+    "competitors": "Wettbewerber",
+    "signals": "Signale",
+    "insights": "Erkenntnisse",
+    "generated": "Generiert",
+    "executiveBrief": "Executive Brief",
+    "topLineSummary": "Überblick",
+    "whatChanged": "Was sich geändert hat",
+    "whatMatters": "Was am wichtigsten ist",
+    "prioritizedInsights": "Priorisierte Erkenntnisse",
+    "insightsSubtitle": "{{count}} strukturierte Erkenntnis bereit zur Teamüberprüfung",
+    "insightsSubtitle_plural": "{{count}} strukturierte Erkenntnisse bereit zur Teamüberprüfung",
+    "recommendedActions": "Empfohlene Maßnahmen",
+    "actionsSubtitle": "Konkrete Folgemaßnahmen aus den signifikantesten Befunden",
+    "noChartData": "Keine Diagrammdaten in diesem Bericht verfügbar."
+  },
+
+  "tabs": {
+    "selectedReport": "Ausgewählter Bericht",
+    "howItWorks": "So funktioniert es"
+  },
+
+  "pipeline": {
+    "title": "Berichts-Pipeline",
+    "description": "Berichte nutzen Live-Workspace-Analysen, strukturierte Erkenntnisse und Wettbewerber-Intelligence-Snapshots. Jede Ausführung wird als strukturierter Payload zur Wiederverwendung und zum Export gespeichert.",
+    "step1": "On-Demand-Generierung: Vorlage an `reports-center`, dann Analytics-RPC + Erkenntnisse + Wettbewerber-Intelligence in persistiertes `report_runs.payload`.",
+    "step2": "Geplante Generierung: gespeicherte `report_schedules` berechnen `next_run_at`; der Fälligkeits-Runner kann alle überfälligen Zeitpläne des aktuellen Workspaces in einem Durchlauf generieren.",
+    "step3": "Exporte: JSON für strukturierte Nachnutzung sowie eine druckfreundliche Ansicht, die im Browser als PDF gespeichert werden kann."
+  },
+
+  "emptyReport": "Generieren oder wählen Sie oben eine Berichtsausführung, um das vollständige Briefing zu inspizieren."
+}

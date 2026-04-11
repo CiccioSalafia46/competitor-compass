@@ -1,0 +1,105 @@
+{
+  "appName": "Tracklyze",
+  "skipSetup": "Passer la configuration →",
+  "back": "Retour",
+  "stepOf": "Étape {{current}} sur {{total}}",
+  "steps": {
+    "welcome": { "title": "Bienvenue", "subtitle": "Commencer" },
+    "workspace": { "title": "Espace de travail", "subtitle": "Votre hub d'équipe" },
+    "competitors": { "title": "Concurrents", "subtitle": "Suivre les rivaux" },
+    "gmail": { "title": "Gmail", "subtitle": "Importer des e-mails" },
+    "import": { "title": "Importer", "subtitle": "Vos données" },
+    "insights": { "title": "Analyses", "subtitle": "Analyse IA" },
+    "done": { "title": "Prêt", "subtitle": "C'est parti" }
+  },
+  "welcome": {
+    "title": "Bienvenue sur Tracklyze",
+    "subtitle": "Votre plateforme de veille concurrentielle. Nous vous aidons à tout configurer en quelques minutes.",
+    "getStarted": "Commencer",
+    "features": {
+      "monitoring": {
+        "title": "Surveillance des concurrents",
+        "desc": "Importez et analysez automatiquement les campagnes concurrentes"
+      },
+      "tracking": {
+        "title": "Suivi concurrentiel",
+        "desc": "Surveillez les messages, offres et stratégies de vos rivaux"
+      },
+      "insights": {
+        "title": "Analyses IA",
+        "desc": "Obtenez des recommandations stratégiques à partir de vos données concurrentielles"
+      }
+    }
+  },
+  "workspace": {
+    "title": "Créer votre espace de travail",
+    "subtitle": "Un espace de travail organise les informations concurrentielles de votre équipe",
+    "label": "Nom de l'espace de travail",
+    "placeholder": "ex. Acme Marketing",
+    "hint": "Généralement le nom de votre entreprise ou équipe",
+    "creating": "Création en cours…",
+    "create": "Créer l'espace de travail",
+    "errorRls": "Une erreur s'est produite. Veuillez vous déconnecter puis vous reconnecter.",
+    "errorDuplicate": "Un espace de travail avec ce nom existe déjà.",
+    "errorGeneric": "Impossible de créer l'espace de travail."
+  },
+  "competitors": {
+    "title": "Ajouter vos concurrents",
+    "subtitle": "Qui souhaitez-vous suivre ? Vous pouvez toujours en ajouter d'autres plus tard.",
+    "namePlaceholder": "Nom de l'entreprise",
+    "websitePlaceholder": "Site web (optionnel)",
+    "addAnother": "Ajouter un autre concurrent",
+    "skipForNow": "Passer pour l'instant",
+    "continue": "Continuer",
+    "addedSingle": "{{count}} concurrent ajouté",
+    "addedMultiple": "{{count}} concurrents ajoutés"
+  },
+  "gmail": {
+    "title": "Connecter Gmail",
+    "subtitle": "Importez automatiquement les newsletters des concurrents depuis votre boîte de réception",
+    "readOnly": {
+      "title": "Accès en lecture seule",
+      "desc": "Nous n'envoyons jamais d'e-mails ni ne modifions votre boîte de réception"
+    },
+    "smartClassification": {
+      "title": "Classification intelligente",
+      "desc": "L'IA identifie les newsletters parmi les e-mails ordinaires"
+    },
+    "disconnect": {
+      "title": "Déconnexion à tout moment",
+      "desc": "Révoquez l'accès depuis les paramètres quand vous le souhaitez"
+    },
+    "skipForNow": "Passer pour l'instant",
+    "connect": "Connecter Gmail",
+    "connecting": "Redirection en cours…",
+    "askAdmin": "Demandez à un administrateur de l'espace de travail de connecter Gmail",
+    "verifyFirst": "Vérifiez votre e-mail avant de connecter Gmail.",
+    "connected": "Gmail connecté !"
+  },
+  "import": {
+    "title": "Importer vos premières données",
+    "subtitle": "Choisissez comment intégrer les données concurrentes dans la plateforme",
+    "skipForNow": "Passer pour l'instant",
+    "gmailSync": {
+      "title": "Synchronisation Gmail",
+      "desc": "Si vous avez connecté Gmail, les communications des concurrents apparaîtront automatiquement dans votre boîte de réception",
+      "label": "Continuer"
+    },
+    "pasteContent": {
+      "title": "Coller du contenu concurrent",
+      "desc": "Collez manuellement des e-mails ou contenus de campagnes concurrentes pour une analyse immédiate",
+      "label": "Importer des données"
+    }
+  },
+  "insights": {
+    "title": "Tout est prêt !",
+    "subtitle": "Votre espace de travail est configuré. Au fil des données, l'IA génèrera automatiquement des analyses, des alertes et des recommandations stratégiques.",
+    "goToDashboard": "Aller au tableau de bord",
+    "exploreOwn": "J'explore par moi-même",
+    "bullets": {
+      "insights": "Analyses IA générées à partir des tendances concurrentes",
+      "analytics": "Tableaux de bord analytiques mis à jour en temps réel",
+      "tracking": "Activité des concurrents suivie en continu"
+    }
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "title": "Centro Avvisi",
+  "subtitle": "Monitora le mosse dei competitor con avvisi di intelligence basati su regole, in tempo reale e pianificati.",
+  "criticalBadge": "{{count}} critici",
+
+  "stats": {
+    "activeRules": "Regole attive",
+    "activeRulesDetail": "attualmente in monitoraggio",
+    "unread": "Non letti",
+    "unreadDetail": "notifiche",
+    "alertsThisWeek": "Avvisi questa settimana",
+    "alertsThisWeekDetail": "generati",
+    "triggersFired": "Trigger attivati",
+    "lastScan": "Ultima scansione {{when}}",
+    "noScansYet": "Nessuna scansione ancora"
+  },
+
+  "actions": {
+    "scheduledScan": "Scansione pianificata",
+    "checkNow": "Controlla ora",
+    "checking": "Controllo in corso…"
+  },
+
+  "tabs": {
+    "notifications": "Notifiche",
+    "rules": "Regole",
+    "activityLog": "Log attività"
+  },
+
+  "filters": {
+    "all": "Tutti",
+    "unread": "Non letti",
+    "read": "Letti",
+    "high": "Alta",
+    "medium": "Media",
+    "info": "Info",
+    "allCategories": "Tutte le categorie",
+    "markAllRead": "Segna tutti come letti",
+    "allRules": "Tutte le regole",
+    "entries": "{{filtered}} di {{total}} voci"
+  },
+
+  "logStatus": {
+    "all": "Tutti",
+    "triggered": "Attivato",
+    "suppressed": "Soppresso",
+    "failed": "Fallito"
+  },
+
+  "severity": {
+    "high": "Alta",
+    "medium": "Media",
+    "info": "Info",
+    "low": "Bassa",
+    "critical": "Critica"
+  },
+
+  "notifications": {
+    "emptyTitle": "Nessun avviso ancora",
+    "emptyTitleFiltered": "Nessun avviso corrisponde ai filtri",
+    "emptyDescription": "Crea regole ed esegui una scansione per iniziare a ricevere avvisi di intelligence sui competitor.",
+    "emptyDescriptionFiltered": "Prova a rimuovere i filtri per vedere tutti gli avvisi.",
+    "clearFilters": "Rimuovi filtri",
+    "markRead": "Segna come letto",
+    "dismiss": "Ignora"
+  },
+
+  "rules": {
+    "quickPresetsTitle": "Preset rapidi",
+    "quickPresetsSubtitle": "Modelli di regole con un clic per scenari di monitoraggio comuni",
+    "customRule": "Regola personalizzata",
+    "useThisPreset": "Usa questo preset",
+    "noRulesTitle": "Nessuna regola di avviso ancora",
+    "noRulesDescription": "Usa un preset sopra o crea una regola personalizzata per iniziare a monitorare l'attività dei competitor.",
+    "emailPlanned": "Email pianificata",
+    "checked": "Controllato {{when}}",
+    "triggered": "Attivato {{when}}",
+    "neverTriggered": "Mai attivato"
+  },
+
+  "log": {
+    "noActivityTitle": "Nessuna attività di trigger",
+    "noActivityDescription": "I log appaiono quando le regole si attivano, vengono soppresse o falliscono.",
+    "noActivityDescriptionFiltered": "Nessuna voce corrisponde ai filtri attuali."
+  },
+
+  "presets": {
+    "deepDiscount": {
+      "label": "Sconto profondo",
+      "description": "Avviso quando un competitor abbassa i prezzi ≥ 40%"
+    },
+    "campaignLaunch": {
+      "label": "Lancio campagna",
+      "description": "Avviso per ogni nuovo lancio di campagna di un competitor"
+    },
+    "activitySpike": {
+      "label": "Picco di attività",
+      "description": "Avviso quando l'attività del competitor supera 2× la baseline"
+    },
+    "pricingSignal": {
+      "label": "Segnale di prezzo",
+      "description": "Avviso su menzioni di \"prezzo\", \"sconto\", \"offerta\", \"costo\""
+    }
+  },
+
+  "ruleTypes": {
+    "discount_threshold": "Soglia di sconto",
+    "keyword_detection": "Rilevamento parole chiave",
+    "new_campaign_launch": "Lancio nuova campagna",
+    "activity_spike": "Picco di attività insolito",
+    "keyword_match": "Corrispondenza parole chiave (legacy)",
+    "new_competitor_ad": "Nuovi annunci competitor (legacy)",
+    "new_category": "Nuova categoria rilevata (legacy)"
+  },
+
+  "evaluationModes": {
+    "both": "Tempo reale + pianificato",
+    "event": "Solo tempo reale",
+    "scheduled": "Solo scansioni pianificate"
+  },
+
+  "dialog": {
+    "createTitle": "Crea regola di avviso",
+    "editTitle": "Modifica regola di avviso",
+    "createDescription": "Le regole valutano automaticamente newsletter, estrazioni e annunci dei competitor.",
+    "editDescription": "Aggiorna la configurazione della regola qui sotto.",
+    "ruleName": "Nome regola",
+    "ruleNamePlaceholder": "es. Sconto profondo rilevato",
+    "ruleType": "Tipo di regola",
+    "evaluationMode": "Modalità di valutazione",
+    "cooldownLabel": "Cooldown (ore)",
+    "cooldownHint": "Sopprimi gli avvisi ripetuti per questa regola entro questa finestra temporale.",
+    "discountThresholdLabel": "Soglia di sconto (%)",
+    "discountThresholdHint": "Si attiva quando uno sconto del competitor raggiunge o supera questa percentuale.",
+    "keywordsLabel": "Parole chiave (separate da virgola)",
+    "keywordsPlaceholder": "lancio, nuovo prezzo, Black Friday",
+    "keywordsHint": "Avviso quando una di queste parole chiave appare nelle newsletter dei competitor.",
+    "campaignTypesLabel": "Tipi di campagna (opzionale)",
+    "campaignTypesPlaceholder": "lancio_prodotto, promozionale, annuncio",
+    "campaignTypesHint": "Lascia vuoto per monitorare ogni nuova campagna rilevata.",
+    "spikeMultiplierLabel": "Moltiplicatore picco",
+    "minimumEventsLabel": "Eventi minimi",
+    "spikeHint": "Si attiva quando il conteggio attività nelle 24h è ≥ {{multiplier}}× la media 7 giorni e ≥ {{events}} eventi.",
+    "competitorScope": "Ambito competitor (opzionale)",
+    "competitorScopeHint": "Lascia tutti non selezionati per monitorare ogni competitor tracciato.",
+    "notificationChannels": "Canali di notifica",
+    "inAppAlways": "In-app (sempre attivo)",
+    "emailFuture": "Email (salvata per consegna futura)",
+    "cancel": "Annulla",
+    "saving": "Salvataggio…",
+    "saveChanges": "Salva modifiche",
+    "createRule": "Crea regola"
+  },
+
+  "relative": {
+    "never": "Mai",
+    "justNow": "Adesso",
+    "minutesAgo": "{{count}}m fa",
+    "hoursAgo": "{{count}}h fa",
+    "daysAgo": "{{count}}g fa"
+  },
+
+  "toast": {
+    "ruleCreated": "Regola di avviso creata",
+    "ruleDeleted": "Regola eliminata",
+    "alertsTriggered_one": "{{count}} avviso attivato",
+    "alertsTriggered_other": "{{count}} avvisi attivati",
+    "noNewAlerts": "Regole verificate senza nuovi avvisi",
+    "suppressedInfo_one": "{{count}} trigger duplicato è stato soppresso",
+    "suppressedInfo_other": "{{count}} trigger duplicati sono stati soppressi",
+    "failedLoadRules": "Impossibile caricare le regole di avviso",
+    "failedCreateRule": "Impossibile creare la regola di avviso",
+    "failedUpdateRule": "Impossibile aggiornare la regola di avviso",
+    "failedDeleteRule": "Impossibile eliminare la regola di avviso",
+    "failedLoadAlerts": "Impossibile caricare gli avvisi",
+    "failedMarkRead": "Impossibile segnare l'avviso come letto",
+    "failedMarkAllRead": "Impossibile segnare tutti gli avvisi come letti",
+    "failedDismiss": "Impossibile ignorare l'avviso",
+    "failedEvaluate": "Impossibile valutare gli avvisi",
+    "failedLoadLog": "Impossibile caricare il log dei trigger"
+  }
+}

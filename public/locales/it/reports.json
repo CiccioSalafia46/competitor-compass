@@ -1,0 +1,173 @@
+{
+  "title": "Report",
+  "description": "Briefing strutturati, pianificazioni ricorrenti ed esportazioni pronte per gli stakeholder.",
+  "readOnly": "Sola lettura — richiesto accesso come analista o amministratore.",
+  "unavailable": "I report non sono disponibili finché non ti unisci a un workspace con accesso ai dati.",
+
+  "buttons": {
+    "refresh": "Aggiorna",
+    "runDue": "Esegui scaduti",
+    "runDueCount": "Esegui scaduti ({{count}})",
+    "running": "In esecuzione…",
+    "schedule": "Pianifica",
+    "generate": "Genera",
+    "generating": "Generazione…",
+    "buildReport": "Crea report",
+    "exportJson": "Esporta JSON",
+    "printPdf": "Stampa / PDF",
+    "cancel": "Annulla",
+    "createSchedule": "Crea pianificazione",
+    "updateSchedule": "Aggiorna pianificazione",
+    "saving": "Salvataggio…",
+    "edit": "Modifica",
+    "delete": "Elimina"
+  },
+
+  "templates": {
+    "weekly_competitor_pulse": {
+      "label": "Pulse settimanale competitor",
+      "description": "Snapshot esecutivo dei principali movimenti dei competitor, segnali e risposte raccomandate."
+    },
+    "promo_digest": {
+      "label": "Digest promozionale",
+      "description": "Panoramica focalizzata sui comportamenti di sconto, tattiche di urgenza e pressione delle offerte."
+    },
+    "messaging_analysis": {
+      "label": "Analisi del messaging",
+      "description": "Variazioni di narrativa, CTA, categoria e posizionamento sull'insieme di competitor monitorati."
+    },
+    "custom_report": {
+      "label": "Report personalizzato",
+      "description": "Crea un briefing su misura scegliendo esattamente quali sezioni, competitor e intervallo di date includere."
+    }
+  },
+
+  "defaultRange": "Predefinito: ultimi {{count}} giorno",
+  "defaultRange_plural": "Predefinito: ultimi {{count}} giorni",
+  "configurableRange": "Intervallo configurabile",
+
+  "schedules": {
+    "title": "Pianificazioni salvate",
+    "subtitle": "Template ricorrenti che vengono generati automaticamente per il tuo team.",
+    "empty": "Nessuna pianificazione salvata.",
+    "weekly": "Settimanalmente il {{day}}",
+    "daily": "Giornalmente",
+    "at": "alle",
+    "next": "Prossima",
+    "last": "Ultima",
+    "notScheduled": "Non pianificata",
+    "activeSchedule": "Pianificazione attiva",
+    "activeScheduleDesc": "Le pianificazioni inattive rimangono salvate ma vengono ignorate dall'esecutore."
+  },
+
+  "weekdays": {
+    "0": "Domenica",
+    "1": "Lunedì",
+    "2": "Martedì",
+    "3": "Mercoledì",
+    "4": "Giovedì",
+    "5": "Venerdì",
+    "6": "Sabato"
+  },
+
+  "rangeOptions": {
+    "7": "7 giorni",
+    "14": "14 giorni",
+    "30": "30 giorni",
+    "90": "90 giorni"
+  },
+
+  "recentRuns": {
+    "title": "Esecuzioni recenti",
+    "subtitle": "Ultimi report generati — clicca per ispezionare il briefing completo.",
+    "empty": "Nessun report generato."
+  },
+
+  "status": {
+    "pending": "In attesa",
+    "running": "In esecuzione",
+    "completed": "Completato",
+    "failed": "Fallito"
+  },
+
+  "scheduleDialog": {
+    "createTitle": "Crea pianificazione report",
+    "editTitle": "Modifica pianificazione report",
+    "description": "Salva le impostazioni ricorrenti del report per questo workspace. Le pianificazioni in scadenza possono essere generate manualmente ora e collegate a un runner cron in seguito.",
+    "namePlaceholder": "Pulse competitor del lunedì",
+    "nameLabel": "Nome",
+    "templateLabel": "Template",
+    "frequencyLabel": "Frequenza",
+    "daily": "Giornaliero",
+    "weekly": "Settimanale",
+    "weekdayLabel": "Giorno della settimana",
+    "hourLabel": "Ora (0–23)",
+    "minuteLabel": "Minuto (0–59)",
+    "coverageLabel": "Finestra di copertura",
+    "timezoneLabel": "Fuso orario",
+    "timezonePlaceholder": "Europe/Rome"
+  },
+
+  "builderDialog": {
+    "title": "Costruttore report personalizzato",
+    "description": "Scegli quali sezioni includere, l'intervallo di date e filtri opzionali per competitor.",
+    "reportTitleLabel": "Titolo report",
+    "reportTitlePlaceholder": "Report personalizzato",
+    "sectionsLabel": "Sezioni da includere",
+    "sectionsSelected": "{{count}} di {{total}} sezioni selezionate",
+    "coverageLabel": "Finestra di copertura",
+    "competitorFilterLabel": "Filtro competitor",
+    "competitorFilterPlaceholder": "Acme, Globex (opzionale)",
+    "competitorFilterHint": "Nomi separati da virgola. Lascia vuoto per includere tutti.",
+    "previewLabel": "Anteprima",
+    "previewLastDays": "Ultimi {{count}} giorni",
+    "previewAllCompetitors": "Tutti i competitor",
+    "previewFiltered": "Filtrati: {{names}}",
+    "noSectionsWarning": "Seleziona almeno una sezione per generare un report."
+  },
+
+  "sections": {
+    "executive_summary": "Sommario esecutivo",
+    "competitor_activity": "Attività competitor",
+    "promo_behavior": "Comportamento promozionale",
+    "messaging_evolution": "Evoluzione del messaging",
+    "category_focus": "Focus su categorie e campagne",
+    "insights": "Insight prioritari",
+    "opportunities": "Opportunità strategiche",
+    "actions": "Azioni raccomandate"
+  },
+
+  "viewer": {
+    "failed": "Questa esecuzione del report è fallita",
+    "failedDesc": "L'esecuzione del report è terminata prima che potesse essere salvato il payload.",
+    "competitors": "Competitor",
+    "signals": "Segnali",
+    "insights": "Insight",
+    "generated": "Generato",
+    "executiveBrief": "Briefing esecutivo",
+    "topLineSummary": "Sintesi di alto livello",
+    "whatChanged": "Cosa è cambiato",
+    "whatMatters": "Cosa conta di più",
+    "prioritizedInsights": "Insight prioritari",
+    "insightsSubtitle": "{{count}} insight strutturato pronto per la revisione del team",
+    "insightsSubtitle_plural": "{{count}} insight strutturati pronti per la revisione del team",
+    "recommendedActions": "Azioni raccomandate",
+    "actionsSubtitle": "Prossime mosse concrete derivate dai segnali più rilevanti",
+    "noChartData": "Nessun dato grafico disponibile in questo report."
+  },
+
+  "tabs": {
+    "selectedReport": "Report selezionato",
+    "howItWorks": "Come funziona"
+  },
+
+  "pipeline": {
+    "title": "Pipeline dei report",
+    "description": "I report riutilizzano le analitiche live del workspace, gli insight strutturati e gli snapshot di intelligence sui competitor. Ogni esecuzione è salvata come payload strutturato per il riutilizzo e l'esportazione.",
+    "step1": "Generazione on-demand: dal template a `reports-center`, poi RPC analitiche + insight + intelligence competitor fino al payload persistito in `report_runs.payload`.",
+    "step2": "Generazione pianificata: i `report_schedules` salvati calcolano `next_run_at`; il runner scaduto può generare tutte le pianificazioni scadute del workspace corrente in un'unica esecuzione.",
+    "step3": "Esportazioni: JSON per uso downstream strutturato, più una vista ottimizzata per la stampa che può essere salvata come PDF dal browser."
+  },
+
+  "emptyReport": "Genera o seleziona un'esecuzione di report qui sopra per ispezionare il briefing completo."
+}

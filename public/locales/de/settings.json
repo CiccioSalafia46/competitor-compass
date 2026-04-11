@@ -24,5 +24,92 @@
   "workspaceName": "Name des Arbeitsbereichs",
   "plan": "Tarif",
   "currentPlan": "Aktueller Tarif",
-  "manageBilling": "Abrechnung verwalten"
+  "manageBilling": "Abrechnung verwalten",
+  "email": "E-Mail",
+  "yourRoles": "Deine Rollen",
+  "noRolesAssigned": "Keine Rollen zugewiesen",
+  "name": "Name",
+  "slug": "Slug",
+  "manageTeam": "Team verwalten",
+  "planUsage": "Tarif & Nutzung",
+  "billingPeriodUsage": "Nutzung im aktuellen Abrechnungszeitraum",
+  "seats": "Plätze",
+  "competitors": "Wettbewerber",
+  "dataImports": "Datenimporte",
+  "analyses": "Analysen",
+  "viewFullUsage": "Vollständige Nutzung anzeigen",
+  "security": "Sicherheit",
+  "appearanceDesc": "Wechsle mit der Schaltfläche oben zwischen hellem und dunklem Modus.",
+  "downloadWorkspaceData": "Workspace-Daten als CSV herunterladen",
+  "exporting": "Wird exportiert…",
+
+  "team": {
+    "title": "Team",
+    "subtitle": "Verwalte Workspace-Mitglieder und Rollen",
+    "inviteTitle": "Mitglied einladen",
+    "inviteSubtitle": "Füge ein Teammitglied zu diesem Workspace hinzu",
+    "inviteEmailPlaceholder": "kollege@unternehmen.de",
+    "inviteButton": "Einladen",
+    "inviting": "Einladung wird gesendet…",
+    "membersTitle": "Mitglieder ({{count}})",
+    "noRoleAssigned": "Keine Rolle zugewiesen",
+    "rolePermissionsTitle": "Rollenberechtigungen",
+    "roles": {
+      "admin": "Administrator",
+      "analyst": "Analyst",
+      "viewer": "Betrachter"
+    },
+    "roleDescriptions": {
+      "admin": "Verwaltet Workspace, Mitglieder, Abrechnung, Integrationen, Benachrichtigungen, Berichte",
+      "analyst": "Verwaltet Wettbewerberüberwachung, Tags, Analysen, Berichte",
+      "viewer": "Lesezugriff auf Dashboards, Analysen und Berichte"
+    },
+    "roleUpdated": "Rolle aktualisiert",
+    "invitationFlow": "Einladungsablauf",
+    "invitationFlowDesc": "Teameinladungen erfordern eine E-Mail-Infrastruktur. Demnächst verfügbar."
+  },
+
+  "billing": {
+    "title": "Tarife & Abrechnung",
+    "subtitle": "Du nutzt den",
+    "plan": "Tarif",
+    "manageSubscription": "Abonnement verwalten",
+    "refresh": "Aktualisieren",
+    "billingPeriodEnds": "Der aktuelle Abrechnungszeitraum endet am {{date}}",
+    "cancelAtPeriodEnd": "und das Abonnement wird am Ende des Zeitraums gekündigt.",
+    "usageTitle": "Aktuelle Nutzung diesen Monat",
+    "upgradeToIncrease": "Auf höheren Tarif upgraden, um das Limit zu erhöhen",
+    "unlimited": "∞ Unbegrenzt",
+    "yourPlan": "Dein Tarif",
+    "recommended": "Empfohlen",
+    "bestValue": "Bestes Preis-Leistungs-Verhältnis",
+    "upgrade": "Upgraden auf",
+    "switch": "Wechseln zu",
+    "to": "zu",
+    "currentPlanLabel": "Aktueller Tarif",
+    "comparisonsTitle": "Vollständiger Funktionsvergleich",
+    "feature": "Funktion",
+    "comingSoon": "Bald",
+    "ctaFreeTitle": "Bereit für ernsthafte Wettbewerbsanalyse?",
+    "ctaFreeDesc": "Starter bietet dir 10-fache Kapazität, vollständige KI-Extraktion und Teamzusammenarbeit.",
+    "ctaPremiumTitle": "Schalte den vollen strategischen Vorteil frei",
+    "ctaPremiumDesc": "Premium schaltet unbegrenzte Wettbewerber, erweiterte Erkenntnisse und Meta Ads Intelligence frei.",
+    "upgradeButton": "Upgraden auf {{plan}}",
+    "loadingBilling": "Abrechnung wird geladen…",
+    "checkoutError": "Kassenfehler",
+    "plans": {
+      "free": {
+        "tagline": "Plattform erkunden",
+        "targetUser": "Für Einzelpersonen, die beginnen"
+      },
+      "starter": {
+        "tagline": "Dein Wettbewerbsvorteil",
+        "targetUser": "Für Teams, die aktiv Wettbewerber beobachten"
+      },
+      "premium": {
+        "tagline": "Strategischer Vorteil",
+        "targetUser": "Für Teams, die umfassende Analysen benötigen"
+      }
+    }
+  }
 }

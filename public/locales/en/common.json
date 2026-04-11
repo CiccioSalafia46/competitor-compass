@@ -47,5 +47,9 @@
   "viewAll": "View all",
   "learnMore": "Learn more",
   "getStarted": "Get started",
-  "upgrade": "Upgrade"
+  "upgrade": "Upgrade",
+  "verifyEmailTitle": "Verify your email",
+  "verifyEmailUnlock": "to unlock all features. Check your inbox for the verification link.",
+  "resend": "Resend",
+  "resending": "Sending…"
 }

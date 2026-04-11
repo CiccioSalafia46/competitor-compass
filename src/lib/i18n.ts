@@ -50,7 +50,11 @@ i18n
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: [...SUPPORTED_LANGUAGES],
     defaultNS: "common",
-    ns: ["common", "nav", "auth", "dashboard", "insights", "inbox", "settings", "errors"],
+    ns: [
+      "common", "nav", "auth", "dashboard", "insights", "inbox", "settings", "errors",
+      "home", "alerts", "analytics", "competitors", "weekly", "reports", "metaAds",
+      "onboarding", "upgrade",
+    ],
     backend: {
       loadPath: "/locales/{{lng}}/{{ns}}.json",
     },

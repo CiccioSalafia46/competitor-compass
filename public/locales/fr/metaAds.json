@@ -1,0 +1,71 @@
+{
+  "title": "Meta Ads Intelligence",
+  "titleBadge": "Bêta · Bientôt disponible",
+  "subtitle": "Surveillez les médias payants des concurrents sur Facebook et Instagram",
+
+  "betaNotice": {
+    "title": "Meta Ads Intelligence est en bêta",
+    "description": "Nous finalisons l'intégration de la Meta Ad Library. Ci-dessous, vous pouvez prévisualiser l'expérience avec des données d'exemple. Quand l'intégration sera en ligne, vous pourrez suivre les vraies publicités des concurrents, analyser les stratégies de messagerie et surveiller automatiquement les tendances de dépenses.",
+    "premiumNote": "Cette fonctionnalité sera disponible dans le <strong>plan Premium</strong> au lancement."
+  },
+
+  "upgradeCard": {
+    "title": "Obtenez un accès anticipé à Meta Ads Intelligence",
+    "description": "Les utilisateurs Premium seront les premiers à accéder au vrai suivi des publicités et à l'analyse par IA au lancement de cette fonctionnalité.",
+    "features": {
+      "adCreativeAnalysis": "Analyse des créatifs publicitaires",
+      "spendMonitoring": "Surveillance des dépenses",
+      "messagingPatterns": "Modèles de messagerie",
+      "competitiveBenchmarks": "Benchmarks concurrentiels"
+    },
+    "upgradeButton": "Passer à Premium"
+  },
+
+  "samplePreview": {
+    "title": "Aperçu des publicités exemples",
+    "badge": "Données démo",
+    "disclaimer": "Il s'agit de publicités exemples à des fins de prévisualisation uniquement. Aucune donnée réelle n'est récupérée ou affichée."
+  },
+
+  "featureList": {
+    "title": "Quand Meta Ads Intelligence sera lancé, vous pourrez :",
+    "trackAds": {
+      "title": "Suivre les publicités des concurrents",
+      "desc": "Importer automatiquement des publicités depuis la Meta Ad Library"
+    },
+    "aiAnalysis": {
+      "title": "Analyse par IA",
+      "desc": "Analyser les angles de messagerie, les offres et les schémas d'urgence"
+    },
+    "spendMonitoring": {
+      "title": "Surveillance des dépenses",
+      "desc": "Suivre les fourchettes de dépenses estimées des concurrents"
+    },
+    "sideComparison": {
+      "title": "Comparaison côte à côte",
+      "desc": "Comparer les stratégies publicitaires entre concurrents"
+    }
+  },
+
+  "adDetail": {
+    "title": "Détails de la publicité",
+    "demoBadge": "Démo",
+    "adCopy": "Texte de la publicité",
+    "observedData": "Données observées",
+    "firstSeen": "Première apparition",
+    "lastSeen": "Dernière apparition",
+    "cta": "CTA",
+    "media": "Média",
+    "estimatedMetrics": "Métriques estimées",
+    "sampleRanges": "Plages d'exemple",
+    "aiAnalysisNote": "L'analyse par IA sera disponible au lancement de l'intégration Meta Ads.",
+    "spend": "Dépenses",
+    "impressions": "Impressions",
+    "audienceSize": "Taille de l'audience"
+  },
+
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif"
+  }
+}

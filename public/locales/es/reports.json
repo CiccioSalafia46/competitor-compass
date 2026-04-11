@@ -1,0 +1,173 @@
+{
+  "title": "Informes",
+  "description": "Briefings estructurados, programaciones recurrentes y exportaciones listas para las partes interesadas.",
+  "readOnly": "Solo lectura — se requiere acceso de analista o administrador.",
+  "unavailable": "Los informes no están disponibles hasta que se una a un espacio de trabajo con acceso a datos.",
+
+  "buttons": {
+    "refresh": "Actualizar",
+    "runDue": "Ejecutar pendientes",
+    "runDueCount": "Ejecutar pendientes ({{count}})",
+    "running": "Ejecutando…",
+    "schedule": "Programar",
+    "generate": "Generar",
+    "generating": "Generando…",
+    "buildReport": "Crear informe",
+    "exportJson": "Exportar JSON",
+    "printPdf": "Imprimir / PDF",
+    "cancel": "Cancelar",
+    "createSchedule": "Crear programación",
+    "updateSchedule": "Actualizar programación",
+    "saving": "Guardando…",
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+
+  "templates": {
+    "weekly_competitor_pulse": {
+      "label": "Pulso semanal de competidores",
+      "description": "Instantánea ejecutiva de los principales movimientos de competidores, señales y respuestas recomendadas."
+    },
+    "promo_digest": {
+      "label": "Resumen promocional",
+      "description": "Vista centrada en el comportamiento de descuentos, tácticas de urgencia y presión de ofertas."
+    },
+    "messaging_analysis": {
+      "label": "Análisis de mensajería",
+      "description": "Cambios en narrativa, CTA, categoría y posicionamiento en el conjunto de competidores rastreados."
+    },
+    "custom_report": {
+      "label": "Informe personalizado",
+      "description": "Cree un briefing a medida eligiendo exactamente qué secciones, competidores y rango de fechas incluir."
+    }
+  },
+
+  "defaultRange": "Por defecto: últimos {{count}} día",
+  "defaultRange_plural": "Por defecto: últimos {{count}} días",
+  "configurableRange": "Período configurable",
+
+  "schedules": {
+    "title": "Programaciones guardadas",
+    "subtitle": "Plantillas recurrentes que se generan automáticamente para su equipo.",
+    "empty": "Aún no hay programaciones guardadas.",
+    "weekly": "Semanalmente el {{day}}",
+    "daily": "Diariamente",
+    "at": "a las",
+    "next": "Próxima",
+    "last": "Última",
+    "notScheduled": "Sin programar",
+    "activeSchedule": "Programación activa",
+    "activeScheduleDesc": "Las programaciones inactivas se guardan pero el ejecutor las ignora."
+  },
+
+  "weekdays": {
+    "0": "Domingo",
+    "1": "Lunes",
+    "2": "Martes",
+    "3": "Miércoles",
+    "4": "Jueves",
+    "5": "Viernes",
+    "6": "Sábado"
+  },
+
+  "rangeOptions": {
+    "7": "7 días",
+    "14": "14 días",
+    "30": "30 días",
+    "90": "90 días"
+  },
+
+  "recentRuns": {
+    "title": "Ejecuciones recientes",
+    "subtitle": "Últimos informes generados — haga clic para inspeccionar el briefing completo.",
+    "empty": "Aún no se han generado informes."
+  },
+
+  "status": {
+    "pending": "Pendiente",
+    "running": "En ejecución",
+    "completed": "Completado",
+    "failed": "Fallido"
+  },
+
+  "scheduleDialog": {
+    "createTitle": "Crear programación de informe",
+    "editTitle": "Editar programación de informe",
+    "description": "Guarde la configuración recurrente del informe para este espacio de trabajo. Las programaciones vencidas pueden generarse manualmente ahora y vincularse a un runner cron más adelante.",
+    "namePlaceholder": "Pulso de competidores del lunes",
+    "nameLabel": "Nombre",
+    "templateLabel": "Plantilla",
+    "frequencyLabel": "Frecuencia",
+    "daily": "Diario",
+    "weekly": "Semanal",
+    "weekdayLabel": "Día de la semana",
+    "hourLabel": "Hora (0–23)",
+    "minuteLabel": "Minuto (0–59)",
+    "coverageLabel": "Ventana de cobertura",
+    "timezoneLabel": "Zona horaria",
+    "timezonePlaceholder": "Europe/Madrid"
+  },
+
+  "builderDialog": {
+    "title": "Constructor de informes personalizados",
+    "description": "Elija qué secciones incluir, el rango de fechas y filtros opcionales de competidores.",
+    "reportTitleLabel": "Título del informe",
+    "reportTitlePlaceholder": "Informe personalizado",
+    "sectionsLabel": "Secciones a incluir",
+    "sectionsSelected": "{{count}} de {{total}} secciones seleccionadas",
+    "coverageLabel": "Ventana de cobertura",
+    "competitorFilterLabel": "Filtro de competidores",
+    "competitorFilterPlaceholder": "Acme, Globex (opcional)",
+    "competitorFilterHint": "Nombres separados por comas. Deje en blanco para incluir todos.",
+    "previewLabel": "Vista previa",
+    "previewLastDays": "Últimos {{count}} días",
+    "previewAllCompetitors": "Todos los competidores",
+    "previewFiltered": "Filtrados: {{names}}",
+    "noSectionsWarning": "Seleccione al menos una sección para generar un informe."
+  },
+
+  "sections": {
+    "executive_summary": "Resumen ejecutivo",
+    "competitor_activity": "Actividad de competidores",
+    "promo_behavior": "Comportamiento promocional",
+    "messaging_evolution": "Evolución del mensaje",
+    "category_focus": "Enfoque en categorías y campañas",
+    "insights": "Insights priorizados",
+    "opportunities": "Oportunidades estratégicas",
+    "actions": "Acciones recomendadas"
+  },
+
+  "viewer": {
+    "failed": "Esta ejecución del informe falló",
+    "failedDesc": "La ejecución del informe falló antes de que se pudiera guardar el payload.",
+    "competitors": "Competidores",
+    "signals": "Señales",
+    "insights": "Insights",
+    "generated": "Generado",
+    "executiveBrief": "Briefing ejecutivo",
+    "topLineSummary": "Resumen de alto nivel",
+    "whatChanged": "Qué cambió",
+    "whatMatters": "Qué importa más",
+    "prioritizedInsights": "Insights priorizados",
+    "insightsSubtitle": "{{count}} insight estructurado listo para revisión del equipo",
+    "insightsSubtitle_plural": "{{count}} insights estructurados listos para revisión del equipo",
+    "recommendedActions": "Acciones recomendadas",
+    "actionsSubtitle": "Próximas acciones concretas derivadas de los hallazgos más significativos",
+    "noChartData": "No hay datos de gráfico disponibles en este informe."
+  },
+
+  "tabs": {
+    "selectedReport": "Informe seleccionado",
+    "howItWorks": "Cómo funciona"
+  },
+
+  "pipeline": {
+    "title": "Pipeline de informes",
+    "description": "Los informes reutilizan los análisis en vivo del espacio de trabajo, los insights estructurados y las instantáneas de inteligencia competitiva. Cada ejecución se almacena como payload estructurado para su reutilización y exportación.",
+    "step1": "Generación bajo demanda: plantilla a `reports-center`, luego RPC de análisis + insights + inteligencia de competidores hacia `report_runs.payload` persistido.",
+    "step2": "Generación planificada: los `report_schedules` guardados calculan `next_run_at`; el runner de vencidos puede generar todas las programaciones vencidas del espacio de trabajo actual en un solo paso.",
+    "step3": "Exportaciones: JSON para uso estructurado posterior, más una vista optimizada para impresión que puede guardarse como PDF desde el navegador."
+  },
+
+  "emptyReport": "Genere o seleccione una ejecución de informe arriba para inspeccionar el briefing completo."
+}

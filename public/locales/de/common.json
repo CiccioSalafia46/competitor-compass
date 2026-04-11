@@ -47,5 +47,9 @@
   "viewAll": "Alle anzeigen",
   "learnMore": "Mehr erfahren",
   "getStarted": "Loslegen",
-  "upgrade": "Upgrade"
+  "upgrade": "Upgrade",
+  "verifyEmailTitle": "E-Mail bestätigen",
+  "verifyEmailUnlock": "um alle Funktionen freizuschalten. Prüfe dein Postfach nach dem Bestätigungslink.",
+  "resend": "Erneut senden",
+  "resending": "Wird gesendet…"
 }

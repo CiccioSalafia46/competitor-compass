@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import UpgradePrompt from "@/components/UpgradePrompt";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
@@ -51,10 +52,10 @@ import { cn } from "@/lib/utils";
 type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 
 const percent = (value: number) => `${Math.round(value * 100)}%`;
-const dateTime = (value: string | null) =>
+const dateTime = (value: string | null, fallback = "—") =>
   value
     ? new Date(value).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-    : "No recent activity";
+    : fallback;
 
 const priorityTone = (value: InsightPriorityLevel) =>
   value === "high" ? "border-destructive/20 bg-destructive/10 text-destructive" : value === "medium" ? "border-warning/20 bg-warning/10 text-warning" : "border-primary/20 bg-primary/10 text-primary";
@@ -194,6 +195,7 @@ function StrategicList({
 }
 
 export default function Competitors() {
+  const { t } = useTranslation("competitors");
   const { currentWorkspace } = useWorkspace();
   const { canManageCompetitors } = useRoles();
   const { isAtLimit, trackUsage } = useUsage();
@@ -324,8 +326,8 @@ export default function Competitors() {
     setCsvImportOpen(false);
     setCsvRows([]);
     toast({
-      title: `Import complete`,
-      description: `${created} competitor${created !== 1 ? "s" : ""} added${failed > 0 ? `, ${failed} failed` : ""}.`,
+      title: t("importComplete"),
+      description: t("importCompleteDesc", { count: created, failed: failed > 0 ? `, ${failed} failed` : "" }),
     });
     await fetchCompetitors();
     await refetchIntelligence();
@@ -334,11 +336,11 @@ export default function Competitors() {
   const handleCreate = async () => {
     if (!currentWorkspace || !name.trim()) return;
     if (!canManageCompetitors) {
-      toast({ title: "Access denied", description: "Analyst or admin access is required to add competitors.", variant: "destructive" });
+      toast({ title: t("accessDenied"), description: t("accessDeniedAdd"), variant: "destructive" });
       return;
     }
     if (isAtLimit("competitors")) {
-      toast({ title: "Limit reached", description: "Upgrade your plan to track more competitors.", variant: "destructive" });
+      toast({ title: t("limitReached"), description: t("limitReachedDesc"), variant: "destructive" });
       return;
     }
     setIsSubmitting(true);
@@ -357,8 +359,8 @@ export default function Competitors() {
       await trackUsage("competitor_added");
       await log("created", "competitor", data.id, { name: data.name });
       toast({
-        title: "Competitor added",
-        description: attribution.matched > 0 ? `Matched ${attribution.matched} inbox ${attribution.matched === 1 ? "email" : "emails"} to this competitor.` : "No existing inbox emails matched yet.",
+        title: t("competitorAdded"),
+        description: attribution.matched > 0 ? t("competitorAddedMatched", { count: attribution.matched }) : t("competitorAddedNoMatch"),
       });
       setName("");
       setWebsite("");
@@ -378,7 +380,7 @@ export default function Competitors() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     if (!canManageCompetitors) {
-      toast({ title: "Access denied", description: "Analyst or admin access is required to remove competitors.", variant: "destructive" });
+      toast({ title: t("accessDenied"), description: t("accessDeniedRemove"), variant: "destructive" });
       setDeleteTarget(null);
       return;
     }
@@ -388,7 +390,7 @@ export default function Competitors() {
     } else {
       await log("deleted", "competitor", deleteTarget.id, { name: deleteTarget.name });
       setCompetitors((prev) => prev.filter((item) => item.id !== deleteTarget.id));
-      toast({ title: "Competitor removed" });
+      toast({ title: t("competitorRemoved") });
       void refetchIntelligence();
     }
     setDeleteTarget(null);
@@ -402,12 +404,12 @@ export default function Competitors() {
     <div className="space-y-6 p-6 lg:p-8 animate-fade-in">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Competitor Intelligence</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Understand how each competitor is moving across campaigns, promotions, positioning and category focus.</p>
-          {!canManageCompetitors && <p className="mt-2 text-xs text-muted-foreground">Read-only mode. Analyst or admin access is required to add or remove competitors.</p>}
+          <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("description")}</p>
+          {!canManageCompetitors && <p className="mt-2 text-xs text-muted-foreground">{t("readOnly")}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2" onClick={() => void refetchIntelligence()}><RefreshCcw className="h-4 w-4" />Refresh intelligence</Button>
+          <Button variant="outline" className="gap-2" onClick={() => void refetchIntelligence()}><RefreshCcw className="h-4 w-4" />{t("refreshIntelligence")}</Button>
           {/* Hidden file input for CSV import */}
           <input
             type="file"
@@ -427,24 +429,24 @@ export default function Competitors() {
             onClick={() => document.getElementById("csv-import-input")?.click()}
           >
             <Upload className="h-4 w-4" />
-            Import CSV
+            {t("importCsv")}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2" disabled={!canManageCompetitors}><Plus className="h-4 w-4" />Add competitor</Button>
+              <Button className="gap-2" disabled={!canManageCompetitors}><Plus className="h-4 w-4" />{t("addCompetitor")}</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add Competitor</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("addCompetitorDialog")}</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-2">
-                <div className="space-y-2"><Label>Company name *</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Acme Corp" /></div>
-                <div className="space-y-2"><Label>Website</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="https://acme.com" /></div>
+                <div className="space-y-2"><Label>{t("companyName")}</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder={t("companyNamePlaceholder")} /></div>
+                <div className="space-y-2"><Label>{t("website")}</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder={t("websitePlaceholder")} /></div>
                 <div className="space-y-2">
-                  <Label>Sender domains</Label>
-                  <Input value={domainsInput} onChange={(event) => setDomainsInput(event.target.value)} placeholder="acme.com, news.acme.com" />
-                  <p className="text-xs text-muted-foreground">Used to auto-assign imported newsletters to this competitor.</p>
+                  <Label>{t("senderDomains")}</Label>
+                  <Input value={domainsInput} onChange={(event) => setDomainsInput(event.target.value)} placeholder={t("senderDomainsPlaceholder")} />
+                  <p className="text-xs text-muted-foreground">{t("senderDomainsHint")}</p>
                 </div>
-                <div className="space-y-2"><Label>Notes</Label><Textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Key things to track..." /></div>
-                <Button onClick={handleCreate} disabled={isSubmitting || !name.trim() || !canManageCompetitors} className="w-full">{isSubmitting ? "Adding..." : "Add competitor"}</Button>
+                <div className="space-y-2"><Label>{t("notes")}</Label><Textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder={t("notesPlaceholder")} /></div>
+                <Button onClick={handleCreate} disabled={isSubmitting || !name.trim() || !canManageCompetitors} className="w-full">{isSubmitting ? t("adding") : t("addCompetitor")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -455,9 +457,9 @@ export default function Competitors() {
         <Card className="border-2 border-dashed bg-accent/20">
           <CardContent className="py-10 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10"><Users className="h-6 w-6 text-primary" /></div>
-            <h2 className="mb-1 text-base font-semibold text-foreground">Start tracking competitors</h2>
-            <p className="mx-auto mb-5 max-w-sm text-sm text-muted-foreground">Add the companies you want to monitor. This page turns newsletters, ads and insights into a strategic profile per competitor.</p>
-            <Button className="gap-2" onClick={() => setDialogOpen(true)} disabled={!canManageCompetitors}><Plus className="h-4 w-4" />Add your first competitor</Button>
+            <h2 className="mb-1 text-base font-semibold text-foreground">{t("emptyTitle")}</h2>
+            <p className="mx-auto mb-5 max-w-sm text-sm text-muted-foreground">{t("emptyDesc")}</p>
+            <Button className="gap-2" onClick={() => setDialogOpen(true)} disabled={!canManageCompetitors}><Plus className="h-4 w-4" />{t("addFirstCompetitor")}</Button>
           </CardContent>
         </Card>
       ) : (
@@ -466,22 +468,22 @@ export default function Competitors() {
             <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
               <div className="flex items-center justify-between border-b bg-muted/20 px-4 py-3">
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground">Tracked set</p>
+                  <p className="text-[13px] font-semibold text-foreground">{t("trackedSet")}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {generatedAt ? `Refreshed ${dateTime(generatedAt)}` : "Intelligence not loaded yet"}
+                    {generatedAt ? t("refreshedAt", { time: dateTime(generatedAt) }) : t("intelligenceNotLoaded")}
                   </p>
                 </div>
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                  {sortedCompetitors.length} tracked
+                  {t("tracked", { count: sortedCompetitors.length })}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 p-3">
                 <div className="rounded-lg border bg-card p-3 shadow-sm">
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Total signals</p>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{t("totalSignals")}</p>
                   <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.totalSignals, 0)}</p>
                 </div>
                 <div className="rounded-lg border bg-card p-3 shadow-sm">
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Active ads</p>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{t("activeAds")}</p>
                   <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.activeAds, 0)}</p>
                 </div>
               </div>
@@ -567,7 +569,7 @@ export default function Competitors() {
                         className="block w-full border-t px-4 pb-3 pt-2.5 text-left"
                       >
                         <div className="mb-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
-                          <span>Share of activity</span>
+                          <span>{t("shareOfActivity")}</span>
                           <span className="font-semibold text-foreground/70">{percent(snapshot.activity.shareOfVoice)}</span>
                         </div>
                         <div className="h-1.5 overflow-hidden rounded-full bg-muted/50">
@@ -582,7 +584,7 @@ export default function Competitors() {
                       </button>
                     ) : (
                       <div className="border-t px-4 py-2.5 text-[11px] text-muted-foreground/60">
-                        Add sender domains to start tracking signals.
+                        {t("addSenderDomains")}
                       </div>
                     )}
                   </div>
@@ -622,12 +624,12 @@ export default function Competitors() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete competitor</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to remove <strong>{deleteTarget?.name}</strong>? This will not delete associated newsletters or analyses, but they will no longer be linked to this competitor.</AlertDialogDescription>
+            <AlertDialogTitle>{t("deleteCompetitor")}</AlertDialogTitle>
+            <AlertDialogDescription dangerouslySetInnerHTML={{ __html: t("deleteConfirm", { name: deleteTarget?.name ?? "" }) }} />
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={!canManageCompetitors}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel", { ns: "common", defaultValue: "Cancel" })}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={!canManageCompetitors}>{t("delete", { ns: "common", defaultValue: "Delete" })}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -636,25 +638,26 @@ export default function Competitors() {
       <Dialog open={csvImportOpen} onOpenChange={(open) => { if (!open) { setCsvImportOpen(false); setCsvRows([]); } }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Import competitors from CSV</DialogTitle>
+            <DialogTitle>{t("csvImportTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Preview of <strong>{csvRows.length}</strong> competitor{csvRows.length !== 1 ? "s" : ""} to import. Expected columns: <code className="text-xs">name, website, domains</code>.
-            </p>
+            <p
+              className="text-sm text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: t("csvImportPreview", { count: csvRows.length }) }}
+            />
             <div className="max-h-64 overflow-y-auto rounded-md border">
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-muted/80">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium">Name</th>
-                    <th className="px-3 py-2 text-left font-medium">Website</th>
-                    <th className="px-3 py-2 text-left font-medium">Domains</th>
+                    <th className="px-3 py-2 text-left font-medium">{t("csvColumnName")}</th>
+                    <th className="px-3 py-2 text-left font-medium">{t("csvColumnWebsite")}</th>
+                    <th className="px-3 py-2 text-left font-medium">{t("csvColumnDomains")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {csvRows.map((row, index) => (
                     <tr key={index} className="border-t">
-                      <td className="px-3 py-1.5 text-foreground">{row.name || <span className="text-destructive">Missing</span>}</td>
+                      <td className="px-3 py-1.5 text-foreground">{row.name || <span className="text-destructive">{t("csvMissing")}</span>}</td>
                       <td className="px-3 py-1.5 text-muted-foreground">{row.website || "—"}</td>
                       <td className="px-3 py-1.5 text-muted-foreground">{row.domains || "—"}</td>
                     </tr>
@@ -663,9 +666,9 @@ export default function Competitors() {
               </table>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setCsvImportOpen(false); setCsvRows([]); }}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setCsvImportOpen(false); setCsvRows([]); }}>{t("cancel", { ns: "common", defaultValue: "Cancel" })}</Button>
               <Button onClick={handleCsvImport} disabled={csvImporting || csvRows.length === 0 || !canManageCompetitors}>
-                {csvImporting ? "Importing…" : `Import ${csvRows.length} competitor${csvRows.length !== 1 ? "s" : ""}`}
+                {csvImporting ? t("importing") : csvRows.length === 1 ? t("importCount", { count: csvRows.length }) : t("importCountPlural", { count: csvRows.length })}
               </Button>
             </div>
           </div>
@@ -704,6 +707,7 @@ function CompetitorDetail({
   onSaveDescription,
   onDescriptionDraftChange,
 }: CompetitorDetailProps) {
+  const { t } = useTranslation("competitors");
   return (
     <div className="space-y-4">
       {/* ── Header ── */}
@@ -722,7 +726,7 @@ function CompetitorDetail({
                         variant="outline"
                         className={cn("capitalize font-medium", profileBadgeClass(snapshot.promoBehavior.profile))}
                       >
-                        {snapshot.promoBehavior.profile} promo
+                        {t(snapshot.promoBehavior.profile as "aggressive" | "moderate" | "conservative")} {t("promo")}
                       </Badge>
                     )}
                     {snapshot && snapshot.activity.totalSignals > 0 && (
@@ -739,12 +743,12 @@ function CompetitorDetail({
                     onChange={(e) => onDescriptionDraftChange(e.target.value)}
                     rows={3}
                     className="resize-none text-sm"
-                    placeholder="Add a description for this competitor…"
+                    placeholder={t("descriptionPlaceholder")}
                     autoFocus
                   />
                   <div className="flex gap-2">
                     <Button size="sm" disabled={savingDescription} onClick={onSaveDescription}>
-                      {savingDescription ? "Saving…" : "Save"}
+                      {savingDescription ? t("saving") : t("save", { ns: "common", defaultValue: "Save" })}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={onCancelDescription}>
                       <X className="h-3.5 w-3.5" />
@@ -754,13 +758,13 @@ function CompetitorDetail({
               ) : (
                 <div className="group flex max-w-2xl items-start gap-2">
                   <CardDescription className="text-sm leading-6">
-                    {competitor.description || "This profile aggregates tracked newsletters, Meta ads and AI insights linked to this competitor."}
+                    {competitor.description || t("descriptionFallback")}
                   </CardDescription>
                   {canManageCompetitors && (
                     <button
                       className="mt-0.5 shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
                       onClick={onEditDescription}
-                      title="Edit description"
+                      title={t("editDescriptionTitle")}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
@@ -787,9 +791,9 @@ function CompetitorDetail({
             </div>
 
             <div className="shrink-0 rounded-xl border bg-muted/20 px-4 py-3">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Last activity</p>
-              <p className="mt-1 text-sm font-semibold">{dateTime(snapshot?.activity.lastActivityAt ?? null)}</p>
-              <p className="mt-1.5 text-xs text-muted-foreground">Last 180-day signal window</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{t("lastActivity")}</p>
+              <p className="mt-1 text-sm font-semibold">{dateTime(snapshot?.activity.lastActivityAt ?? null, t("noRecentActivity", { defaultValue: "—" }))}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">{t("lastActivityWindow")}</p>
             </div>
           </div>
         </CardHeader>
@@ -797,10 +801,10 @@ function CompetitorDetail({
         {/* KPI strip */}
         <CardContent className="grid gap-3 border-t pt-4 sm:grid-cols-4">
           {[
-            { label: "Newsletters", value: snapshot?.activity.newsletters ?? 0, sub: "email campaigns" },
-            { label: "Meta Ads", value: snapshot?.activity.ads ?? 0, sub: `${snapshot?.activity.activeAds ?? 0} live` },
-            { label: "Share of voice", value: percent(snapshot?.activity.shareOfVoice ?? 0), sub: "vs. tracked set" },
-            { label: "AI signals", value: snapshot?.activity.insights ?? 0, sub: "strategic briefs" },
+            { label: t("kpi.newsletters"), value: snapshot?.activity.newsletters ?? 0, sub: t("kpi.newslettersSub") },
+            { label: t("kpi.metaAds"), value: snapshot?.activity.ads ?? 0, sub: t("kpi.live", { count: snapshot?.activity.activeAds ?? 0 }) },
+            { label: t("kpi.shareOfVoice"), value: percent(snapshot?.activity.shareOfVoice ?? 0), sub: t("kpi.shareOfVoiceSub") },
+            { label: t("kpi.aiSignals"), value: snapshot?.activity.insights ?? 0, sub: t("kpi.aiSignalsSub") },
           ].map((kpi) => (
             <div key={kpi.label} className="rounded-xl border bg-card p-4 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{kpi.label}</p>
@@ -814,7 +818,7 @@ function CompetitorDetail({
       {intelligenceError && (
         <Card className="border-destructive/20 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-foreground">Intelligence unavailable</p>
+            <p className="text-sm font-semibold text-foreground">{t("intelligenceUnavailable")}</p>
             <p className="mt-1 text-sm text-muted-foreground">{intelligenceError}</p>
           </CardContent>
         </Card>
@@ -826,9 +830,9 @@ function CompetitorDetail({
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Brain className="h-6 w-6" />
             </div>
-            <h2 className="text-base font-semibold">No intelligence yet</h2>
+            <h2 className="text-base font-semibold">{t("noIntelligenceTitle")}</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Add sender domains, sync Gmail or connect more signals. Once newsletters, ads or insights are linked, this profile becomes strategic.
+              {t("noIntelligenceDesc")}
             </p>
           </CardContent>
         </Card>
@@ -837,19 +841,19 @@ function CompetitorDetail({
           <TabsList className="h-9 w-full justify-start gap-0.5 bg-muted/40">
             <TabsTrigger value="profile" className="gap-1.5 text-xs">
               <Activity className="h-3.5 w-3.5" />
-              Profile
+              {t("tabProfile")}
             </TabsTrigger>
             <TabsTrigger value="timeline" className="gap-1.5 text-xs">
               <Clock className="h-3.5 w-3.5" />
-              Timeline
+              {t("tabTimeline")}
             </TabsTrigger>
             <TabsTrigger value="strategy" className="gap-1.5 text-xs">
               <Target className="h-3.5 w-3.5" />
-              Strategy
+              {t("tabStrategy")}
             </TabsTrigger>
             <TabsTrigger value="opportunities" className="gap-1.5 text-xs">
               <Lightbulb className="h-3.5 w-3.5" />
-              Opportunities
+              {t("tabOpportunities")}
             </TabsTrigger>
           </TabsList>
 
@@ -881,6 +885,7 @@ function CompetitorDetail({
 // ─── Tab: Profile ─────────────────────────────────────────────────────────────
 
 function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) {
+  const { t } = useTranslation("competitors");
   const { promoBehavior, categoryFocus, campaignClusters } = snapshot;
 
   return (
@@ -888,25 +893,25 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
       {/* Promo behavior */}
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Promotion behavior</CardTitle>
-          <CardDescription>Offer depth, urgency mechanics and conversion pressure.</CardDescription>
+          <CardTitle className="text-sm">{t("profile.title")}</CardTitle>
+          <CardDescription>{t("profile.desc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-4">
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Promo rate</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.promoRate")}</p>
               <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{percent(promoBehavior.promoRate)}</p>
             </div>
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Avg discount</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.avgDiscount")}</p>
               <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.averageDiscount)}%</p>
             </div>
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Max discount</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.maxDiscount")}</p>
               <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.maxDiscount)}%</p>
             </div>
             <div className={cn("rounded-xl border p-4", profileBadgeClass(promoBehavior.profile).includes("destructive") ? "border-destructive/20 bg-destructive/5" : promoBehavior.profile === "moderate" ? "border-amber-400/25 bg-amber-50/50 dark:bg-amber-950/15" : "border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/15")}>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Profile</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.profile")}</p>
               <p className={cn("mt-2 text-xl font-bold capitalize", promoBehavior.profile === "aggressive" ? "text-destructive" : promoBehavior.profile === "moderate" ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
                 {promoBehavior.profile}
               </p>
@@ -914,9 +919,9 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
           </div>
           <div className="space-y-3">
             {[
-              { label: "Coupon usage", value: promoBehavior.couponUsageRate },
-              { label: "Urgency signals", value: promoBehavior.urgencyRate },
-              { label: "Free shipping", value: promoBehavior.freeShippingRate },
+              { label: t("profile.couponUsage"), value: promoBehavior.couponUsageRate },
+              { label: t("profile.urgencySignals"), value: promoBehavior.urgencyRate },
+              { label: t("profile.freeShipping"), value: promoBehavior.freeShippingRate },
             ].map((item) => (
               <div key={item.label} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -942,12 +947,12 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Category focus</CardTitle>
-            <CardDescription>Top product and content categories by mention frequency.</CardDescription>
+            <CardTitle className="text-sm">{t("profile.categoryFocus")}</CardTitle>
+            <CardDescription>{t("profile.categoryFocusDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {categoryFocus.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Visible once newsletter extractions or insight categories are available.</p>
+              <p className="text-sm text-muted-foreground">{t("profile.categoryFocusEmpty")}</p>
             ) : (
               <div className="space-y-3">
                 {categoryFocus.map((entry) => (
@@ -969,12 +974,12 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
 
         <Card className="border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Campaign clusters</CardTitle>
-            <CardDescription>Distribution of campaign types across all observed signals.</CardDescription>
+            <CardTitle className="text-sm">{t("profile.campaignClusters")}</CardTitle>
+            <CardDescription>{t("profile.campaignClustersDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {campaignClusters.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No campaign types detected yet.</p>
+              <p className="text-sm text-muted-foreground">{t("profile.campaignClustersEmpty")}</p>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={campaignClusters} margin={{ top: 4, right: 4, bottom: 32, left: 0 }}>
@@ -1000,7 +1005,7 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
                     labelFormatter={(label: string) => label.replace(/_/g, " ")}
                     contentStyle={{ fontSize: 12, borderRadius: 8, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
                   />
-                  <Bar dataKey="count" name="signals" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
+                  <Bar dataKey="count" name={t("profile.signals")} radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -1014,14 +1019,16 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
 // ─── Tab: Timeline ────────────────────────────────────────────────────────────
 
 const SOURCE_CONFIG = {
-  newsletter: { icon: Newspaper, label: "Newsletter", dot: "bg-blue-500" },
-  meta_ad: { icon: Megaphone, label: "Meta Ad", dot: "bg-violet-500" },
-  insight: { icon: Lightbulb, label: "Insight", dot: "bg-amber-500" },
+  newsletter: { icon: Newspaper, dot: "bg-blue-500" },
+  meta_ad: { icon: Megaphone, dot: "bg-violet-500" },
+  insight: { icon: Lightbulb, dot: "bg-amber-500" },
 } as const;
 
 function TimelineEventRow({ event }: { event: CompetitorTimelineEvent }) {
+  const { t } = useTranslation("competitors");
   const config = SOURCE_CONFIG[event.source];
   const Icon = config.icon;
+  const sourceLabel = event.source === "newsletter" ? t("timeline.newsletter") : event.source === "meta_ad" ? t("timeline.metaAd") : t("timeline.insight");
   return (
     <div className="flex gap-3">
       {/* Dot */}
@@ -1037,7 +1044,7 @@ function TimelineEventRow({ event }: { event: CompetitorTimelineEvent }) {
           <span className={cn(
             "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium text-white",
             config.dot,
-          )}>{config.label}</span>
+          )}>{sourceLabel}</span>
           {event.campaignType && (
             <Badge variant="secondary" className="text-[10px] capitalize">
               {event.campaignType.replace(/_/g, " ")}
@@ -1053,6 +1060,7 @@ function TimelineEventRow({ event }: { event: CompetitorTimelineEvent }) {
 }
 
 function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) {
+  const { t } = useTranslation("competitors");
   const { campaignTimeline, activityByMonth } = snapshot;
 
   return (
@@ -1060,8 +1068,8 @@ function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
       {/* Activity over time chart */}
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Activity over time</CardTitle>
-          <CardDescription>Monthly signal volume across emails, ads and insights (last 6 months).</CardDescription>
+          <CardTitle className="text-sm">{t("timeline.activityOverTime")}</CardTitle>
+          <CardDescription>{t("timeline.activityOverTimeDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={240}>
@@ -1083,7 +1091,7 @@ function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               <Area
                 type="monotone"
                 dataKey="newsletters"
-                name="Newsletters"
+                name={t("timeline.newsletter")}
                 stroke="hsl(var(--primary))"
                 fill="url(#colorNewsletters)"
                 strokeWidth={2}
@@ -1091,7 +1099,7 @@ function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               <Area
                 type="monotone"
                 dataKey="ads"
-                name="Meta Ads"
+                name={t("timeline.metaAd")}
                 stroke="#8b5cf6"
                 fill="url(#colorAds)"
                 strokeWidth={2}
@@ -1104,12 +1112,12 @@ function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
       {/* Visual timeline */}
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Campaign timeline</CardTitle>
-          <CardDescription>Recent launches, pushes and strategic signals in chronological order.</CardDescription>
+          <CardTitle className="text-sm">{t("timeline.campaignTimeline")}</CardTitle>
+          <CardDescription>{t("timeline.campaignTimelineDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           {campaignTimeline.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No timeline events available yet.</p>
+            <p className="text-sm text-muted-foreground">{t("timeline.noTimeline")}</p>
           ) : (
             <div className="pt-1">
               {campaignTimeline.map((event, index) => (
@@ -1131,6 +1139,7 @@ function TimelineTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
 // ─── Tab: Strategy ────────────────────────────────────────────────────────────
 
 function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) {
+  const { t } = useTranslation("competitors");
   const { messagingEvolution, positioningStrategy, recurringPatterns, strengths, weaknesses } = snapshot;
 
   return (
@@ -1142,9 +1151,9 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
             <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/10">
               <Target className="h-3.5 w-3.5 text-primary" />
             </div>
-            <CardTitle className="text-sm">Positioning strategy</CardTitle>
+            <CardTitle className="text-sm">{t("strategy.positioningStrategy")}</CardTitle>
           </div>
-          <CardDescription>Derived from observed positioning angles, channel mix and pricing posture.</CardDescription>
+          <CardDescription>{t("strategy.positioningStrategyDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm leading-6 text-foreground">{positioningStrategy}</p>
@@ -1154,8 +1163,8 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
       {/* Messaging evolution */}
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Messaging evolution</CardTitle>
-          <CardDescription>How the narrative is shifting across campaigns and positioning angles.</CardDescription>
+          <CardTitle className="text-sm">{t("strategy.messagingEvolution")}</CardTitle>
+          <CardDescription>{t("strategy.messagingEvolutionDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-xl border bg-muted/10 p-3">
@@ -1163,35 +1172,35 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Current themes</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentThemes.length > 0
-                  ? messagingEvolution.currentThemes.map((t) => <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>)
-                  : <p className="text-xs text-muted-foreground">No stable theme yet.</p>}
+                  ? messagingEvolution.currentThemes.map((theme) => <Badge key={theme} variant="secondary" className="text-xs">{theme}</Badge>)
+                  : <p className="text-xs text-muted-foreground">{t("strategy.noCurrentThemes")}</p>}
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Emerging angles</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.emergingAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.emergingAngles.length > 0
                   ? messagingEvolution.emergingAngles.map((a) => <Badge key={a} variant="outline" className="border-primary/30 bg-primary/5 text-primary text-xs">{a}</Badge>)
-                  : <p className="text-xs text-muted-foreground">No new angle detected.</p>}
+                  : <p className="text-xs text-muted-foreground">{t("strategy.noEmergingAngles")}</p>}
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Current angles</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentAngles.length > 0
                   ? messagingEvolution.currentAngles.map((a) => <Badge key={a} variant="secondary" className="text-xs">{a}</Badge>)
-                  : <p className="text-xs text-muted-foreground">No angles detected.</p>}
+                  : <p className="text-xs text-muted-foreground">{t("strategy.noCurrentAngles")}</p>}
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Previous themes</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.previousThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.previousThemes.length > 0
-                  ? messagingEvolution.previousThemes.map((t) => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)
-                  : <p className="text-xs text-muted-foreground">Insufficient history.</p>}
+                  ? messagingEvolution.previousThemes.map((theme) => <Badge key={theme} variant="outline" className="text-xs">{theme}</Badge>)
+                  : <p className="text-xs text-muted-foreground">{t("strategy.noPreviousThemes")}</p>}
               </div>
             </div>
           </div>
@@ -1200,8 +1209,8 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
 
       {/* Strengths / Weaknesses */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <StrategicList title="Strengths" items={strengths} empty="No clear strengths detected yet." tone="positive" />
-        <StrategicList title="Weaknesses" items={weaknesses} empty="No obvious weaknesses have surfaced yet." tone="warning" />
+        <StrategicList title={t("strategy.strengths")} items={strengths} empty={t("strategy.noStrengths")} tone="positive" />
+        <StrategicList title={t("strategy.weaknesses")} items={weaknesses} empty={t("strategy.noWeaknesses")} tone="warning" />
       </div>
 
       {/* Recurring patterns */}
@@ -1212,9 +1221,9 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               <div className="flex h-6 w-6 items-center justify-center rounded bg-muted">
                 <Activity className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
-              <CardTitle className="text-sm">Recurring patterns</CardTitle>
+              <CardTitle className="text-sm">{t("strategy.recurringPatterns")}</CardTitle>
             </div>
-            <CardDescription>Consistent behavioral signals detected across the observation window.</CardDescription>
+            <CardDescription>{t("strategy.recurringPatternsDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2.5">
@@ -1233,8 +1242,8 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
       {snapshot.topSignals.length > 0 && (
         <Card className="border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Top strategic signals</CardTitle>
-            <CardDescription>Highest-value AI briefs linked to this competitor.</CardDescription>
+            <CardTitle className="text-sm">{t("strategy.topStrategicSignals")}</CardTitle>
+            <CardDescription>{t("strategy.topStrategicSignalsDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {snapshot.topSignals.map((signal) => (
@@ -1271,6 +1280,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
 // ─── Tab: Opportunities ───────────────────────────────────────────────────────
 
 function OpportunitiesTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) {
+  const { t } = useTranslation("competitors");
   const { opportunities, strategicGaps } = snapshot;
 
   const hasContent = opportunities.length > 0 || strategicGaps.length > 0;
@@ -1282,9 +1292,9 @@ function OpportunitiesTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapsh
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
             <Lightbulb className="h-5 w-5 text-muted-foreground/50" />
           </div>
-          <p className="text-sm font-medium text-muted-foreground">No opportunities or gaps detected yet.</p>
+          <p className="text-sm font-medium text-muted-foreground">{t("opportunities.none")}</p>
           <p className="mt-1 text-xs text-muted-foreground/60">
-            Opportunities surface once enough signals are available to detect whitespace in competitor strategy.
+            {t("opportunities.noneDesc")}
           </p>
         </CardContent>
       </Card>
@@ -1300,7 +1310,7 @@ function OpportunitiesTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapsh
             <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10">
               <ChevronRight className="h-3 w-3 text-primary" />
             </div>
-            <p className="text-sm font-semibold">Detected opportunities</p>
+            <p className="text-sm font-semibold">{t("opportunities.detected")}</p>
             <span className="text-xs text-muted-foreground">({opportunities.length})</span>
           </div>
           <div className="space-y-2">
@@ -1326,7 +1336,7 @@ function OpportunitiesTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapsh
             <div className="flex h-5 w-5 items-center justify-center rounded bg-warning/10">
               <AlertTriangle className="h-3 w-3 text-warning" />
             </div>
-            <p className="text-sm font-semibold">Competitor gaps</p>
+            <p className="text-sm font-semibold">{t("opportunities.gaps")}</p>
             <span className="text-xs text-muted-foreground">({strategicGaps.length})</span>
           </div>
           <div className="space-y-2">

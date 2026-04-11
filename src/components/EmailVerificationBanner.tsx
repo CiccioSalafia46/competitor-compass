@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { AlertCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function EmailVerificationBanner() {
+  const { t } = useTranslation("common");
   const { isVerified, resendVerification, resending } = useEmailVerification();
 
   if (isVerified) return null;
@@ -12,8 +14,8 @@ export function EmailVerificationBanner() {
       <div className="flex items-center gap-2 min-w-0">
         <AlertCircle className="h-4 w-4 text-warning shrink-0" />
         <p className="text-sm text-foreground">
-          <span className="font-medium">Verify your email</span>{" "}
-          <span className="text-muted-foreground">to unlock all features. Check your inbox for the verification link.</span>
+          <span className="font-medium">{t("verifyEmailTitle")}</span>{" "}
+          <span className="text-muted-foreground">{t("verifyEmailUnlock")}</span>
         </p>
       </div>
       <Button
@@ -24,7 +26,7 @@ export function EmailVerificationBanner() {
         disabled={resending}
       >
         <Mail className="h-3 w-3" />
-        {resending ? "Sending…" : "Resend"}
+        {resending ? t("resending") : t("resend")}
       </Button>
     </div>
   );

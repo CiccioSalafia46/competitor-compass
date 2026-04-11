@@ -1,0 +1,105 @@
+{
+  "appName": "Tracklyze",
+  "skipSetup": "Skip setup →",
+  "back": "Back",
+  "stepOf": "Step {{current}} of {{total}}",
+  "steps": {
+    "welcome": { "title": "Welcome", "subtitle": "Get started" },
+    "workspace": { "title": "Workspace", "subtitle": "Your team hub" },
+    "competitors": { "title": "Competitors", "subtitle": "Track rivals" },
+    "gmail": { "title": "Gmail", "subtitle": "Import emails" },
+    "import": { "title": "Import", "subtitle": "Your data" },
+    "insights": { "title": "Insights", "subtitle": "AI analysis" },
+    "done": { "title": "Ready", "subtitle": "All set" }
+  },
+  "welcome": {
+    "title": "Welcome to Tracklyze",
+    "subtitle": "Your competitor intelligence platform. We'll help you set up in just a few minutes.",
+    "getStarted": "Get started",
+    "features": {
+      "monitoring": {
+        "title": "Competitor Monitoring",
+        "desc": "Import and analyze competitor campaigns automatically"
+      },
+      "tracking": {
+        "title": "Competitive Tracking",
+        "desc": "Monitor rivals' messaging, offers, and strategies"
+      },
+      "insights": {
+        "title": "AI Insights",
+        "desc": "Get strategic recommendations from your competitive data"
+      }
+    }
+  },
+  "workspace": {
+    "title": "Create your workspace",
+    "subtitle": "A workspace organizes your team's competitive intelligence",
+    "label": "Workspace name",
+    "placeholder": "e.g. Acme Marketing",
+    "hint": "Typically your company or team name",
+    "creating": "Creating…",
+    "create": "Create workspace",
+    "errorRls": "Something went wrong. Please try signing out and back in.",
+    "errorDuplicate": "A workspace with that name already exists.",
+    "errorGeneric": "Failed to create workspace."
+  },
+  "competitors": {
+    "title": "Add your competitors",
+    "subtitle": "Who are you tracking? You can always add more later.",
+    "namePlaceholder": "Company name",
+    "websitePlaceholder": "Website (optional)",
+    "addAnother": "Add another competitor",
+    "skipForNow": "Skip for now",
+    "continue": "Continue",
+    "addedSingle": "Added {{count}} competitor",
+    "addedMultiple": "Added {{count}} competitors"
+  },
+  "gmail": {
+    "title": "Connect Gmail",
+    "subtitle": "Automatically import competitor newsletters from your inbox",
+    "readOnly": {
+      "title": "Read-only access",
+      "desc": "We never send emails or modify your inbox"
+    },
+    "smartClassification": {
+      "title": "Smart classification",
+      "desc": "AI identifies newsletters vs regular emails"
+    },
+    "disconnect": {
+      "title": "Disconnect anytime",
+      "desc": "Revoke access from settings whenever you want"
+    },
+    "skipForNow": "Skip for now",
+    "connect": "Connect Gmail",
+    "connecting": "Redirecting…",
+    "askAdmin": "Ask a workspace admin to connect Gmail",
+    "verifyFirst": "Verify your email before connecting Gmail.",
+    "connected": "Gmail connected!"
+  },
+  "import": {
+    "title": "Import your first data",
+    "subtitle": "Choose how to get competitor data into the platform",
+    "skipForNow": "Skip for now",
+    "gmailSync": {
+      "title": "Gmail sync",
+      "desc": "If you connected Gmail, competitor communications will appear automatically in your inbox",
+      "label": "Continue"
+    },
+    "pasteContent": {
+      "title": "Paste competitor content",
+      "desc": "Manually paste competitor email or campaign content for immediate analysis",
+      "label": "Import data"
+    }
+  },
+  "insights": {
+    "title": "You're all set!",
+    "subtitle": "Your workspace is ready. As data flows in, AI will generate insights, alerts, and strategic recommendations automatically.",
+    "goToDashboard": "Go to Dashboard",
+    "exploreOwn": "I'll explore on my own",
+    "bullets": {
+      "insights": "AI insights generated from competitor patterns",
+      "analytics": "Analytics dashboards updated in real-time",
+      "tracking": "Competitor activity tracked continuously"
+    }
+  }
+}

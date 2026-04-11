@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { BarChart3, ArrowLeft } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 
 export default function ForgotPassword() {
+  const { t } = useTranslation("auth");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -25,7 +27,7 @@ export default function ForgotPassword() {
       if (error) throw error;
       setSent(true);
     } catch (error) {
-      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
+      toast({ title: t("error"), description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -38,45 +40,43 @@ export default function ForgotPassword() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
             <BarChart3 className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold text-foreground">Reset password</h1>
+          <h1 className="text-xl font-semibold text-foreground">{t("resetPasswordTitle")}</h1>
         </div>
 
         <Card className="shadow-card border">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">
-              {sent ? "Check your email" : "Forgot password?"}
+              {sent ? t("checkEmailCardTitle") : t("forgotPasswordCardTitle")}
             </CardTitle>
             <CardDescription>
-              {sent
-                ? "We sent a password reset link to your email address."
-                : "Enter your email and we'll send you a reset link."}
+              {sent ? t("sentResetLinkDesc") : t("enterEmailDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {sent ? (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Didn't receive the email? Check spam or try again.
+                  {t("didntReceiveEmail")}
                 </p>
                 <Button variant="outline" className="w-full" onClick={() => setSent(false)}>
-                  Try again
+                  {t("tryAgain")}
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("emailLabel")}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
+                    placeholder={t("emailPlaceholder")}
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset link"}
+                  {isLoading ? t("sending") : t("sendResetLink")}
                 </Button>
               </form>
             )}
@@ -86,7 +86,7 @@ export default function ForgotPassword() {
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
-                Back to sign in
+                {t("backToSignIn")}
               </Link>
             </div>
           </CardContent>

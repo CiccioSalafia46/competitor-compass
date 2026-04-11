@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import {
@@ -86,8 +87,8 @@ function formatGrowth(value: number) {
   return `${direction}${value.toFixed(1)}%`;
 }
 
-function formatDateTime(value: string | null) {
-  if (!value) return "No recent activity";
+function formatDateTime(value: string | null, noActivityLabel = "No recent activity") {
+  if (!value) return noActivityLabel;
   return new Date(value).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
@@ -96,14 +97,8 @@ function formatDateTime(value: string | null) {
   });
 }
 
-function signalLabel(sourceType: "newsletter" | "meta_ad" | "insight") {
-  if (sourceType === "newsletter") return "Newsletter";
-  if (sourceType === "meta_ad") return "Meta ad";
-  return "Insight";
-}
-
-function formatRangeLabel(days: number) {
-  return `Last ${days} days`;
+function formatRangeLabel(days: number, label: string) {
+  return label.replace("{{days}}", String(days));
 }
 
 function getHealthBadgeClass(status: AnalyticsHealthItem["status"]) {
@@ -220,6 +215,7 @@ function ChartCard({
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function Analytics() {
+  const { t } = useTranslation("analytics");
   const [rangeDays, setRangeDays] = useState("30");
   const selectedRangeDays = Number(rangeDays);
   const { data, loading, error, refetch } = useAnalyticsData(selectedRangeDays);
@@ -267,9 +263,9 @@ export default function Analytics() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/50">
             <TrendingUp className="h-6 w-6 text-muted-foreground/40" />
           </div>
-          <p className="text-sm font-semibold text-foreground">Analytics unavailable</p>
+          <p className="text-sm font-semibold text-foreground">{t("unavailable")}</p>
           <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
-            {error || "Select a workspace and import some signals to unlock analytics."}
+            {error || t("unavailableDesc")}
           </p>
         </div>
       </div>
@@ -295,21 +291,21 @@ export default function Analytics() {
       {/* ── Page header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="page-title">Analytics</h1>
+          <h1 className="page-title">{t("title")}</h1>
           <p className="page-description">
-            Competitive pressure, data quality, coverage gaps, and operational priorities — all from your imported signals.
+            {t("description")}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
           <div className="flex items-center gap-1.5">
             <Select value={rangeDays} onValueChange={setRangeDays}>
               <SelectTrigger className="h-8 w-[148px] bg-background text-xs font-medium">
-                <SelectValue placeholder="Time range" />
+                <SelectValue placeholder={t("timeRange")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-                <SelectItem value="180">Last 180 days</SelectItem>
+                <SelectItem value="30">{t("last30Days")}</SelectItem>
+                <SelectItem value="90">{t("last90Days")}</SelectItem>
+                <SelectItem value="180">{t("last180Days")}</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -319,26 +315,26 @@ export default function Analytics() {
               onClick={() => void refetch()}
             >
               <RefreshCcw className="h-3.5 w-3.5" />
-              Refresh
+              {t("refresh")}
             </Button>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[11px] text-muted-foreground/70">
             <span>
-              Newsletters synced{" "}
+              {t("newslettersSynced")}{" "}
               <span className="font-medium text-foreground/80">
-                {formatDateTime(summary.lastInboxActivity)}
+                {formatDateTime(summary.lastInboxActivity, t("noRecentActivity"))}
               </span>
             </span>
             <span className="text-border">·</span>
             <span>
-              Ads synced{" "}
+              {t("adsSynced")}{" "}
               <span className="font-medium text-foreground/80">
-                {formatDateTime(summary.lastAdActivity)}
+                {formatDateTime(summary.lastAdActivity, t("noRecentActivity"))}
               </span>
             </span>
             <span className="text-border">·</span>
             <span className="font-medium text-foreground/60">
-              {formatRangeLabel(summary.rangeDays)} window
+              {formatRangeLabel(summary.rangeDays, t("lastDays"))} {t("window")}
             </span>
           </div>
         </div>
@@ -349,10 +345,9 @@ export default function Analytics() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/50">
             <TrendingUp className="h-6 w-6 text-muted-foreground/40" />
           </div>
-          <p className="text-sm font-semibold text-foreground">Not enough data yet</p>
+          <p className="text-sm font-semibold text-foreground">{t("notEnoughData")}</p>
           <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
-            Import competitor newsletters or ads first. Once signals are flowing, this page will
-            surface pressure, coverage gaps, attribution issues, and operational priorities.
+            {t("notEnoughDataDesc")}
           </p>
         </div>
       )}
@@ -360,61 +355,61 @@ export default function Analytics() {
       {/* ── KPI summary ── */}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <StatCard
-          label="Newsletters"
+          label={t("newsletters")}
           value={String(summary.totalNewslettersInRange)}
-          subtitle={`In ${formatRangeLabel(summary.rangeDays).toLowerCase()} · Last: ${formatDateTime(summary.lastInboxActivity)}`}
+          subtitle={`${t("inRange", { range: formatRangeLabel(summary.rangeDays, t("lastDays")).toLowerCase(), last: formatDateTime(summary.lastInboxActivity, t("noRecentActivity")) })}`}
           icon={Inbox}
           trend={summary.newsletterGrowthRate}
         />
         <StatCard
-          label="Meta ads"
+          label={t("metaAds")}
           value={String(summary.totalAdsInRange)}
-          subtitle={`In ${formatRangeLabel(summary.rangeDays).toLowerCase()} · Last: ${formatDateTime(summary.lastAdActivity)}`}
+          subtitle={`${t("inRange", { range: formatRangeLabel(summary.rangeDays, t("lastDays")).toLowerCase(), last: formatDateTime(summary.lastAdActivity, t("noRecentActivity")) })}`}
           icon={Megaphone}
           trend={summary.adGrowthRate}
         />
         <StatCard
-          label="Competitors active"
+          label={t("competitorsActive")}
           value={`${summary.activeCompetitorsInRange}/${summary.totalCompetitors}`}
-          subtitle={`With newsletter or ad activity in ${formatRangeLabel(summary.rangeDays).toLowerCase()}`}
+          subtitle={t("competitorsActiveSub", { range: formatRangeLabel(summary.rangeDays, t("lastDays")).toLowerCase() })}
           icon={Users}
           tone="positive"
         />
         <StatCard
-          label="Attribution coverage"
+          label={t("attributionCoverage")}
           value={formatPercent(attributionRate)}
-          subtitle={`${summary.attributedNewslettersInRange} matched · ${summary.unattributedBacklog} in backlog`}
+          subtitle={t("attributionCoverageSub", { matched: summary.attributedNewslettersInRange, backlog: summary.unattributedBacklog })}
           icon={MailSearch}
           tone={summary.unattributedBacklog > 0 ? "warning" : "positive"}
         />
         <StatCard
-          label="Promo pressure"
+          label={t("promoPressure")}
           value={formatPercent(summary.promotionRate)}
-          subtitle={`Avg discount ${summary.averageDiscount.toFixed(1)}% · Max ${summary.maxDiscount.toFixed(0)}%`}
+          subtitle={t("promoPressureSub", { avg: summary.averageDiscount.toFixed(1), max: summary.maxDiscount.toFixed(0) })}
           icon={Activity}
         />
         <StatCard
-          label="AI insights"
+          label={t("aiInsights")}
           value={String(summary.totalInsightsInRange)}
-          subtitle={`${formatPercent(summary.urgencyRate)} of campaigns used urgency tactics`}
+          subtitle={t("aiInsightsSub", { pct: formatPercent(summary.urgencyRate) })}
           icon={Lightbulb}
         />
       </div>
 
       {/* ── Operational priorities ── */}
-      <SectionDivider label="Operational priorities" icon={Activity} />
+      <SectionDivider label={t("operationalPriorities")} icon={Activity} />
 
       <div className="grid gap-4 xl:grid-cols-[1.25fr,1fr]">
         {/* Action queue */}
         <ChartCard
-          title="Action queue"
-          description="High-value next steps from data freshness, coverage gaps, competitor pressure, and promo intensity."
+          title={t("actionQueue")}
+          description={t("actionQueueDesc")}
         >
           <div className="space-y-2">
             {actionQueue.length === 0 ? (
               <EmptyBlock
                 icon={CircleAlert}
-                text="No urgent actions detected. Keep importing signals to maintain visibility."
+                text={t("noUrgentActions")}
               />
             ) : (
               actionQueue.map((action) => (
@@ -465,8 +460,8 @@ export default function Analytics() {
 
         {/* Data health */}
         <ChartCard
-          title="Data health audit"
-          description="Whether the analytics layer is trustworthy enough for decisions or still needs cleanup."
+          title={t("dataHealthAudit")}
+          description={t("dataHealthAuditDesc")}
           action={<ShieldAlert className="h-4 w-4" />}
         >
           <div className="space-y-2.5">
@@ -509,13 +504,13 @@ export default function Analytics() {
       </div>
 
       {/* ── Market pressure ── */}
-      <SectionDivider label="Market pressure" icon={TrendingUp} />
+      <SectionDivider label={t("marketPressure")} icon={TrendingUp} />
 
       <div className="grid gap-4 xl:grid-cols-[1.15fr,1fr]">
         {/* Share of voice */}
         <ChartCard
-          title="Share of monitored activity"
-          description="Which competitors own the largest share of observed newsletter and ad signals."
+          title={t("shareOfMonitoredActivity")}
+          description={t("shareOfMonitoredActivityDesc")}
         >
           <div className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -544,7 +539,7 @@ export default function Analytics() {
                 />
                 <Tooltip
                   contentStyle={chartTooltipStyle}
-                  formatter={(value: number) => [`${value.toFixed(1)}%`, "Signal share"]}
+                  formatter={(value: number) => [`${value.toFixed(1)}%`, t("signalShare")]}
                 />
                 <Bar dataKey="signalShare" fill="hsl(var(--chart-2))" radius={[0, 5, 5, 0]} />
               </BarChart>
@@ -554,15 +549,15 @@ export default function Analytics() {
 
         {/* Anomalies */}
         <ChartCard
-          title="Detected anomalies"
-          description="Behavior that materially departs from the recent baseline and deserves immediate review."
+          title={t("detectedAnomalies")}
+          description={t("detectedAnomaliesDesc")}
           action={<Radar className="h-4 w-4" />}
         >
           <div className="space-y-2.5">
             {anomalies.length === 0 ? (
               <EmptyBlock
                 icon={Radar}
-                text="No sharp anomalies detected in the current window."
+                text={t("noAnomalies")}
               />
             ) : (
               anomalies.map((anomaly) => (
@@ -596,8 +591,8 @@ export default function Analytics() {
       {/* Promo frequency per competitor */}
       {data.promotionFrequency.some((d) => d.total > 0) && (
         <ChartCard
-          title="Promo frequency by competitor"
-          description="How often each competitor uses promotions relative to total newsletter volume. Reveals aggressive discounting strategies at a glance."
+          title={t("promoFrequencyByCompetitor")}
+          description={t("promoFrequencyByCompetitorDesc")}
         >
           <div className="h-[272px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -619,8 +614,8 @@ export default function Analytics() {
                 />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 12 }} iconType="circle" iconSize={8} />
-                <Bar dataKey="total" name="Total signals" fill="hsl(var(--chart-4))" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="promos" name="Promos" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="total" name={t("totalSignals")} fill="hsl(var(--chart-4))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="promos" name={t("promos")} fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -630,8 +625,8 @@ export default function Analytics() {
       <div className="grid gap-4 xl:grid-cols-[1.8fr,1fr]">
         {/* Weekly activity */}
         <ChartCard
-          title="Competitive activity by week"
-          description="Spot bursts in competitor campaigns, ad pushes, and insight generation over the last 12 weeks."
+          title={t("competitiveActivityByWeek")}
+          description={t("competitiveActivityByWeekDesc")}
         >
           <div className="h-[356px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -658,20 +653,20 @@ export default function Analytics() {
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 14 }} iconType="circle" iconSize={8} />
                 <Bar
                   dataKey="newsletters"
-                  name="Newsletters"
+                  name={t("newsletters")}
                   fill="hsl(var(--chart-1))"
                   radius={[5, 5, 0, 0]}
                 />
                 <Bar
                   dataKey="ads"
-                  name="Ads"
+                  name={t("ads")}
                   fill="hsl(var(--chart-2))"
                   radius={[5, 5, 0, 0]}
                 />
                 <Line
                   type="monotone"
                   dataKey="insights"
-                  name="Insights"
+                  name={t("insights")}
                   stroke="hsl(var(--chart-5))"
                   strokeWidth={2.5}
                   dot={{ r: 3.5, strokeWidth: 0, fill: "hsl(var(--chart-5))" }}
@@ -684,8 +679,8 @@ export default function Analytics() {
 
         {/* Attribution health */}
         <ChartCard
-          title="Attribution health"
-          description="Inbox coverage quality. Unassigned newsletters indicate a missing or incomplete competitor record."
+          title={t("attributionHealth")}
+          description={t("attributionHealthDesc")}
         >
           <div className="flex flex-col gap-4">
             <div className="h-52">
@@ -720,7 +715,7 @@ export default function Analytics() {
             <div className="grid gap-2.5 sm:grid-cols-2">
               <div className="rounded-xl border bg-card px-4 py-4 shadow-sm">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Matched
+                  {t("matched")}
                 </p>
                 <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">
                   {summary.attributedNewslettersInRange}
@@ -728,7 +723,7 @@ export default function Analytics() {
               </div>
               <div className="rounded-xl border bg-card px-4 py-4 shadow-sm">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Needs review
+                  {t("needsReview")}
                 </p>
                 <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">
                   {summary.unattributedNewslettersInRange}
@@ -740,17 +735,17 @@ export default function Analytics() {
       </div>
 
       {/* ── Competitive pressure ── */}
-      <SectionDivider label="Competitive pressure" />
+      <SectionDivider label={t("competitivePressure")} />
 
       <div className="grid gap-4 xl:grid-cols-[1.35fr,1fr]">
         {/* Pressure ranking */}
         <ChartCard
-          title="Competitor pressure ranking"
-          description="Weighted by newsletter volume, ad activity, and promotions. High scores signal where the market is pushing hardest."
+          title={t("competitorPressureRanking")}
+          description={t("competitorPressureRankingDesc")}
         >
           <div className="space-y-2.5">
             {data.competitorPressure.length === 0 ? (
-              <EmptyBlock icon={Users} text="No competitor pressure data yet." />
+              <EmptyBlock icon={Users} text={t("noCompetitorPressure")} />
             ) : (
               data.competitorPressure.map((item, index) => {
                 const maxPressure = data.competitorPressure[0]?.pressureScore || 1;
@@ -793,7 +788,7 @@ export default function Analytics() {
                           </div>
                         </div>
                         <p className="mt-0.5 text-[10px] text-muted-foreground/60">
-                          Last activity {formatDateTime(item.latestActivityAt)}
+                          {t("lastActivity", { time: formatDateTime(item.latestActivityAt, t("noRecentActivity")) })}
                         </p>
                         <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted/70">
                           <div
@@ -819,12 +814,12 @@ export default function Analytics() {
 
         {/* Recent signals */}
         <ChartCard
-          title="Recent signals"
-          description="Latest newsletter, ad, and insight events that should shape today's decisions."
+          title={t("recentSignals")}
+          description={t("recentSignalsDesc")}
         >
           <div className="space-y-2.5">
             {data.recentSignals.length === 0 ? (
-              <EmptyBlock icon={Radar} text="No recent signals yet." />
+              <EmptyBlock icon={Radar} text={t("noRecentSignals")} />
             ) : (
               data.recentSignals.map((signal, index) => (
                 <div
@@ -840,14 +835,14 @@ export default function Analytics() {
                           getSignalBadgeClass(signal.sourceType),
                         )}
                       >
-                        {signalLabel(signal.sourceType)}
+                        {signal.sourceType === "newsletter" ? t("newsletter") : signal.sourceType === "meta_ad" ? t("metaAd") : t("insight")}
                       </Badge>
                       <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
                         {signal.competitor}
                       </span>
                     </div>
                     <p className="shrink-0 whitespace-nowrap text-[10px] text-muted-foreground/60">
-                      {formatDateTime(signal.happenedAt)}
+                      {formatDateTime(signal.happenedAt, t("noRecentActivity"))}
                     </p>
                   </div>
                   <p className="text-sm font-semibold leading-snug text-foreground">
@@ -862,42 +857,42 @@ export default function Analytics() {
       </div>
 
       {/* ── Coverage & quality ── */}
-      <SectionDivider label="Coverage & quality" icon={ShieldAlert} />
+      <SectionDivider label={t("coverageQuality")} icon={ShieldAlert} />
 
       {/* Intelligence quality — metrics not surfaced in the KPI row */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {
-            label: "Newsletter extraction",
+            label: t("newsletterExtraction"),
             value: `${summary.extractedNewslettersInRange} / ${summary.totalNewslettersInRange}`,
             rate: summary.extractionCoverageRate,
-            detail: `${summary.extractionCoverageRate.toFixed(1)}% analyzed by AI`,
+            detail: t("newsletterExtractionDetail", { pct: summary.extractionCoverageRate.toFixed(1) }),
           },
           {
-            label: "Ad analysis coverage",
+            label: t("adAnalysisCoverage"),
             value: `${summary.analyzedAdsInRange} / ${summary.totalAdsInRange}`,
             rate: summary.adAnalysisCoverageRate,
-            detail: `${summary.adAnalysisCoverageRate.toFixed(1)}% with AI analysis`,
+            detail: t("adAnalysisCoverageDetail", { pct: summary.adAnalysisCoverageRate.toFixed(1) }),
           },
           {
-            label: "Domains configured",
+            label: t("domainsConfigured"),
             value: `${summary.competitorsWithDomains} / ${summary.totalCompetitors}`,
             rate: summary.totalCompetitors > 0
               ? (summary.competitorsWithDomains / summary.totalCompetitors) * 100
               : 100,
             detail: summary.competitorsMissingDomains > 0
-              ? `${summary.competitorsMissingDomains} missing attribution`
-              : "All competitors configured",
+              ? t("domainsConfiguredDetail", { count: summary.competitorsMissingDomains })
+              : t("allCompetitorsConfigured"),
           },
           {
-            label: "Active in range",
+            label: t("activeInRange"),
             value: `${summary.activeCompetitorsInRange} / ${summary.totalCompetitors}`,
             rate: summary.totalCompetitors > 0
               ? (summary.activeCompetitorsInRange / summary.totalCompetitors) * 100
               : 100,
             detail: summary.inactiveCompetitorsInRange > 0
-              ? `${summary.inactiveCompetitorsInRange} with no recent signals`
-              : "All competitors sending signals",
+              ? t("activeInRangeDetail", { count: summary.inactiveCompetitorsInRange })
+              : t("allCompetitorsSending"),
           },
         ].map((m) => {
           const isGood = m.rate >= 80;
@@ -934,8 +929,8 @@ export default function Analytics() {
       <div className="grid gap-4 xl:grid-cols-[1.05fr,1fr]">
         {/* Top sender domains */}
         <ChartCard
-          title="Top sender domains"
-          description="Domains carrying the most newsletter volume — the fastest way to spot attribution cleanup opportunities."
+          title={t("topSenderDomains")}
+          description={t("topSenderDomainsDesc")}
         >
           <div className="h-[308px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -970,12 +965,12 @@ export default function Analytics() {
 
         {/* Coverage audit */}
         <ChartCard
-          title="Competitor coverage audit"
-          description="Competitors that still need domain setup, fresh signals, or more AI extraction depth."
+          title={t("competitorCoverageAudit")}
+          description={t("competitorCoverageAuditDesc")}
         >
           <div className="space-y-2.5">
             {data.competitorCoverage.length === 0 ? (
-              <EmptyBlock icon={ShieldAlert} text="No monitored competitors yet." />
+              <EmptyBlock icon={ShieldAlert} text={t("noMonitoredCompetitors")} />
             ) : (
               data.competitorCoverage.map((item) => (
                 <div key={item.competitorId} className="rounded-xl border bg-background px-4 py-3 transition-all duration-150 hover:bg-accent/20 hover:shadow-sm">
@@ -992,21 +987,21 @@ export default function Analytics() {
                               : "border-destructive/20 bg-destructive/10 text-destructive",
                           )}
                         >
-                          {item.hasDomains ? "Domains ready" : "Domains missing"}
+                          {item.hasDomains ? t("domainsReady") : t("domainsMissing")}
                         </Badge>
                       </div>
                       <p className="text-[10px] text-muted-foreground/60">
-                        Last: {formatDateTime(item.latestActivityAt)}
+                        Last: {formatDateTime(item.latestActivityAt, t("noRecentActivity"))}
                       </p>
                     </div>
                     <div className="shrink-0 text-right text-[10px] text-muted-foreground">
-                      <p>{item.newsletters} newsletters</p>
-                      <p>{item.ads} ads</p>
+                      <p>{item.newsletters} {t("newsletters").toLowerCase()}</p>
+                      <p>{item.ads} {t("ads").toLowerCase()}</p>
                     </div>
                   </div>
                   <div className="mt-3">
                     <div className="mb-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span>Extraction coverage</span>
+                      <span>{t("extractionCoverage")}</span>
                       <span className="font-semibold text-foreground/70">
                         {item.extractionCoverageRate.toFixed(1)}%
                       </span>
@@ -1029,20 +1024,20 @@ export default function Analytics() {
       </div>
 
       {/* ── Signal intelligence ── */}
-      <SectionDivider label="Signal intelligence" icon={Radar} />
+      <SectionDivider label={t("signalIntelligence")} icon={Radar} />
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr,1fr]">
         {/* Discount posture */}
         <ChartCard
-          title="Discount posture"
-          description="How aggressive the observed offer mechanics are, and how they distribute across recent campaigns."
+          title={t("discountPosture")}
+          description={t("discountPostureDesc")}
         >
           <div className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-3">
               {[
-                { label: "Avg discount", value: `${summary.averageDiscount.toFixed(1)}%` },
-                { label: "Max discount", value: `${summary.maxDiscount.toFixed(0)}%` },
-                { label: "Free shipping", value: `${summary.freeShippingRate.toFixed(1)}%` },
+                { label: t("avgDiscount"), value: `${summary.averageDiscount.toFixed(1)}%` },
+                { label: t("maxDiscount"), value: `${summary.maxDiscount.toFixed(0)}%` },
+                { label: t("freeShipping"), value: `${summary.freeShippingRate.toFixed(1)}%` },
               ].map((m) => (
                 <div key={m.label} className="rounded-xl border bg-card px-4 py-4 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -1083,8 +1078,8 @@ export default function Analytics() {
 
         {/* Weekday cadence */}
         <ChartCard
-          title="Newsletter cadence by weekday"
-          description="Cadence concentration reveals competitor campaign send rhythm and likely planning windows."
+          title={t("newsletterCadenceByWeekday")}
+          description={t("newsletterCadenceByWeekdayDesc")}
         >
           <div className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -1118,8 +1113,8 @@ export default function Analytics() {
       {/* Insight mix · product categories · urgency */}
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard
-          title="Insight category mix"
-          description="Which strategic themes the AI layer is surfacing most often."
+          title={t("insightCategoryMix")}
+          description={t("insightCategoryMixDesc")}
         >
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -1150,8 +1145,8 @@ export default function Analytics() {
         </ChartCard>
 
         <ChartCard
-          title="Product categories"
-          description="Categories most often mentioned across competitor newsletter analysis."
+          title={t("productCategories")}
+          description={t("productCategoriesDesc")}
         >
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -1185,8 +1180,8 @@ export default function Analytics() {
         </ChartCard>
 
         <ChartCard
-          title="Urgency tactics"
-          description="Which urgency signals appear most often in extracted newsletter campaigns."
+          title={t("urgencyTactics")}
+          description={t("urgencyTacticsDesc")}
         >
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">

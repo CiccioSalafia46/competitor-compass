@@ -1,0 +1,25 @@
+{
+  "upgradeTo": "Passer à {{plan}}",
+  "upgrade": "Mettre à niveau",
+  "startingAt": "À partir de ${{price}}/mois",
+  "competitor_limit": {
+    "title": "Limite de concurrents atteinte",
+    "desc": "Passez à un forfait supérieur pour suivre plus de concurrents et obtenir des analyses plus poussées."
+  },
+  "newsletter_limit": {
+    "title": "Limite de newsletters atteinte",
+    "desc": "Vous avez atteint votre limite mensuelle d'importation de newsletters. Passez à un forfait supérieur pour plus de capacité."
+  },
+  "analysis_limit": {
+    "title": "Limite d'analyses IA atteinte",
+    "desc": "Débloquez davantage d'analyses IA pour extraire des insights concurrentiels plus approfondis."
+  },
+  "seat_limit": {
+    "title": "Limite de licences atteinte",
+    "desc": "Invitez plus de membres en passant à un forfait supérieur."
+  },
+  "feature_locked": {
+    "title": "Fonctionnalité premium",
+    "desc": "Cette fonctionnalité est disponible dans les forfaits payants."
+  }
+}

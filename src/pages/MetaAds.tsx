@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MetaAdCard } from "@/components/meta-ads/MetaAdCard";
 import { AdAnalysisPanel } from "@/components/meta-ads/AdAnalysisPanel";
 import { EstimatedMetric } from "@/components/meta-ads/EstimatedMetric";
@@ -22,12 +23,27 @@ import { useSubscription } from "@/hooks/useSubscription";
 // and re-enable the fetch/analyze flows.
 
 export default function MetaAdsPage() {
+  const { t } = useTranslation("metaAds");
   const { tier } = useSubscription();
   const navigate = useNavigate();
   const isUnlocked = tier === "premium";
 
   const [selectedDemoAd, setSelectedDemoAd] = useState<string | null>(null);
   const selectedAdData = DEMO_META_ADS.find((a) => a.id === selectedDemoAd);
+
+  const upgradeFeatures = [
+    t("upgradeCard.features.adCreativeAnalysis"),
+    t("upgradeCard.features.spendMonitoring"),
+    t("upgradeCard.features.messagingPatterns"),
+    t("upgradeCard.features.competitiveBenchmarks"),
+  ];
+
+  const featureItems = [
+    { titleKey: "featureList.trackAds.title", descKey: "featureList.trackAds.desc" },
+    { titleKey: "featureList.aiAnalysis.title", descKey: "featureList.aiAnalysis.desc" },
+    { titleKey: "featureList.spendMonitoring.title", descKey: "featureList.spendMonitoring.desc" },
+    { titleKey: "featureList.sideComparison.title", descKey: "featureList.sideComparison.desc" },
+  ];
 
   return (
     <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
@@ -36,13 +52,13 @@ export default function MetaAdsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             <Megaphone className="h-6 w-6 text-primary" />
-            Meta Ads Intelligence
+            {t("title")}
             <Badge variant="outline" className="text-[10px] gap-1 font-normal ml-1">
-              <Beaker className="h-2.5 w-2.5" /> Beta · Coming Soon
+              <Beaker className="h-2.5 w-2.5" /> {t("titleBadge")}
             </Badge>
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Monitor competitor paid media across Facebook and Instagram
+            {t("subtitle")}
           </p>
         </div>
       </div>
@@ -53,17 +69,16 @@ export default function MetaAdsPage() {
           <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">
-              Meta Ads Intelligence is in beta
+              {t("betaNotice.title")}
             </p>
             <p className="text-sm text-muted-foreground">
-              We're finalizing the Meta Ad Library integration. Below you can preview the experience
-              with sample data. When the integration is live, you'll be able to track real competitor
-              ads, analyze messaging strategies, and monitor spend patterns automatically.
+              {t("betaNotice.description")}
             </p>
             {!isUnlocked && (
-              <p className="text-xs text-muted-foreground mt-2">
-                This feature will be available on the <strong>Premium plan</strong> when launched.
-              </p>
+              <p
+                className="text-xs text-muted-foreground mt-2"
+                dangerouslySetInnerHTML={{ __html: t("betaNotice.premiumNote") }}
+              />
             )}
           </div>
         </CardContent>
@@ -77,21 +92,20 @@ export default function MetaAdsPage() {
               <Megaphone className="h-6 w-6 text-primary" />
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-1">
-              Get early access to Meta Ads Intelligence
+              {t("upgradeCard.title")}
             </h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto mb-1">
-              Premium users will be the first to access real ad tracking and AI analysis
-              when this feature launches.
+              {t("upgradeCard.description")}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground mb-4">
-              {["Ad creative analysis", "Spend monitoring", "Messaging patterns", "Competitive benchmarks"].map((f) => (
+              {upgradeFeatures.map((f) => (
                 <span key={f} className="flex items-center gap-1">
                   <Sparkles className="h-3 w-3 text-primary" /> {f}
                 </span>
               ))}
             </div>
             <Button className="gap-2" onClick={() => navigate("/settings/billing")}>
-              <Zap className="h-4 w-4" /> Upgrade to Premium
+              <Zap className="h-4 w-4" /> {t("upgradeCard.upgradeButton")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </CardContent>
@@ -101,9 +115,9 @@ export default function MetaAdsPage() {
       {/* Demo Data Section */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium text-foreground">Sample Ads Preview</h3>
+          <h3 className="text-sm font-medium text-foreground">{t("samplePreview.title")}</h3>
           <Badge variant="secondary" className="text-[9px] gap-1">
-            <Clock className="h-2 w-2" /> Demo Data
+            <Clock className="h-2 w-2" /> {t("samplePreview.badge")}
           </Badge>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -117,26 +131,21 @@ export default function MetaAdsPage() {
           ))}
         </div>
         <p className="text-[11px] text-muted-foreground italic">
-          These are sample ads for preview purposes only. No real data is being fetched or displayed.
+          {t("samplePreview.disclaimer")}
         </p>
       </div>
 
       {/* What you'll get section */}
       <Card className="border">
         <CardContent className="p-6">
-          <h3 className="text-sm font-semibold text-foreground mb-3">When Meta Ads Intelligence launches, you'll be able to:</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-3">{t("featureList.title")}</h3>
           <div className="grid sm:grid-cols-2 gap-3">
-            {[
-              { title: "Track competitor ads", desc: "Automatically import ads from Meta Ad Library" },
-              { title: "AI-powered analysis", desc: "Analyze messaging angles, offers, and urgency patterns" },
-              { title: "Spend monitoring", desc: "Track estimated spend ranges across competitors" },
-              { title: "Side-by-side comparison", desc: "Compare ad strategies between competitors" },
-            ].map((item) => (
-              <div key={item.title} className="flex items-start gap-2">
+            {featureItems.map((item) => (
+              <div key={item.titleKey} className="flex items-start gap-2">
                 <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  <p className="text-sm font-medium text-foreground">{t(item.titleKey)}</p>
+                  <p className="text-xs text-muted-foreground">{t(item.descKey)}</p>
                 </div>
               </div>
             ))}
@@ -149,8 +158,8 @@ export default function MetaAdsPage() {
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
-              <Eye className="h-4 w-4" /> Ad Details
-              <Badge variant="secondary" className="text-[9px]">Demo</Badge>
+              <Eye className="h-4 w-4" /> {t("adDetail.title")}
+              <Badge variant="secondary" className="text-[9px]">{t("adDetail.demoBadge")}</Badge>
             </SheetTitle>
           </SheetHeader>
           {selectedAdData && (
@@ -159,9 +168,9 @@ export default function MetaAdsPage() {
                 <p className="text-lg font-medium text-foreground">{selectedAdData.page_name}</p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {selectedAdData.is_active ? (
-                    <Badge className="bg-primary/10 text-primary border-0 text-xs">Active</Badge>
+                    <Badge className="bg-primary/10 text-primary border-0 text-xs">{t("status.active")}</Badge>
                   ) : (
-                    <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                    <Badge variant="secondary" className="text-xs">{t("status.inactive")}</Badge>
                   )}
                   {(selectedAdData.publisher_platforms || []).map((p) => (
                     <Badge key={p} variant="outline" className="text-xs capitalize">{p}</Badge>
@@ -170,9 +179,9 @@ export default function MetaAdsPage() {
               </div>
               <Separator />
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-foreground">Ad Copy</h4>
-                {selectedAdData.ad_creative_link_titles?.map((t, i) => (
-                  <p key={i} className="text-sm font-semibold">{t}</p>
+                <h4 className="text-sm font-medium text-foreground">{t("adDetail.adCopy")}</h4>
+                {selectedAdData.ad_creative_link_titles?.map((title, i) => (
+                  <p key={i} className="text-sm font-semibold">{title}</p>
                 ))}
                 {selectedAdData.ad_creative_bodies?.map((b, i) => (
                   <p key={i} className="text-sm text-muted-foreground whitespace-pre-wrap">{b}</p>
@@ -183,22 +192,22 @@ export default function MetaAdsPage() {
               </div>
               <Separator />
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-foreground">Observed Data</h4>
+                <h4 className="text-sm font-medium text-foreground">{t("adDetail.observedData")}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-muted-foreground">First seen</span>
+                    <span className="text-muted-foreground">{t("adDetail.firstSeen")}</span>
                     <p className="font-medium">{selectedAdData.first_seen_at ? new Date(selectedAdData.first_seen_at).toLocaleDateString() : "—"}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Last seen</span>
+                    <span className="text-muted-foreground">{t("adDetail.lastSeen")}</span>
                     <p className="font-medium">{selectedAdData.last_seen_at ? new Date(selectedAdData.last_seen_at).toLocaleDateString() : "—"}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">CTA</span>
+                    <span className="text-muted-foreground">{t("adDetail.cta")}</span>
                     <p className="font-medium">{selectedAdData.cta_type?.replace(/_/g, " ") || "None"}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Media</span>
+                    <span className="text-muted-foreground">{t("adDetail.media")}</span>
                     <p className="font-medium capitalize">{selectedAdData.media_type || "Unknown"}</p>
                   </div>
                 </div>
@@ -206,17 +215,17 @@ export default function MetaAdsPage() {
               <Separator />
               <div className="space-y-2">
                 <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                  Estimated Metrics
-                  <Badge variant="outline" className="text-[10px]">Sample Ranges</Badge>
+                  {t("adDetail.estimatedMetrics")}
+                  <Badge variant="outline" className="text-[10px]">{t("adDetail.sampleRanges")}</Badge>
                 </h4>
-                <EstimatedMetric label="Spend" range={selectedAdData.spend_range} prefix="$" />
-                <EstimatedMetric label="Impressions" range={selectedAdData.impressions_range} />
-                <EstimatedMetric label="Audience Size" range={selectedAdData.estimated_audience_size} />
+                <EstimatedMetric label={t("adDetail.spend")} range={selectedAdData.spend_range} prefix="$" />
+                <EstimatedMetric label={t("adDetail.impressions")} range={selectedAdData.impressions_range} />
+                <EstimatedMetric label={t("adDetail.audienceSize")} range={selectedAdData.estimated_audience_size} />
               </div>
               <Separator />
               <div className="p-3 rounded-lg bg-muted/50 border text-center">
                 <p className="text-xs text-muted-foreground">
-                  AI analysis will be available when the Meta Ads integration launches.
+                  {t("adDetail.aiAnalysisNote")}
                 </p>
               </div>
             </div>

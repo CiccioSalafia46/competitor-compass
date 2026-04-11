@@ -1,0 +1,25 @@
+{
+  "upgradeTo": "Passa a {{plan}}",
+  "upgrade": "Aggiorna piano",
+  "startingAt": "A partire da ${{price}}/mese",
+  "competitor_limit": {
+    "title": "Limite di competitor raggiunto",
+    "desc": "Aggiorna il piano per tracciare più competitor e ottenere analisi più approfondite."
+  },
+  "newsletter_limit": {
+    "title": "Limite newsletter raggiunto",
+    "desc": "Hai raggiunto il limite mensile di importazione newsletter. Aggiorna il piano per aumentare la capacità."
+  },
+  "analysis_limit": {
+    "title": "Limite analisi AI raggiunto",
+    "desc": "Sblocca più analisi AI per estrarre insight competitivi più profondi."
+  },
+  "seat_limit": {
+    "title": "Limite posti team raggiunto",
+    "desc": "Invita altri membri del team aggiornando il tuo piano."
+  },
+  "feature_locked": {
+    "title": "Funzionalità premium",
+    "desc": "Questa funzionalità è disponibile nei piani a pagamento."
+  }
+}

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ALERT_EVALUATION_MODES,
   RULE_TYPES,
@@ -120,30 +121,30 @@ function getRuleColor(ruleType: string): string {
 
 const RULE_PRESETS = [
   {
-    label: "Deep discount",
+    labelKey: "presets.deepDiscount.label",
+    descriptionKey: "presets.deepDiscount.description",
     icon: Percent,
-    description: "Alert when a competitor drops prices ≥ 40%",
     ruleType: "discount_threshold" as AlertRuleType,
     config: { threshold: 40, cooldown_hours: 24 } as AlertRuleConfig,
   },
   {
-    label: "Campaign launch",
+    labelKey: "presets.campaignLaunch.label",
+    descriptionKey: "presets.campaignLaunch.description",
     icon: Megaphone,
-    description: "Alert on any new competitor campaign launch",
     ruleType: "new_campaign_launch" as AlertRuleType,
     config: { cooldown_hours: 12 } as AlertRuleConfig,
   },
   {
-    label: "Activity spike",
+    labelKey: "presets.activitySpike.label",
+    descriptionKey: "presets.activitySpike.description",
     icon: Zap,
-    description: "Alert when competitor activity jumps 2× baseline",
     ruleType: "activity_spike" as AlertRuleType,
     config: { spike_multiplier: 2, minimum_events: 3, cooldown_hours: 24 } as AlertRuleConfig,
   },
   {
-    label: "Pricing signal",
+    labelKey: "presets.pricingSignal.label",
+    descriptionKey: "presets.pricingSignal.description",
     icon: Search,
-    description: 'Alert on mentions of "price", "discount", "offer", "cost"',
     ruleType: "keyword_detection" as AlertRuleType,
     config: { keywords: ["price", "discount", "offer", "cost", "promotion", "fee"], cooldown_hours: 48 } as AlertRuleConfig,
   },
@@ -151,14 +152,14 @@ const RULE_PRESETS = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function toRelativeDate(value: string | null) {
-  if (!value) return "Never";
+function toRelativeDate(value: string | null, t: (key: string, opts?: Record<string, unknown>) => string) {
+  if (!value) return t("relative.never");
   const date = new Date(value);
   const diff = Date.now() - date.getTime();
-  if (diff < 60_000) return "Just now";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-  return `${Math.floor(diff / 86_400_000)}d ago`;
+  if (diff < 60_000) return t("relative.justNow");
+  if (diff < 3_600_000) return t("relative.minutesAgo", { count: Math.floor(diff / 60_000) });
+  if (diff < 86_400_000) return t("relative.hoursAgo", { count: Math.floor(diff / 3_600_000) });
+  return t("relative.daysAgo", { count: Math.floor(diff / 86_400_000) });
 }
 
 function StatCard({ icon: Icon, label, value, detail, accent }: {
@@ -205,6 +206,7 @@ function CreateEditRuleDialog({
   existingRule?: AlertRule | null;
   initialPreset?: RulePreset | null;
 }) {
+  const { t } = useTranslation("alerts");
   const { currentWorkspace } = useWorkspace();
   const { createRule, updateRule } = useAlertRules();
   const [name, setName] = useState("");
@@ -239,7 +241,7 @@ function CreateEditRuleDialog({
       setChannels((existingRule.delivery_channels as string[]) || ["in_app"]);
       setSelectedCompetitorIds(normalized.competitor_ids ?? []);
     } else if (initialPreset) {
-      setName(initialPreset.label);
+      setName(t(initialPreset.labelKey));
       setRuleType(initialPreset.ruleType);
       setEvaluationMode("both");
       setConfig({ ...initialPreset.config });
@@ -253,7 +255,7 @@ function CreateEditRuleDialog({
       setChannels(["in_app"]);
       setSelectedCompetitorIds([]);
     }
-  }, [open, existingRule, initialPreset]);
+  }, [open, existingRule, initialPreset, t]);
 
   const handleTypeChange = (value: string) => {
     setRuleType(value as AlertRuleType);
@@ -307,7 +309,7 @@ function CreateEditRuleDialog({
 
   const commonCooldown = (
     <div className="space-y-1.5">
-      <Label className="text-xs">Cooldown (hours)</Label>
+      <Label className="text-xs">{t("dialog.cooldownLabel")}</Label>
       <Input
         type="number"
         min={1}
@@ -316,7 +318,7 @@ function CreateEditRuleDialog({
         onChange={(e) => setConfig((c) => ({ ...c, cooldown_hours: Number(e.target.value) }))}
         className="h-8"
       />
-      <p className="text-[11px] text-muted-foreground">Suppress repeated alerts for this rule within this window.</p>
+      <p className="text-[11px] text-muted-foreground">{t("dialog.cooldownHint")}</p>
     </div>
   );
 
@@ -324,7 +326,7 @@ function CreateEditRuleDialog({
     discount_threshold: (
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Discount threshold (%)</Label>
+          <Label className="text-xs">{t("dialog.discountThresholdLabel")}</Label>
           <Input
             type="number"
             min={1}
@@ -333,7 +335,7 @@ function CreateEditRuleDialog({
             onChange={(e) => setConfig((c) => ({ ...c, threshold: Number(e.target.value) }))}
             className="h-8"
           />
-          <p className="text-[11px] text-muted-foreground">Fire when a competitor discount reaches or exceeds this percentage.</p>
+          <p className="text-[11px] text-muted-foreground">{t("dialog.discountThresholdHint")}</p>
         </div>
         {commonCooldown}
       </div>
@@ -341,7 +343,7 @@ function CreateEditRuleDialog({
     keyword_detection: (
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Keywords (comma-separated)</Label>
+          <Label className="text-xs">{t("dialog.keywordsLabel")}</Label>
           <Input
             value={(config.keywords || []).join(", ")}
             onChange={(e) =>
@@ -350,10 +352,10 @@ function CreateEditRuleDialog({
                 keywords: e.target.value.split(",").map((k) => k.trim()).filter(Boolean),
               }))
             }
-            placeholder="launch, new pricing, Black Friday"
+            placeholder={t("dialog.keywordsPlaceholder")}
             className="h-8"
           />
-          <p className="text-[11px] text-muted-foreground">Alert when any of these keywords appear in competitor newsletters.</p>
+          <p className="text-[11px] text-muted-foreground">{t("dialog.keywordsHint")}</p>
         </div>
         {commonCooldown}
       </div>
@@ -361,19 +363,19 @@ function CreateEditRuleDialog({
     new_campaign_launch: (
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Campaign types (optional)</Label>
+          <Label className="text-xs">{t("dialog.campaignTypesLabel")}</Label>
           <Input
             value={(config.campaign_types || []).join(", ")}
             onChange={(e) =>
               setConfig((c) => ({
                 ...c,
-                campaign_types: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
+                campaign_types: e.target.value.split(",").map((tp) => tp.trim()).filter(Boolean),
               }))
             }
-            placeholder="product_launch, promotional, announcement"
+            placeholder={t("dialog.campaignTypesPlaceholder")}
             className="h-8"
           />
-          <p className="text-[11px] text-muted-foreground">Leave empty to monitor every new campaign detected.</p>
+          <p className="text-[11px] text-muted-foreground">{t("dialog.campaignTypesHint")}</p>
         </div>
         {commonCooldown}
       </div>
@@ -382,7 +384,7 @@ function CreateEditRuleDialog({
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Spike multiplier</Label>
+            <Label className="text-xs">{t("dialog.spikeMultiplierLabel")}</Label>
             <Input
               type="number"
               step="0.5"
@@ -393,7 +395,7 @@ function CreateEditRuleDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Minimum events</Label>
+            <Label className="text-xs">{t("dialog.minimumEventsLabel")}</Label>
             <Input
               type="number"
               min={1}
@@ -403,7 +405,7 @@ function CreateEditRuleDialog({
             />
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground">Fire when the 24h activity count is ≥ {config.spike_multiplier ?? 2}× the 7-day average and ≥ {config.minimum_events ?? 3} events.</p>
+        <p className="text-[11px] text-muted-foreground">{t("dialog.spikeHint", { multiplier: config.spike_multiplier ?? 2, events: config.minimum_events ?? 3 })}</p>
         {commonCooldown}
       </div>
     ),
@@ -416,27 +418,27 @@ function CreateEditRuleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-base">{isEditing ? "Edit alert rule" : "Create alert rule"}</DialogTitle>
+          <DialogTitle className="text-base">{isEditing ? t("dialog.editTitle") : t("dialog.createTitle")}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update the rule configuration below." : "Rules evaluate competitor newsletters, extractions, and ads automatically."}
+            {isEditing ? t("dialog.editDescription") : t("dialog.createDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 pt-1 max-h-[70vh] overflow-y-auto pr-1">
           {/* Rule name */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Rule name</Label>
+            <Label className="text-xs">{t("dialog.ruleName")}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Deep discount detected"
+              placeholder={t("dialog.ruleNamePlaceholder")}
               className="h-8"
             />
           </div>
 
           {/* Rule type */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Rule type</Label>
+            <Label className="text-xs">{t("dialog.ruleType")}</Label>
             <Select value={ruleType} onValueChange={handleTypeChange}>
               <SelectTrigger className="h-8">
                 <SelectValue />
@@ -456,7 +458,7 @@ function CreateEditRuleDialog({
 
           {/* Evaluation mode */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Evaluation mode</Label>
+            <Label className="text-xs">{t("dialog.evaluationMode")}</Label>
             <Select value={evaluationMode} onValueChange={(v) => setEvaluationMode(v as AlertEvaluationMode)}>
               <SelectTrigger className="h-8">
                 <SelectValue />
@@ -478,8 +480,8 @@ function CreateEditRuleDialog({
           {/* Competitor targeting */}
           {competitors.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-xs">Competitor scope (optional)</Label>
-              <p className="text-[11px] text-muted-foreground">Leave all unselected to monitor every tracked competitor.</p>
+              <Label className="text-xs">{t("dialog.competitorScope")}</Label>
+              <p className="text-[11px] text-muted-foreground">{t("dialog.competitorScopeHint")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {competitors.map((c) => (
                   <button
@@ -503,11 +505,11 @@ function CreateEditRuleDialog({
 
           {/* Delivery channels */}
           <div className="space-y-2 rounded-xl border bg-muted/20 px-4 py-3">
-            <p className="text-xs font-medium">Notification channels</p>
+            <p className="text-xs font-medium">{t("dialog.notificationChannels")}</p>
             <div className="flex items-center gap-4 text-xs">
               <label className="flex items-center gap-1.5 cursor-default text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                In-app (always active)
+                {t("dialog.inAppAlways")}
               </label>
               <label className="flex items-center gap-1.5 text-muted-foreground">
                 <input
@@ -522,16 +524,16 @@ function CreateEditRuleDialog({
                   }
                   className="rounded"
                 />
-                Email (saved for future delivery)
+                {t("dialog.emailFuture")}
               </label>
             </div>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("dialog.cancel")}</Button>
           <Button onClick={() => void handleSave()} disabled={!canSave || saving}>
-            {saving ? "Saving…" : isEditing ? "Save changes" : "Create rule"}
+            {saving ? t("dialog.saving") : isEditing ? t("dialog.saveChanges") : t("dialog.createRule")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -554,6 +556,7 @@ const RuleCard = memo(function RuleCard({
   onDelete: () => void;
   competitorMap: Map<string, string>;
 }) {
+  const { t } = useTranslation("alerts");
   const meta = getRuleTypeMeta(rule.rule_type);
   const RuleIcon = getRuleIcon(rule.rule_type);
   const ruleColor = getRuleColor(rule.rule_type);
@@ -602,7 +605,7 @@ const RuleCard = memo(function RuleCard({
             <Badge variant="secondary" className="text-[10px]">{mode.label}</Badge>
           )}
           {(rule.delivery_channels as string[] | null)?.includes("email") && (
-            <Badge variant="outline" className="text-[10px]">Email planned</Badge>
+            <Badge variant="outline" className="text-[10px]">{t("rules.emailPlanned")}</Badge>
           )}
         </div>
 
@@ -619,14 +622,14 @@ const RuleCard = memo(function RuleCard({
 
         <div className="flex items-center justify-between gap-2 border-t pt-2">
           <p className="text-[10px] text-muted-foreground">
-            Checked {toRelativeDate(rule.last_evaluated_at)}
+            {t("rules.checked", { when: toRelativeDate(rule.last_evaluated_at, t) })}
           </p>
           {rule.last_triggered_at ? (
             <p className="text-[10px] text-amber-600 dark:text-amber-400">
-              Triggered {toRelativeDate(rule.last_triggered_at)}
+              {t("rules.triggered", { when: toRelativeDate(rule.last_triggered_at, t) })}
             </p>
           ) : (
-            <p className="text-[10px] text-muted-foreground/50">Never triggered</p>
+            <p className="text-[10px] text-muted-foreground/50">{t("rules.neverTriggered")}</p>
           )}
         </div>
       </div>
@@ -637,6 +640,7 @@ const RuleCard = memo(function RuleCard({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Alerts() {
+  const { t } = useTranslation("alerts");
   const { rules, loading: rulesLoading, updateRule, deleteRule, refetch: refetchRules } = useAlertRules();
   const {
     alerts,
@@ -740,16 +744,16 @@ export default function Alerts() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <h1 className="page-title">Alert Center</h1>
+            <h1 className="page-title">{t("title")}</h1>
             {highAlerts > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full border border-destructive/25 bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
-                {highAlerts} critical
+                {t("criticalBadge", { count: highAlerts })}
               </span>
             )}
           </div>
           <p className="page-description">
-            Monitor competitor moves with rule-based, real-time and scheduled intelligence alerts.
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -761,7 +765,7 @@ export default function Alerts() {
             disabled={evaluating}
           >
             <Clock3 className="h-3.5 w-3.5" />
-            Scheduled scan
+            {t("actions.scheduledScan")}
           </Button>
           <Button
             size="sm"
@@ -770,21 +774,21 @@ export default function Alerts() {
             disabled={evaluating}
           >
             <RefreshCw className={cn("h-3.5 w-3.5", evaluating && "animate-spin")} />
-            {evaluating ? "Checking…" : "Check now"}
+            {evaluating ? t("actions.checking") : t("actions.checkNow")}
           </Button>
         </div>
       </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard icon={BellOff} label="Active rules" value={stats.activeRules} detail="currently monitoring" />
-        <StatCard icon={Bell} label="Unread" value={unreadCount} detail="notifications" accent={unreadCount > 0} />
-        <StatCard icon={Activity} label="Alerts this week" value={stats.alertsThisWeek} detail="generated" />
+        <StatCard icon={BellOff} label={t("stats.activeRules")} value={stats.activeRules} detail={t("stats.activeRulesDetail")} />
+        <StatCard icon={Bell} label={t("stats.unread")} value={unreadCount} detail={t("stats.unreadDetail")} accent={unreadCount > 0} />
+        <StatCard icon={Activity} label={t("stats.alertsThisWeek")} value={stats.alertsThisWeek} detail={t("stats.alertsThisWeekDetail")} />
         <StatCard
           icon={Zap}
-          label="Triggers fired"
+          label={t("stats.triggersFired")}
           value={stats.triggeredThisWeek}
-          detail={stats.lastEvaluatedAt ? `Last scan ${toRelativeDate(stats.lastEvaluatedAt)}` : "No scans yet"}
+          detail={stats.lastEvaluatedAt ? t("stats.lastScan", { when: toRelativeDate(stats.lastEvaluatedAt, t) }) : t("stats.noScansYet")}
         />
       </div>
 
@@ -793,19 +797,19 @@ export default function Alerts() {
         <TabsList className="h-9 bg-muted/40 p-0.5">
           <TabsTrigger value="notifications" className="h-8 gap-1.5 text-xs">
             <Bell className="h-3.5 w-3.5" />
-            Notifications
+            {t("tabs.notifications")}
             {unreadCount > 0 && (
               <Badge className="h-4 min-w-4 px-1 text-[9px] leading-none">{unreadCount > 99 ? "99+" : unreadCount}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="rules" className="h-8 gap-1.5 text-xs">
             <Filter className="h-3.5 w-3.5" />
-            Rules
+            {t("tabs.rules")}
             <span className="text-muted-foreground">({rules.filter((r) => r.is_active).length}/{rules.length})</span>
           </TabsTrigger>
           <TabsTrigger value="log" className="h-8 gap-1.5 text-xs">
             <History className="h-3.5 w-3.5" />
-            Activity log
+            {t("tabs.activityLog")}
           </TabsTrigger>
         </TabsList>
 
@@ -819,11 +823,11 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setReadFilter(v)}
                   className={cn(
-                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors capitalize",
+                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors",
                     readFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {v}
+                  {t(`filters.${v}`)}
                 </button>
               ))}
             </div>
@@ -834,11 +838,11 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setSeverityFilter(v)}
                   className={cn(
-                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors capitalize",
+                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors",
                     severityFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {v}
+                  {t(`filters.${v}`)}
                 </button>
               ))}
             </div>
@@ -846,10 +850,10 @@ export default function Alerts() {
             {allCategories.length > 0 && (
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="h-7 w-36 text-[11px] bg-background">
-                  <SelectValue placeholder="All categories" />
+                  <SelectValue placeholder={t("filters.allCategories")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="all">{t("filters.allCategories")}</SelectItem>
                   {allCategories.map((cat) => (
                     <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
                   ))}
@@ -868,7 +872,7 @@ export default function Alerts() {
                 }}
               >
                 <Check className="h-3 w-3" />
-                Mark all read
+                {t("filters.markAllRead")}
               </Button>
             )}
           </div>
@@ -892,12 +896,12 @@ export default function Alerts() {
                 <Bell className="h-7 w-7 text-muted-foreground/30" />
               </div>
               <p className="text-sm font-medium text-foreground">
-                {alerts.length === 0 ? "No alerts yet" : "No alerts match your filters"}
+                {alerts.length === 0 ? t("notifications.emptyTitle") : t("notifications.emptyTitleFiltered")}
               </p>
               <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
                 {alerts.length === 0
-                  ? "Create rules and run a scan to start receiving competitor intelligence alerts."
-                  : "Try clearing filters to see all alerts."}
+                  ? t("notifications.emptyDescription")
+                  : t("notifications.emptyDescriptionFiltered")}
               </p>
               {alerts.length > 0 && (
                 <Button
@@ -906,7 +910,7 @@ export default function Alerts() {
                   className="mt-3 h-7 gap-1 text-xs"
                   onClick={() => { setSeverityFilter("all"); setCategoryFilter("all"); setReadFilter("all"); }}
                 >
-                  Clear filters
+                  {t("notifications.clearFilters")}
                 </Button>
               )}
             </div>
@@ -952,7 +956,7 @@ export default function Alerts() {
                     </div>
                     <div className="flex shrink-0 gap-0.5 mt-0.5">
                       {!alert.is_read && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void markRead(alert.id)} title="Mark read">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void markRead(alert.id)} title={t("notifications.markRead")}>
                           <Check className="h-3.5 w-3.5" />
                         </Button>
                       )}
@@ -961,7 +965,7 @@ export default function Alerts() {
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         onClick={() => void dismiss(alert.id)}
-                        title="Dismiss"
+                        title={t("notifications.dismiss")}
                       >
                         <X className="h-3.5 w-3.5" />
                       </Button>
@@ -981,11 +985,11 @@ export default function Alerts() {
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <Zap className="h-3.5 w-3.5" />
               </div>
-              <p className="text-[12px] font-semibold text-foreground">Quick presets</p>
-              <p className="ml-1 text-[11px] text-muted-foreground hidden sm:block">One-click rule templates for common monitoring scenarios</p>
+              <p className="text-[12px] font-semibold text-foreground">{t("rules.quickPresetsTitle")}</p>
+              <p className="ml-1 text-[11px] text-muted-foreground hidden sm:block">{t("rules.quickPresetsSubtitle")}</p>
               <Button size="sm" className="ml-auto h-7 gap-1.5 text-xs" onClick={() => openCreate()}>
                 <Plus className="h-3.5 w-3.5" />
-                Custom rule
+                {t("rules.customRule")}
               </Button>
             </div>
             <div className="grid gap-0 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x">
@@ -993,7 +997,7 @@ export default function Alerts() {
                 const PresetIcon = preset.icon;
                 return (
                   <button
-                    key={preset.label}
+                    key={preset.labelKey}
                     onClick={() => openCreate(preset)}
                     className="group flex flex-col gap-2 p-4 text-left transition-colors hover:bg-muted/30"
                   >
@@ -1001,11 +1005,11 @@ export default function Alerts() {
                       <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", getRuleColor(preset.ruleType))}>
                         <PresetIcon className="h-3.5 w-3.5" />
                       </div>
-                      <p className="text-[13px] font-semibold text-foreground">{preset.label}</p>
+                      <p className="text-[13px] font-semibold text-foreground">{t(preset.labelKey)}</p>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">{preset.description}</p>
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">{t(preset.descriptionKey)}</p>
                     <div className="flex items-center gap-1 text-[10px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                      Use this preset <ChevronRight className="h-3 w-3" />
+                      {t("rules.useThisPreset")} <ChevronRight className="h-3 w-3" />
                     </div>
                   </button>
                 );
@@ -1027,9 +1031,9 @@ export default function Alerts() {
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
                 <BellOff className="h-7 w-7 text-muted-foreground/30" />
               </div>
-              <p className="text-sm font-medium">No alert rules yet</p>
+              <p className="text-sm font-medium">{t("rules.noRulesTitle")}</p>
               <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
-                Use a preset above or create a custom rule to start monitoring competitor activity.
+                {t("rules.noRulesDescription")}
               </p>
             </div>
           ) : (
@@ -1058,21 +1062,21 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setLogStatusFilter(v)}
                   className={cn(
-                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors capitalize",
+                    "h-6 rounded px-2.5 text-[11px] font-medium transition-colors",
                     logStatusFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {v}
+                  {t(`logStatus.${v}`)}
                 </button>
               ))}
             </div>
             {rules.length > 0 && (
               <Select value={logRuleFilter} onValueChange={setLogRuleFilter}>
                 <SelectTrigger className="h-7 w-44 text-[11px] bg-background">
-                  <SelectValue placeholder="All rules" />
+                  <SelectValue placeholder={t("filters.allRules")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All rules</SelectItem>
+                  <SelectItem value="all">{t("filters.allRules")}</SelectItem>
                   {rules.map((r) => (
                     <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                   ))}
@@ -1080,7 +1084,7 @@ export default function Alerts() {
               </Select>
             )}
             <p className="ml-auto text-[11px] text-muted-foreground/60">
-              {filteredLogs.length} of {logs.length} entries
+              {t("filters.entries", { filtered: filteredLogs.length, total: logs.length })}
             </p>
           </div>
 
@@ -1097,9 +1101,9 @@ export default function Alerts() {
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
                 <History className="h-7 w-7 text-muted-foreground/30" />
               </div>
-              <p className="text-sm font-medium">No trigger activity</p>
+              <p className="text-sm font-medium">{t("log.noActivityTitle")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {logs.length > 0 ? "No entries match your current filters." : "Logs appear when rules fire, get suppressed, or fail."}
+                {logs.length > 0 ? t("log.noActivityDescriptionFiltered") : t("log.noActivityDescription")}
               </p>
             </div>
           ) : (

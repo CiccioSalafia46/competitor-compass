@@ -1,0 +1,105 @@
+{
+  "appName": "Tracklyze",
+  "skipSetup": "Salta configurazione →",
+  "back": "Indietro",
+  "stepOf": "Passo {{current}} di {{total}}",
+  "steps": {
+    "welcome": { "title": "Benvenuto", "subtitle": "Inizia" },
+    "workspace": { "title": "Workspace", "subtitle": "Il tuo hub" },
+    "competitors": { "title": "Competitor", "subtitle": "Monitora i rivali" },
+    "gmail": { "title": "Gmail", "subtitle": "Importa email" },
+    "import": { "title": "Importa", "subtitle": "I tuoi dati" },
+    "insights": { "title": "Insights", "subtitle": "Analisi AI" },
+    "done": { "title": "Pronto", "subtitle": "Tutto configurato" }
+  },
+  "welcome": {
+    "title": "Benvenuto su Tracklyze",
+    "subtitle": "La tua piattaforma di competitive intelligence. Ti aiutiamo a configurare tutto in pochi minuti.",
+    "getStarted": "Inizia",
+    "features": {
+      "monitoring": {
+        "title": "Monitoraggio competitor",
+        "desc": "Importa e analizza automaticamente le campagne dei competitor"
+      },
+      "tracking": {
+        "title": "Analisi competitiva",
+        "desc": "Monitora messaggi, offerte e strategie dei tuoi rivali"
+      },
+      "insights": {
+        "title": "Insights AI",
+        "desc": "Ottieni raccomandazioni strategiche dai tuoi dati competitivi"
+      }
+    }
+  },
+  "workspace": {
+    "title": "Crea il tuo workspace",
+    "subtitle": "Un workspace organizza le informazioni competitive del tuo team",
+    "label": "Nome workspace",
+    "placeholder": "es. Acme Marketing",
+    "hint": "Di solito il nome della tua azienda o del team",
+    "creating": "Creazione in corso…",
+    "create": "Crea workspace",
+    "errorRls": "Qualcosa è andato storto. Prova a disconnetterti e ad accedere di nuovo.",
+    "errorDuplicate": "Esiste già un workspace con questo nome.",
+    "errorGeneric": "Impossibile creare il workspace."
+  },
+  "competitors": {
+    "title": "Aggiungi i tuoi competitor",
+    "subtitle": "Chi vuoi tracciare? Puoi aggiungerne altri in qualsiasi momento.",
+    "namePlaceholder": "Nome azienda",
+    "websitePlaceholder": "Sito web (opzionale)",
+    "addAnother": "Aggiungi un altro competitor",
+    "skipForNow": "Salta per ora",
+    "continue": "Continua",
+    "addedSingle": "Aggiunto {{count}} competitor",
+    "addedMultiple": "Aggiunti {{count}} competitor"
+  },
+  "gmail": {
+    "title": "Connetti Gmail",
+    "subtitle": "Importa automaticamente le newsletter dei competitor dalla tua casella",
+    "readOnly": {
+      "title": "Accesso in sola lettura",
+      "desc": "Non inviamo email né modifichiamo la tua casella"
+    },
+    "smartClassification": {
+      "title": "Classificazione intelligente",
+      "desc": "L'AI distingue le newsletter dalle email normali"
+    },
+    "disconnect": {
+      "title": "Disconnetti quando vuoi",
+      "desc": "Revoca l'accesso dalle impostazioni in qualsiasi momento"
+    },
+    "skipForNow": "Salta per ora",
+    "connect": "Connetti Gmail",
+    "connecting": "Reindirizzamento…",
+    "askAdmin": "Chiedi a un amministratore del workspace di connettere Gmail",
+    "verifyFirst": "Verifica la tua email prima di connettere Gmail.",
+    "connected": "Gmail connesso!"
+  },
+  "import": {
+    "title": "Importa i tuoi primi dati",
+    "subtitle": "Scegli come importare i dati dei competitor nella piattaforma",
+    "skipForNow": "Salta per ora",
+    "gmailSync": {
+      "title": "Sincronizzazione Gmail",
+      "desc": "Se hai connesso Gmail, le comunicazioni dei competitor appariranno automaticamente nella tua casella",
+      "label": "Continua"
+    },
+    "pasteContent": {
+      "title": "Incolla contenuto competitor",
+      "desc": "Incolla manualmente email o contenuti di campagne dei competitor per un'analisi immediata",
+      "label": "Importa dati"
+    }
+  },
+  "insights": {
+    "title": "Sei pronto!",
+    "subtitle": "Il tuo workspace è configurato. Man mano che arrivano i dati, l'AI genererà automaticamente insights, alert e raccomandazioni strategiche.",
+    "goToDashboard": "Vai alla Dashboard",
+    "exploreOwn": "Esploro da solo",
+    "bullets": {
+      "insights": "Insights AI generati dai pattern dei competitor",
+      "analytics": "Dashboard di analytics aggiornate in tempo reale",
+      "tracking": "Attività dei competitor monitorata continuamente"
+    }
+  }
+}

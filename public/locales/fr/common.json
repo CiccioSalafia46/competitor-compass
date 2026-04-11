@@ -47,5 +47,9 @@
   "viewAll": "Tout afficher",
   "learnMore": "En savoir plus",
   "getStarted": "Commencer",
-  "upgrade": "Mettre à niveau"
+  "upgrade": "Mettre à niveau",
+  "verifyEmailTitle": "Vérifiez votre e-mail",
+  "verifyEmailUnlock": "pour débloquer toutes les fonctionnalités. Consultez votre boîte de réception pour le lien de vérification.",
+  "resend": "Renvoyer",
+  "resending": "Envoi en cours…"
 }

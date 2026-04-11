@@ -29,6 +29,7 @@ import {
   TrendingUp,
   WandSparkles,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useReports } from "@/hooks/useReports";
 import { useRoles } from "@/hooks/useRoles";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -72,26 +73,9 @@ const chartTooltipStyle = {
   boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
 };
 
-const weekdayOptions = [
-  { value: "1", label: "Monday" },
-  { value: "2", label: "Tuesday" },
-  { value: "3", label: "Wednesday" },
-  { value: "4", label: "Thursday" },
-  { value: "5", label: "Friday" },
-  { value: "6", label: "Saturday" },
-  { value: "0", label: "Sunday" },
-];
-
-const rangeOptions = [
-  { value: "7", label: "7 days" },
-  { value: "14", label: "14 days" },
-  { value: "30", label: "30 days" },
-  { value: "90", label: "90 days" },
-];
-
-function formatDateTime(value: string | null) {
+function formatDateTime(value: string | null, notScheduledLabel: string) {
   if (!value) {
-    return "Not scheduled";
+    return notScheduledLabel;
   }
 
   return new Date(value).toLocaleString(undefined, {
@@ -115,7 +99,26 @@ function ScheduleDialog({
   schedule: ReportScheduleRecord | null;
   saving: boolean;
 }) {
+  const { t } = useTranslation("reports");
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+  const weekdayOptions = [
+    { value: "1", label: t("weekdays.1") },
+    { value: "2", label: t("weekdays.2") },
+    { value: "3", label: t("weekdays.3") },
+    { value: "4", label: t("weekdays.4") },
+    { value: "5", label: t("weekdays.5") },
+    { value: "6", label: t("weekdays.6") },
+    { value: "0", label: t("weekdays.0") },
+  ];
+
+  const rangeOptions = [
+    { value: "7", label: t("rangeOptions.7") },
+    { value: "14", label: t("rangeOptions.14") },
+    { value: "30", label: t("rangeOptions.30") },
+    { value: "90", label: t("rangeOptions.90") },
+  ];
+
   const [draft, setDraft] = useState<ReportScheduleInput>({
     name: "",
     templateKey: "weekly_competitor_pulse",
@@ -166,26 +169,26 @@ function ScheduleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{schedule ? "Edit report schedule" : "Create report schedule"}</DialogTitle>
+          <DialogTitle>{schedule ? t("scheduleDialog.editTitle") : t("scheduleDialog.createTitle")}</DialogTitle>
           <DialogDescription>
-            Save recurring report settings for this workspace. Due schedules can be generated manually now and attached to a cron runner later.
+            {t("scheduleDialog.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="report-schedule-name">Name</Label>
+            <Label htmlFor="report-schedule-name">{t("scheduleDialog.nameLabel")}</Label>
             <Input
               id="report-schedule-name"
               value={draft.name}
               onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              placeholder="Monday competitor pulse"
+              placeholder={t("scheduleDialog.namePlaceholder")}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Template</Label>
+              <Label>{t("scheduleDialog.templateLabel")}</Label>
               <Select
                 value={draft.templateKey}
                 onValueChange={(value) => {
@@ -211,7 +214,7 @@ function ScheduleDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Frequency</Label>
+              <Label>{t("scheduleDialog.frequencyLabel")}</Label>
               <Select
                 value={draft.frequency}
                 onValueChange={(value) =>
@@ -226,8 +229,8 @@ function ScheduleDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="daily">{t("scheduleDialog.daily")}</SelectItem>
+                  <SelectItem value="weekly">{t("scheduleDialog.weekly")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -236,7 +239,7 @@ function ScheduleDialog({
           <div className="grid gap-4 sm:grid-cols-3">
             {draft.frequency === "weekly" ? (
               <div className="space-y-2">
-                <Label>Weekday</Label>
+                <Label>{t("scheduleDialog.weekdayLabel")}</Label>
                 <Select
                   value={String(draft.dayOfWeek ?? 1)}
                   onValueChange={(value) =>
@@ -257,15 +260,15 @@ function ScheduleDialog({
               </div>
             ) : (
               <div className="space-y-2">
-                <Label>Weekday</Label>
+                <Label>{t("scheduleDialog.weekdayLabel")}</Label>
                 <div className="flex h-10 items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground">
-                  Daily
+                  {t("scheduleDialog.daily")}
                 </div>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="report-hour">Hour (0–23)</Label>
+              <Label htmlFor="report-hour">{t("scheduleDialog.hourLabel")}</Label>
               <Input
                 id="report-hour"
                 type="number"
@@ -280,7 +283,7 @@ function ScheduleDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="report-minute">Minute (0–59)</Label>
+              <Label htmlFor="report-minute">{t("scheduleDialog.minuteLabel")}</Label>
               <Input
                 id="report-minute"
                 type="number"
@@ -297,7 +300,7 @@ function ScheduleDialog({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Coverage window</Label>
+              <Label>{t("scheduleDialog.coverageLabel")}</Label>
               <Select
                 value={String(draft.rangeDays)}
                 onValueChange={(value) => setDraft((current) => ({ ...current, rangeDays: Number(value) }))}
@@ -316,21 +319,21 @@ function ScheduleDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="report-timezone">Timezone</Label>
+              <Label htmlFor="report-timezone">{t("scheduleDialog.timezoneLabel")}</Label>
               <Input
                 id="report-timezone"
                 value={draft.timezone}
                 onChange={(event) => setDraft((current) => ({ ...current, timezone: event.target.value }))}
-                placeholder="Europe/Rome"
+                placeholder={t("scheduleDialog.timezonePlaceholder")}
               />
             </div>
           </div>
 
           <div className="flex items-center justify-between rounded-xl border px-4 py-3">
             <div>
-              <p className="text-sm font-medium text-foreground">Active schedule</p>
+              <p className="text-sm font-medium text-foreground">{t("schedules.activeSchedule")}</p>
               <p className="text-xs text-muted-foreground">
-                Inactive schedules stay saved but are ignored by the due runner.
+                {t("schedules.activeScheduleDesc")}
               </p>
             </div>
             <Switch
@@ -342,13 +345,13 @@ function ScheduleDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("buttons.cancel")}
           </Button>
           <Button
             onClick={() => void onSave(draft)}
             disabled={saving || !draft.name.trim()}
           >
-            {saving ? "Saving..." : schedule ? "Update schedule" : "Create schedule"}
+            {saving ? t("buttons.saving") : schedule ? t("buttons.updateSchedule") : t("buttons.createSchedule")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -369,6 +372,15 @@ function ReportBuilderDialog({
   onGenerate: (config: CustomReportConfig) => Promise<void>;
   generating: boolean;
 }) {
+  const { t } = useTranslation("reports");
+
+  const rangeOptions = [
+    { value: "7", label: t("rangeOptions.7") },
+    { value: "14", label: t("rangeOptions.14") },
+    { value: "30", label: t("rangeOptions.30") },
+    { value: "90", label: t("rangeOptions.90") },
+  ];
+
   const [title, setTitle] = useState("Custom report");
   const [sections, setSections] = useState<CustomReportSection[]>(ALL_SECTIONS);
   const [rangeDays, setRangeDays] = useState(30);
@@ -399,25 +411,25 @@ function ReportBuilderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Custom report builder</DialogTitle>
+          <DialogTitle>{t("builderDialog.title")}</DialogTitle>
           <DialogDescription>
-            Choose which sections to include, the date range, and optional competitor filters.
+            {t("builderDialog.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-5 py-2">
           <div className="space-y-2">
-            <Label htmlFor="custom-report-title">Report title</Label>
+            <Label htmlFor="custom-report-title">{t("builderDialog.reportTitleLabel")}</Label>
             <Input
               id="custom-report-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Custom report"
+              placeholder={t("builderDialog.reportTitlePlaceholder")}
             />
           </div>
 
           <div className="space-y-3">
-            <Label>Sections to include</Label>
+            <Label>{t("builderDialog.sectionsLabel")}</Label>
             <div className="grid grid-cols-2 gap-2">
               {ALL_SECTIONS.map((section) => (
                 <div key={section} className="flex items-center gap-2">
@@ -436,13 +448,13 @@ function ReportBuilderDialog({
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {sections.length} of {ALL_SECTIONS.length} sections selected
+              {t("builderDialog.sectionsSelected", { count: sections.length, total: ALL_SECTIONS.length })}
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Coverage window</Label>
+              <Label>{t("builderDialog.coverageLabel")}</Label>
               <Select
                 value={String(rangeDays)}
                 onValueChange={(value) => setRangeDays(Number(value))}
@@ -461,46 +473,48 @@ function ReportBuilderDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="competitor-filter">Competitor filter</Label>
+              <Label htmlFor="competitor-filter">{t("builderDialog.competitorFilterLabel")}</Label>
               <Input
                 id="competitor-filter"
                 value={competitorInput}
                 onChange={(event) => setCompetitorInput(event.target.value)}
-                placeholder="Acme, Globex (optional)"
+                placeholder={t("builderDialog.competitorFilterPlaceholder")}
               />
-              <p className="text-[11px] text-muted-foreground">Comma-separated names. Leave blank to include all.</p>
+              <p className="text-[11px] text-muted-foreground">{t("builderDialog.competitorFilterHint")}</p>
             </div>
           </div>
 
           {sections.length > 0 ? (
             <div className="rounded-xl border bg-muted/20 px-4 py-3">
-              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Preview</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{title.trim() || "Custom report"}</p>
+              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("builderDialog.previewLabel")}</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{title.trim() || t("builderDialog.reportTitlePlaceholder")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {sections.map((s) => CUSTOM_REPORT_SECTION_LABELS[s]).join(" · ")}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Last {rangeDays} days
-                {competitorFilter.length > 0 ? ` · Filtered: ${competitorFilter.join(", ")}` : " · All competitors"}
+                {t("builderDialog.previewLastDays", { count: rangeDays })}
+                {competitorFilter.length > 0
+                  ? ` · ${t("builderDialog.previewFiltered", { names: competitorFilter.join(", ") })}`
+                  : ` · ${t("builderDialog.previewAllCompetitors")}`}
               </p>
             </div>
           ) : (
             <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-muted-foreground">
-              Select at least one section to generate a report.
+              {t("builderDialog.noSectionsWarning")}
             </div>
           )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("buttons.cancel")}
           </Button>
           <Button
             onClick={() => void handleGenerate()}
             disabled={generating || sections.length === 0}
           >
             <WandSparkles className="mr-2 h-4 w-4" />
-            {generating ? "Generating..." : "Generate"}
+            {generating ? t("buttons.generating") : t("buttons.generate")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -509,10 +523,12 @@ function ReportBuilderDialog({
 }
 
 function ReportChartView({ chart }: { chart: ReportChart }) {
+  const { t } = useTranslation("reports");
+
   if (!chart.data.length) {
     return (
       <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
-        No chart data available in this report.
+        {t("viewer.noChartData")}
       </div>
     );
   }
@@ -569,13 +585,15 @@ function actionPriorityClass(priority: string) {
 }
 
 function ReportViewer({ run }: { run: ReportRunRecord }) {
+  const { t } = useTranslation("reports");
+
   if (!run.payload) {
     return (
       <Card className="border border-destructive/20 bg-destructive/5">
         <CardContent className="space-y-2 p-6">
-          <p className="text-sm font-semibold text-foreground">This report run failed</p>
+          <p className="text-sm font-semibold text-foreground">{t("viewer.failed")}</p>
           <p className="text-sm text-muted-foreground">
-            {run.errorMessage || "The report run failed before a payload could be saved."}
+            {run.errorMessage || t("viewer.failedDesc")}
           </p>
         </CardContent>
       </Card>
@@ -600,30 +618,30 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadReportJson(run)}>
               <Download className="h-4 w-4" />
-              Export JSON
+              {t("buttons.exportJson")}
             </Button>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => printReport(payload)}>
               <Printer className="h-4 w-4" />
-              Print / PDF
+              {t("buttons.printPdf")}
             </Button>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t bg-muted/20 px-6 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Competitors</span>
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.competitors")}</span>
             <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.activeCompetitors}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Signals</span>
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.signals")}</span>
             <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.trackedSignals}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Insights</span>
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.insights")}</span>
             <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.structuredInsights}</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Generated</span>
-            <span className="text-xs font-medium text-muted-foreground">{formatDateTime(payload.generatedAt)}</span>
+            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.generated")}</span>
+            <span className="text-xs font-medium text-muted-foreground">{formatDateTime(payload.generatedAt, t("schedules.notScheduled"))}</span>
           </div>
         </div>
       </div>
@@ -634,16 +652,16 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
             <TrendingUp className="h-4 w-4" />
           </div>
-          <h3 className="text-[13px] font-semibold text-foreground">Executive Brief</h3>
-          <span className="ml-auto text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">Top-line summary</span>
+          <h3 className="text-[13px] font-semibold text-foreground">{t("viewer.executiveBrief")}</h3>
+          <span className="ml-auto text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">{t("viewer.topLineSummary")}</span>
         </div>
         <div className="grid gap-0 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
           <div className="px-6 py-5">
-            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">What changed</p>
+            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatChanged")}</p>
             <p className="text-[13px] leading-7 text-foreground">{payload.summary.whatChanged}</p>
           </div>
           <div className="px-6 py-5">
-            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">What matters most</p>
+            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatMatters")}</p>
             <p className="text-[13px] leading-7 text-foreground">{payload.summary.whatMatters}</p>
           </div>
         </div>
@@ -791,9 +809,9 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
               <Lightbulb className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-[13px] font-semibold text-foreground">Prioritized Insights</h3>
+              <h3 className="text-[13px] font-semibold text-foreground">{t("viewer.prioritizedInsights")}</h3>
               <p className="text-[11px] text-muted-foreground">
-                {insights.length} structured insight{insights.length !== 1 ? "s" : ""} ready for team review
+                {t("viewer.insightsSubtitle", { count: insights.length })}
               </p>
             </div>
           </div>
@@ -849,9 +867,9 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
               <ArrowRight className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-[13px] font-semibold text-foreground">Recommended Actions</h3>
+              <h3 className="text-[13px] font-semibold text-foreground">{t("viewer.recommendedActions")}</h3>
               <p className="text-[11px] text-muted-foreground">
-                Concrete follow-up moves derived from the highest-signal findings
+                {t("viewer.actionsSubtitle")}
               </p>
             </div>
           </div>
@@ -894,6 +912,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
 }
 
 export default function Reports() {
+  const { t } = useTranslation("reports");
   const { currentWorkspace } = useWorkspace();
   const { canCreateReports, canViewData } = useRoles();
   const {
@@ -913,6 +932,16 @@ export default function Reports() {
   const [editingSchedule, setEditingSchedule] = useState<ReportScheduleRecord | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
+
+  const weekdayOptions = [
+    { value: "1", label: t("weekdays.1") },
+    { value: "2", label: t("weekdays.2") },
+    { value: "3", label: t("weekdays.3") },
+    { value: "4", label: t("weekdays.4") },
+    { value: "5", label: t("weekdays.5") },
+    { value: "6", label: t("weekdays.6") },
+    { value: "0", label: t("weekdays.0") },
+  ];
 
   const selectedRun = useMemo(
     () => recentRuns.find((run) => run.id === selectedRunId) ?? recentRuns[0] ?? null,
@@ -976,7 +1005,7 @@ export default function Reports() {
       <div className="p-6">
         <Card className="border">
           <CardContent className="py-16 text-center text-sm text-muted-foreground">
-            Reports are unavailable until you join a workspace with data access.
+            {t("unavailable")}
           </CardContent>
         </Card>
       </div>
@@ -988,20 +1017,20 @@ export default function Reports() {
       <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-primary via-primary/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="page-title">Reports</h1>
+          <h1 className="page-title">{t("title")}</h1>
           <p className="page-description">
-            Structured briefings, recurring schedules, and stakeholder-ready exports.
+            {t("description")}
           </p>
           {!canCreateReports && (
             <p className="text-xs text-muted-foreground/60">
-              Read-only — analyst or admin access required.
+              {t("readOnly")}
             </p>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => void refetch()}>
             <RefreshCcw className="h-3.5 w-3.5" />
-            Refresh
+            {t("buttons.refresh")}
           </Button>
           <Button
             variant="outline"
@@ -1011,11 +1040,15 @@ export default function Reports() {
             disabled={!canCreateReports || runningDue}
           >
             <PlayCircle className="h-3.5 w-3.5" />
-            {runningDue ? "Running…" : dueCount > 0 ? `Run due (${dueCount})` : "Run due"}
+            {runningDue
+              ? t("buttons.running")
+              : dueCount > 0
+              ? t("buttons.runDueCount", { count: dueCount })
+              : t("buttons.runDue")}
           </Button>
           <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => openCreateSchedule()} disabled={!canCreateReports}>
             <CalendarClock className="h-3.5 w-3.5" />
-            Schedule
+            {t("buttons.schedule")}
           </Button>
         </div>
       </div>
@@ -1073,7 +1106,9 @@ export default function Reports() {
                   </div>
                   <div className="space-y-3 p-4">
                     <p className="text-[11px] text-muted-foreground/70">
-                      {isCustom ? "Configurable date range" : `Default: last ${template.defaultRangeDays} day${template.defaultRangeDays === 1 ? "" : "s"}`}
+                      {isCustom
+                        ? t("configurableRange")
+                        : t("defaultRange", { count: template.defaultRangeDays })}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {isCustom ? (
@@ -1084,7 +1119,7 @@ export default function Reports() {
                           disabled={!canCreateReports}
                         >
                           <SlidersHorizontal className="h-3.5 w-3.5" />
-                          Build report
+                          {t("buttons.buildReport")}
                         </Button>
                       ) : (
                         <>
@@ -1095,10 +1130,10 @@ export default function Reports() {
                             disabled={!canCreateReports || generatingTemplate === key}
                           >
                             <WandSparkles className="h-3.5 w-3.5" />
-                            {generatingTemplate === key ? "Generating…" : "Generate"}
+                            {generatingTemplate === key ? t("buttons.generating") : t("buttons.generate")}
                           </Button>
                           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
-                            Schedule
+                            {t("buttons.schedule")}
                           </Button>
                         </>
                       )}
@@ -1116,14 +1151,14 @@ export default function Reports() {
                   <CalendarClock className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground">Saved schedules</p>
-                  <p className="text-[11px] text-muted-foreground">Recurring templates that generate automatically for your team.</p>
+                  <p className="text-[13px] font-semibold text-foreground">{t("schedules.title")}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("schedules.subtitle")}</p>
                 </div>
               </div>
               <div className="divide-y">
                 {schedules.length === 0 ? (
                   <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    No schedules saved yet.
+                    {t("schedules.empty")}
                   </div>
                 ) : (
                   schedules.map((schedule) => (
@@ -1146,11 +1181,11 @@ export default function Reports() {
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {schedule.frequency === "weekly"
-                            ? `Weekly on ${weekdayOptions.find((option) => Number(option.value) === (schedule.dayOfWeek ?? 1))?.label ?? "Monday"}`
-                            : "Daily"} at {`${String(schedule.hourOfDay).padStart(2, "0")}:${String(schedule.minuteOfHour).padStart(2, "0")}`}
+                            ? t("schedules.weekly", { day: weekdayOptions.find((option) => Number(option.value) === (schedule.dayOfWeek ?? 1))?.label ?? t("weekdays.1") })
+                            : t("schedules.daily")} {t("schedules.at")} {`${String(schedule.hourOfDay).padStart(2, "0")}:${String(schedule.minuteOfHour).padStart(2, "0")}`}
                         </p>
                         <p className="mt-0.5 text-[11px] text-muted-foreground/60">
-                          Next {formatDateTime(schedule.nextRunAt)} · Last {formatDateTime(schedule.lastRunAt)}
+                          {t("schedules.next")} {formatDateTime(schedule.nextRunAt, t("schedules.notScheduled"))} · {t("schedules.last")} {formatDateTime(schedule.lastRunAt, t("schedules.notScheduled"))}
                         </p>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
@@ -1164,7 +1199,7 @@ export default function Reports() {
                           }}
                           disabled={!canCreateReports}
                         >
-                          Edit
+                          {t("buttons.edit")}
                         </Button>
                         <Button
                           variant="ghost"
@@ -1173,7 +1208,7 @@ export default function Reports() {
                           onClick={() => void deleteSchedule(schedule.id)}
                           disabled={!canCreateReports}
                         >
-                          Delete
+                          {t("buttons.delete")}
                         </Button>
                       </div>
                     </div>
@@ -1188,14 +1223,14 @@ export default function Reports() {
                   <FileBarChart className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground">Recent runs</p>
-                  <p className="text-[11px] text-muted-foreground">Last generated reports — click to inspect the full briefing.</p>
+                  <p className="text-[13px] font-semibold text-foreground">{t("recentRuns.title")}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("recentRuns.subtitle")}</p>
                 </div>
               </div>
               <div className="divide-y">
                 {recentRuns.length === 0 ? (
                   <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    No reports generated yet.
+                    {t("recentRuns.empty")}
                   </div>
                 ) : (
                   recentRuns.map((run) => (
@@ -1223,11 +1258,19 @@ export default function Reports() {
                             run.status !== "completed" && run.status !== "running" && run.status !== "failed" && "border-muted text-muted-foreground",
                           )}
                         >
-                          {run.status}
+                          {run.status === "pending"
+                            ? t("status.pending")
+                            : run.status === "running"
+                            ? t("status.running")
+                            : run.status === "completed"
+                            ? t("status.completed")
+                            : run.status === "failed"
+                            ? t("status.failed")
+                            : run.status}
                         </Badge>
                       </div>
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        {REPORT_TEMPLATES[run.templateKey].label} · {formatDateTime(run.generatedAt)}
+                        {REPORT_TEMPLATES[run.templateKey].label} · {formatDateTime(run.generatedAt, t("schedules.notScheduled"))}
                       </p>
                       {run.errorMessage ? (
                         <p className="mt-1 text-xs text-destructive">{run.errorMessage}</p>
@@ -1241,38 +1284,38 @@ export default function Reports() {
 
           <Tabs defaultValue="report" className="space-y-4">
             <TabsList className="h-9 bg-muted/40 p-0.5 text-xs">
-              <TabsTrigger value="report" className="h-8 text-xs">Selected report</TabsTrigger>
-              <TabsTrigger value="process" className="h-8 text-xs">How it works</TabsTrigger>
+              <TabsTrigger value="report" className="h-8 text-xs">{t("tabs.selectedReport")}</TabsTrigger>
+              <TabsTrigger value="process" className="h-8 text-xs">{t("tabs.howItWorks")}</TabsTrigger>
             </TabsList>
             <TabsContent value="report">
               {selectedRun ? (
                 <ReportViewer run={selectedRun} />
               ) : (
                 <div className="rounded-xl border border-dashed py-16 text-center text-sm text-muted-foreground">
-                  Generate or select a report run above to inspect the full briefing.
+                  {t("emptyReport")}
                 </div>
               )}
             </TabsContent>
             <TabsContent value="process">
               <Card className="border shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-base">Report pipeline</CardTitle>
+                  <CardTitle className="text-base">{t("pipeline.title")}</CardTitle>
                   <CardDescription>
-                    Reports reuse live workspace analytics, structured insights, and competitor intelligence snapshots. Every run is stored as a structured payload for reuse and export.
+                    {t("pipeline.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm leading-6 text-muted-foreground">
                   <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">1</div>
-                    <p>On-demand generation: template to `reports-center` to analytics RPC + insights + competitor intelligence to persisted `report_runs.payload`.</p>
+                    <p>{t("pipeline.step1")}</p>
                   </div>
                   <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">2</div>
-                    <p>Scheduled generation: saved `report_schedules` compute `next_run_at`; the due runner can generate all overdue schedules for the current workspace in one pass.</p>
+                    <p>{t("pipeline.step2")}</p>
                   </div>
                   <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">3</div>
-                    <p>Exports: JSON for structured downstream use, plus a print-friendly view that can be saved as PDF from the browser.</p>
+                    <p>{t("pipeline.step3")}</p>
                   </div>
                 </CardContent>
               </Card>

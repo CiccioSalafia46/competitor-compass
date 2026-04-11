@@ -1,0 +1,182 @@
+{
+  "title": "Centro de alertas",
+  "subtitle": "Monitorea los movimientos de la competencia con alertas de inteligencia basadas en reglas, en tiempo real y programadas.",
+  "criticalBadge": "{{count}} crítico",
+
+  "stats": {
+    "activeRules": "Reglas activas",
+    "activeRulesDetail": "monitoreando actualmente",
+    "unread": "No leídas",
+    "unreadDetail": "notificaciones",
+    "alertsThisWeek": "Alertas esta semana",
+    "alertsThisWeekDetail": "generadas",
+    "triggersFired": "Disparadores activados",
+    "lastScan": "Último escaneo {{when}}",
+    "noScansYet": "Sin escaneos aún"
+  },
+
+  "actions": {
+    "scheduledScan": "Escaneo programado",
+    "checkNow": "Comprobar ahora",
+    "checking": "Comprobando…"
+  },
+
+  "tabs": {
+    "notifications": "Notificaciones",
+    "rules": "Reglas",
+    "activityLog": "Registro de actividad"
+  },
+
+  "filters": {
+    "all": "Todas",
+    "unread": "No leídas",
+    "read": "Leídas",
+    "high": "Alta",
+    "medium": "Media",
+    "info": "Info",
+    "allCategories": "Todas las categorías",
+    "markAllRead": "Marcar todo como leído",
+    "allRules": "Todas las reglas",
+    "entries": "{{filtered}} de {{total}} entradas"
+  },
+
+  "logStatus": {
+    "all": "Todas",
+    "triggered": "Activado",
+    "suppressed": "Suprimido",
+    "failed": "Fallido"
+  },
+
+  "severity": {
+    "high": "Alta",
+    "medium": "Media",
+    "info": "Info",
+    "low": "Baja",
+    "critical": "Crítica"
+  },
+
+  "notifications": {
+    "emptyTitle": "Aún no hay alertas",
+    "emptyTitleFiltered": "Ninguna alerta coincide con sus filtros",
+    "emptyDescription": "Crea reglas y ejecuta un escaneo para empezar a recibir alertas de inteligencia sobre la competencia.",
+    "emptyDescriptionFiltered": "Intenta eliminar los filtros para ver todas las alertas.",
+    "clearFilters": "Eliminar filtros",
+    "markRead": "Marcar como leído",
+    "dismiss": "Descartar"
+  },
+
+  "rules": {
+    "quickPresetsTitle": "Plantillas rápidas",
+    "quickPresetsSubtitle": "Plantillas de reglas en un clic para escenarios de monitoreo comunes",
+    "customRule": "Regla personalizada",
+    "useThisPreset": "Usar esta plantilla",
+    "noRulesTitle": "Aún no hay reglas de alerta",
+    "noRulesDescription": "Usa una plantilla de arriba o crea una regla personalizada para empezar a monitorear la actividad de la competencia.",
+    "emailPlanned": "Correo electrónico planificado",
+    "checked": "Comprobado {{when}}",
+    "triggered": "Activado {{when}}",
+    "neverTriggered": "Nunca activado"
+  },
+
+  "log": {
+    "noActivityTitle": "Sin actividad de disparadores",
+    "noActivityDescription": "Los registros aparecen cuando las reglas se activan, se suprimen o fallan.",
+    "noActivityDescriptionFiltered": "Ninguna entrada coincide con sus filtros actuales."
+  },
+
+  "presets": {
+    "deepDiscount": {
+      "label": "Descuento profundo",
+      "description": "Alerta cuando un competidor baja los precios ≥ 40%"
+    },
+    "campaignLaunch": {
+      "label": "Lanzamiento de campaña",
+      "description": "Alerta ante cualquier nuevo lanzamiento de campaña de un competidor"
+    },
+    "activitySpike": {
+      "label": "Pico de actividad",
+      "description": "Alerta cuando la actividad del competidor supera 2× la línea base"
+    },
+    "pricingSignal": {
+      "label": "Señal de precios",
+      "description": "Alerta sobre menciones de «precio», «descuento», «oferta», «costo»"
+    }
+  },
+
+  "ruleTypes": {
+    "discount_threshold": "Umbral de descuento",
+    "keyword_detection": "Detección de palabras clave",
+    "new_campaign_launch": "Nuevo lanzamiento de campaña",
+    "activity_spike": "Pico de actividad inusual",
+    "keyword_match": "Coincidencia de palabras clave (legacy)",
+    "new_competitor_ad": "Nuevos anuncios de competidores (legacy)",
+    "new_category": "Nueva categoría detectada (legacy)"
+  },
+
+  "evaluationModes": {
+    "both": "Tiempo real + programado",
+    "event": "Solo tiempo real",
+    "scheduled": "Solo escaneos programados"
+  },
+
+  "dialog": {
+    "createTitle": "Crear regla de alerta",
+    "editTitle": "Editar regla de alerta",
+    "createDescription": "Las reglas evalúan automáticamente los boletines, extracciones y anuncios de la competencia.",
+    "editDescription": "Actualiza la configuración de la regla a continuación.",
+    "ruleName": "Nombre de la regla",
+    "ruleNamePlaceholder": "ej. Descuento profundo detectado",
+    "ruleType": "Tipo de regla",
+    "evaluationMode": "Modo de evaluación",
+    "cooldownLabel": "Tiempo de espera (horas)",
+    "cooldownHint": "Suprime las alertas repetidas para esta regla dentro de esta ventana de tiempo.",
+    "discountThresholdLabel": "Umbral de descuento (%)",
+    "discountThresholdHint": "Se activa cuando el descuento de un competidor alcanza o supera este porcentaje.",
+    "keywordsLabel": "Palabras clave (separadas por comas)",
+    "keywordsPlaceholder": "lanzamiento, nuevos precios, Black Friday",
+    "keywordsHint": "Alerta cuando alguna de estas palabras clave aparece en los boletines de la competencia.",
+    "campaignTypesLabel": "Tipos de campaña (opcional)",
+    "campaignTypesPlaceholder": "lanzamiento_producto, promocional, anuncio",
+    "campaignTypesHint": "Déjalo vacío para monitorear cada nueva campaña detectada.",
+    "spikeMultiplierLabel": "Multiplicador de pico",
+    "minimumEventsLabel": "Eventos mínimos",
+    "spikeHint": "Se activa cuando el conteo de actividad en 24h es ≥ {{multiplier}}× el promedio de 7 días y ≥ {{events}} eventos.",
+    "competitorScope": "Alcance de competidores (opcional)",
+    "competitorScopeHint": "Deja todo sin seleccionar para monitorear cada competidor rastreado.",
+    "notificationChannels": "Canales de notificación",
+    "inAppAlways": "En la app (siempre activo)",
+    "emailFuture": "Correo electrónico (guardado para entrega futura)",
+    "cancel": "Cancelar",
+    "saving": "Guardando…",
+    "saveChanges": "Guardar cambios",
+    "createRule": "Crear regla"
+  },
+
+  "relative": {
+    "never": "Nunca",
+    "justNow": "Ahora mismo",
+    "minutesAgo": "hace {{count}}m",
+    "hoursAgo": "hace {{count}}h",
+    "daysAgo": "hace {{count}}d"
+  },
+
+  "toast": {
+    "ruleCreated": "Regla de alerta creada",
+    "ruleDeleted": "Regla eliminada",
+    "alertsTriggered_one": "{{count}} alerta activada",
+    "alertsTriggered_other": "{{count}} alertas activadas",
+    "noNewAlerts": "Reglas comprobadas sin nuevas alertas",
+    "suppressedInfo_one": "{{count}} disparador duplicado fue suprimido",
+    "suppressedInfo_other": "{{count}} disparadores duplicados fueron suprimidos",
+    "failedLoadRules": "No se pudieron cargar las reglas de alerta",
+    "failedCreateRule": "No se pudo crear la regla de alerta",
+    "failedUpdateRule": "No se pudo actualizar la regla de alerta",
+    "failedDeleteRule": "No se pudo eliminar la regla de alerta",
+    "failedLoadAlerts": "No se pudieron cargar las alertas",
+    "failedMarkRead": "No se pudo marcar la alerta como leída",
+    "failedMarkAllRead": "No se pudieron marcar todas las alertas como leídas",
+    "failedDismiss": "No se pudo descartar la alerta",
+    "failedEvaluate": "No se pudieron evaluar las alertas",
+    "failedLoadLog": "No se pudo cargar el registro de disparadores"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { User, Building2, CreditCard, Shield, Download, Moon, Sun, MailCheck } from "lucide-react";
+import { User, Building2, CreditCard, Shield, Download, Moon, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV } from "@/lib/export-csv";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { getErrorMessage } from "@/lib/errors";
 
 export default function SettingsPage() {
+  const { t } = useTranslation("settings");
   const { user } = useAuth();
   const { currentWorkspace } = useWorkspace();
   const { isAdmin, roles } = useRoles();
@@ -41,6 +43,7 @@ export default function SettingsPage() {
           .limit(5000);
         if (error) throw error;
         exportToCSV(data || [], `newsletters-${currentWorkspace.slug}`);
+        toast.success(t("exportNewslettersSuccess"));
       } else {
         const { data, error } = await supabase
           .from("insights")
@@ -50,10 +53,10 @@ export default function SettingsPage() {
           .limit(5000);
         if (error) throw error;
         exportToCSV(data || [], `insights-${currentWorkspace.slug}`);
+        toast.success(t("exportInsightsSuccess"));
       }
-      toast.success(`${type === "newsletters" ? "Newsletters" : "Insights"} exported successfully`);
     } catch (error) {
-      toast.error(getErrorMessage(error, "Export failed"));
+      toast.error(getErrorMessage(error, t("exportFailed")));
     } finally {
       setExporting(false);
     }
@@ -62,8 +65,8 @@ export default function SettingsPage() {
   return (
     <div className="p-6 lg:p-8 max-w-2xl space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your account and workspace</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
       </div>
 
       {/* Email verification banner */}
@@ -71,9 +74,9 @@ export default function SettingsPage() {
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40 p-4 text-sm">
           <MailCheck className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
           <div>
-            <p className="font-medium text-blue-900 dark:text-blue-100">Verify your email to continue</p>
+            <p className="font-medium text-blue-900 dark:text-blue-100">{t("verifyEmail")}</p>
             <p className="text-blue-700 dark:text-blue-300 mt-0.5">
-              A verification link has been sent to <strong>{user?.email}</strong>. Check your inbox and click the link to activate your account.
+              {t("verifyEmailDesc", { email: user?.email })} {t("checkInbox")}
             </p>
           </div>
         </div>
@@ -84,23 +87,23 @@ export default function SettingsPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Account</CardTitle>
+            <CardTitle className="text-base">{t("account")}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Email</span>
+            <span className="text-muted-foreground">{t("email")}</span>
             <span className="text-foreground">{user?.email}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Your roles</span>
+            <span className="text-muted-foreground">{t("yourRoles")}</span>
             <div className="flex gap-1">
               {roles.length > 0 ? (
                 roles.map((r) => (
                   <Badge key={r} variant="outline" className="capitalize text-xs">{r}</Badge>
                 ))
               ) : (
-                <span className="text-muted-foreground text-xs">No roles assigned</span>
+                <span className="text-muted-foreground text-xs">{t("noRolesAssigned")}</span>
               )}
             </div>
           </div>
@@ -113,23 +116,23 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Workspace</CardTitle>
+              <CardTitle className="text-base">{t("workspace")}</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Name</span>
+              <span className="text-muted-foreground">{t("name")}</span>
               <span className="text-foreground">{currentWorkspace.name}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Slug</span>
+              <span className="text-muted-foreground">{t("slug")}</span>
               <span className="text-foreground font-mono text-xs">{currentWorkspace.slug}</span>
             </div>
             {isAdmin && (
               <>
                 <Separator />
                 <Button variant="outline" size="sm" onClick={() => navigate("/settings/team")}>
-                  Manage team
+                  {t("manageTeam")}
                 </Button>
               </>
             )}
@@ -143,26 +146,26 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Plan & Usage</CardTitle>
+              <CardTitle className="text-base">{t("planUsage")}</CardTitle>
             </div>
             <Badge variant="outline" className="capitalize">
               {PLAN_LIMITS[currentPlan].label}
             </Badge>
           </div>
-          <CardDescription>Current billing period usage</CardDescription>
+          <CardDescription>{t("billingPeriodUsage")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Seats</span>
+                <span className="text-muted-foreground">{t("seats")}</span>
                 <span>{usage.seats_used} / {limits.seats}</span>
               </div>
               <Progress value={getUsagePercent("seats_used")} className="h-1.5" />
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Competitors</span>
+                <span className="text-muted-foreground">{t("competitors")}</span>
                 <span>{usage.competitors} / {limits.competitors === -1 ? "∞" : limits.competitors}</span>
               </div>
               {limits.competitors !== -1 && (
@@ -171,14 +174,14 @@ export default function SettingsPage() {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Data Imports</span>
+                <span className="text-muted-foreground">{t("dataImports")}</span>
                 <span>{usage.newsletters_this_month} / {limits.newsletters_per_month.toLocaleString()}</span>
               </div>
               <Progress value={getUsagePercent("newsletters_this_month")} className="h-1.5" />
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Analyses</span>
+                <span className="text-muted-foreground">{t("analyses")}</span>
                 <span>{usage.analyses_this_month} / {limits.analyses_per_month.toLocaleString()}</span>
               </div>
               <Progress value={getUsagePercent("analyses_this_month")} className="h-1.5" />
@@ -189,11 +192,11 @@ export default function SettingsPage() {
 
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate("/settings/usage")}>
-              View full usage
+              {t("viewFullUsage")}
             </Button>
             {isAdmin && (
               <Button size="sm" onClick={() => navigate("/settings/billing")}>
-                Manage billing
+                {t("manageBilling")}
               </Button>
             )}
           </div>
@@ -205,12 +208,12 @@ export default function SettingsPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Security</CardTitle>
+            <CardTitle className="text-base">{t("security")}</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <Button variant="outline" size="sm" onClick={() => navigate("/forgot-password")}>
-            Change password
+            {t("changePassword")}
           </Button>
         </CardContent>
       </Card>
@@ -221,13 +224,13 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Moon className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Appearance</CardTitle>
+              <CardTitle className="text-base">{t("appearance")}</CardTitle>
             </div>
             <DarkModeToggle />
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-muted-foreground">Toggle between light and dark mode using the button above.</p>
+          <p className="text-xs text-muted-foreground">{t("appearanceDesc")}</p>
         </CardContent>
       </Card>
 
@@ -237,16 +240,16 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Download className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Data Export</CardTitle>
+              <CardTitle className="text-base">{t("exportData")}</CardTitle>
             </div>
-            <CardDescription>Download your workspace data as CSV</CardDescription>
+            <CardDescription>{t("downloadWorkspaceData")}</CardDescription>
           </CardHeader>
           <CardContent className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => handleExport("newsletters")} disabled={exporting}>
-              Export newsletters
+              {exporting ? t("exporting") : t("exportNewsletters")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => handleExport("insights")} disabled={exporting}>
-              Export insights
+              {exporting ? t("exporting") : t("exportInsights")}
             </Button>
           </CardContent>
         </Card>

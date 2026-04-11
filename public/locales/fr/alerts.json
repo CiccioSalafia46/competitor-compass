@@ -1,0 +1,182 @@
+{
+  "title": "Centre d'alertes",
+  "subtitle": "Surveillez les mouvements des concurrents avec des alertes de renseignement basées sur des règles, en temps réel et planifiées.",
+  "criticalBadge": "{{count}} critique",
+
+  "stats": {
+    "activeRules": "Règles actives",
+    "activeRulesDetail": "en cours de surveillance",
+    "unread": "Non lues",
+    "unreadDetail": "notifications",
+    "alertsThisWeek": "Alertes cette semaine",
+    "alertsThisWeekDetail": "générées",
+    "triggersFired": "Déclencheurs activés",
+    "lastScan": "Dernier scan {{when}}",
+    "noScansYet": "Aucun scan encore"
+  },
+
+  "actions": {
+    "scheduledScan": "Scan planifié",
+    "checkNow": "Vérifier maintenant",
+    "checking": "Vérification…"
+  },
+
+  "tabs": {
+    "notifications": "Notifications",
+    "rules": "Règles",
+    "activityLog": "Journal d'activité"
+  },
+
+  "filters": {
+    "all": "Tous",
+    "unread": "Non lus",
+    "read": "Lus",
+    "high": "Haute",
+    "medium": "Moyenne",
+    "info": "Info",
+    "allCategories": "Toutes les catégories",
+    "markAllRead": "Tout marquer comme lu",
+    "allRules": "Toutes les règles",
+    "entries": "{{filtered}} sur {{total}} entrées"
+  },
+
+  "logStatus": {
+    "all": "Tous",
+    "triggered": "Déclenché",
+    "suppressed": "Supprimé",
+    "failed": "Échoué"
+  },
+
+  "severity": {
+    "high": "Haute",
+    "medium": "Moyenne",
+    "info": "Info",
+    "low": "Faible",
+    "critical": "Critique"
+  },
+
+  "notifications": {
+    "emptyTitle": "Aucune alerte pour l'instant",
+    "emptyTitleFiltered": "Aucune alerte ne correspond à vos filtres",
+    "emptyDescription": "Créez des règles et lancez un scan pour commencer à recevoir des alertes de renseignement sur les concurrents.",
+    "emptyDescriptionFiltered": "Essayez de supprimer les filtres pour voir toutes les alertes.",
+    "clearFilters": "Effacer les filtres",
+    "markRead": "Marquer comme lu",
+    "dismiss": "Ignorer"
+  },
+
+  "rules": {
+    "quickPresetsTitle": "Modèles rapides",
+    "quickPresetsSubtitle": "Modèles de règles en un clic pour les scénarios de surveillance courants",
+    "customRule": "Règle personnalisée",
+    "useThisPreset": "Utiliser ce modèle",
+    "noRulesTitle": "Aucune règle d'alerte encore",
+    "noRulesDescription": "Utilisez un modèle ci-dessus ou créez une règle personnalisée pour commencer à surveiller l'activité des concurrents.",
+    "emailPlanned": "E-mail planifié",
+    "checked": "Vérifié {{when}}",
+    "triggered": "Déclenché {{when}}",
+    "neverTriggered": "Jamais déclenché"
+  },
+
+  "log": {
+    "noActivityTitle": "Aucune activité de déclenchement",
+    "noActivityDescription": "Les journaux apparaissent lorsque les règles se déclenchent, sont supprimées ou échouent.",
+    "noActivityDescriptionFiltered": "Aucune entrée ne correspond à vos filtres actuels."
+  },
+
+  "presets": {
+    "deepDiscount": {
+      "label": "Remise importante",
+      "description": "Alerte lorsqu'un concurrent baisse ses prix de ≥ 40%"
+    },
+    "campaignLaunch": {
+      "label": "Lancement de campagne",
+      "description": "Alerte pour tout nouveau lancement de campagne d'un concurrent"
+    },
+    "activitySpike": {
+      "label": "Pic d'activité",
+      "description": "Alerte lorsque l'activité du concurrent dépasse 2× la référence"
+    },
+    "pricingSignal": {
+      "label": "Signal de prix",
+      "description": "Alerte sur les mentions de « prix », « remise », « offre », « coût »"
+    }
+  },
+
+  "ruleTypes": {
+    "discount_threshold": "Seuil de remise",
+    "keyword_detection": "Détection de mots-clés",
+    "new_campaign_launch": "Nouveau lancement de campagne",
+    "activity_spike": "Pic d'activité inhabituel",
+    "keyword_match": "Correspondance de mots-clés (legacy)",
+    "new_competitor_ad": "Nouvelles publicités concurrentes (legacy)",
+    "new_category": "Nouvelle catégorie détectée (legacy)"
+  },
+
+  "evaluationModes": {
+    "both": "Temps réel + planifié",
+    "event": "Temps réel uniquement",
+    "scheduled": "Scans planifiés uniquement"
+  },
+
+  "dialog": {
+    "createTitle": "Créer une règle d'alerte",
+    "editTitle": "Modifier la règle d'alerte",
+    "createDescription": "Les règles évaluent automatiquement les newsletters, extractions et publicités des concurrents.",
+    "editDescription": "Mettez à jour la configuration de la règle ci-dessous.",
+    "ruleName": "Nom de la règle",
+    "ruleNamePlaceholder": "ex. Remise importante détectée",
+    "ruleType": "Type de règle",
+    "evaluationMode": "Mode d'évaluation",
+    "cooldownLabel": "Délai de recharge (heures)",
+    "cooldownHint": "Supprime les alertes répétées pour cette règle dans cette fenêtre temporelle.",
+    "discountThresholdLabel": "Seuil de remise (%)",
+    "discountThresholdHint": "Se déclenche lorsqu'une remise d'un concurrent atteint ou dépasse ce pourcentage.",
+    "keywordsLabel": "Mots-clés (séparés par des virgules)",
+    "keywordsPlaceholder": "lancement, nouveau tarif, Black Friday",
+    "keywordsHint": "Alerte lorsque l'un de ces mots-clés apparaît dans les newsletters des concurrents.",
+    "campaignTypesLabel": "Types de campagne (optionnel)",
+    "campaignTypesPlaceholder": "lancement_produit, promotionnel, annonce",
+    "campaignTypesHint": "Laissez vide pour surveiller chaque nouvelle campagne détectée.",
+    "spikeMultiplierLabel": "Multiplicateur de pic",
+    "minimumEventsLabel": "Événements minimum",
+    "spikeHint": "Se déclenche lorsque le nombre d'activités sur 24h est ≥ {{multiplier}}× la moyenne sur 7 jours et ≥ {{events}} événements.",
+    "competitorScope": "Périmètre des concurrents (optionnel)",
+    "competitorScopeHint": "Laissez tout non sélectionné pour surveiller chaque concurrent suivi.",
+    "notificationChannels": "Canaux de notification",
+    "inAppAlways": "In-app (toujours actif)",
+    "emailFuture": "E-mail (enregistré pour livraison future)",
+    "cancel": "Annuler",
+    "saving": "Enregistrement…",
+    "saveChanges": "Enregistrer les modifications",
+    "createRule": "Créer la règle"
+  },
+
+  "relative": {
+    "never": "Jamais",
+    "justNow": "À l'instant",
+    "minutesAgo": "il y a {{count}}m",
+    "hoursAgo": "il y a {{count}}h",
+    "daysAgo": "il y a {{count}}j"
+  },
+
+  "toast": {
+    "ruleCreated": "Règle d'alerte créée",
+    "ruleDeleted": "Règle supprimée",
+    "alertsTriggered_one": "{{count}} alerte déclenchée",
+    "alertsTriggered_other": "{{count}} alertes déclenchées",
+    "noNewAlerts": "Règles vérifiées sans nouvelles alertes",
+    "suppressedInfo_one": "{{count}} déclencheur en doublon a été supprimé",
+    "suppressedInfo_other": "{{count}} déclencheurs en doublon ont été supprimés",
+    "failedLoadRules": "Impossible de charger les règles d'alerte",
+    "failedCreateRule": "Impossible de créer la règle d'alerte",
+    "failedUpdateRule": "Impossible de mettre à jour la règle d'alerte",
+    "failedDeleteRule": "Impossible de supprimer la règle d'alerte",
+    "failedLoadAlerts": "Impossible de charger les alertes",
+    "failedMarkRead": "Impossible de marquer l'alerte comme lue",
+    "failedMarkAllRead": "Impossible de marquer toutes les alertes comme lues",
+    "failedDismiss": "Impossible d'ignorer l'alerte",
+    "failedEvaluate": "Impossible d'évaluer les alertes",
+    "failedLoadLog": "Impossible de charger le journal des déclencheurs"
+  }
+}

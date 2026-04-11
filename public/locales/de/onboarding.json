@@ -1,0 +1,105 @@
+{
+  "appName": "Tracklyze",
+  "skipSetup": "Einrichtung überspringen →",
+  "back": "Zurück",
+  "stepOf": "Schritt {{current}} von {{total}}",
+  "steps": {
+    "welcome": { "title": "Willkommen", "subtitle": "Loslegen" },
+    "workspace": { "title": "Arbeitsbereich", "subtitle": "Dein Team-Hub" },
+    "competitors": { "title": "Wettbewerber", "subtitle": "Rivalen verfolgen" },
+    "gmail": { "title": "Gmail", "subtitle": "E-Mails importieren" },
+    "import": { "title": "Import", "subtitle": "Deine Daten" },
+    "insights": { "title": "Insights", "subtitle": "KI-Analyse" },
+    "done": { "title": "Bereit", "subtitle": "Alles erledigt" }
+  },
+  "welcome": {
+    "title": "Willkommen bei Tracklyze",
+    "subtitle": "Deine Competitive-Intelligence-Plattform. Wir helfen dir, alles in wenigen Minuten einzurichten.",
+    "getStarted": "Loslegen",
+    "features": {
+      "monitoring": {
+        "title": "Wettbewerber-Monitoring",
+        "desc": "Wettbewerber-Kampagnen automatisch importieren und analysieren"
+      },
+      "tracking": {
+        "title": "Wettbewerbsbeobachtung",
+        "desc": "Botschaften, Angebote und Strategien der Konkurrenz verfolgen"
+      },
+      "insights": {
+        "title": "KI-Insights",
+        "desc": "Strategische Empfehlungen aus deinen Wettbewerbsdaten erhalten"
+      }
+    }
+  },
+  "workspace": {
+    "title": "Arbeitsbereich erstellen",
+    "subtitle": "Ein Arbeitsbereich organisiert die Wettbewerbsinformationen deines Teams",
+    "label": "Name des Arbeitsbereichs",
+    "placeholder": "z.B. Acme Marketing",
+    "hint": "In der Regel dein Unternehmens- oder Teamname",
+    "creating": "Wird erstellt…",
+    "create": "Arbeitsbereich erstellen",
+    "errorRls": "Etwas ist schiefgelaufen. Versuche, dich ab- und wieder anzumelden.",
+    "errorDuplicate": "Ein Arbeitsbereich mit diesem Namen existiert bereits.",
+    "errorGeneric": "Arbeitsbereich konnte nicht erstellt werden."
+  },
+  "competitors": {
+    "title": "Wettbewerber hinzufügen",
+    "subtitle": "Wen möchtest du beobachten? Du kannst jederzeit weitere hinzufügen.",
+    "namePlaceholder": "Unternehmensname",
+    "websitePlaceholder": "Webseite (optional)",
+    "addAnother": "Weiteren Wettbewerber hinzufügen",
+    "skipForNow": "Jetzt überspringen",
+    "continue": "Weiter",
+    "addedSingle": "{{count}} Wettbewerber hinzugefügt",
+    "addedMultiple": "{{count}} Wettbewerber hinzugefügt"
+  },
+  "gmail": {
+    "title": "Gmail verbinden",
+    "subtitle": "Wettbewerber-Newsletter automatisch aus deinem Posteingang importieren",
+    "readOnly": {
+      "title": "Nur-Lese-Zugriff",
+      "desc": "Wir senden keine E-Mails und ändern deinen Posteingang nicht"
+    },
+    "smartClassification": {
+      "title": "Intelligente Klassifizierung",
+      "desc": "KI erkennt Newsletter im Vergleich zu normalen E-Mails"
+    },
+    "disconnect": {
+      "title": "Jederzeit trennen",
+      "desc": "Den Zugriff jederzeit in den Einstellungen widerrufen"
+    },
+    "skipForNow": "Jetzt überspringen",
+    "connect": "Gmail verbinden",
+    "connecting": "Weiterleitung…",
+    "askAdmin": "Bitte einen Arbeitsbereich-Administrator, Gmail zu verbinden",
+    "verifyFirst": "Bestätige deine E-Mail, bevor du Gmail verbindest.",
+    "connected": "Gmail verbunden!"
+  },
+  "import": {
+    "title": "Erste Daten importieren",
+    "subtitle": "Wähle, wie du Wettbewerberdaten in die Plattform bringst",
+    "skipForNow": "Jetzt überspringen",
+    "gmailSync": {
+      "title": "Gmail-Synchronisierung",
+      "desc": "Wenn du Gmail verbunden hast, erscheinen Wettbewerber-Nachrichten automatisch in deinem Posteingang",
+      "label": "Weiter"
+    },
+    "pasteContent": {
+      "title": "Wettbewerber-Inhalte einfügen",
+      "desc": "Wettbewerber-E-Mails oder Kampagneninhalte manuell einfügen für sofortige Analyse",
+      "label": "Daten importieren"
+    }
+  },
+  "insights": {
+    "title": "Alles bereit!",
+    "subtitle": "Dein Arbeitsbereich ist eingerichtet. Sobald Daten eintreffen, generiert die KI automatisch Insights, Benachrichtigungen und strategische Empfehlungen.",
+    "goToDashboard": "Zum Dashboard",
+    "exploreOwn": "Ich erkunde selbst",
+    "bullets": {
+      "insights": "KI-Insights aus Wettbewerbermustern generiert",
+      "analytics": "Analytics-Dashboards in Echtzeit aktualisiert",
+      "tracking": "Wettbewerberaktivität kontinuierlich verfolgt"
+    }
+  }
+}

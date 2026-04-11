@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -92,6 +93,7 @@ function fmt(value: string | null | undefined, fallback = "") {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const { t } = useTranslation("dashboard");
   const { currentWorkspace, loading: wsLoading, error: workspaceError, refetch: refetchWorkspace } = useWorkspace();
   const { snapshot, loading, error: snapshotError, refetch: refetchSnapshot } = useDashboardSnapshot(currentWorkspace?.id);
   const navigate = useNavigate();
@@ -215,12 +217,12 @@ export default function Dashboard() {
     () => {
       const unreadAlertCount = snapshot?.unreadAlertCount ?? 0;
       return [
-        ...(unreadAlertCount > 0 ? [{ label: "Unread alerts", count: unreadAlertCount, href: "/alerts", tone: "red" as const }] : []),
+        ...(unreadAlertCount > 0 ? [{ label: t("unreadAlerts"), count: unreadAlertCount, href: "/alerts", tone: "red" as const }] : []),
         ...(filteredAnomalies.filter((a) => a.severity === "high").length > 0
-          ? [{ label: "Critical anomalies", count: filteredAnomalies.filter((a) => a.severity === "high").length, href: "/analytics", tone: "amber" as const }]
+          ? [{ label: t("criticalAnomalies"), count: filteredAnomalies.filter((a) => a.severity === "high").length, href: "/analytics", tone: "amber" as const }]
           : []),
         ...(filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length > 0
-          ? [{ label: "High-priority insights", count: filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length, href: "/insights", tone: "blue" as const }]
+          ? [{ label: t("highPriorityInsights"), count: filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length, href: "/insights", tone: "blue" as const }]
           : []),
       ];
     },
@@ -229,10 +231,10 @@ export default function Dashboard() {
 
   // ── Early returns after all hooks ────────────────────────────────────────────
 
-  if (workspaceError) return <ErrorState title="Workspace unavailable" description={workspaceError} onRetry={() => void refetchWorkspace()} />;
+  if (workspaceError) return <ErrorState title={t("title") + " unavailable"} description={workspaceError} onRetry={() => void refetchWorkspace()} />;
   if (wsLoading || (currentWorkspace && loading)) return <LoadingState />;
   if (!currentWorkspace) return <EmptyWorkspaceState onCreate={() => navigate("/onboarding")} />;
-  if (snapshotError || !snapshot) return <ErrorState title="Dashboard failed to load" description={snapshotError || "Snapshot unavailable."} onRetry={() => void refetchSnapshot()} />;
+  if (snapshotError || !snapshot) return <ErrorState title={t("title") + " failed to load"} description={snapshotError || "Snapshot unavailable."} onRetry={() => void refetchSnapshot()} />;
 
   const { stats, competitors, decisionModel, gmailConnected, usage, limits, unreadAlertCount } = snapshot;
 
@@ -270,17 +272,17 @@ export default function Dashboard() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} · Intelligence feed
+            {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} · {t("intelligenceFeed")}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/newsletters/new")}>
             <Plus className="h-3.5 w-3.5" />
-            Import data
+            {t("importData")}
           </Button>
           <Button size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/insights")}>
             <Sparkles className="h-3.5 w-3.5" />
-            Generate insights
+            {t("generateInsights")}
           </Button>
         </div>
       </div>
@@ -289,12 +291,12 @@ export default function Dashboard() {
 
       {/* ── Zone 2: KPI Strip ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
-        <KpiStrip icon={Newspaper} label="Inbox" value={stats.inboxItems} sub="signals" href="/inbox" />
-        <KpiStrip icon={Users} label="Competitors" value={stats.competitors} sub="tracked" href="/competitors" />
-        <KpiStrip icon={TrendingUp} label="Analyses" value={stats.completedAnalyses} sub="done" href="/analytics" />
-        <KpiStrip icon={Megaphone} label="Meta Ads" value={stats.metaAds} sub={`${stats.activeAds} live`} href="/meta-ads" />
-        <KpiStrip icon={Lightbulb} label="Insights" value={stats.insightCount} sub="actionable" href="/insights" />
-        <KpiStrip icon={Bell} label="Alerts" value={unreadAlertCount} sub="unread" href="/alerts" accent={unreadAlertCount > 0} />
+        <KpiStrip icon={Newspaper} label={t("kpiInbox")} value={stats.inboxItems} sub={t("kpiSignals")} href="/inbox" />
+        <KpiStrip icon={Users} label={t("kpiCompetitors")} value={stats.competitors} sub={t("kpiTracked")} href="/competitors" />
+        <KpiStrip icon={TrendingUp} label={t("kpiAnalyses")} value={stats.completedAnalyses} sub={t("kpiDone")} href="/analytics" />
+        <KpiStrip icon={Megaphone} label={t("kpiMetaAds")} value={stats.metaAds} sub={`${stats.activeAds} ${t("kpiTracked")}`} href="/meta-ads" />
+        <KpiStrip icon={Lightbulb} label={t("kpiInsights")} value={stats.insightCount} sub={t("kpiActionable")} href="/insights" />
+        <KpiStrip icon={Bell} label={t("kpiAlerts")} value={unreadAlertCount} sub={t("kpiUnread")} href="/alerts" accent={unreadAlertCount > 0} />
       </div>
 
       {!hasData && (
@@ -309,31 +311,31 @@ export default function Dashboard() {
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
               </div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground/70">Intelligence brief</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground/70">{t("intelligenceBrief")}</p>
               {activeFilterCount > 0 && (
                 <Badge variant="secondary" className="ml-auto text-[10px] font-medium">
-                  Filtered · {activeFilterCount} active
+                  {t("filteredActive", { count: activeFilterCount })}
                 </Badge>
               )}
             </div>
             <div className="grid gap-0 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
               <BriefColumn
                 icon={Activity}
-                label="What happened"
+                label={t("whatHappened")}
                 text={aiSummary.whatChangedToday}
               />
               <BriefColumn
                 icon={Target}
-                label="What matters"
+                label={t("whatMatters")}
                 text={aiSummary.whatMattersMost}
                 accent
               />
               <BriefColumn
                 icon={Zap}
-                label="What to do now"
+                label={t("whatToDoNow")}
                 text={filteredActions[0]
                   ? `${filteredActions[0].title}. ${filteredActions[0].detail}`
-                  : "No immediate action required. Keep the data feed fresh."}
+                  : t("noImmediateAction")}
                 cta={filteredActions[0] ? { label: filteredActions[0].cta, href: filteredActions[0].path } : undefined}
                 onNavigate={navigate}
               />
@@ -345,16 +347,16 @@ export default function Dashboard() {
             <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2">
               <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <Filter className="h-3 w-3" />
-                <span>Filter</span>
+                <span>{t("filter")}</span>
               </div>
               <Separator orientation="vertical" className="h-4" />
               {competitorOptions.length > 0 && (
                 <Select value={selectedCompetitor || ALL_COMPETITORS} onValueChange={(v) => setSelectedCompetitor(v === ALL_COMPETITORS ? "" : v)}>
                   <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background">
-                    <SelectValue placeholder="All competitors" />
+                    <SelectValue placeholder={t("allCompetitors")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ALL_COMPETITORS}>All competitors</SelectItem>
+                    <SelectItem value={ALL_COMPETITORS}>{t("allCompetitors")}</SelectItem>
                     {competitorOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -362,10 +364,10 @@ export default function Dashboard() {
               {campaignTypeOptions.length > 0 && (
                 <Select value={selectedCampaignType || ALL_CAMPAIGNS} onValueChange={(v) => setSelectedCampaignType(v === ALL_CAMPAIGNS ? "" : v)}>
                   <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background">
-                    <SelectValue placeholder="All campaigns" />
+                    <SelectValue placeholder={t("allCampaigns")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ALL_CAMPAIGNS}>All campaigns</SelectItem>
+                    <SelectItem value={ALL_CAMPAIGNS}>{t("allCampaigns")}</SelectItem>
                     {campaignTypeOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -373,7 +375,7 @@ export default function Dashboard() {
               {activeFilterCount > 0 && (
                 <button onClick={clearFilters} className="ml-auto flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground">
                   <X className="h-3 w-3" />
-                  Clear filters
+                  {t("clearFilters")}
                 </button>
               )}
             </div>
@@ -383,8 +385,8 @@ export default function Dashboard() {
           {filteredActions.length > 0 && (
             <section className="space-y-2">
               <SectionHeader
-                label="Action queue"
-                sub={`${filteredActions.length} prioritized next move${filteredActions.length !== 1 ? "s" : ""}`}
+                label={t("actionQueue")}
+                sub={filteredActions.length !== 1 ? t("actionQueueSubPlural", { count: filteredActions.length }) : t("actionQueueSub", { count: filteredActions.length })}
               />
               <div className="space-y-2">
                 {filteredActions.map((action, index) => (
@@ -400,12 +402,12 @@ export default function Dashboard() {
             {/* Top insights: featured #1 + compact list */}
             <section className="space-y-2">
               <SectionHeader
-                label="Top insights"
-                sub={`${filteredInsights.length} prioritized by urgency and impact`}
-                action={filteredInsights.length > 3 ? { label: `View all ${filteredInsights.length}`, onClick: () => navigate("/insights") } : undefined}
+                label={t("topInsights")}
+                sub={t("topInsightsSub", { count: filteredInsights.length })}
+                action={filteredInsights.length > 3 ? { label: `${t("viewInsights")} (${filteredInsights.length})`, onClick: () => navigate("/insights") } : undefined}
               />
               {filteredInsights.length === 0 ? (
-                <EmptyZone icon={Lightbulb} title="No insights in scope" desc="Generate insights or remove filters." action={{ label: "Generate insights", onClick: () => navigate("/insights") }} />
+                <EmptyZone icon={Lightbulb} title={t("noInsightsInScope")} desc={t("noInsightsInScopeDesc")} action={{ label: t("generateInsights"), onClick: () => navigate("/insights") }} />
               ) : (
                 <div className="space-y-2">
                   {/* Featured insight */}
@@ -421,12 +423,12 @@ export default function Dashboard() {
             {/* Competitor pressure */}
             <section className="space-y-2">
               <SectionHeader
-                label="Competitor pressure"
-                sub="Signal intensity by tracked company"
-                action={{ label: "Compare", onClick: () => navigate("/analytics") }}
+                label={t("competitorPressure")}
+                sub={t("competitorPressureSub")}
+                action={{ label: t("compare"), onClick: () => navigate("/analytics") }}
               />
               {filteredCompetitorSummary.length === 0 ? (
-                <EmptyZone icon={Users} title="No competitor data" desc="Import activity or remove filters." />
+                <EmptyZone icon={Users} title={t("noCompetitorData")} desc={t("noCompetitorDataDesc")} />
               ) : (
                 <Card className="border shadow-sm divide-y">
                   {filteredCompetitorSummary.map((entry) => (
@@ -443,12 +445,12 @@ export default function Dashboard() {
             {/* Daily highlights */}
             <section className="space-y-2">
               <SectionHeader
-                label="Daily highlights"
-                sub="Top observed competitor moves"
-                action={{ label: "Analytics", onClick: () => navigate("/analytics") }}
+                label={t("dailyHighlights")}
+                sub={t("dailyHighlightsSub")}
+                action={{ label: t("analytics"), onClick: () => navigate("/analytics") }}
               />
               {filteredHighlights.length === 0 ? (
-                <EmptyZone icon={Sparkles} title="No highlights" desc="Reset filters or import more data." />
+                <EmptyZone icon={Sparkles} title={t("noHighlights")} desc={t("noHighlightsDesc")} />
               ) : (
                 <div className="space-y-1.5">
                   {filteredHighlights.map((h) => <HighlightCompactRow key={`${h.kind}-${h.title}`} highlight={h} />)}
@@ -459,11 +461,11 @@ export default function Dashboard() {
             {/* Anomaly radar */}
             <section className="space-y-2">
               <SectionHeader
-                label="Anomaly radar"
-                sub="Spikes, blind spots, pressure changes"
+                label={t("anomalyRadar")}
+                sub={t("anomalyRadarSub")}
               />
               {filteredAnomalies.length === 0 ? (
-                <EmptyZone icon={Activity} title="No anomalies" desc="Feed looks stable." />
+                <EmptyZone icon={Activity} title={t("noAnomalies")} desc={t("noAnomaliesDesc")} />
               ) : (
                 <div className="space-y-1.5">
                   {filteredAnomalies.map((a) => <AnomalyCompactRow key={a.title} anomaly={a} onNavigate={() => navigate(a.path)} />)}
@@ -474,16 +476,16 @@ export default function Dashboard() {
             {/* Recent inbox */}
             <section className="space-y-2">
               <SectionHeader
-                label="Recent competitor activity"
-                sub="Latest inbox events"
-                action={{ label: "Open inbox", onClick: () => navigate("/inbox") }}
+                label={t("recentCompetitorActivity")}
+                sub={t("recentCompetitorActivitySub")}
+                action={{ label: t("openInbox"), onClick: () => navigate("/inbox") }}
               />
               {filteredRecentInbox.length === 0 ? (
                 <EmptyZone
                   icon={Newspaper}
-                  title="No recent activity"
-                  desc={gmailConnected ? "Widen filters or wait for next sync." : "Connect Gmail to start tracking."}
-                  action={!gmailConnected ? { label: "Connect Gmail", onClick: () => navigate("/settings") } : undefined}
+                  title={t("noRecentActivity")}
+                  desc={gmailConnected ? t("widenFiltersOrWait") : t("connectGmail")}
+                  action={!gmailConnected ? { label: t("connectGmailAction"), onClick: () => navigate("/settings") } : undefined}
                 />
               ) : (
                 <div className="space-y-1.5">
@@ -504,9 +506,9 @@ export default function Dashboard() {
           {competitors.length > 0 && (
             <section className="space-y-2">
               <SectionHeader
-                label="Tracked companies"
-                sub={`${competitors.length} monitored competitor${competitors.length !== 1 ? "s" : ""}`}
-                action={{ label: "Manage", onClick: () => navigate("/competitors") }}
+                label={t("trackedCompanies")}
+                sub={competitors.length !== 1 ? t("trackedCompaniesSubPlural", { count: competitors.length }) : t("trackedCompaniesSub", { count: competitors.length })}
+                action={{ label: t("manage"), onClick: () => navigate("/competitors") }}
               />
               <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {competitors.map((c) => (
@@ -532,10 +534,10 @@ export default function Dashboard() {
       <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-1">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
-            { icon: Newspaper, label: "Import data", desc: "Paste or upload", path: "/newsletters/new" },
-            { icon: Users, label: "Competitors", desc: "Manage monitored rivals", path: "/competitors" },
-            { icon: TrendingUp, label: "Analytics", desc: "Activity trends", path: "/analytics" },
-            { icon: Megaphone, label: "Meta Ads", desc: "Paid intelligence", path: "/meta-ads" },
+            { icon: Newspaper, label: t("quickNavImportData"), desc: t("quickNavImportDataDesc"), path: "/newsletters/new" },
+            { icon: Users, label: t("quickNavCompetitors"), desc: t("quickNavCompetitorsDesc"), path: "/competitors" },
+            { icon: TrendingUp, label: t("quickNavAnalytics"), desc: t("quickNavAnalyticsDesc"), path: "/analytics" },
+            { icon: Megaphone, label: t("quickNavMetaAds"), desc: t("quickNavMetaAdsDesc"), path: "/meta-ads" },
           ].map((a) => (
             <button
               key={a.path}
@@ -610,28 +612,31 @@ function EmptyZone({ icon: Icon, title, desc, action }: {
 // ─── State components ─────────────────────────────────────────────────────────
 
 function LoadingState() {
+  const { t } = useTranslation("dashboard");
   return (
     <div className="flex h-full items-center justify-center p-8">
       <div className="flex flex-col items-center gap-3">
         <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-xs text-muted-foreground">Loading dashboard…</p>
+        <p className="text-xs text-muted-foreground">{t("loading")}</p>
       </div>
     </div>
   );
 }
 
 function EmptyWorkspaceState({ onCreate }: { onCreate: () => void }) {
+  const { t } = useTranslation("dashboard");
   return (
     <div className="flex h-full items-center justify-center p-8">
       <div className="text-center">
-        <p className="mb-3 text-sm text-muted-foreground">No workspace found.</p>
-        <Button onClick={onCreate}>Create workspace</Button>
+        <p className="mb-3 text-sm text-muted-foreground">{t("noWorkspaceFound")}</p>
+        <Button onClick={onCreate}>{t("createWorkspace")}</Button>
       </div>
     </div>
   );
 }
 
 function ErrorState({ title, description, onRetry }: { title: string; description: string; onRetry: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex h-full items-center justify-center p-8">
       <Card className="w-full max-w-md border-destructive/20">
@@ -643,7 +648,7 @@ function ErrorState({ title, description, onRetry }: { title: string; descriptio
             <h2 className="text-base font-semibold">{title}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{description}</p>
           </div>
-          <Button size="sm" onClick={onRetry}>Retry</Button>
+          <Button size="sm" onClick={onRetry}>{t("retry")}</Button>
         </CardContent>
       </Card>
     </div>
@@ -655,29 +660,30 @@ function EmptyDecisionState({ gmailConnected, competitorCount, onNavigate }: {
   competitorCount: number;
   onNavigate: ReturnType<typeof useNavigate>;
 }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card className="border-2 border-dashed bg-accent/20">
       <CardContent className="p-6 text-center sm:p-8">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
           <Zap className="h-6 w-6 text-primary" />
         </div>
-        <h2 className="mb-1 text-base font-semibold">Build your first decision feed</h2>
+        <h2 className="mb-1 text-base font-semibold">{t("buildDecisionFeed")}</h2>
         <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
-          Connect data sources and add tracked competitors to unlock automated insights, anomalies, and recommended actions.
+          {t("buildDecisionFeedDesc")}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2">
           {!gmailConnected && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => onNavigate("/settings")}>
-              <Mail className="h-3.5 w-3.5" />Connect Gmail
+              <Mail className="h-3.5 w-3.5" />{t("connectGmailBtn")}
             </Button>
           )}
           {competitorCount === 0 && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => onNavigate("/competitors")}>
-              <Users className="h-3.5 w-3.5" />Add competitors
+              <Users className="h-3.5 w-3.5" />{t("addCompetitors")}
             </Button>
           )}
           <Button size="sm" className="gap-1.5" onClick={() => onNavigate("/newsletters/new")}>
-            <Newspaper className="h-3.5 w-3.5" />Import competitor data
+            <Newspaper className="h-3.5 w-3.5" />{t("importCompetitorData")}
           </Button>
         </div>
       </CardContent>
@@ -805,6 +811,7 @@ function ActionCard({ action, rank, onNavigate }: {
 // ─── Insight Cards ────────────────────────────────────────────────────────────
 
 function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; onClick: () => void }) {
+  const { t } = useTranslation("dashboard");
   const priority = normalizeDashboardPriority(insight.priority_level);
   return (
     <button
@@ -832,7 +839,7 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
           <p className="text-xs leading-5 text-muted-foreground">{insight.strategic_takeaway || insight.what_is_happening}</p>
           {insight.why_it_matters && (
             <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Why it matters</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("whyItMatters")}</p>
               <p className="mt-1 text-xs leading-5 text-foreground/80">{insight.why_it_matters}</p>
             </div>
           )}
@@ -888,6 +895,7 @@ function CompetitorPressureRow({ entry, maxSignals, onClick }: {
   maxSignals: number;
   onClick: () => void;
 }) {
+  const { t } = useTranslation("dashboard");
   const total = entry.newsletters + entry.ads;
   const pct = maxSignals > 0 ? Math.round((total / maxSignals) * 100) : 0;
   return (
@@ -923,7 +931,7 @@ function CompetitorPressureRow({ entry, maxSignals, onClick }: {
       </div>
       {typeof entry.promoRate === "number" && entry.promoRate > 0 && (
         <p className="text-[10px] text-muted-foreground">
-          {Math.round(entry.promoRate * 100)}% promo intensity
+          {t("promoIntensity", { value: Math.round(entry.promoRate * 100) })}
         </p>
       )}
     </button>
@@ -933,6 +941,7 @@ function CompetitorPressureRow({ entry, maxSignals, onClick }: {
 // ─── Highlights (compact) ─────────────────────────────────────────────────────
 
 function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
+  const { t } = useTranslation("dashboard");
   const toneLeft: Record<DashboardHighlight["tone"], string> = {
     positive: "border-l-primary",
     warning: "border-l-warning",
@@ -955,7 +964,7 @@ function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
               <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
             ))}
             <span className="text-[9px] uppercase tracking-wide text-muted-foreground/50">
-              {highlight.kind === "competitor_action" ? "Move" : highlight.kind === "promotion" ? "Promo" : "Campaign"}
+              {highlight.kind === "competitor_action" ? t("highlightKindMove") : highlight.kind === "promotion" ? t("highlightKindPromo") : t("highlightKindCampaign")}
             </span>
           </div>
         </div>
@@ -1001,6 +1010,8 @@ function InboxCompactRow({ item, competitorName, onClick }: {
   competitorName: string | null;
   onClick: () => void;
 }) {
+  const { t } = useTranslation("dashboard");
+  const { t: tCommon } = useTranslation("common");
   return (
     <button
       onClick={onClick}
@@ -1014,11 +1025,11 @@ function InboxCompactRow({ item, competitorName, onClick }: {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className={cn("truncate text-xs font-medium", !item.is_read && "font-semibold text-foreground")}>{item.subject || "No subject"}</p>
+          <p className={cn("truncate text-xs font-medium", !item.is_read && "font-semibold text-foreground")}>{item.subject || t("noSubject")}</p>
           {!item.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <p className="truncate text-[10px] text-muted-foreground">{item.from_name || item.from_email || "Unknown"}</p>
+          <p className="truncate text-[10px] text-muted-foreground">{item.from_name || item.from_email || tCommon("unknown")}</p>
           {competitorName && <Badge variant="outline" className="text-[9px]">{competitorName}</Badge>}
         </div>
       </div>
@@ -1032,6 +1043,7 @@ function InboxCompactRow({ item, competitorName, onClick }: {
 // ─── Competitor preview card ──────────────────────────────────────────────────
 
 function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardCompetitorPreview; onClick: () => void }) {
+  const { t } = useTranslation("dashboard");
   return (
     <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/8 text-base font-bold text-primary">
@@ -1043,7 +1055,7 @@ function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardC
           <p className="truncate text-[11px] text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
         )}
         {!competitor.is_monitored && (
-          <span className="text-[10px] text-muted-foreground/50">Not monitored</span>
+          <span className="text-[10px] text-muted-foreground/50">{t("notMonitored")}</span>
         )}
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-primary/50" />

@@ -1,0 +1,25 @@
+{
+  "upgradeTo": "Upgrade auf {{plan}}",
+  "upgrade": "Upgrade",
+  "startingAt": "Ab ${{price}}/Monat",
+  "competitor_limit": {
+    "title": "Wettbewerber-Limit erreicht",
+    "desc": "Führe ein Upgrade durch, um mehr Wettbewerber zu verfolgen und tiefere Erkenntnisse zu gewinnen."
+  },
+  "newsletter_limit": {
+    "title": "Newsletter-Limit erreicht",
+    "desc": "Du hast dein monatliches Newsletter-Importlimit erreicht. Upgrade für mehr Kapazität."
+  },
+  "analysis_limit": {
+    "title": "KI-Analyse-Limit erreicht",
+    "desc": "Schalte mehr KI-Analysen frei, um tiefere Wettbewerbserkenntnisse zu gewinnen."
+  },
+  "seat_limit": {
+    "title": "Team-Platz-Limit erreicht",
+    "desc": "Lade weitere Teammitglieder ein, indem du deinen Tarif upgradetest."
+  },
+  "feature_locked": {
+    "title": "Premium-Funktion",
+    "desc": "Diese Funktion ist in kostenpflichtigen Tarifen verfügbar."
+  }
+}

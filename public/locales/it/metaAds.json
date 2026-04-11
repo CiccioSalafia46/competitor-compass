@@ -1,0 +1,71 @@
+{
+  "title": "Meta Ads Intelligence",
+  "titleBadge": "Beta · Prossimamente",
+  "subtitle": "Monitora i media a pagamento dei competitor su Facebook e Instagram",
+
+  "betaNotice": {
+    "title": "Meta Ads Intelligence è in beta",
+    "description": "Stiamo finalizzando l'integrazione con la Meta Ad Library. Qui sotto puoi visualizzare in anteprima l'esperienza con dati di esempio. Quando l'integrazione sarà attiva, potrai monitorare gli annunci reali dei competitor, analizzare le strategie di messaging e seguire automaticamente i pattern di spesa.",
+    "premiumNote": "Questa funzionalità sarà disponibile nel <strong>piano Premium</strong> al lancio."
+  },
+
+  "upgradeCard": {
+    "title": "Ottieni accesso anticipato a Meta Ads Intelligence",
+    "description": "Gli utenti Premium saranno i primi ad accedere al tracciamento reale degli annunci e all'analisi IA quando questa funzionalità sarà lanciata.",
+    "features": {
+      "adCreativeAnalysis": "Analisi dei creativi",
+      "spendMonitoring": "Monitoraggio della spesa",
+      "messagingPatterns": "Pattern di messaging",
+      "competitiveBenchmarks": "Benchmark competitivi"
+    },
+    "upgradeButton": "Passa a Premium"
+  },
+
+  "samplePreview": {
+    "title": "Anteprima annunci di esempio",
+    "badge": "Dati demo",
+    "disclaimer": "Questi sono annunci di esempio solo a scopo di anteprima. Non vengono recuperati o visualizzati dati reali."
+  },
+
+  "featureList": {
+    "title": "Quando Meta Ads Intelligence sarà lanciato, potrai:",
+    "trackAds": {
+      "title": "Tracciare gli annunci dei competitor",
+      "desc": "Importa automaticamente annunci dalla Meta Ad Library"
+    },
+    "aiAnalysis": {
+      "title": "Analisi basata sull'IA",
+      "desc": "Analizza angolazioni del messaggio, offerte e pattern di urgenza"
+    },
+    "spendMonitoring": {
+      "title": "Monitoraggio della spesa",
+      "desc": "Monitora i range di spesa stimati per i competitor"
+    },
+    "sideComparison": {
+      "title": "Confronto affiancato",
+      "desc": "Confronta le strategie pubblicitarie tra competitor"
+    }
+  },
+
+  "adDetail": {
+    "title": "Dettagli annuncio",
+    "demoBadge": "Demo",
+    "adCopy": "Testo dell'annuncio",
+    "observedData": "Dati osservati",
+    "firstSeen": "Prima vista",
+    "lastSeen": "Ultima vista",
+    "cta": "CTA",
+    "media": "Media",
+    "estimatedMetrics": "Metriche stimate",
+    "sampleRanges": "Range di esempio",
+    "aiAnalysisNote": "L'analisi IA sarà disponibile quando l'integrazione Meta Ads sarà lanciata.",
+    "spend": "Spesa",
+    "impressions": "Impression",
+    "audienceSize": "Dimensione pubblico"
+  },
+
+  "status": {
+    "active": "Attivo",
+    "inactive": "Inattivo"
+  }
+}

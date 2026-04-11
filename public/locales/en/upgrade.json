@@ -1,0 +1,25 @@
+{
+  "upgradeTo": "Upgrade to {{plan}}",
+  "upgrade": "Upgrade",
+  "startingAt": "Starting at ${{price}}/mo",
+  "competitor_limit": {
+    "title": "Competitor limit reached",
+    "desc": "Upgrade to track more competitors and get deeper intelligence."
+  },
+  "newsletter_limit": {
+    "title": "Newsletter limit reached",
+    "desc": "You've hit your monthly newsletter import limit. Upgrade for more capacity."
+  },
+  "analysis_limit": {
+    "title": "AI analysis limit reached",
+    "desc": "Unlock more AI analyses to extract deeper competitive insights."
+  },
+  "seat_limit": {
+    "title": "Team seat limit reached",
+    "desc": "Invite more team members by upgrading your plan."
+  },
+  "feature_locked": {
+    "title": "Premium feature",
+    "desc": "This feature is available on paid plans."
+  }
+}

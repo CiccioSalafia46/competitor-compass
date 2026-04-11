@@ -1,0 +1,105 @@
+{
+  "appName": "Tracklyze",
+  "skipSetup": "Omitir configuración →",
+  "back": "Atrás",
+  "stepOf": "Paso {{current}} de {{total}}",
+  "steps": {
+    "welcome": { "title": "Bienvenido", "subtitle": "Comenzar" },
+    "workspace": { "title": "Espacio de trabajo", "subtitle": "Tu hub de equipo" },
+    "competitors": { "title": "Competidores", "subtitle": "Rastrear rivales" },
+    "gmail": { "title": "Gmail", "subtitle": "Importar correos" },
+    "import": { "title": "Importar", "subtitle": "Tus datos" },
+    "insights": { "title": "Perspectivas", "subtitle": "Análisis IA" },
+    "done": { "title": "Listo", "subtitle": "Todo configurado" }
+  },
+  "welcome": {
+    "title": "Bienvenido a Tracklyze",
+    "subtitle": "Tu plataforma de inteligencia competitiva. Te ayudamos a configurar todo en pocos minutos.",
+    "getStarted": "Comenzar",
+    "features": {
+      "monitoring": {
+        "title": "Monitoreo de competidores",
+        "desc": "Importa y analiza automáticamente las campañas de tus competidores"
+      },
+      "tracking": {
+        "title": "Seguimiento competitivo",
+        "desc": "Supervisa los mensajes, ofertas y estrategias de tus rivales"
+      },
+      "insights": {
+        "title": "Perspectivas IA",
+        "desc": "Obtén recomendaciones estratégicas a partir de tus datos competitivos"
+      }
+    }
+  },
+  "workspace": {
+    "title": "Crea tu espacio de trabajo",
+    "subtitle": "Un espacio de trabajo organiza la inteligencia competitiva de tu equipo",
+    "label": "Nombre del espacio de trabajo",
+    "placeholder": "ej. Acme Marketing",
+    "hint": "Normalmente el nombre de tu empresa o equipo",
+    "creating": "Creando…",
+    "create": "Crear espacio de trabajo",
+    "errorRls": "Algo salió mal. Intenta cerrar sesión y volver a entrar.",
+    "errorDuplicate": "Ya existe un espacio de trabajo con ese nombre.",
+    "errorGeneric": "No se pudo crear el espacio de trabajo."
+  },
+  "competitors": {
+    "title": "Añade tus competidores",
+    "subtitle": "¿A quién quieres rastrear? Siempre puedes añadir más después.",
+    "namePlaceholder": "Nombre de la empresa",
+    "websitePlaceholder": "Sitio web (opcional)",
+    "addAnother": "Añadir otro competidor",
+    "skipForNow": "Omitir por ahora",
+    "continue": "Continuar",
+    "addedSingle": "{{count}} competidor añadido",
+    "addedMultiple": "{{count}} competidores añadidos"
+  },
+  "gmail": {
+    "title": "Conectar Gmail",
+    "subtitle": "Importa automáticamente las newsletters de competidores desde tu bandeja de entrada",
+    "readOnly": {
+      "title": "Acceso de solo lectura",
+      "desc": "Nunca enviamos correos ni modificamos tu bandeja de entrada"
+    },
+    "smartClassification": {
+      "title": "Clasificación inteligente",
+      "desc": "La IA identifica newsletters entre los correos ordinarios"
+    },
+    "disconnect": {
+      "title": "Desconecta cuando quieras",
+      "desc": "Revoca el acceso desde la configuración en cualquier momento"
+    },
+    "skipForNow": "Omitir por ahora",
+    "connect": "Conectar Gmail",
+    "connecting": "Redirigiendo…",
+    "askAdmin": "Pide a un administrador del espacio de trabajo que conecte Gmail",
+    "verifyFirst": "Verifica tu correo antes de conectar Gmail.",
+    "connected": "¡Gmail conectado!"
+  },
+  "import": {
+    "title": "Importa tus primeros datos",
+    "subtitle": "Elige cómo introducir los datos de competidores en la plataforma",
+    "skipForNow": "Omitir por ahora",
+    "gmailSync": {
+      "title": "Sincronización de Gmail",
+      "desc": "Si conectaste Gmail, las comunicaciones de competidores aparecerán automáticamente en tu bandeja de entrada",
+      "label": "Continuar"
+    },
+    "pasteContent": {
+      "title": "Pegar contenido de competidor",
+      "desc": "Pega manualmente correos o contenido de campañas de competidores para análisis inmediato",
+      "label": "Importar datos"
+    }
+  },
+  "insights": {
+    "title": "¡Todo listo!",
+    "subtitle": "Tu espacio de trabajo está preparado. A medida que lleguen datos, la IA generará automáticamente perspectivas, alertas y recomendaciones estratégicas.",
+    "goToDashboard": "Ir al panel",
+    "exploreOwn": "Exploraré por mi cuenta",
+    "bullets": {
+      "insights": "Perspectivas IA generadas a partir de patrones de competidores",
+      "analytics": "Paneles de análisis actualizados en tiempo real",
+      "tracking": "Actividad de competidores rastreada continuamente"
+    }
+  }
+}
