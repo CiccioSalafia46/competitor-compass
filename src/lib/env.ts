@@ -30,3 +30,5 @@ export function parseClientEnv(source: EnvSource): ClientEnv {
 }
 
 export const clientEnv = parseClientEnv(import.meta.env as EnvSource);
+
+export const isDev = import.meta.env.DEV === true;

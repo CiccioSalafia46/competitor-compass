@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Newspaper } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type NewsletterEntry = Database["public"]["Tables"]["newsletter_entries"]["Row"];
@@ -12,6 +13,7 @@ type NewsletterEntry = Database["public"]["Tables"]["newsletter_entries"]["Row"]
 export default function Newsletters() {
   const { currentWorkspace } = useWorkspace();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [entries, setEntries] = useState<NewsletterEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,11 +27,14 @@ export default function Newsletters() {
       .order("created_at", { ascending: false })
       .limit(200)
       .then(({ data, error }) => {
-        if (error) console.error("Newsletter entries fetch error:", error);
+        if (error) {
+          console.error("Newsletter entries fetch error:", error);
+          toast({ title: "Failed to load newsletters", variant: "destructive" });
+        }
         setEntries(data || []);
         setLoading(false);
       });
-  }, [currentWorkspace]);
+  }, [currentWorkspace, toast]);
 
   if (loading) {
     return (

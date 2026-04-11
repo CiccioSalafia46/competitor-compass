@@ -227,7 +227,10 @@ function CreateEditRuleDialog({
       .select("id, name")
       .eq("workspace_id", currentWorkspace.id)
       .order("name")
-      .then(({ data }) => setCompetitors(data || []));
+      .then(({ data, error }) => {
+        if (error) console.error("Failed to fetch competitors for rule editor:", error);
+        setCompetitors(data || []);
+      });
   }, [open, currentWorkspace]);
 
   useEffect(() => {
@@ -682,7 +685,10 @@ export default function Alerts() {
       .select("id, name")
       .eq("workspace_id", currentWorkspace.id)
       .order("name")
-      .then(({ data }) => setCompetitors(data || []));
+      .then(({ data, error }) => {
+        if (error) console.error("Failed to fetch competitors for alert list:", error);
+        setCompetitors(data || []);
+      });
   }, [currentWorkspace]);
 
   const rulesById = useMemo(() => new Map(rules.map((r) => [r.id, r])), [rules]);

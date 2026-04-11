@@ -43,7 +43,10 @@ export default function NewNewsletter() {
       .select("*")
       .eq("workspace_id", currentWorkspace.id)
       .order("name")
-      .then(({ data }) => setCompetitors(data || []));
+      .then(({ data, error }) => {
+        if (error) console.error("Failed to fetch competitors:", error);
+        setCompetitors(data || []);
+      });
   }, [currentWorkspace]);
 
   const handleSubmit = async (openAnalysis: boolean) => {

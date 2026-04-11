@@ -61,9 +61,15 @@ export default function NewsletterReader() {
           return;
         }
         setItem(data as NewsletterInboxItem);
-        // Mark as read
+        // Mark as read (fire-and-forget — non-critical)
         if (!data.is_read) {
-          supabase.from("newsletter_inbox").update({ is_read: true }).eq("id", id);
+          void supabase
+            .from("newsletter_inbox")
+            .update({ is_read: true })
+            .eq("id", id)
+            .then(({ error }) => {
+              if (error) console.error("Failed to mark newsletter as read:", error);
+            });
         }
         setLoading(false);
       });

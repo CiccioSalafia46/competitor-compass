@@ -34,6 +34,8 @@ export default function UsageDashboard() {
         alertsTriggered: alerts.count || 0,
         aiExtractions: extractions.count || 0,
       });
+    }).catch((err) => {
+      console.error("Failed to fetch usage metrics:", err);
     });
   }, [currentWorkspace]);
 

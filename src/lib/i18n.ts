@@ -2,6 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import HttpBackend from "i18next-http-backend";
+import { isDev } from "@/lib/env";
 
 export const SUPPORTED_LANGUAGES = ["en", "it", "de", "fr", "es"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
@@ -79,7 +80,7 @@ i18n
       useSuspense: true,
     },
     // Never log missing keys in production
-    missingKeyHandler: import.meta.env.DEV
+    missingKeyHandler: isDev
       ? (lngs, ns, key) => console.warn(`[i18n] missing key: ${ns}:${key} (${lngs.join(",")})`)
       : false,
   });
