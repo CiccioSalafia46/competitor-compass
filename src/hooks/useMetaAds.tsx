@@ -90,10 +90,15 @@ export function useMetaAds(filters: MetaAdsFilters = {}) {
   };
 
   const analyzeAd = async (metaAdId: string) => {
-    const data = await invokeEdgeFunction("analyze-meta-ad", {
-      body: { metaAdId },
-    });
-    return data;
+    try {
+      const data = await invokeEdgeFunction("analyze-meta-ad", {
+        body: { metaAdId },
+      });
+      return data;
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to analyze ad"));
+      return null;
+    }
   };
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);

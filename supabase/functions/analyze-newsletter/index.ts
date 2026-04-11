@@ -6,6 +6,7 @@ import {
   assertWorkspaceAnalyst,
   requireAuthenticatedUser,
 } from "../_shared/auth.ts";
+import { assertActiveSubscription } from "../_shared/billing.ts";
 import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 import { processNewsletterAnalysisJob } from "../_shared/newsletter-analysis.ts";
 
@@ -43,6 +44,7 @@ serve(async (req) => {
     }
 
     await assertWorkspaceAnalyst(supabase, user.id, workspaceId);
+    await assertActiveSubscription(supabase, workspaceId);
 
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
       _user_id: user.id,
