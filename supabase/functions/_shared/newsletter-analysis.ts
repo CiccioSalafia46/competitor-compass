@@ -363,9 +363,17 @@ export async function processNewsletterAnalysisJob(
   params: {
     analysisId: string;
     newsletterEntryId: string;
+    language?: string;
   },
 ): Promise<void> {
   const { analysisId, newsletterEntryId } = params;
+  const SUPPORTED_LANGUAGES = ["en", "it", "de", "fr", "es"] as const;
+  const LANGUAGE_NAMES: Record<string, string> = {
+    en: "English", it: "Italian", de: "German", fr: "French", es: "Spanish",
+  };
+  const language = params.language && (SUPPORTED_LANGUAGES as readonly string[]).includes(params.language)
+    ? params.language : "en";
+  const languageName = LANGUAGE_NAMES[language] ?? "English";
   const startedAt = new Date().toISOString();
 
   const { data: analysis, error: analysisError } = await supabase
@@ -434,7 +442,7 @@ export async function processNewsletterAnalysisJob(
       }
     }
 
-    const systemPrompt = `You are a competitive intelligence analyst specializing in B2B SaaS. Analyze the following newsletter content and extract structured competitive intelligence.
+    const systemPrompt = `You are a competitive intelligence analyst specializing in B2B SaaS. Analyze the following newsletter content and extract structured competitive intelligence. Write all text values (summary, observations, themes, examples, descriptions, significance, signals, details, moves, impacts, and recommendations) in ${languageName}. JSON keys, competitor names, brand names, product names, and URLs must remain in English.
 
 Your analysis MUST be thorough, actionable, and clearly labeled with confidence levels.
 
@@ -592,6 +600,7 @@ ${entry.content.substring(0, 10000)}`;
         error_message: null,
         source_snapshot: sourceSnapshot,
         validation_errors: validationErrors.length > 0 ? validationErrors : null,
+        language,
       })
       .eq("id", analysisId);
   } catch (error) {

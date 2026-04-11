@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { memo, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 type NavItem = {
   label: string;
@@ -54,6 +55,7 @@ export const AppSidebar = memo(function AppSidebar() {
   const { tier } = useSubscription();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { t } = useTranslation("nav");
 
   const handleSignOut = useCallback(async () => {
     await signOut();
@@ -68,35 +70,35 @@ export const AppSidebar = memo(function AppSidebar() {
 
   const coreNav = useMemo(
     () => [
-      { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
-      { label: "Inbox", icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
-      { label: "Data Sources", icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
-      { label: "Competitors", icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
+      { label: t("dashboard"), icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
+      { label: t("inbox"), icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
+      { label: t("dataSources"), icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
+      { label: t("competitors"), icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
     ],
-    [isAnalyst]
+    [isAnalyst, t]
   );
 
   const intelligenceNav = useMemo(
     () => [
-      { label: "Meta Ads", icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? "Premium" : undefined },
-      { label: "Insights", icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
-      { label: "Weekly Briefing", icon: Sparkles, path: "/weekly-briefing", matchPrefix: "/weekly-briefing", show: isAnalyst },
-      { label: "Analytics", icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
-      { label: "Reports", icon: FileText, path: "/reports", matchPrefix: "/reports", show: canViewData },
-      { label: "Alerts", icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
+      { label: t("metaAds"), icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? t("common:premium") : undefined },
+      { label: t("insights"), icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
+      { label: t("weeklyBriefing"), icon: Sparkles, path: "/weekly-briefing", matchPrefix: "/weekly-briefing", show: isAnalyst },
+      { label: t("analytics"), icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
+      { label: t("reports"), icon: FileText, path: "/reports", matchPrefix: "/reports", show: canViewData },
+      { label: t("alerts"), icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
     ],
-    [canViewData, isAnalyst, tier]
+    [canViewData, isAnalyst, tier, t]
   );
 
   const adminNav = useMemo(
     () => [
-      { label: "Usage", icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
-      { label: "Team", icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
-      { label: "Billing", icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
-      { label: "Settings", icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
-      { label: "Admin Panel", icon: Shield, path: "/admin", matchPrefix: "/admin", show: isPlatformAdmin },
+      { label: t("usage"), icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
+      { label: t("team"), icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
+      { label: t("billing"), icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
+      { label: t("settings"), icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
+      { label: t("adminPanel"), icon: Shield, path: "/admin", matchPrefix: "/admin", show: isPlatformAdmin },
     ],
-    [isAdmin, isPlatformAdmin]
+    [isAdmin, isPlatformAdmin, t]
   );
 
   const renderNavGroup = useCallback(
@@ -199,8 +201,8 @@ export const AppSidebar = memo(function AppSidebar() {
       )}
 
       <SidebarContent className="scrollbar-thin">
-        {renderNavGroup(coreNav, "Core")}
-        {renderNavGroup(intelligenceNav, "Intelligence")}
+        {renderNavGroup(coreNav, t("groupCore"))}
+        {renderNavGroup(intelligenceNav, t("groupIntelligence"))}
 
         {isAnalyst && !collapsed && (
           <div className="px-3 py-1">
@@ -211,12 +213,12 @@ export const AppSidebar = memo(function AppSidebar() {
               onClick={() => navigate("/newsletters/new")}
             >
               <Plus className="h-3 w-3" />
-              Import data
+              {t("importData")}
             </Button>
           </div>
         )}
 
-        {renderNavGroup(adminNav, "Management")}
+        {renderNavGroup(adminNav, t("groupManagement"))}
       </SidebarContent>
 
       <SidebarFooter className="border-t p-2">
@@ -239,7 +241,7 @@ export const AppSidebar = memo(function AppSidebar() {
               className="gap-2.5 h-8 text-[13px] text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
             >
               <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Sign out</span>}
+              {!collapsed && <span>{t("signOut")}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

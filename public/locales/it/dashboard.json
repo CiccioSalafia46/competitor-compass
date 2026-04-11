@@ -1,0 +1,22 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Panoramica della tua intelligence competitiva",
+  "loading": "Caricamento dashboard…",
+  "noWorkspace": "Nessun workspace selezionato",
+  "recentActivity": "Attività recente",
+  "topCompetitors": "Principali competitor",
+  "activeAlerts": "Avvisi attivi",
+  "latestInsights": "Ultimi insights",
+  "newslettersSynced": "Newsletter sincronizzate",
+  "adsTracked": "Annunci monitorati",
+  "insightsGenerated": "Insights generati",
+  "noActivity": "Nessuna attività recente",
+  "noInsights": "Nessun insight ancora",
+  "noAlerts": "Nessun avviso attivo",
+  "viewInsights": "Vedi tutti gli insights",
+  "viewAlerts": "Vedi tutti gli avvisi",
+  "generateInsights": "Genera insights",
+  "syncNow": "Sincronizza ora",
+  "last30Days": "Ultimi 30 giorni",
+  "last7Days": "Ultimi 7 giorni"
+}

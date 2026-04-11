@@ -1,0 +1,15 @@
+{
+  "generic": "Qualcosa è andato storto. Riprova.",
+  "unauthorized": "Non sei autorizzato a eseguire questa azione.",
+  "forbidden": "Non hai il permesso per accedere a questa risorsa.",
+  "notFound": "La risorsa richiesta non è stata trovata.",
+  "serverError": "Si è verificato un errore interno. Riprova.",
+  "rateLimitExceeded": "Limite di richieste raggiunto. Attendi prima di riprovare.",
+  "subscriptionRequired": "È necessario un abbonamento attivo per utilizzare questa funzione.",
+  "networkError": "Errore di rete. Controlla la connessione e riprova.",
+  "timeout": "La richiesta è scaduta. Riprova.",
+  "validationFailed": "Controlla i dati inseriti e riprova.",
+  "sessionExpired": "La sessione è scaduta. Accedi di nuovo.",
+  "workspaceRequired": "Nessun workspace selezionato.",
+  "emailNotVerified": "Verifica la tua email prima di continuare."
+}

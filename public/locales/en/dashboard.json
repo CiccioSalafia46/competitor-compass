@@ -1,0 +1,22 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Your competitive intelligence overview",
+  "loading": "Loading dashboard…",
+  "noWorkspace": "No workspace selected",
+  "recentActivity": "Recent Activity",
+  "topCompetitors": "Top Competitors",
+  "activeAlerts": "Active Alerts",
+  "latestInsights": "Latest Insights",
+  "newslettersSynced": "Newsletters synced",
+  "adsTracked": "Ads tracked",
+  "insightsGenerated": "Insights generated",
+  "noActivity": "No recent activity",
+  "noInsights": "No insights yet",
+  "noAlerts": "No active alerts",
+  "viewInsights": "View all insights",
+  "viewAlerts": "View all alerts",
+  "generateInsights": "Generate insights",
+  "syncNow": "Sync now",
+  "last30Days": "Last 30 days",
+  "last7Days": "Last 7 days"
+}

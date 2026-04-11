@@ -1,0 +1,15 @@
+{
+  "generic": "Something went wrong. Please try again.",
+  "unauthorized": "You are not authorized to perform this action.",
+  "forbidden": "You do not have permission to access this resource.",
+  "notFound": "The requested resource was not found.",
+  "serverError": "An internal error occurred. Please try again.",
+  "rateLimitExceeded": "Rate limit reached. Please wait before trying again.",
+  "subscriptionRequired": "An active subscription is required to use this feature.",
+  "networkError": "Network error. Check your connection and retry.",
+  "timeout": "The request timed out. Please try again.",
+  "validationFailed": "Please check your input and try again.",
+  "sessionExpired": "Your session has expired. Please sign in again.",
+  "workspaceRequired": "No workspace selected.",
+  "emailNotVerified": "Please verify your email before continuing."
+}

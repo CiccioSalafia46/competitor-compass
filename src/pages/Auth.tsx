@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { BarChart3, Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
+import { useTranslation } from "react-i18next";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -18,6 +19,7 @@ export default function Auth() {
   const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation("auth");
 
   if (!loading && user) return <Navigate to="/redirect" replace />;
 
@@ -27,20 +29,20 @@ export default function Auth() {
     try {
       if (isSignUp) {
         await signUp(email, password, displayName);
-        toast({ title: "Account created", description: "Check your email to verify your account." });
+        toast({ title: t("accountCreated"), description: t("checkEmailVerification") });
       } else {
         await signIn(email, password);
         navigate("/redirect");
       }
     } catch (error) {
-      const msg = getErrorMessage(error, "Something went wrong");
+      const msg = getErrorMessage(error, t("somethingWentWrong"));
       let description = msg;
       if (msg.includes("password") && (msg.includes("leaked") || msg.includes("breach") || msg.includes("compromised") || msg.includes("HIBP"))) {
-        description = "This password has appeared in a known data breach. Please choose a different, stronger password.";
+        description = t("passwordBreach");
       } else if (msg.includes("password") && (msg.includes("weak") || msg.includes("short") || msg.includes("strength"))) {
-        description = "Password is too weak. Use at least 6 characters with a mix of letters and numbers.";
+        description = t("passwordWeak");
       }
-      toast({ title: "Error", description, variant: "destructive" });
+      toast({ title: t("error"), description, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -61,47 +63,47 @@ export default function Auth() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
             <BarChart3 className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-lg font-semibold text-foreground tracking-tight">Tracklyze</h1>
-          <p className="text-xs text-muted-foreground">Competitor intelligence for marketing teams</p>
+          <h1 className="text-lg font-semibold text-foreground tracking-tight">{t("brand")}</h1>
+          <p className="text-xs text-muted-foreground">{t("tagline")}</p>
         </div>
 
         <Card className="border shadow-md">
           <CardHeader className="pb-4 space-y-1">
-            <CardTitle className="text-base">{isSignUp ? "Create account" : "Sign in"}</CardTitle>
+            <CardTitle className="text-base">{isSignUp ? t("createAccount") : t("signIn")}</CardTitle>
             <CardDescription className="text-xs">
-              {isSignUp ? "Start monitoring your competitors" : "Welcome back"}
+              {isSignUp ? t("startMonitoring") : t("welcomeBack")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-3">
               {isSignUp && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-xs">Name</Label>
-                  <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" className="h-9" />
+                  <Label htmlFor="name" className="text-xs">{t("nameLabel")}</Label>
+                  <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t("namePlaceholder")} className="h-9" />
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required className="h-9" />
+                <Label htmlFor="email" className="text-xs">{t("emailLabel")}</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("emailPlaceholder")} required className="h-9" />
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-xs">Password</Label>
+                  <Label htmlFor="password" className="text-xs">{t("passwordLabel")}</Label>
                   {!isSignUp && (
                     <Link to="/forgot-password" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-                      Forgot password?
+                      {t("forgotPassword")}
                     </Link>
                   )}
                 </div>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-9" />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("passwordPlaceholder")} required minLength={6} className="h-9" />
               </div>
               <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading}>
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isSignUp ? "Create account" : "Sign in"}
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isSignUp ? t("createAccount") : t("signIn")}
               </Button>
             </form>
             <div className="mt-4 text-center">
               <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+                {isSignUp ? t("alreadyHaveAccount") : t("dontHaveAccount")}
               </button>
             </div>
           </CardContent>

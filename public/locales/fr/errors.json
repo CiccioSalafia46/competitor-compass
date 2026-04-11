@@ -1,0 +1,15 @@
+{
+  "generic": "Une erreur s'est produite. Veuillez réessayer.",
+  "unauthorized": "Vous n'êtes pas autorisé à effectuer cette action.",
+  "forbidden": "Vous n'avez pas la permission d'accéder à cette ressource.",
+  "notFound": "La ressource demandée est introuvable.",
+  "serverError": "Une erreur interne s'est produite. Veuillez réessayer.",
+  "rateLimitExceeded": "Limite de requêtes atteinte. Veuillez patienter avant de réessayer.",
+  "subscriptionRequired": "Un abonnement actif est requis pour utiliser cette fonctionnalité.",
+  "networkError": "Erreur réseau. Vérifiez votre connexion et réessayez.",
+  "timeout": "La requête a expiré. Veuillez réessayer.",
+  "validationFailed": "Veuillez vérifier vos saisies et réessayer.",
+  "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+  "workspaceRequired": "Aucun espace de travail sélectionné.",
+  "emailNotVerified": "Veuillez vérifier votre e-mail avant de continuer."
+}

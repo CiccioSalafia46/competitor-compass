@@ -42,6 +42,13 @@ serve(async (req) => {
     if (!metaAdId || typeof metaAdId !== "string") {
       return jsonResponse({ error: "metaAdId is required" }, 400);
     }
+    const SUPPORTED_LANGUAGES = ["en", "it", "de", "fr", "es"] as const;
+    const LANGUAGE_NAMES: Record<string, string> = {
+      en: "English", it: "Italian", de: "German", fr: "French", es: "Spanish",
+    };
+    const requestedLang = typeof body?.language === "string" ? body.language : "en";
+    const language = (SUPPORTED_LANGUAGES as readonly string[]).includes(requestedLang) ? requestedLang : "en";
+    const languageName = LANGUAGE_NAMES[language] ?? "English";
 
     const { data: exists } = await supabase.rpc("check_ad_analysis_exists", { _meta_ad_id: metaAdId });
     if (exists) {
@@ -106,7 +113,7 @@ Return ONLY valid JSON, no markdown.`;
         "gpt-4.1-mini",
       ],
       messages: [
-        { role: "system", content: "You are an expert paid media analyst. Analyze ads and return structured JSON." },
+        { role: "system", content: `You are an expert paid media analyst. Analyze ads and return structured JSON. Write all text values (message_angle, offer_angle, promo_language, urgency_style, funnel_intent, creative_pattern, product_category, and strategy_takeaways entries) in ${languageName}. JSON keys and brand/product names must remain in English.` },
         { role: "user", content: prompt },
       ],
       responseFormat: { type: "json_object" },

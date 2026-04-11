@@ -7,6 +7,7 @@ import { getErrorMessage } from "@/lib/errors";
 import type { NewsletterInboxItem, NewsletterExtraction } from "@/types/gmail";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { fetchNewsletterCompetitorSuggestions, type CompetitorSuggestion } from "@/lib/competitor-attribution";
+import { getCurrentLanguage } from "@/hooks/useLanguage";
 
 interface InboxFilters {
   competitorId?: string;
@@ -389,7 +390,7 @@ export function useNewsletterExtraction(newsletterInboxId: string | null) {
       if (!newsletterInboxId) return null;
       const result = await invokeEdgeFunction<{ extraction?: NewsletterExtraction }>(
         "extract-newsletter-intel",
-        { body: { newsletterInboxId } },
+        { body: { newsletterInboxId, language: getCurrentLanguage() } },
       );
       return result;
     },

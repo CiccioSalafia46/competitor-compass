@@ -26,6 +26,9 @@ serve(async (req) => {
     const body = await req.json();
     const analysisId = typeof body?.analysisId === "string" ? body.analysisId : "";
     const newsletterEntryId = typeof body?.newsletterEntryId === "string" ? body.newsletterEntryId : "";
+    const SUPPORTED_LANGUAGES = ["en", "it", "de", "fr", "es"] as const;
+    const requestedLang = typeof body?.language === "string" ? body.language : "en";
+    const language = (SUPPORTED_LANGUAGES as readonly string[]).includes(requestedLang) ? requestedLang : "en";
 
     if (!analysisId || !newsletterEntryId) {
       return jsonResponse({ error: "analysisId and newsletterEntryId are required" }, 400);
@@ -60,7 +63,7 @@ serve(async (req) => {
       );
     }
 
-    await processNewsletterAnalysisJob(supabase, { analysisId, newsletterEntryId });
+    await processNewsletterAnalysisJob(supabase, { analysisId, newsletterEntryId, language });
 
     return jsonResponse({ success: true, analysisId, status: "completed" });
   } catch (error) {

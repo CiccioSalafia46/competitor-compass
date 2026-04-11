@@ -935,6 +935,13 @@ serve(async (req) => {
     const category = INSIGHT_CATEGORIES.includes(requestedCategory as InsightCategory)
       ? (requestedCategory as InsightCategory)
       : undefined;
+    const SUPPORTED_LANGUAGES = ["en", "it", "de", "fr", "es"] as const;
+    const requestedLang = normalizeString(requestBody?.language);
+    const language = (SUPPORTED_LANGUAGES as readonly string[]).includes(requestedLang) ? requestedLang : "en";
+    const LANGUAGE_NAMES: Record<string, string> = {
+      en: "English", it: "Italian", de: "German", fr: "French", es: "Spanish",
+    };
+    const languageName = LANGUAGE_NAMES[language] ?? "English";
 
     if (!workspaceId) {
       return jsonResponse({ error: "workspaceId required" }, 400);
@@ -1436,7 +1443,7 @@ serve(async (req) => {
         {
           role: "system",
           content:
-            "You are a principal competitive-intelligence analyst and senior marketing strategist. Produce dense, quantified, non-generic insights for a SaaS user monitoring competitor newsletters and paid ads. Each insight must be specific, commercially useful, grounded in the provided data, and written to help a team decide what to do next. Your output must be structurally consistent and analytics-ready.",
+            `You are a principal competitive-intelligence analyst and senior marketing strategist. Produce dense, quantified, non-generic insights for a SaaS user monitoring competitor newsletters and paid ads. Each insight must be specific, commercially useful, grounded in the provided data, and written to help a team decide what to do next. Your output must be structurally consistent and analytics-ready. Write all narrative text fields (title, main_message, what_is_happening, why_it_matters, strategic_implication, strategic_takeaway, recommended_response, cta_analysis, positioning_angle, and evidence detail fields) in ${languageName}. JSON keys, competitor names, brand names, URLs, coupon codes, and numeric values must remain unchanged regardless of language.`,
         },
         {
           role: "user",
@@ -1558,6 +1565,7 @@ serve(async (req) => {
         source_type: insight.source_type,
         priority_level: insight.priority_level,
         impact_area: insight.impact_area,
+        language,
       }));
 
       const { error: insertError } = await supabaseAdmin.from("insights").insert(rows);

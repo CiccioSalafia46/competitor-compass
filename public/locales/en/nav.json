@@ -1,0 +1,22 @@
+{
+  "dashboard": "Dashboard",
+  "inbox": "Inbox",
+  "dataSources": "Data Sources",
+  "competitors": "Competitors",
+  "metaAds": "Meta Ads",
+  "insights": "Insights",
+  "weeklyBriefing": "Weekly Briefing",
+  "analytics": "Analytics",
+  "reports": "Reports",
+  "alerts": "Alerts",
+  "usage": "Usage",
+  "team": "Team",
+  "billing": "Billing",
+  "settings": "Settings",
+  "adminPanel": "Admin Panel",
+  "importData": "Import data",
+  "signOut": "Sign out",
+  "groupCore": "Core",
+  "groupIntelligence": "Intelligence",
+  "groupManagement": "Management"
+}

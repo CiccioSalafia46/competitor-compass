@@ -1,0 +1,22 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Übersicht deiner Wettbewerbs-Intelligence",
+  "loading": "Dashboard wird geladen…",
+  "noWorkspace": "Kein Arbeitsbereich ausgewählt",
+  "recentActivity": "Letzte Aktivität",
+  "topCompetitors": "Top-Wettbewerber",
+  "activeAlerts": "Aktive Benachrichtigungen",
+  "latestInsights": "Neueste Insights",
+  "newslettersSynced": "Synchronisierte Newsletter",
+  "adsTracked": "Verfolgte Anzeigen",
+  "insightsGenerated": "Generierte Insights",
+  "noActivity": "Keine letzte Aktivität",
+  "noInsights": "Noch keine Insights",
+  "noAlerts": "Keine aktiven Benachrichtigungen",
+  "viewInsights": "Alle Insights anzeigen",
+  "viewAlerts": "Alle Benachrichtigungen anzeigen",
+  "generateInsights": "Insights generieren",
+  "syncNow": "Jetzt synchronisieren",
+  "last30Days": "Letzte 30 Tage",
+  "last7Days": "Letzte 7 Tage"
+}

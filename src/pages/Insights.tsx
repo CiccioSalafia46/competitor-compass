@@ -1,4 +1,5 @@
 import { memo, useMemo, useState, type ElementType } from "react";
+import { useTranslation } from "react-i18next";
 import { useInsights, INSIGHT_CATEGORIES, type Insight, type InsightEvidence } from "@/hooks/useInsights";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,46 +33,66 @@ import {
   type InsightPriorityLevel,
 } from "@/lib/insight-priority";
 
-const CATEGORY_META: Record<string, { label: string; icon: ElementType }> = {
-  pricing: { label: "Pricing", icon: Target },
-  promotions: { label: "Promotions", icon: TrendingUp },
-  email_strategy: { label: "Email Strategy", icon: Mail },
-  paid_ads: { label: "Paid Ads", icon: Megaphone },
-  product_focus: { label: "Product Focus", icon: Layers },
-  seasonal_strategy: { label: "Seasonal", icon: Calendar },
-  messaging_positioning: { label: "Messaging", icon: Lightbulb },
-  cadence_frequency: { label: "Cadence", icon: AlertTriangle },
+const CATEGORY_ICON: Record<string, ElementType> = {
+  pricing: Target,
+  promotions: TrendingUp,
+  email_strategy: Mail,
+  paid_ads: Megaphone,
+  product_focus: Layers,
+  seasonal_strategy: Calendar,
+  messaging_positioning: Lightbulb,
+  cadence_frequency: AlertTriangle,
 };
 
-function formatConfidence(confidence: number | null) {
-  if (confidence == null) return "Unknown";
-  if (confidence >= 0.85) return "High";
-  if (confidence >= 0.7) return "Medium";
-  return "Watch";
+// Label helpers are now hooks — rendered inline using t()
+function useCategoryMeta(t: (key: string) => string) {
+  return useMemo<Record<string, { label: string; icon: ElementType }>>(() => ({
+    pricing: { label: t("categoryPricing"), icon: Target },
+    promotions: { label: t("categoryPromotions"), icon: TrendingUp },
+    email_strategy: { label: t("categoryEmailStrategy"), icon: Mail },
+    paid_ads: { label: t("categoryPaidAds"), icon: Megaphone },
+    product_focus: { label: t("categoryProductFocus"), icon: Layers },
+    seasonal_strategy: { label: t("categorySeasonal"), icon: Calendar },
+    messaging_positioning: { label: t("categoryMessaging"), icon: Lightbulb },
+    cadence_frequency: { label: t("categoryCadence"), icon: AlertTriangle },
+  }), [t]);
 }
 
-function formatSourceLabel(sourceType: string) {
-  if (sourceType === "cross_channel") return "Cross-channel";
-  if (sourceType === "meta_ad") return "Meta ads";
-  return "Newsletter";
+function useFormatConfidence(t: (key: string) => string) {
+  return (confidence: number | null) => {
+    if (confidence == null) return t("confidenceUnknown");
+    if (confidence >= 0.85) return t("confidenceHigh");
+    if (confidence >= 0.7) return t("confidenceMedium");
+    return t("confidenceWatch");
+  };
 }
 
-function formatOfferSummary(insight: Insight) {
-  const segments: string[] = [];
+function useFormatSourceLabel(t: (key: string) => string) {
+  return (sourceType: string) => {
+    if (sourceType === "cross_channel") return t("sourceCrossChannel");
+    if (sourceType === "meta_ad") return t("sourceMetaAds");
+    return t("sourceNewsletter");
+  };
+}
 
-  if (typeof insight.offer_discount_percentage === "number") {
-    segments.push(`${insight.offer_discount_percentage}% discount`);
-  }
+function useFormatOfferSummary(t: (key: string, opts?: Record<string, unknown>) => string) {
+  return (insight: Insight) => {
+    const segments: string[] = [];
 
-  if (insight.offer_coupon_code) {
-    segments.push(`Coupon: ${insight.offer_coupon_code}`);
-  }
+    if (typeof insight.offer_discount_percentage === "number") {
+      segments.push(t("discount", { percent: insight.offer_discount_percentage }));
+    }
 
-  if ((insight.offer_urgency ?? []).length > 0) {
-    segments.push(`Urgency: ${insight.offer_urgency.join(", ")}`);
-  }
+    if (insight.offer_coupon_code) {
+      segments.push(t("coupon", { code: insight.offer_coupon_code }));
+    }
 
-  return segments.length > 0 ? segments.join(" | ") : "No explicit offer mechanics detected";
+    if ((insight.offer_urgency ?? []).length > 0) {
+      segments.push(t("urgency", { signals: insight.offer_urgency.join(", ") }));
+    }
+
+    return segments.length > 0 ? segments.join(" | ") : t("noOffer");
+  };
 }
 
 function SummaryCard({
@@ -134,7 +155,12 @@ function EvidenceItemView({ evidence }: { evidence: InsightEvidence }) {
 }
 
 const InsightCard = memo(function InsightCard({ insight }: { insight: Insight }) {
-  const meta = CATEGORY_META[insight.category] || CATEGORY_META.pricing;
+  const { t } = useTranslation("insights");
+  const CATEGORY_META = useCategoryMeta(t);
+  const formatConfidence = useFormatConfidence(t);
+  const formatSourceLabel = useFormatSourceLabel(t);
+  const formatOfferSummary = useFormatOfferSummary(t);
+  const meta = CATEGORY_META[insight.category] || CATEGORY_META["pricing"];
   const Icon = meta.icon;
   const confidence = insight.confidence;
   const confidenceValue = confidence != null ? `${Math.round(confidence * 100)}%` : "N/A";
@@ -354,9 +380,11 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
 });
 
 export default function Insights() {
+  const { t } = useTranslation("insights");
   const [activeTab, setActiveTab] = useState<string>("all");
   const categoryFilter = activeTab === "all" ? undefined : activeTab;
   const { insights, loading, generating, generateInsights } = useInsights(categoryFilter, { limit: 36 });
+  const CATEGORY_META = useCategoryMeta(t);
 
   const evidenceCount = insights.reduce((total, insight) => total + insight.supporting_evidence.length, 0);
   const competitorCount = new Set(insights.flatMap((insight) => insight.affected_competitors)).size;
@@ -440,7 +468,7 @@ export default function Insights() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex h-auto flex-wrap gap-1 bg-muted/50 p-1">
           <TabsTrigger value="all" className="gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" />All
+            <Sparkles className="h-3.5 w-3.5" />{t("allCategories")}
           </TabsTrigger>
           {INSIGHT_CATEGORIES.map((category) => {
             const CategoryIcon = CATEGORY_META[category]?.icon;

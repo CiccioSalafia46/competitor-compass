@@ -4,6 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { getErrorMessage } from "@/lib/errors";
+import { getCurrentLanguage } from "@/hooks/useLanguage";
 import { isTransientNavigationFetchError } from "@/lib/transient-network";
 import type { InsightPriorityLevel } from "@/lib/insight-priority";
 import {
@@ -90,7 +91,7 @@ export function useInsights(categoryFilter?: string, options: UseInsightsOptions
       const data = await invokeEdgeFunction<{ error?: string; message?: string; insights?: Insight[] }>(
         "generate-insights",
         {
-          body: { workspaceId: currentWorkspace.id, category },
+          body: { workspaceId: currentWorkspace.id, category, language: getCurrentLanguage() },
         }
       );
 

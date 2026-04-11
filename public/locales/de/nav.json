@@ -1,0 +1,22 @@
+{
+  "dashboard": "Dashboard",
+  "inbox": "Posteingang",
+  "dataSources": "Datenquellen",
+  "competitors": "Wettbewerber",
+  "metaAds": "Meta Ads",
+  "insights": "Insights",
+  "weeklyBriefing": "Wöchentliches Briefing",
+  "analytics": "Analytik",
+  "reports": "Berichte",
+  "alerts": "Benachrichtigungen",
+  "usage": "Nutzung",
+  "team": "Team",
+  "billing": "Abrechnung",
+  "settings": "Einstellungen",
+  "adminPanel": "Admin-Bereich",
+  "importData": "Daten importieren",
+  "signOut": "Abmelden",
+  "groupCore": "Kern",
+  "groupIntelligence": "Intelligence",
+  "groupManagement": "Verwaltung"
+}

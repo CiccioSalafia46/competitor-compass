@@ -1,0 +1,15 @@
+{
+  "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  "unauthorized": "Du bist nicht berechtigt, diese Aktion auszuführen.",
+  "forbidden": "Du hast keine Berechtigung, auf diese Ressource zuzugreifen.",
+  "notFound": "Die angeforderte Ressource wurde nicht gefunden.",
+  "serverError": "Ein interner Fehler ist aufgetreten. Bitte versuche es erneut.",
+  "rateLimitExceeded": "Anfragelimit erreicht. Bitte warte, bevor du es erneut versuchst.",
+  "subscriptionRequired": "Für diese Funktion ist ein aktives Abonnement erforderlich.",
+  "networkError": "Netzwerkfehler. Überprüfe deine Verbindung und versuche es erneut.",
+  "timeout": "Die Anfrage ist abgelaufen. Bitte versuche es erneut.",
+  "validationFailed": "Bitte überprüfe deine Eingabe und versuche es erneut.",
+  "sessionExpired": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+  "workspaceRequired": "Kein Arbeitsbereich ausgewählt.",
+  "emailNotVerified": "Bitte bestätige deine E-Mail, bevor du fortfährst."
+}

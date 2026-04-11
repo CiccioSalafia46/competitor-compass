@@ -466,6 +466,13 @@ serve(async (req) => {
     if (!newsletterInboxId || typeof newsletterInboxId !== "string") {
       return jsonResponse({ error: "newsletterInboxId is required" }, 400);
     }
+    const SUPPORTED_LANGUAGES = ["en", "it", "de", "fr", "es"] as const;
+    const LANGUAGE_NAMES: Record<string, string> = {
+      en: "English", it: "Italian", de: "German", fr: "French", es: "Spanish",
+    };
+    const requestedLang = typeof body?.language === "string" ? body.language : "en";
+    const language = (SUPPORTED_LANGUAGES as readonly string[]).includes(requestedLang) ? requestedLang : "en";
+    const languageName = LANGUAGE_NAMES[language] ?? "English";
 
     const { data: exists } = await supabase.rpc("check_extraction_exists", { _newsletter_inbox_id: newsletterInboxId });
     if (exists) {
@@ -511,8 +518,8 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = `You are a competitive intelligence analyst specializing in newsletter analysis for B2B and B2C companies. 
-Extract structured intelligence from the newsletter content provided.
+    const systemPrompt = `You are a competitive intelligence analyst specializing in newsletter analysis for B2B and B2C companies.
+Extract structured intelligence from the newsletter content provided. Write all text values in ${languageName}. JSON keys, competitor names, brand names, product names, URLs, coupon codes, and numeric values must remain in English.
 
 RULES:
 - Only report what you can directly observe or reasonably infer

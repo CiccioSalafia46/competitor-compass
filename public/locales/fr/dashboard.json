@@ -1,0 +1,22 @@
+{
+  "title": "Tableau de bord",
+  "subtitle": "Vue d'ensemble de votre intelligence concurrentielle",
+  "loading": "Chargement du tableau de bord…",
+  "noWorkspace": "Aucun espace de travail sélectionné",
+  "recentActivity": "Activité récente",
+  "topCompetitors": "Principaux concurrents",
+  "activeAlerts": "Alertes actives",
+  "latestInsights": "Dernières analyses",
+  "newslettersSynced": "Newsletters synchronisées",
+  "adsTracked": "Annonces suivies",
+  "insightsGenerated": "Analyses générées",
+  "noActivity": "Aucune activité récente",
+  "noInsights": "Aucune analyse pour l'instant",
+  "noAlerts": "Aucune alerte active",
+  "viewInsights": "Voir toutes les analyses",
+  "viewAlerts": "Voir toutes les alertes",
+  "generateInsights": "Générer des analyses",
+  "syncNow": "Synchroniser maintenant",
+  "last30Days": "30 derniers jours",
+  "last7Days": "7 derniers jours"
+}

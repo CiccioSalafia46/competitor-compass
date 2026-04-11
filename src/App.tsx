@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { LanguageProvider } from "@/hooks/useLanguage";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import AppLayout from "./components/AppLayout";
@@ -86,6 +87,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
+          <LanguageProvider>
           <WorkspaceProvider>
             <SubscriptionProvider>
               <Suspense fallback={<PageLoader />}>
@@ -135,6 +137,7 @@ const App = () => (
               </Suspense>
             </SubscriptionProvider>
           </WorkspaceProvider>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

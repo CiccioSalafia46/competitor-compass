@@ -1,0 +1,15 @@
+{
+  "generic": "Algo salió mal. Por favor inténtalo de nuevo.",
+  "unauthorized": "No estás autorizado para realizar esta acción.",
+  "forbidden": "No tienes permiso para acceder a este recurso.",
+  "notFound": "El recurso solicitado no fue encontrado.",
+  "serverError": "Se produjo un error interno. Por favor inténtalo de nuevo.",
+  "rateLimitExceeded": "Límite de solicitudes alcanzado. Espera antes de volver a intentarlo.",
+  "subscriptionRequired": "Se requiere una suscripción activa para usar esta función.",
+  "networkError": "Error de red. Comprueba tu conexión y vuelve a intentarlo.",
+  "timeout": "La solicitud expiró. Por favor inténtalo de nuevo.",
+  "validationFailed": "Por favor verifica tus datos e inténtalo de nuevo.",
+  "sessionExpired": "Tu sesión ha expirado. Por favor inicia sesión de nuevo.",
+  "workspaceRequired": "Ningún espacio de trabajo seleccionado.",
+  "emailNotVerified": "Por favor verifica tu correo antes de continuar."
+}

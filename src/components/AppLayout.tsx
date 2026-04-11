@@ -12,7 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRealtimeTable } from "@/hooks/useRealtimeTable";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { useTranslation } from "react-i18next";
 import { isTransientNavigationFetchError } from "@/lib/transient-network";
 
 export default function AppLayout() {
@@ -23,7 +25,7 @@ export default function AppLayout() {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-xs text-muted-foreground">Loading…</p>
+          <p className="text-xs text-muted-foreground">Loading…</p>{/* pre-i18n intentional — translations may not be ready yet */}
         </div>
       </div>
     );
@@ -57,6 +59,7 @@ export default function AppLayout() {
 const TopBar = memo(function TopBar() {
   const navigate = useNavigate();
   const { currentWorkspace } = useWorkspace();
+  const { t } = useTranslation("common");
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Lightweight unread count query — only counts, no full data fetch
@@ -105,13 +108,14 @@ const TopBar = memo(function TopBar() {
         )}
       </div>
       <div className="flex items-center gap-0.5">
+        <LanguageSelector />
         <DarkModeToggle />
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8 relative"
           onClick={() => navigate("/alerts")}
-          aria-label="Alerts"
+          aria-label={t("alerts")}
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (

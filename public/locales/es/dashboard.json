@@ -1,0 +1,22 @@
+{
+  "title": "Panel",
+  "subtitle": "Resumen de tu inteligencia competitiva",
+  "loading": "Cargando panel…",
+  "noWorkspace": "Ningún espacio de trabajo seleccionado",
+  "recentActivity": "Actividad reciente",
+  "topCompetitors": "Principales competidores",
+  "activeAlerts": "Alertas activas",
+  "latestInsights": "Últimas perspectivas",
+  "newslettersSynced": "Newsletters sincronizados",
+  "adsTracked": "Anuncios rastreados",
+  "insightsGenerated": "Perspectivas generadas",
+  "noActivity": "Sin actividad reciente",
+  "noInsights": "Aún no hay perspectivas",
+  "noAlerts": "Sin alertas activas",
+  "viewInsights": "Ver todas las perspectivas",
+  "viewAlerts": "Ver todas las alertas",
+  "generateInsights": "Generar perspectivas",
+  "syncNow": "Sincronizar ahora",
+  "last30Days": "Últimos 30 días",
+  "last7Days": "Últimos 7 días"
+}
