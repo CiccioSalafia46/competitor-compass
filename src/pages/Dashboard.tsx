@@ -849,12 +849,12 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
               <span className="text-[10px] text-muted-foreground">{Math.round(insight.confidence * 100)}% confidence</span>
             )}
           </div>
-          <p className="text-sm font-semibold leading-snug">{insight.title}</p>
-          <p className="text-xs leading-5 text-muted-foreground">{insight.strategic_takeaway || insight.what_is_happening}</p>
+          <p className="text-sm font-semibold leading-snug [overflow-wrap:anywhere]">{insight.title}</p>
+          <p className="text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway || insight.what_is_happening}</p>
           {insight.why_it_matters && (
             <div className="rounded-lg bg-muted/40 px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("whyItMatters")}</p>
-              <p className="mt-1 text-xs leading-5 text-foreground/80">{insight.why_it_matters}</p>
+              <p className="mt-1 text-xs leading-5 text-foreground/80 [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
             </div>
           )}
           {(insight.affected_competitors ?? []).length > 0 && (
@@ -971,8 +971,8 @@ function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
       <div className="flex items-start gap-2.5">
         <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", kindDot[highlight.kind])} />
         <div className="min-w-0">
-          <p className="text-xs font-semibold leading-snug text-foreground">{highlight.title}</p>
-          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground">{highlight.detail}</p>
+          <p className="text-xs font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">{highlight.title}</p>
+          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]">{highlight.detail}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {highlight.competitors?.slice(0, 1).map((c) => (
               <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
@@ -1006,8 +1006,8 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
           );
         })()}
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-foreground">{anomaly.title}</p>
-          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground">{anomaly.detail}</p>
+          <p className="text-xs font-semibold text-foreground [overflow-wrap:anywhere]">{anomaly.title}</p>
+          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]">{anomaly.detail}</p>
         </div>
         <Badge variant="outline" className={cn("shrink-0 text-[10px] capitalize", PRIORITY_BADGE[priority])}>
           {priority}
