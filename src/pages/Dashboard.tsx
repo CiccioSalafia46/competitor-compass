@@ -408,7 +408,7 @@ export default function Dashboard() {
           <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[1.6fr_1fr]">
 
             {/* Top insights: featured #1 + compact list */}
-            <section className="space-y-2">
+            <section className="min-w-0 space-y-2">
               <SectionHeader
                 label={t("topInsights")}
                 sub={t("topInsightsSub", { count: filteredInsights.length })}
@@ -429,7 +429,7 @@ export default function Dashboard() {
             </section>
 
             {/* Competitor pressure */}
-            <section className="space-y-2">
+            <section className="min-w-0 space-y-2">
               <SectionHeader
                 label={t("competitorPressure")}
                 sub={t("competitorPressureSub")}
@@ -451,7 +451,7 @@ export default function Dashboard() {
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
 
             {/* Daily highlights */}
-            <section className="space-y-2">
+            <section className="min-w-0 space-y-2">
               <SectionHeader
                 label={t("dailyHighlights")}
                 sub={t("dailyHighlightsSub")}
@@ -467,7 +467,7 @@ export default function Dashboard() {
             </section>
 
             {/* Anomaly radar */}
-            <section className="space-y-2">
+            <section className="min-w-0 space-y-2">
               <SectionHeader
                 label={t("anomalyRadar")}
                 sub={t("anomalyRadarSub")}
@@ -482,7 +482,7 @@ export default function Dashboard() {
             </section>
 
             {/* Recent inbox */}
-            <section className="space-y-2">
+            <section className="min-w-0 space-y-2">
               <SectionHeader
                 label={t("recentCompetitorActivity")}
                 sub={t("recentCompetitorActivitySub")}
