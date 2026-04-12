@@ -115,6 +115,10 @@
 }
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
+
   * {
     @apply border-border;
     /* Disable tap highlight flash on mobile */

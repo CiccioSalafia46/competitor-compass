@@ -34,13 +34,13 @@ export default function AppLayout() {
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+    <SidebarProvider className="overflow-x-hidden">
+      <div className="min-h-screen flex w-full overflow-x-hidden">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar />
           <SidebarInset className="flex-1">
-            <main className="flex-1 overflow-x-hidden overflow-y-auto scrollbar-thin">
+            <main className="flex-1 overflow-x-hidden md:overflow-y-auto scrollbar-thin">
               <ErrorBoundary>
                 <div className="px-4 pt-3 sm:px-6 lg:px-8">
                   <EmailVerificationBanner />
