@@ -65,8 +65,8 @@
       "viewer": "Read-only access to dashboards, analyses, and reports"
     },
     "roleUpdated": "Role updated",
-    "invitationFlow": "Invitation flow",
-    "invitationFlowDesc": "Team invitations require email infrastructure. Coming soon."
+    "memberAdded": "Member added",
+    "invitationSent": "Invitation sent"
   },
 
   "billing": {

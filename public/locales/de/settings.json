@@ -65,8 +65,8 @@
       "viewer": "Lesezugriff auf Dashboards, Analysen und Berichte"
     },
     "roleUpdated": "Rolle aktualisiert",
-    "invitationFlow": "Einladungsablauf",
-    "invitationFlowDesc": "Teameinladungen erfordern eine E-Mail-Infrastruktur. Demnächst verfügbar."
+    "memberAdded": "Mitglied hinzugefügt",
+    "invitationSent": "Einladung gesendet"
   },
 
   "billing": {

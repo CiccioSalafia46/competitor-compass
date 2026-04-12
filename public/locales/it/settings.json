@@ -65,8 +65,8 @@
       "viewer": "Accesso in sola lettura a dashboard, analisi e report"
     },
     "roleUpdated": "Ruolo aggiornato",
-    "invitationFlow": "Flusso di invito",
-    "invitationFlowDesc": "Gli inviti al team richiedono un'infrastruttura email. Prossimamente."
+    "memberAdded": "Membro aggiunto",
+    "invitationSent": "Invito inviato"
   },
 
   "billing": {

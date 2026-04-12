@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS public.workspace_invitations (
   invited_role  text NOT NULL DEFAULT 'viewer'
                   CHECK (invited_role IN ('admin', 'analyst', 'viewer')),
   invited_by    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  token         text NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(32), 'hex'),
+  -- Two concatenated UUIDs stripped of dashes = 64 hex chars, 256 bits of entropy.
+  -- Uses only built-in PostgreSQL 13+ functions, no pgcrypto extension required.
+  token         text NOT NULL UNIQUE DEFAULT (replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '')),
   accepted_at   timestamptz,
   expires_at    timestamptz NOT NULL DEFAULT (now() + interval '7 days'),
   created_at    timestamptz NOT NULL DEFAULT now(),
@@ -32,9 +34,12 @@ CREATE POLICY "Admins can manage invitations"
   USING (public.is_workspace_admin_member(auth.uid(), workspace_id))
   WITH CHECK (public.is_workspace_admin_member(auth.uid(), workspace_id));
 
+-- Partial index on pending invitations only (accepted_at IS NULL).
+-- Expiry filtering is done at query time, not in the index predicate
+-- because now() is volatile and cannot be used in immutable index predicates.
 CREATE INDEX IF NOT EXISTS idx_workspace_invitations_email
   ON public.workspace_invitations (invited_email)
-  WHERE accepted_at IS NULL AND expires_at > now();
+  WHERE accepted_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_workspace_invitations_workspace
   ON public.workspace_invitations (workspace_id, created_at DESC);

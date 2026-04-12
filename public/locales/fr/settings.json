@@ -65,8 +65,8 @@
       "viewer": "Accès en lecture seule aux tableaux de bord, analyses et rapports"
     },
     "roleUpdated": "Rôle mis à jour",
-    "invitationFlow": "Flux d'invitation",
-    "invitationFlowDesc": "Les invitations d'équipe nécessitent une infrastructure e-mail. Bientôt disponible."
+    "memberAdded": "Membre ajouté",
+    "invitationSent": "Invitation envoyée"
   },
 
   "billing": {

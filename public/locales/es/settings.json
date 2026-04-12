@@ -65,8 +65,8 @@
       "viewer": "Acceso de solo lectura a paneles, análisis e informes"
     },
     "roleUpdated": "Rol actualizado",
-    "invitationFlow": "Flujo de invitación",
-    "invitationFlowDesc": "Las invitaciones de equipo requieren infraestructura de correo. Próximamente."
+    "memberAdded": "Miembro añadido",
+    "invitationSent": "Invitación enviada"
   },
 
   "billing": {
