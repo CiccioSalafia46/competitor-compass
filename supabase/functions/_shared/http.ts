@@ -24,5 +24,13 @@ export function getErrorMessage(error: unknown, fallback = "An internal error oc
     return error.trim();
   }
 
+  // Supabase PostgrestError and similar objects expose a message property.
+  if (error !== null && typeof error === "object" && "message" in error) {
+    const msg = (error as { message: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) {
+      return msg.trim();
+    }
+  }
+
   return fallback;
 }
