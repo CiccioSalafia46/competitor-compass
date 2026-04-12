@@ -42,6 +42,7 @@ import {
 } from "@/lib/insight-priority";
 import { cn } from "@/lib/utils";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import CompetitorLogo from "@/components/CompetitorLogo";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import { SystemHealthPanel } from "@/components/SystemHealthPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -123,6 +124,11 @@ export default function Dashboard() {
 
   const competitorNameById = useMemo(
     () => new Map(snapshotCompetitors.map((c) => [c.id, c.name])),
+    [snapshotCompetitors],
+  );
+
+  const competitorWebsiteByName = useMemo(
+    () => new Map(snapshotCompetitors.map((c) => [c.name, c.website])),
     [snapshotCompetitors],
   );
 
@@ -438,7 +444,7 @@ export default function Dashboard() {
               ) : (
                 <Card className="border shadow-sm divide-y">
                   {filteredCompetitorSummary.map((entry) => (
-                    <CompetitorPressureRow key={entry.competitor} entry={entry} maxSignals={filteredCompetitorSummary[0].newsletters + filteredCompetitorSummary[0].ads} onClick={() => navigate("/competitors")} />
+                    <CompetitorPressureRow key={entry.competitor} entry={entry} maxSignals={filteredCompetitorSummary[0].newsletters + filteredCompetitorSummary[0].ads} website={competitorWebsiteByName.get(entry.competitor) ?? null} onClick={() => navigate("/competitors")} />
                   ))}
                 </Card>
               )}
@@ -868,9 +874,10 @@ function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; on
 
 // ─── Competitor Pressure ──────────────────────────────────────────────────────
 
-function CompetitorPressureRow({ entry, maxSignals, onClick }: {
+function CompetitorPressureRow({ entry, maxSignals, website, onClick }: {
   entry: DashboardCompetitorSummary;
   maxSignals: number;
+  website: string | null;
   onClick: () => void;
 }) {
   const { t } = useTranslation("dashboard");
@@ -880,9 +887,7 @@ function CompetitorPressureRow({ entry, maxSignals, onClick }: {
     <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-4 py-3.5 text-left transition-colors hover:bg-accent/20">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border bg-background text-[11px] font-bold text-foreground shadow-sm">
-            {entry.competitor.charAt(0).toUpperCase()}
-          </div>
+          <CompetitorLogo name={entry.competitor} website={website} size="xs" />
           <p className="truncate text-sm font-medium">{entry.competitor}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -1021,9 +1026,7 @@ function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardC
   const { t } = useTranslation("dashboard");
   return (
     <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/8 text-base font-bold text-primary">
-        {competitor.name.charAt(0).toUpperCase()}
-      </div>
+      <CompetitorLogo name={competitor.name} website={competitor.website} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-foreground">{competitor.name}</p>
         {competitor.website && (

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import DOMPurify from "dompurify";
 import { useTranslation } from "react-i18next";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import CompetitorLogo from "@/components/CompetitorLogo";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
 import { useUsage } from "@/hooks/useUsage";
@@ -67,77 +68,6 @@ const profileBadgeClass = (profile: string): string => {
   if (profile === "moderate") return "border-amber-400/30 bg-amber-50/60 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400";
   return "border-emerald-500/25 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400";
 };
-
-// ─── Logo helpers ─────────────────────────────────────────────────────────────
-
-function competitorDomain(website: string | null): string | null {
-  if (!website) return null;
-  try {
-    const url = website.startsWith("http") ? website : `https://${website}`;
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-}
-
-interface CompetitorLogoProps {
-  name: string;
-  website: string | null;
-  size?: "sm" | "md";
-}
-
-function CompetitorLogo({ name, website, size = "md" }: CompetitorLogoProps) {
-  const domain = competitorDomain(website);
-  const [src, setSrc] = useState<string | null>(
-    domain ? `https://logo.clearbit.com/${domain}` : null,
-  );
-
-  useEffect(() => {
-    setSrc(domain ? `https://logo.clearbit.com/${domain}` : null);
-  }, [domain]);
-
-  const handleError = () => {
-    setSrc(null);
-  };
-
-  const sizeClass = size === "sm" ? "h-8 w-8 rounded-lg" : "h-10 w-10 rounded-xl";
-
-  if (!src) {
-    return (
-      <div
-        className={cn(
-          "flex shrink-0 items-center justify-center border bg-muted/40",
-          sizeClass,
-        )}
-      >
-        <span
-          className={cn(
-            "font-semibold text-foreground/60",
-            size === "sm" ? "text-xs" : "text-sm",
-          )}
-        >
-          {name.charAt(0).toUpperCase()}
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={cn(
-        "shrink-0 overflow-hidden border bg-background shadow-sm",
-        sizeClass,
-      )}
-    >
-      <img
-        src={src}
-        alt={`${name} logo`}
-        className="h-full w-full object-contain p-1"
-        onError={handleError}
-      />
-    </div>
-  );
-}
 
 function StrategicList({
   title,
