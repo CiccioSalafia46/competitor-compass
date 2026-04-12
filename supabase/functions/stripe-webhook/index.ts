@@ -102,7 +102,7 @@ async function resolveWorkspaceId(params: {
   return null;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }

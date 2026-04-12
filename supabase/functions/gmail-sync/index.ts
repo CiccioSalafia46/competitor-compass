@@ -189,7 +189,7 @@ async function refreshToken(
 
   const data = await resp.json();
 
-  await supabase
+  const { error: updateError } = await supabase
     .from("gmail_tokens")
     .update({
       access_token: data.access_token,
@@ -197,6 +197,14 @@ async function refreshToken(
       updated_at: new Date().toISOString(),
     })
     .eq("gmail_connection_id", connectionId);
+
+  if (updateError) {
+    // The refresh succeeded with Google but failed to persist. Log it so the
+    // issue is visible in Supabase function logs. The current request can still
+    // proceed with the in-memory token, but the next cold start will load the
+    // old expired token from DB and fail — surface this loudly.
+    console.error("[gmail-sync] Failed to persist refreshed access token:", updateError);
+  }
 
   return data.access_token;
 }
@@ -293,7 +301,7 @@ function buildSyncSummary(params: {
   };
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

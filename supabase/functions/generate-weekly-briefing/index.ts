@@ -25,7 +25,7 @@ function getWeekBounds(date: Date): { weekStart: string; weekEnd: string } {
   return { weekStart: fmt(monday), weekEnd: fmt(sunday) };
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

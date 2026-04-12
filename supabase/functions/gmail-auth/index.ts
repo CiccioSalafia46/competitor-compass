@@ -119,7 +119,7 @@ async function parseStateToken(rawState: string | null, secret: string): Promise
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

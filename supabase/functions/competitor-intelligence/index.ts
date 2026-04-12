@@ -4,7 +4,7 @@ import { HttpError, assertWorkspaceMember, requireAuthenticatedUser } from "../_
 import { fetchCompetitorIntelligenceSnapshots } from "../_shared/competitor-intelligence.ts";
 import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

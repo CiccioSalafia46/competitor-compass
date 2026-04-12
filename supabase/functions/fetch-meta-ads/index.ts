@@ -17,7 +17,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(JSON.stringify({ fn: "fetch-meta-ads", step, ts: new Date().toISOString(), ...(details || {}) }));
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

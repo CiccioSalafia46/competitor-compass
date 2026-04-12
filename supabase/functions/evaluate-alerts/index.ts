@@ -11,7 +11,7 @@ import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 const log = (step: string, details?: Record<string, unknown>) =>
   console.log(JSON.stringify({ fn: "evaluate-alerts", step, ts: new Date().toISOString(), ...(details || {}) }));
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

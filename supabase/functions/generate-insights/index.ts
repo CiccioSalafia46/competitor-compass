@@ -909,7 +909,7 @@ function buildFallbackInsights(summary: WorkspaceSummary, category?: InsightCate
   return category ? structuredInsights.filter((item) => item.category === category) : structuredInsights;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
