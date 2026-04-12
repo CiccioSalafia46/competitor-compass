@@ -1172,35 +1172,35 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
             <p className="text-sm leading-6 text-muted-foreground">{messagingEvolution.shiftSummary}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentThemes.length > 0
-                  ? messagingEvolution.currentThemes.map((theme) => <Badge key={theme} variant="secondary" className="text-xs">{theme}</Badge>)
+                  ? messagingEvolution.currentThemes.map((theme) => <Badge key={theme} variant="secondary" className="text-xs [overflow-wrap:anywhere]">{theme}</Badge>)
                   : <p className="text-xs text-muted-foreground">{t("strategy.noCurrentThemes")}</p>}
               </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.emergingAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.emergingAngles.length > 0
-                  ? messagingEvolution.emergingAngles.map((a) => <Badge key={a} variant="outline" className="border-primary/30 bg-primary/5 text-primary text-xs">{a}</Badge>)
+                  ? messagingEvolution.emergingAngles.map((a) => <Badge key={a} variant="outline" className="border-primary/30 bg-primary/5 text-primary text-xs [overflow-wrap:anywhere]">{a}</Badge>)
                   : <p className="text-xs text-muted-foreground">{t("strategy.noEmergingAngles")}</p>}
               </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentAngles.length > 0
-                  ? messagingEvolution.currentAngles.map((a) => <Badge key={a} variant="secondary" className="text-xs">{a}</Badge>)
+                  ? messagingEvolution.currentAngles.map((a) => <Badge key={a} variant="secondary" className="text-xs [overflow-wrap:anywhere]">{a}</Badge>)
                   : <p className="text-xs text-muted-foreground">{t("strategy.noCurrentAngles")}</p>}
               </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.previousThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.previousThemes.length > 0
-                  ? messagingEvolution.previousThemes.map((theme) => <Badge key={theme} variant="outline" className="text-xs">{theme}</Badge>)
+                  ? messagingEvolution.previousThemes.map((theme) => <Badge key={theme} variant="outline" className="text-xs [overflow-wrap:anywhere]">{theme}</Badge>)
                   : <p className="text-xs text-muted-foreground">{t("strategy.noPreviousThemes")}</p>}
               </div>
             </div>

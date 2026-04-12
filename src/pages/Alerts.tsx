@@ -1014,7 +1014,7 @@ export default function Alerts() {
                   <button
                     key={preset.labelKey}
                     onClick={() => openCreate(preset)}
-                    className="group flex flex-col gap-2 p-4 text-left transition-colors hover:bg-muted/30"
+                    className="min-w-0 group flex flex-col gap-2 p-4 text-left transition-colors hover:bg-muted/30"
                   >
                     <div className="flex items-center gap-2">
                       <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", getRuleColor(preset.ruleType))}>

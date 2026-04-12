@@ -898,7 +898,7 @@ export default function Analytics() {
           const isGood = m.rate >= 80;
           const isWarn = m.rate >= 40 && m.rate < 80;
           return (
-            <div key={m.label} className="rounded-xl border bg-card p-4 shadow-sm">
+            <div key={m.label} className="min-w-0 rounded-xl border bg-card p-4 shadow-sm">
               <div className="mb-2.5 flex items-center justify-between">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">
                   {m.label}
@@ -1039,7 +1039,7 @@ export default function Analytics() {
                 { label: t("maxDiscount"), value: `${summary.maxDiscount.toFixed(0)}%` },
                 { label: t("freeShipping"), value: `${summary.freeShippingRate.toFixed(1)}%` },
               ].map((m) => (
-                <div key={m.label} className="rounded-xl border bg-card px-4 py-4 shadow-sm">
+                <div key={m.label} className="min-w-0 rounded-xl border bg-card px-4 py-4 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {m.label}
                   </p>
