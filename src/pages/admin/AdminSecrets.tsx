@@ -233,7 +233,7 @@ export default function AdminSecrets() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 gap-1.5 text-xs"
+                    className="h-8 gap-1.5 text-xs"
                     disabled={acting || testingId === integration.id}
                     onClick={() => runTest(integration.id)}
                   >

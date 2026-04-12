@@ -144,7 +144,7 @@ function EvidenceItemView({ evidence }: { evidence: InsightEvidence }) {
           </Badge>
         ) : null}
       </div>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{evidence.detail}</p>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{evidence.detail}</p>
       {(evidence.competitor || evidence.timeframe) && (
         <p className="mt-2 text-xs text-muted-foreground">
           {[evidence.competitor, evidence.timeframe].filter(Boolean).join(" | ")}
@@ -203,11 +203,11 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
     >
       <CardHeader className="space-y-4 pb-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-primary/10 p-2 text-primary">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div className="shrink-0 rounded-xl bg-primary/10 p-2 text-primary">
               <Icon className="h-5 w-5" />
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="capitalize">
                   {meta.label}
@@ -235,13 +235,13 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <CardTitle className="text-xl leading-tight">{insight.title}</CardTitle>
-              <p className="text-sm font-medium text-foreground/80">Main message: {insight.main_message}</p>
-              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{insight.what_is_happening}</p>
+              <CardTitle className="text-xl leading-tight break-words">{insight.title}</CardTitle>
+              <p className="text-sm font-medium text-foreground/80 [overflow-wrap:anywhere]">Main message: {insight.main_message}</p>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{insight.what_is_happening}</p>
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-2.5 sm:w-auto sm:min-w-[220px] lg:w-[260px]">
+          <div className="grid w-full grid-cols-2 gap-2.5 lg:w-[260px] lg:shrink-0">
             <div className={cn("rounded-xl border p-3", confidenceBg)}>
               <p className="section-label">Confidence</p>
               <p className={cn("stat-value mt-1.5 text-lg font-semibold leading-none", confidenceTextColor)}>{confidenceValue}</p>
@@ -266,11 +266,11 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">Why it matters</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.why_it_matters}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">Strategic implication</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.strategic_implication}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_implication}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">Recommended response</p>
@@ -300,11 +300,11 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
         <div className="grid gap-4 xl:grid-cols-4">
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">Offers</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{formatOfferSummary(insight)}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{formatOfferSummary(insight)}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">CTA analysis</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.cta_analysis}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{insight.cta_analysis}</p>
             {insight.cta_primary ? (
               <Badge variant="outline" className="mt-3">
                 Primary CTA: {insight.cta_primary}
@@ -313,11 +313,11 @@ const InsightCard = memo(function InsightCard({ insight }: { insight: Insight })
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">Positioning angle</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.positioning_angle}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{insight.positioning_angle}</p>
           </div>
           <div className="rounded-2xl border bg-muted/20 p-4">
             <p className="section-label text-foreground">Strategic takeaway</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{insight.strategic_takeaway}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway}</p>
           </div>
         </div>
 

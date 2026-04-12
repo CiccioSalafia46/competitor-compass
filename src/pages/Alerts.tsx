@@ -342,7 +342,7 @@ function CreateEditRuleDialog({
             max={95}
             value={config.threshold ?? 30}
             onChange={(e) => setConfig((c) => ({ ...c, threshold: Number(e.target.value) }))}
-            className="h-8"
+            className="h-9"
           />
           <p className="text-[11px] text-muted-foreground">{t("dialog.discountThresholdHint")}</p>
         </div>
@@ -362,7 +362,7 @@ function CreateEditRuleDialog({
               }))
             }
             placeholder={t("dialog.keywordsPlaceholder")}
-            className="h-8"
+            className="h-9"
           />
           <p className="text-[11px] text-muted-foreground">{t("dialog.keywordsHint")}</p>
         </div>
@@ -382,7 +382,7 @@ function CreateEditRuleDialog({
               }))
             }
             placeholder={t("dialog.campaignTypesPlaceholder")}
-            className="h-8"
+            className="h-9"
           />
           <p className="text-[11px] text-muted-foreground">{t("dialog.campaignTypesHint")}</p>
         </div>
@@ -449,7 +449,7 @@ function CreateEditRuleDialog({
           <div className="space-y-1.5">
             <Label className="text-xs">{t("dialog.ruleType")}</Label>
             <Select value={ruleType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="h-8">
+              <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -469,7 +469,7 @@ function CreateEditRuleDialog({
           <div className="space-y-1.5">
             <Label className="text-xs">{t("dialog.evaluationMode")}</Label>
             <Select value={evaluationMode} onValueChange={(v) => setEvaluationMode(v as AlertEvaluationMode)}>
-              <SelectTrigger className="h-8">
+              <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -596,11 +596,11 @@ const RuleCard = memo(function RuleCard({
             onCheckedChange={onToggle}
             className="scale-90"
           />
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={onEdit} aria-label="Edit alert rule">
-            <Pencil className="h-3 w-3" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={onEdit} aria-label="Edit alert rule">
+            <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/5" onClick={onDelete} aria-label="Delete alert rule">
-            <Trash2 className="h-3 w-3" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5" onClick={onDelete} aria-label="Delete alert rule">
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -775,7 +775,7 @@ export default function Alerts() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-xs"
             onClick={() => void handleEvaluate("scheduled")}
             disabled={evaluating}
           >
@@ -784,7 +784,7 @@ export default function Alerts() {
           </Button>
           <Button
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-xs"
             onClick={() => void handleEvaluate("manual")}
             disabled={evaluating}
           >
@@ -838,7 +838,7 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setReadFilter(v)}
                   className={cn(
-                    "h-7 rounded px-2.5 text-xs font-medium transition-colors",
+                    "h-8 rounded px-2.5 text-xs font-medium transition-colors",
                     readFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -853,7 +853,7 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setSeverityFilter(v)}
                   className={cn(
-                    "h-7 rounded px-2.5 text-xs font-medium transition-colors",
+                    "h-8 rounded px-2.5 text-xs font-medium transition-colors",
                     severityFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -864,7 +864,7 @@ export default function Alerts() {
 
             {allCategories.length > 0 && (
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="h-7 w-36 text-[11px] bg-background">
+                <SelectTrigger className="h-9 w-36 text-xs bg-background">
                   <SelectValue placeholder={t("filters.allCategories")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -880,7 +880,7 @@ export default function Alerts() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="ml-auto h-7 gap-1 text-[11px]"
+                className="ml-auto h-8 gap-1 text-xs"
                 onClick={() => {
                   void markAllRead();
                   void refetchAlerts();
@@ -922,7 +922,7 @@ export default function Alerts() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="mt-3 h-7 gap-1 text-xs"
+                  className="mt-3 h-9 gap-1 text-xs"
                   onClick={() => { setSeverityFilter("all"); setCategoryFilter("all"); setReadFilter("all"); }}
                 >
                   {t("notifications.clearFilters")}
@@ -971,14 +971,14 @@ export default function Alerts() {
                     </div>
                     <div className="flex shrink-0 gap-0.5 mt-0.5">
                       {!alert.is_read && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void markRead(alert.id)} title={t("notifications.markRead")}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void markRead(alert.id)} title={t("notifications.markRead")}>
                           <Check className="h-3.5 w-3.5" />
                         </Button>
                       )}
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         onClick={() => void dismiss(alert.id)}
                         title={t("notifications.dismiss")}
                       >
@@ -1002,7 +1002,7 @@ export default function Alerts() {
               </div>
               <p className="text-[12px] font-semibold text-foreground">{t("rules.quickPresetsTitle")}</p>
               <p className="ml-1 text-[11px] text-muted-foreground hidden sm:block">{t("rules.quickPresetsSubtitle")}</p>
-              <Button size="sm" className="ml-auto h-7 gap-1.5 text-xs" onClick={() => openCreate()}>
+              <Button size="sm" className="ml-auto h-8 gap-1.5 text-xs" onClick={() => openCreate()}>
                 <Plus className="h-3.5 w-3.5" />
                 {t("rules.customRule")}
               </Button>
@@ -1077,7 +1077,7 @@ export default function Alerts() {
                   key={v}
                   onClick={() => setLogStatusFilter(v)}
                   className={cn(
-                    "h-7 rounded px-2.5 text-xs font-medium transition-colors",
+                    "h-8 rounded px-2.5 text-xs font-medium transition-colors",
                     logStatusFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -1087,7 +1087,7 @@ export default function Alerts() {
             </div>
             {rules.length > 0 && (
               <Select value={logRuleFilter} onValueChange={setLogRuleFilter}>
-                <SelectTrigger className="h-7 w-44 text-[11px] bg-background">
+                <SelectTrigger className="h-8 w-44 text-[11px] bg-background">
                   <SelectValue placeholder={t("filters.allRules")} />
                 </SelectTrigger>
                 <SelectContent>

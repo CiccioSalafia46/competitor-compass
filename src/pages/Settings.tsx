@@ -63,7 +63,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-2xl space-y-6 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
@@ -91,13 +91,13 @@ export default function SettingsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("email")}</span>
-            <span className="text-foreground">{user?.email}</span>
+          <div className="flex flex-wrap items-start justify-between gap-y-0.5 text-sm">
+            <span className="text-muted-foreground shrink-0 mr-4">{t("email")}</span>
+            <span className="text-foreground break-all text-right">{user?.email}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("yourRoles")}</span>
-            <div className="flex gap-1">
+          <div className="flex flex-wrap items-start justify-between gap-2 text-sm">
+            <span className="text-muted-foreground shrink-0">{t("yourRoles")}</span>
+            <div className="flex flex-wrap gap-1 justify-end">
               {roles.length > 0 ? (
                 roles.map((r) => (
                   <Badge key={r} variant="outline" className="capitalize text-xs">{r}</Badge>
@@ -120,12 +120,12 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t("name")}</span>
+            <div className="flex flex-wrap items-start justify-between gap-y-0.5 text-sm">
+              <span className="text-muted-foreground shrink-0 mr-4">{t("name")}</span>
               <span className="text-foreground">{currentWorkspace.name}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t("slug")}</span>
+            <div className="flex flex-wrap items-start justify-between gap-y-0.5 text-sm">
+              <span className="text-muted-foreground shrink-0 mr-4">{t("slug")}</span>
               <span className="text-foreground font-mono text-xs">{currentWorkspace.slug}</span>
             </div>
             {isAdmin && (
@@ -190,7 +190,7 @@ export default function SettingsPage() {
 
           <Separator />
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate("/settings/usage")}>
               {t("viewFullUsage")}
             </Button>
@@ -244,7 +244,7 @@ export default function SettingsPage() {
             </div>
             <CardDescription>{t("downloadWorkspaceData")}</CardDescription>
           </CardHeader>
-          <CardContent className="flex gap-2">
+          <CardContent className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => handleExport("newsletters")} disabled={exporting}>
               {exporting ? t("exporting") : t("exportNewsletters")}
             </Button>

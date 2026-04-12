@@ -40,7 +40,7 @@ export default function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar />
           <SidebarInset className="flex-1">
-            <main className="flex-1 overflow-auto scrollbar-thin">
+            <main className="flex-1 overflow-x-hidden overflow-y-auto scrollbar-thin">
               <ErrorBoundary>
                 <div className="px-4 pt-3 sm:px-6 lg:px-8">
                   <EmailVerificationBanner />
@@ -114,9 +114,9 @@ const TopBar = memo(function TopBar() {
   }, [realtimeFailed, currentWorkspace, fetchUnread]);
 
   return (
-    <header className="h-12 flex items-center justify-between border-b bg-card/95 backdrop-blur-sm px-3 shrink-0 sticky top-0 z-20">
+    <header className="h-14 flex items-center justify-between border-b bg-card/95 backdrop-blur-sm px-3 sm:px-4 shrink-0 sticky top-0 z-20">
       <div className="flex items-center gap-2">
-        <SidebarTrigger className="h-8 w-8 shrink-0" />
+        <SidebarTrigger className="h-10 w-10 shrink-0" />
         {currentWorkspace && (
           <span className="hidden sm:block text-[13px] font-medium text-muted-foreground/70 select-none truncate max-w-[200px]">
             {currentWorkspace.name}
@@ -129,7 +129,7 @@ const TopBar = memo(function TopBar() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 relative"
+          className="h-10 w-10 relative"
           onClick={() => navigate("/alerts")}
           aria-label={t("alerts")}
         >

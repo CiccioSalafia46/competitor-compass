@@ -150,7 +150,7 @@ export default function AdminWorkspaces() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/5"
+                      className="h-8 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/5"
                       disabled={acting}
                       onClick={() => setDeleteTarget(ws)}
                     >

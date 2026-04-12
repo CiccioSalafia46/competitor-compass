@@ -1027,15 +1027,15 @@ export default function Reports() {
             </p>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => void refetch()}>
+        <div className="flex flex-wrap shrink-0 items-center gap-1.5">
+          <Button variant="ghost" size="sm" className="h-9 gap-1.5 text-xs" onClick={() => void refetch()}>
             <RefreshCcw className="h-3.5 w-3.5" />
             {t("buttons.refresh")}
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-xs"
             onClick={() => void runDueSchedules()}
             disabled={!canCreateReports || runningDue}
           >
@@ -1046,7 +1046,7 @@ export default function Reports() {
               ? t("buttons.runDueCount", { count: dueCount })
               : t("buttons.runDue")}
           </Button>
-          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => openCreateSchedule()} disabled={!canCreateReports}>
+          <Button size="sm" className="h-9 gap-1.5 text-xs" onClick={() => openCreateSchedule()} disabled={!canCreateReports}>
             <CalendarClock className="h-3.5 w-3.5" />
             {t("buttons.schedule")}
           </Button>
@@ -1114,7 +1114,7 @@ export default function Reports() {
                       {isCustom ? (
                         <Button
                           size="sm"
-                          className="h-8 gap-1.5 text-xs"
+                          className="h-9 gap-1.5 text-xs"
                           onClick={() => setBuilderOpen(true)}
                           disabled={!canCreateReports}
                         >
@@ -1125,14 +1125,14 @@ export default function Reports() {
                         <>
                           <Button
                             size="sm"
-                            className="h-8 gap-1.5 text-xs"
+                            className="h-9 gap-1.5 text-xs"
                             onClick={() => void handleGenerate(key as ReportTemplateKey, template.defaultRangeDays)}
                             disabled={!canCreateReports || generatingTemplate === key}
                           >
                             <WandSparkles className="h-3.5 w-3.5" />
                             {generatingTemplate === key ? t("buttons.generating") : t("buttons.generate")}
                           </Button>
-                          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
+                          <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
                             {t("buttons.schedule")}
                           </Button>
                         </>
@@ -1192,7 +1192,7 @@ export default function Reports() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 text-xs"
+                          className="h-8 text-xs"
                           onClick={() => {
                             setEditingSchedule(schedule);
                             setScheduleDialogOpen(true);
@@ -1204,7 +1204,7 @@ export default function Reports() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/5"
+                          className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/5"
                           onClick={() => void deleteSchedule(schedule.id)}
                           disabled={!canCreateReports}
                         >

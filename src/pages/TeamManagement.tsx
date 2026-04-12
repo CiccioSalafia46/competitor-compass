@@ -152,7 +152,7 @@ export default function TeamManagement() {
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-2xl space-y-6 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{t("team.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">{t("team.subtitle")}</p>
@@ -165,7 +165,7 @@ export default function TeamManagement() {
             <CardDescription>{t("team.inviteSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
               <div className="flex-1">
                 <Label htmlFor="invite-email" className="sr-only">{t("email")}</Label>
                 <Input
@@ -176,20 +176,22 @@ export default function TeamManagement() {
                   placeholder={t("team.inviteEmailPlaceholder")}
                 />
               </div>
-              <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">{t("team.roles.admin")}</SelectItem>
-                  <SelectItem value="analyst">{t("team.roles.analyst")}</SelectItem>
-                  <SelectItem value="viewer">{t("team.roles.viewer")}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()} className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                {inviting ? t("team.inviting") : t("team.inviteButton")}
-              </Button>
+              <div className="flex gap-2">
+                <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
+                  <SelectTrigger className="w-32 sm:w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">{t("team.roles.admin")}</SelectItem>
+                    <SelectItem value="analyst">{t("team.roles.analyst")}</SelectItem>
+                    <SelectItem value="viewer">{t("team.roles.viewer")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()} className="gap-2 flex-1 sm:flex-none">
+                  <UserPlus className="h-4 w-4" />
+                  {inviting ? t("team.inviting") : t("team.inviteButton")}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -203,26 +205,26 @@ export default function TeamManagement() {
           {members.map((member) => {
             const primaryRole = member.roles[0];
             return (
-              <div key={member.user_id} className="flex items-center justify-between rounded-md border p-3">
+              <div key={member.user_id} className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+                  <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground shrink-0">
                     {(member.display_name || "?")[0].toUpperCase()}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {member.display_name || "Unknown"}
                     </p>
                     <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pl-12 sm:pl-0">
                   {primaryRole ? (
-                    <Badge variant="outline" className="gap-1 capitalize">
+                    <Badge variant="outline" className="gap-1 capitalize shrink-0">
                       {roleIcon(primaryRole.role)}
                       {t(`team.roles.${primaryRole.role}`)}
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="capitalize">
+                    <Badge variant="secondary" className="capitalize shrink-0">
                       {t("team.noRoleAssigned")}
                     </Badge>
                   )}
@@ -231,7 +233,7 @@ export default function TeamManagement() {
                       value={primaryRole.role}
                       onValueChange={(v) => handleRoleChange(member.user_id, primaryRole.id, v as AppRole)}
                     >
-                      <SelectTrigger className="w-28 h-8 text-xs">
+                      <SelectTrigger className="w-28 h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

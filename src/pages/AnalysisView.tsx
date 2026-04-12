@@ -100,10 +100,10 @@ export default function AnalysisView() {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-3xl animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl animate-fade-in">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors py-2 -ml-1 px-1"
       >
         <ArrowLeft className="h-4 w-4" />
         Back

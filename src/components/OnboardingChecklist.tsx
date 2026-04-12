@@ -32,7 +32,7 @@ const OnboardingChecklist = memo(function OnboardingChecklist() {
             <p className="text-sm font-semibold text-foreground">Complete your setup</p>
             <p className="text-xs text-muted-foreground mt-0.5">{progress}% complete</p>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={dismiss} aria-label="Dismiss setup checklist">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={dismiss} aria-label="Dismiss setup checklist">
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>

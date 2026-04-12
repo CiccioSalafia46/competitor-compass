@@ -574,7 +574,7 @@ Deno.serve(async (req) => {
           },
         ];
 
-        return jsonResponse({ integrations, flags: flags || [], secretStatus });
+        return jsonResponse({ integrations, flags: flags || [] });
       }
 
       case "test_integration": {

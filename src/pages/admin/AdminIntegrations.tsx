@@ -165,7 +165,7 @@ export default function AdminIntegrations() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs gap-1"
+                        className="h-8 text-xs gap-1"
                         disabled={acting}
                         onClick={() => handleResync(conn.id)}
                       >
@@ -175,7 +175,7 @@ export default function AdminIntegrations() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/5"
+                        className="h-8 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/5"
                         disabled={acting}
                         onClick={() => setDisconnectTarget(conn)}
                       >

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { HttpError, assertWorkspaceAdmin, requireAuthenticatedUser } from "../_shared/auth.ts";
+import { HttpError, assertVerifiedUser, assertWorkspaceAdmin, requireAuthenticatedUser } from "../_shared/auth.ts";
 import { sanitizeRedirectUrl } from "../_shared/app.ts";
 import { getStripeClient } from "../_shared/stripe-billing.ts";
 import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
     );
 
     const { user } = await requireAuthenticatedUser(supabase, req);
+    await assertVerifiedUser(user);
     const { workspaceId } = await req.json();
 
     if (!workspaceId) {

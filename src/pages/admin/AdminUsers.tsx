@@ -265,7 +265,7 @@ export default function AdminUsers() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs gap-1"
+                        className="h-8 text-xs gap-1"
                         disabled={acting}
                         onClick={() => setConfirmAction({ type: "unban", user })}
                       >
@@ -276,7 +276,7 @@ export default function AdminUsers() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={cn("h-7 text-xs gap-1 text-warning hover:text-warning hover:bg-warning/5")}
+                        className={cn("h-8 text-xs gap-1 text-warning hover:text-warning hover:bg-warning/5")}
                         disabled={acting}
                         onClick={() => setConfirmAction({ type: "ban", user })}
                       >
@@ -287,7 +287,7 @@ export default function AdminUsers() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/5"
+                      className="h-8 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/5"
                       disabled={acting}
                       onClick={() => setConfirmAction({ type: "delete", user })}
                     >

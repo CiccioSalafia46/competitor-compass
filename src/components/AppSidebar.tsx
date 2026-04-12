@@ -123,7 +123,7 @@ export const AppSidebar = memo(function AppSidebar() {
                       isActive={active}
                       onClick={() => navigate(item.path)}
                       className={cn(
-                        "gap-2.5 h-8 text-[13px] font-normal transition-colors",
+                        "gap-2.5 h-9 text-[13px] font-normal transition-colors",
                         active
                           ? "bg-accent text-accent-foreground font-medium"
                           : "text-sidebar-foreground hover:bg-muted hover:text-foreground"
@@ -169,7 +169,7 @@ export const AppSidebar = memo(function AppSidebar() {
         <div className="px-2 pb-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex w-full items-center gap-2 rounded-lg border bg-background px-2.5 py-2 text-left text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+              <button className="flex w-full items-center gap-2 rounded-lg border bg-background px-2.5 py-2.5 text-left text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/15 text-[10px] font-bold uppercase text-primary">
                   {currentWorkspace.name.charAt(0)}
                 </div>
@@ -209,7 +209,7 @@ export const AppSidebar = memo(function AppSidebar() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start gap-2 text-xs h-7"
+              className="w-full justify-start gap-2 text-xs h-9"
               onClick={() => navigate("/newsletters/new")}
             >
               <Plus className="h-3 w-3" />
@@ -238,7 +238,7 @@ export const AppSidebar = memo(function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleSignOut}
-              className="gap-2.5 h-8 text-[13px] text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+              className="gap-2.5 h-9 text-[13px] text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>{t("signOut")}</span>}

@@ -645,7 +645,7 @@ export default function NewsletterInbox() {
                     if (!item.is_demo) void toggleStar(item.id);
                   }}
                   className={cn(
-                    "shrink-0 rounded p-0.5 transition-colors",
+                    "shrink-0 rounded p-2 transition-colors",
                     item.is_starred
                       ? "text-warning"
                       : "text-transparent group-hover:text-muted-foreground/40 hover:!text-muted-foreground/70",
@@ -758,7 +758,7 @@ export default function NewsletterInbox() {
                     event.stopPropagation();
                     if (!item.is_demo) void archive(item.id);
                   }}
-                  className="shrink-0 rounded p-0.5 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground"
+                  className="shrink-0 rounded p-2 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground"
                   title={t("archiveAction")}
                   aria-label={t("archiveAction")}
                 >
@@ -781,7 +781,7 @@ export default function NewsletterInbox() {
             <Button
               variant="outline"
               size="icon"
-              className="h-7 w-7"
+              className="h-9 w-9"
               disabled={!hasPreviousPage}
               onClick={goToPrevPage}
               aria-label="Previous page"
@@ -791,7 +791,7 @@ export default function NewsletterInbox() {
             <Button
               variant="outline"
               size="icon"
-              className="h-7 w-7"
+              className="h-9 w-9"
               disabled={!hasNextPage}
               onClick={goToNextPage}
               aria-label="Next page"

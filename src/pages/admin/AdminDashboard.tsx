@@ -247,7 +247,7 @@ export default function AdminDashboard() {
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs gap-1 border-destructive/30 text-destructive hover:bg-destructive/10 shrink-0"
+            className="h-8 text-xs gap-1 border-destructive/30 text-destructive hover:bg-destructive/10 shrink-0"
             onClick={() => navigate("/admin/issues")}
           >
             Investigate <ArrowRight className="h-3 w-3" />
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
-              <Button variant="ghost" size="sm" className="h-6 text-[11px] gap-1 text-muted-foreground" onClick={() => navigate("/admin/logs")}>
+              <Button variant="ghost" size="sm" className="h-8 text-[11px] gap-1 text-muted-foreground" onClick={() => navigate("/admin/logs")}>
                 View all <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
@@ -500,7 +500,7 @@ export default function AdminDashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/5"
+                className="h-8 text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/5"
                 onClick={() => navigate("/admin/issues")}
               >
                 Manage Issues <ArrowRight className="h-3 w-3" />

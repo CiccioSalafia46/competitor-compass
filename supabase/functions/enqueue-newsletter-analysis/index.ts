@@ -89,6 +89,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "analysisId or newsletterEntryIds is required" }, 400);
     }
 
+    if (newsletterEntryIds.length > 50) {
+      return jsonResponse({ error: "Maximum 50 newsletter entries per batch." }, 400);
+    }
+
     const queuedAnalyses: AnalysisRow[] = [];
 
     if (analysisId) {

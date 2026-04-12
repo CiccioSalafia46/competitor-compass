@@ -172,7 +172,7 @@ export default function Billing() {
 
   if (loading) {
     return (
-      <div className="p-6 lg:p-8 flex items-center gap-2">
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
         <span className="text-sm text-muted-foreground">{t("billing.loadingBilling")}</span>
       </div>
@@ -191,11 +191,11 @@ export default function Billing() {
         </div>
         <div className="flex gap-2">
           {subscribed && (
-            <Button variant="outline" size="sm" onClick={handlePortal} className="gap-1.5 text-xs h-8">
+            <Button variant="outline" size="sm" onClick={handlePortal} className="gap-1.5 text-xs h-9">
               <ExternalLink className="h-3 w-3" /> {t("billing.manageSubscription")}
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={() => checkSubscription()} className="gap-1.5 text-xs h-8">
+          <Button variant="ghost" size="sm" onClick={() => checkSubscription()} className="gap-1.5 text-xs h-9">
             <CreditCard className="h-3 w-3" /> {t("billing.refresh")}
           </Button>
         </div>
@@ -214,7 +214,7 @@ export default function Billing() {
           <CardTitle className="text-sm font-medium">{t("billing.usageTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: "Competitors", used: usage.competitors, limit: limits.competitors, key: "competitors" as const },
               { label: "Data Imports", used: usage.newsletters_this_month, limit: limits.newsletters_per_month, key: "newsletters_this_month" as const },
@@ -254,7 +254,7 @@ export default function Billing() {
       </Card>
 
       {/* Plan Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(Object.keys(STRIPE_PLANS) as PlanTier[]).map((plan) => {
           const isCurrent = tier === plan;
           const price = PLAN_PRICES[plan];
@@ -356,7 +356,7 @@ export default function Billing() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full min-w-[480px] text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">{t("billing.feature")}</th>

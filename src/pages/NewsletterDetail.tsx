@@ -114,16 +114,16 @@ export default function NewsletterDetail() {
   if (!entry) return null;
 
   return (
-    <div className="p-6 lg:p-8 max-w-3xl animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl animate-fade-in">
       <button
         onClick={() => navigate("/newsletters")}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors py-2 -ml-1 px-1"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to newsletters
       </button>
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">
             {entry.subject || "Untitled newsletter"}
@@ -142,7 +142,7 @@ export default function NewsletterDetail() {
             )}
           </div>
         </div>
-        <Button onClick={handleAnalyze} disabled={analyzing} className="gap-2 shrink-0">
+        <Button onClick={handleAnalyze} disabled={analyzing} className="gap-2 shrink-0 self-start">
           <Sparkles className="h-4 w-4" />
           {analyzing ? "Starting..." : "Analyze"}
         </Button>

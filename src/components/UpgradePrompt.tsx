@@ -61,7 +61,7 @@ const UpgradePrompt = memo(function UpgradePrompt({
         </div>
         <Button
           size="sm"
-          className="shrink-0 gap-1.5 text-xs h-7"
+          className="shrink-0 gap-1.5 text-xs h-8"
           onClick={() => navigate("/settings/billing")}
         >
           {t("upgrade")} <ArrowRight className="h-3 w-3" />

@@ -47,9 +47,9 @@ export default function MetaAdsPage() {
   ];
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             <Megaphone className="h-6 w-6 text-primary" />

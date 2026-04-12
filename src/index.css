@@ -117,6 +117,8 @@
 @layer base {
   * {
     @apply border-border;
+    /* Disable tap highlight flash on mobile */
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -125,6 +127,10 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
+    /* iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -134,6 +140,11 @@
   /* Focus rings */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Faster, snappier taps on mobile — no 300ms delay */
+  button, a, [role="button"], input, select, textarea {
+    touch-action: manipulation;
   }
 }
 
@@ -167,7 +178,7 @@
 
   /* Section label — consistent uppercase eyebrow text */
   .section-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground;
   }
 
   /* Stat value — tabular numerals for KPI displays */
@@ -188,7 +199,7 @@
 
   /* Pill badge — compact status labels */
   .pill {
-    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-none;
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none;
   }
 
   /* Scrollbar styling */
@@ -220,6 +231,32 @@
 @layer base {
   button, a, [role="button"] {
     @apply transition-colors;
+  }
+}
+
+/* Safe-area padding for iOS notch/home-bar */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Horizontal scroll container with visual fade hint */
+  .scroll-x-hint {
+    position: relative;
+  }
+  .scroll-x-hint::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 24px;
+    background: linear-gradient(to right, transparent, hsl(var(--background) / 0.8));
+    pointer-events: none;
+    border-radius: inherit;
   }
 }
 

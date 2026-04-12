@@ -1,58 +1,58 @@
 project_id = "qynksmyzqkzltnuajarm"
 
 [functions.admin-data]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-meta-ad]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-newsletter]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enqueue-newsletter-analysis]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-subscription]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-checkout]
-verify_jwt = false
+verify_jwt = true
 
 [functions.customer-portal]
-verify_jwt = false
+verify_jwt = true
 
 [functions.competitor-intelligence]
-verify_jwt = false
+verify_jwt = true
 
 [functions.dashboard-snapshot]
-verify_jwt = false
+verify_jwt = true
 
 [functions.reports-center]
-verify_jwt = false
+verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
 
 [functions.evaluate-alerts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.extract-newsletter-intel]
-verify_jwt = false
+verify_jwt = true
 
 [functions.fetch-meta-ads]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-insights]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-weekly-briefing]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gmail-auth]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gmail-sync]
-verify_jwt = false
+verify_jwt = true
 
 [functions.invite-member]
-verify_jwt = false
+verify_jwt = true

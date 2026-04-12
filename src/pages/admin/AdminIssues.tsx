@@ -342,7 +342,7 @@ export default function AdminIssues() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 gap-1 text-xs"
+                  className="h-8 gap-1 text-xs"
                   disabled={acting}
                   onClick={() => handleResync(conn.id)}
                 >

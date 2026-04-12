@@ -402,7 +402,7 @@ export default function Competitors() {
   }
 
   return (
-    <div className="space-y-6 p-6 lg:p-8 animate-fade-in">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>

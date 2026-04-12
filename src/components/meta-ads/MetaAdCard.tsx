@@ -109,7 +109,7 @@ export function MetaAdCard({ ad, onAnalyze, onSelect, analyzing, isDemo }: MetaA
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs gap-1"
+              className="h-8 text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onAnalyze(ad.id!);

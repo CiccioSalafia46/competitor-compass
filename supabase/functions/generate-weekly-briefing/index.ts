@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import {
   HttpError,
+  assertVerifiedUser,
   assertWorkspaceAnalyst,
   requireAuthenticatedUser,
 } from "../_shared/auth.ts";
@@ -43,6 +44,7 @@ Deno.serve(async (req) => {
 
   try {
     const { user } = await requireAuthenticatedUser(supabase, req);
+    await assertVerifiedUser(user);
     const body = await req.json().catch(() => ({}));
     const { workspaceId, forceRegenerate = false } = body;
 
@@ -98,7 +100,10 @@ Deno.serve(async (req) => {
       .select()
       .single();
 
-    if (upsertError) throw upsertError;
+    if (upsertError) {
+      console.error("[generate-weekly-briefing] briefing upsert failed:", upsertError);
+      throw new HttpError(500, "Failed to create briefing record.");
+    }
     const briefingId = briefingRow.id;
 
     // Gather data for the briefing
@@ -264,7 +269,10 @@ Deno.serve(async (req) => {
       .select()
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("[generate-weekly-briefing] briefing update failed:", updateError);
+      throw new HttpError(500, "Failed to save briefing.");
+    }
 
     return jsonResponse({ briefing: finalRow, cached: false });
   } catch (error) {

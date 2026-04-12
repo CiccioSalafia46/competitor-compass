@@ -276,11 +276,11 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/newsletters/new")}>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-medium" onClick={() => navigate("/newsletters/new")}>
             <Plus className="h-3.5 w-3.5" />
             {t("importData")}
           </Button>
-          <Button size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/insights")}>
+          <Button size="sm" className="h-9 gap-1.5 text-xs font-medium" onClick={() => navigate("/insights")}>
             <Sparkles className="h-3.5 w-3.5" />
             {t("generateInsights")}
           </Button>
@@ -344,15 +344,23 @@ export default function Dashboard() {
 
           {/* ── Filter Strip (only if filters are meaningful) ───────────────── */}
           {(competitorOptions.length > 0 || campaignTypeOptions.length > 0) && (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <Filter className="h-3 w-3" />
-                <span>{t("filter")}</span>
+            <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 px-3 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:py-2">
+              <div className="flex items-center justify-between sm:justify-start">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Filter className="h-3 w-3" />
+                  <span>{t("filter")}</span>
+                </div>
+                {activeFilterCount > 0 && (
+                  <button onClick={clearFilters} className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground sm:hidden">
+                    <X className="h-3 w-3" />
+                    {t("clearFilters")}
+                  </button>
+                )}
               </div>
               <Separator orientation="vertical" className="hidden sm:block h-4" />
               {competitorOptions.length > 0 && (
                 <Select value={selectedCompetitor || ALL_COMPETITORS} onValueChange={(v) => setSelectedCompetitor(v === ALL_COMPETITORS ? "" : v)}>
-                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background">
+                  <SelectTrigger className="h-9 w-full text-xs bg-background sm:w-auto sm:min-w-[140px]">
                     <SelectValue placeholder={t("allCompetitors")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -363,7 +371,7 @@ export default function Dashboard() {
               )}
               {campaignTypeOptions.length > 0 && (
                 <Select value={selectedCampaignType || ALL_CAMPAIGNS} onValueChange={(v) => setSelectedCampaignType(v === ALL_CAMPAIGNS ? "" : v)}>
-                  <SelectTrigger className="h-7 min-w-[160px] text-xs bg-background">
+                  <SelectTrigger className="h-9 w-full text-xs bg-background sm:w-auto sm:min-w-[140px]">
                     <SelectValue placeholder={t("allCampaigns")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -373,7 +381,7 @@ export default function Dashboard() {
                 </Select>
               )}
               {activeFilterCount > 0 && (
-                <button onClick={clearFilters} className="ml-auto flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground">
+                <button onClick={clearFilters} className="hidden sm:ml-auto sm:flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground min-h-[36px]">
                   <X className="h-3 w-3" />
                   {t("clearFilters")}
                 </button>
@@ -600,7 +608,7 @@ function EmptyZone({ icon: Icon, title, desc, action }: {
       <p className="text-xs font-medium text-muted-foreground">{title}</p>
       <p className="mx-auto mt-0.5 max-w-[200px] text-[11px] text-muted-foreground/60">{desc}</p>
       {action && (
-        <Button variant="outline" size="sm" className="mt-3 h-7 gap-1 text-xs" onClick={action.onClick}>
+        <Button variant="outline" size="sm" className="mt-3 h-8 gap-1 text-xs" onClick={action.onClick}>
           {action.label}
           <ArrowRight className="h-3 w-3" />
         </Button>
@@ -758,7 +766,7 @@ function BriefColumn({ icon: Icon, label, text, accent, cta, onNavigate }: {
       <p className="text-sm leading-[1.65] text-foreground">{text}</p>
       {cta && onNavigate && (
         <div className="mt-auto pt-1">
-          <Button size="sm" className="h-7 gap-1.5 text-xs" onClick={() => onNavigate(cta.href)}>
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onNavigate(cta.href)}>
             {cta.label}
             <ArrowRight className="h-3 w-3" />
           </Button>
@@ -777,30 +785,36 @@ function ActionCard({ action, rank, onNavigate }: {
 }) {
   const priority = normalizeDashboardPriority(action.priority);
   return (
-    <div className={cn("flex items-start gap-3.5 rounded-xl border border-l-[3px] bg-background p-4 transition-all duration-200 hover:bg-accent/20 hover:shadow-md hover:-translate-y-0.5", PRIORITY_BORDER[priority])}>
-      <div className={cn("mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white shadow-sm", priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-primary")}>
-        {rank}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold">{action.title}</p>
-          <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
-            {INSIGHT_PRIORITY_LABELS[priority]}
-          </Badge>
+    <div className={cn("rounded-xl border border-l-[3px] bg-background p-4 transition-all duration-200 hover:bg-accent/20 hover:shadow-md hover:-translate-y-0.5", PRIORITY_BORDER[priority])}>
+      <div className="flex items-start gap-3.5">
+        <div className={cn("mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white shadow-sm", priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-primary")}>
+          {rank}
         </div>
-        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{action.detail}</p>
-        {(action.competitors?.length || action.campaignTypes?.length) ? (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {action.competitors?.slice(0, 2).map((c) => (
-              <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
-            ))}
-            {action.campaignTypes?.slice(0, 1).map((ct) => (
-              <Badge key={ct} variant="outline" className="text-[10px] capitalize">{fmt(ct, "campaign")}</Badge>
-            ))}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold">{action.title}</p>
+            <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
+              {INSIGHT_PRIORITY_LABELS[priority]}
+            </Badge>
           </div>
-        ) : null}
+          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{action.detail}</p>
+          {(action.competitors?.length || action.campaignTypes?.length) ? (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {action.competitors?.slice(0, 2).map((c) => (
+                <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+              ))}
+              {action.campaignTypes?.slice(0, 1).map((ct) => (
+                <Badge key={ct} variant="outline" className="text-[10px] capitalize">{fmt(ct, "campaign")}</Badge>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        <Button size="sm" className="hidden h-8 shrink-0 gap-1 text-xs sm:inline-flex" onClick={onNavigate}>
+          {action.cta}
+          <ArrowRight className="h-3 w-3" />
+        </Button>
       </div>
-      <Button size="sm" className="h-7 shrink-0 gap-1 text-xs" onClick={onNavigate}>
+      <Button size="sm" className="mt-3 h-9 w-full gap-1.5 text-xs sm:hidden" onClick={onNavigate}>
         {action.cta}
         <ArrowRight className="h-3 w-3" />
       </Button>

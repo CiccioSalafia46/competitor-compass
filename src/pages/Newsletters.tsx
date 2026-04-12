@@ -45,13 +45,13 @@ export default function Newsletters() {
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 animate-fade-in">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Data Sources</h1>
           <p className="text-sm text-muted-foreground mt-1">Collected competitor communications</p>
         </div>
-        <Button onClick={() => navigate("/newsletters/new")} className="gap-2">
+        <Button onClick={() => navigate("/newsletters/new")} className="gap-2 self-start sm:self-auto">
           <Plus className="h-4 w-4" />
           Import data
         </Button>

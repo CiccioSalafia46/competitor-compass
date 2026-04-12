@@ -47,28 +47,37 @@ Deno.serve(async (req) => {
       throw new HttpError(400, "You cannot invite yourself.");
     }
 
-    // Check whether the invitee already has an account.
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u) => u.email && normalizeEmail(u.email) === email,
+    // Check whether the invitee already has an account — targeted lookup
+    // via SECURITY DEFINER function to avoid loading the entire user table.
+    const { data: existingUserId, error: lookupError } = await supabase.rpc(
+      "find_user_id_by_email",
+      { p_email: email },
     );
 
-    if (existingUser) {
+    if (lookupError) {
+      console.error("[invite-member] user lookup failed:", lookupError);
+      throw new HttpError(500, "Failed to look up user account.");
+    }
+
+    if (existingUserId) {
       // User already exists — add them to the workspace directly.
       const membershipRole = role === "admin" ? "admin" : "member";
 
       const { error: memberError } = await supabase
         .from("workspace_members")
         .upsert(
-          { workspace_id: workspaceId, user_id: existingUser.id, role: membershipRole },
+          { workspace_id: workspaceId, user_id: existingUserId, role: membershipRole },
           { onConflict: "workspace_id,user_id", ignoreDuplicates: false },
         );
-      if (memberError) throw memberError;
+      if (memberError) {
+        console.error("[invite-member] membership upsert failed:", memberError);
+        throw new HttpError(500, "Failed to add member to workspace.");
+      }
 
       await supabase
         .from("user_roles")
         .upsert(
-          { workspace_id: workspaceId, user_id: existingUser.id, role },
+          { workspace_id: workspaceId, user_id: existingUserId, role },
           { onConflict: "workspace_id,user_id,role", ignoreDuplicates: true },
         );
 
@@ -91,7 +100,10 @@ Deno.serve(async (req) => {
         },
         { onConflict: "workspace_id,invited_email" },
       );
-    if (inviteRecordError) throw inviteRecordError;
+    if (inviteRecordError) {
+      console.error("[invite-member] invitation record upsert failed:", inviteRecordError);
+      throw new HttpError(500, "Failed to create invitation record.");
+    }
 
     // Send the magic-link invite email via Supabase Auth admin API.
     const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {

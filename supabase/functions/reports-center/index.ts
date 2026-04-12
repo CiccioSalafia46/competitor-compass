@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import {
   HttpError,
+  assertVerifiedUser,
   assertWorkspaceAnalyst,
   assertWorkspaceMember,
   requireAuthenticatedUser,
@@ -88,6 +89,7 @@ Deno.serve(async (req) => {
 
   try {
     const { user } = await requireAuthenticatedUser(supabase, req);
+    await assertVerifiedUser(user);
     const body = await parseBody(req);
     const action = body.action ?? "list";
     const workspaceId = requireWorkspaceId(body);
@@ -129,6 +131,17 @@ Deno.serve(async (req) => {
     if (action === "generate") {
       await assertWorkspaceAnalyst(supabase, user.id, workspaceId);
       await assertActiveSubscription(supabase, workspaceId);
+
+      const { data: allowed } = await supabase.rpc("check_rate_limit", {
+        _user_id: user.id,
+        _workspace_id: workspaceId,
+        _endpoint: "reports-generate",
+        _max_per_hour: 10,
+      });
+      if (!allowed) {
+        return jsonResponse({ error: "Rate limit reached. You can generate up to 10 reports per hour." }, 429);
+      }
+
       const templateKey = validateReportTemplateKey(body.templateKey);
       const run = await generateReportRun(supabase, {
         workspaceId,
