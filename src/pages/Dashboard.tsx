@@ -6,7 +6,6 @@ import {
   Activity,
   AlertCircle,
   ArrowRight,
-  Bell,
   CheckCircle,
   ChevronRight,
   Filter,
@@ -38,7 +37,6 @@ import {
   type DashboardCompetitorSummary,
 } from "@/lib/dashboard-decision-engine";
 import {
-  INSIGHT_IMPACT_LABELS,
   INSIGHT_PRIORITY_LABELS,
   type InsightPriorityLevel,
 } from "@/lib/insight-priority";
@@ -80,11 +78,6 @@ const PRIORITY_DOT: Record<InsightPriorityLevel, string> = {
   medium: "bg-warning",
   low: "bg-primary",
 };
-
-function getImpactLabel(value: string | null | undefined) {
-  if (value === "traffic" || value === "conversion" || value === "branding") return INSIGHT_IMPACT_LABELS[value];
-  return "General";
-}
 
 function fmt(value: string | null | undefined, fallback = "") {
   return value?.trim() ? value.replaceAll("_", " ") : fallback;
@@ -289,14 +282,55 @@ export default function Dashboard() {
 
       <OnboardingChecklist />
 
+      {hasData && (
+        /* ── Zone 3: Intelligence Brief (hero position) ────────────────────── */
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2.5 border-b bg-muted/40 px-5 py-3.5">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground/70">{t("intelligenceBrief")}</p>
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary" className="ml-auto text-[10px] font-medium">
+                {t("filteredActive", { count: activeFilterCount })}
+              </Badge>
+            )}
+          </div>
+          <div className="grid gap-0 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
+            <BriefColumn
+              icon={Activity}
+              label={t("whatHappened")}
+              text={aiSummary.whatChangedToday}
+            />
+            <BriefColumn
+              icon={Target}
+              label={t("whatMatters")}
+              text={aiSummary.whatMattersMost}
+              accent
+            />
+            <BriefColumn
+              icon={Zap}
+              label={t("whatToDoNow")}
+              text={filteredActions[0]
+                ? `${filteredActions[0].title}. ${filteredActions[0].detail}`
+                : t("noImmediateAction")}
+              cta={filteredActions[0] ? { label: filteredActions[0].cta, href: filteredActions[0].path } : undefined}
+              onNavigate={navigate}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Zone 2: KPI Strip ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
-        <KpiStrip icon={Newspaper} label={t("kpiInbox")} value={stats.inboxItems} sub={t("kpiSignals")} href="/inbox" />
-        <KpiStrip icon={Users} label={t("kpiCompetitors")} value={stats.competitors} sub={t("kpiTracked")} href="/competitors" />
-        <KpiStrip icon={TrendingUp} label={t("kpiAnalyses")} value={stats.completedAnalyses} sub={t("kpiDone")} href="/analytics" />
-        <KpiStrip icon={Megaphone} label={t("kpiMetaAds")} value={stats.metaAds} sub={`${stats.activeAds} ${t("kpiTracked")}`} href="/meta-ads" />
-        <KpiStrip icon={Lightbulb} label={t("kpiInsights")} value={stats.insightCount} sub={t("kpiActionable")} href="/insights" />
-        <KpiStrip icon={Bell} label={t("kpiAlerts")} value={unreadAlertCount} sub={t("kpiUnread")} href="/alerts" accent={unreadAlertCount > 0} />
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div className="grid grid-cols-3 sm:grid-cols-6">
+          <KpiStrip label={t("kpiInbox")} value={stats.inboxItems} href="/inbox" />
+          <KpiStrip label={t("kpiCompetitors")} value={stats.competitors} href="/competitors" />
+          <KpiStrip label={t("kpiAnalyses")} value={stats.completedAnalyses} href="/analytics" />
+          <KpiStrip label={t("kpiMetaAds")} value={stats.metaAds} href="/meta-ads" />
+          <KpiStrip label={t("kpiInsights")} value={stats.insightCount} href="/insights" />
+          <KpiStrip label={t("kpiAlerts")} value={unreadAlertCount} href="/alerts" accent={unreadAlertCount > 0} />
+        </div>
       </div>
 
       {!hasData && (
@@ -305,43 +339,6 @@ export default function Dashboard() {
 
       {hasData && (
         <>
-          {/* ── Zone 3: Intelligence Command Panel ─────────────────────────── */}
-          <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2.5 border-b bg-muted/40 px-5 py-3.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground/70">{t("intelligenceBrief")}</p>
-              {activeFilterCount > 0 && (
-                <Badge variant="secondary" className="ml-auto text-[10px] font-medium">
-                  {t("filteredActive", { count: activeFilterCount })}
-                </Badge>
-              )}
-            </div>
-            <div className="grid gap-0 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
-              <BriefColumn
-                icon={Activity}
-                label={t("whatHappened")}
-                text={aiSummary.whatChangedToday}
-              />
-              <BriefColumn
-                icon={Target}
-                label={t("whatMatters")}
-                text={aiSummary.whatMattersMost}
-                accent
-              />
-              <BriefColumn
-                icon={Zap}
-                label={t("whatToDoNow")}
-                text={filteredActions[0]
-                  ? `${filteredActions[0].title}. ${filteredActions[0].detail}`
-                  : t("noImmediateAction")}
-                cta={filteredActions[0] ? { label: filteredActions[0].cta, href: filteredActions[0].path } : undefined}
-                onNavigate={navigate}
-              />
-            </div>
-          </div>
-
           {/* ── Filter Strip (only if filters are meaningful) ───────────────── */}
           {(competitorOptions.length > 0 || campaignTypeOptions.length > 0) && (
             <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 px-3 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:py-2">
@@ -395,6 +392,7 @@ export default function Dashboard() {
               <SectionHeader
                 label={t("actionQueue")}
                 sub={filteredActions.length !== 1 ? t("actionQueueSubPlural", { count: filteredActions.length }) : t("actionQueueSub", { count: filteredActions.length })}
+                variant="primary"
               />
               <div className="space-y-2">
                 {filteredActions.map((action, index) => (
@@ -569,16 +567,17 @@ export default function Dashboard() {
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
 
-function SectionHeader({ label, sub, action }: {
+function SectionHeader({ label, sub, action, variant = "default" }: {
   label: string;
   sub?: string;
   action?: { label: string; onClick: () => void };
+  variant?: "primary" | "default";
 }) {
   return (
     <div className="flex items-center justify-between gap-3 pb-2">
       <div className="flex items-center gap-2.5">
-        <span className="h-4 w-[3px] rounded-full bg-primary/50 shrink-0" />
-        <p className="text-sm font-semibold tracking-tight text-foreground">{label}</p>
+        <span className={cn("h-4 w-[3px] rounded-full shrink-0", variant === "primary" ? "bg-primary" : "bg-primary/50")} />
+        <p className={cn("tracking-tight", variant === "primary" ? "text-sm font-bold text-foreground" : "text-sm font-semibold text-foreground")}>{label}</p>
         {sub && (
           <p className="text-[11px] text-muted-foreground/70 hidden sm:block">{sub}</p>
         )}
@@ -701,11 +700,9 @@ function EmptyDecisionState({ gmailConnected, competitorCount, onNavigate }: {
 
 // ─── KPI Strip ────────────────────────────────────────────────────────────────
 
-const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, accent }: {
-  icon: React.ComponentType<{ className?: string }>;
+const KpiStrip = memo(function KpiStrip({ label, value, href, accent }: {
   label: string;
   value: number;
-  sub: string;
   href: string;
   accent?: boolean;
 }) {
@@ -714,33 +711,17 @@ const KpiStrip = memo(function KpiStrip({ icon: Icon, label, value, sub, href, a
     <button
       onClick={() => navigate(href)}
       className={cn(
-        "group relative flex flex-col gap-3 overflow-hidden rounded-xl border border-t-2 bg-card p-5 text-left shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md",
-        accent
-          ? "border-destructive/30 border-t-destructive bg-destructive/5 hover:border-destructive/50"
-          : "border-t-primary/40 hover:border-primary/25 hover:bg-card",
+        "group flex flex-col gap-0.5 border-b border-r px-4 py-3.5 text-left transition-colors hover:bg-muted/40",
+        accent && "bg-destructive/[0.03] hover:bg-destructive/[0.06]",
       )}
     >
-      {/* Accent bottom stripe */}
-      <div className={cn(
-        "absolute bottom-0 left-0 h-0.5 w-full transition-all duration-150",
-        accent ? "bg-destructive/40 group-hover:bg-destructive/60" : "bg-transparent group-hover:bg-primary/30",
-      )} />
-      <div className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-lg",
-        accent ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
+      <p className={cn(
+        "text-xl font-bold leading-tight tracking-tight tabular-nums",
+        accent ? "text-destructive" : "text-foreground",
       )}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0">
-        <p className={cn(
-          "stat-value text-[1.65rem] font-bold leading-none tracking-tight",
-          accent ? "text-destructive" : "text-foreground",
-        )}>
-          {value}
-        </p>
-        <p className="mt-1.5 truncate text-xs font-semibold text-foreground/70">{label}</p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground/50">{sub}</p>
-      </div>
+        {value}
+      </p>
+      <p className="truncate text-[11px] font-medium text-foreground/60">{label}</p>
     </button>
   );
 });
@@ -831,43 +812,33 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
     <button
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border border-l-[3px] p-5 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:bg-accent/15",
-        PRIORITY_BORDER[priority],
-        priority === "high" && "bg-gradient-to-br from-destructive/[0.03] to-transparent",
-        priority === "medium" && "bg-gradient-to-br from-amber-50/30 to-transparent dark:from-amber-950/10 dark:to-transparent",
+        "w-full rounded-xl border p-5 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:bg-accent/15",
+        priority === "high" && "bg-gradient-to-br from-destructive/[0.04] to-transparent",
+        priority === "medium" && "bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10 dark:to-transparent",
         priority === "low" && "bg-card",
       )}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
-              {INSIGHT_PRIORITY_LABELS[priority]}
-            </Badge>
-            <Badge variant="secondary" className="text-[10px] capitalize">{getImpactLabel(insight.impact_area)}</Badge>
-            {typeof insight.confidence === "number" && (
-              <span className="text-[10px] text-muted-foreground">{Math.round(insight.confidence * 100)}% confidence</span>
-            )}
+      <div className="min-w-0 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
+            {INSIGHT_PRIORITY_LABELS[priority]}
+          </Badge>
+        </div>
+        <p className="text-sm font-semibold leading-snug [overflow-wrap:anywhere]">{insight.title}</p>
+        <p className="text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway || insight.what_is_happening}</p>
+        {insight.why_it_matters && (
+          <div className="rounded-lg bg-muted/40 px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("whyItMatters")}</p>
+            <p className="mt-1 text-xs leading-5 text-foreground/80 [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
           </div>
-          <p className="text-sm font-semibold leading-snug [overflow-wrap:anywhere]">{insight.title}</p>
-          <p className="text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway || insight.what_is_happening}</p>
-          {insight.why_it_matters && (
-            <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("whyItMatters")}</p>
-              <p className="mt-1 text-xs leading-5 text-foreground/80 [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
-            </div>
-          )}
-          {(insight.affected_competitors ?? []).length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {(insight.affected_competitors ?? []).slice(0, 3).map((c) => (
-                <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="flex shrink-0 items-start gap-1.5">
-          <Badge variant="outline" className="text-[10px] capitalize whitespace-nowrap">{fmt(insight.campaign_type, "campaign")}</Badge>
-        </div>
+        )}
+        {(insight.affected_competitors ?? []).length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {(insight.affected_competitors ?? []).slice(0, 2).map((c) => (
+              <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
+            ))}
+          </div>
+        )}
       </div>
     </button>
   );
@@ -878,20 +849,13 @@ function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; on
   return (
     <button
       onClick={onClick}
-      className={cn(
-        "flex w-full items-start gap-3 rounded-xl border border-l-[3px] bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md",
-        PRIORITY_BORDER[priority],
-      )}
+      className="flex w-full items-start gap-3 rounded-xl border bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md"
     >
       <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", PRIORITY_DOT[priority])} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{insight.title}</p>
         <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{insight.strategic_takeaway}</p>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] text-muted-foreground capitalize">{getImpactLabel(insight.impact_area)}</span>
-          {typeof insight.confidence === "number" && (
-            <span className="text-[10px] text-muted-foreground">· {Math.round(insight.confidence * 100)}%</span>
-          )}
           {(insight.affected_competitors ?? []).slice(0, 1).map((c) => (
             <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
           ))}
@@ -956,10 +920,10 @@ function CompetitorPressureRow({ entry, maxSignals, onClick }: {
 
 function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
   const { t } = useTranslation("dashboard");
-  const toneLeft: Record<DashboardHighlight["tone"], string> = {
-    positive: "border-l-primary",
-    warning: "border-l-warning",
-    neutral: "border-l-muted-foreground/30",
+  const toneBg: Record<DashboardHighlight["tone"], string> = {
+    positive: "bg-primary/[0.025]",
+    warning: "bg-warning/[0.025]",
+    neutral: "bg-card",
   };
   const kindDot: Record<DashboardHighlight["kind"], string> = {
     competitor_action: "bg-muted-foreground",
@@ -967,7 +931,7 @@ function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
     campaign: "bg-primary",
   };
   return (
-    <div className={cn("rounded-xl border border-l-[3px] bg-card px-4 py-3 shadow-sm", toneLeft[highlight.tone])}>
+    <div className={cn("rounded-xl border px-4 py-3 shadow-sm", toneBg[highlight.tone])}>
       <div className="flex items-start gap-2.5">
         <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", kindDot[highlight.kind])} />
         <div className="min-w-0">
@@ -994,13 +958,13 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
   return (
     <button
       onClick={onNavigate}
-      className={cn("w-full rounded-xl border border-l-[3px] bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md", PRIORITY_BORDER[priority])}
+      className="w-full rounded-xl border bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md"
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start gap-2">
         {(() => {
           const AnomalyIcon = priority === "high" ? AlertCircle : priority === "medium" ? Activity : CheckCircle;
           return (
-            <div className={cn("mt-0.5 shrink-0", priority === "high" && "text-destructive", priority === "medium" && "text-warning", "text-muted-foreground")}>
+            <div className={cn("mt-0.5 shrink-0", priority === "high" ? "text-destructive" : priority === "medium" ? "text-warning" : "text-muted-foreground")}>
               <AnomalyIcon className="h-3.5 w-3.5" />
             </div>
           );
@@ -1009,9 +973,6 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
           <p className="text-xs font-semibold text-foreground [overflow-wrap:anywhere]">{anomaly.title}</p>
           <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]">{anomaly.detail}</p>
         </div>
-        <Badge variant="outline" className={cn("shrink-0 text-[10px] capitalize", PRIORITY_BADGE[priority])}>
-          {priority}
-        </Badge>
       </div>
     </button>
   );
