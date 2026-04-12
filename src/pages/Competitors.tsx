@@ -97,11 +97,7 @@ function CompetitorLogo({ name, website, size = "md" }: CompetitorLogoProps) {
   }, [domain]);
 
   const handleError = () => {
-    if (src?.includes("clearbit") && domain) {
-      setSrc(`https://www.google.com/s2/favicons?domain=${domain}&sz=64`);
-    } else {
-      setSrc(null);
-    }
+    setSrc(null);
   };
 
   const sizeClass = size === "sm" ? "h-8 w-8 rounded-lg" : "h-10 w-10 rounded-xl";
