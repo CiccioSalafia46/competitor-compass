@@ -118,11 +118,7 @@ export default function AdminUsers() {
 
   if (loading) {
     return (
-      <div className="space-y-4 p-6 max-w-7xl">
-        <div className="space-y-1">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-32" />
-        </div>
+      <AdminPageLayout title="User Management" description={<Skeleton className="h-4 w-32 inline-block" />}>
         <Skeleton className="h-8 w-72" />
         <TableShell>
           <div className="divide-y">
@@ -140,17 +136,17 @@ export default function AdminUsers() {
             ))}
           </div>
         </TableShell>
-      </div>
+      </AdminPageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <AdminPageLayout title="User Management">
         <Card className="border-destructive/30">
           <CardContent className="p-6 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
-      </div>
+      </AdminPageLayout>
     );
   }
 
