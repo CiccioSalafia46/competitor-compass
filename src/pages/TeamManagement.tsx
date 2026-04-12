@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Shield, Eye, BarChart3 } from "lucide-react";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { getErrorMessage } from "@/lib/errors";
 
 interface MemberInfo {
@@ -81,14 +82,32 @@ export default function TeamManagement() {
     if (!inviteEmail.trim() || !currentWorkspace) return;
     setInviting(true);
     try {
-      toast({
-        title: t("team.invitationFlow"),
-        description: t("team.invitationFlowDesc"),
+      const result = await invokeEdgeFunction<{ status: "added" | "invited"; email: string }>(
+        "invite-member",
+        { body: { workspaceId: currentWorkspace.id, email: inviteEmail.trim(), role: inviteRole } },
+      );
+
+      if (result.status === "added") {
+        toast({ title: t("team.memberAdded"), description: result.email });
+      } else {
+        toast({ title: t("team.invitationSent"), description: result.email });
+      }
+
+      await log("invite_sent", "team", undefined, {
+        email: inviteEmail,
+        role: inviteRole,
+        status: result.status,
       });
-      await log("invite_attempted", "team", undefined, { email: inviteEmail, role: inviteRole });
+
+      setInviteEmail("");
+    } catch (error) {
+      toast({
+        title: t("common:error"),
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
     } finally {
       setInviting(false);
-      setInviteEmail("");
     }
   };
 

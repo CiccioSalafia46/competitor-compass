@@ -10,10 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users, Building2, Mail, Newspaper, Lightbulb, Target,
-  AlertTriangle, Activity, BarChart3, Megaphone,
+  AlertTriangle, Activity, BarChart3,
   RefreshCw, ArrowRight, CheckCircle, XCircle, AlertCircle,
-  TrendingUp, TrendingDown, Zap, Server, CreditCard,
-  ScrollText, Plug, KeyRound, UserX, RotateCcw,
+  TrendingUp, Zap, Server, CreditCard,
+  ScrollText, Plug, KeyRound, RotateCcw,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -28,13 +28,11 @@ import type { AdminOverviewData } from "@/types/admin";
 function computeHealth(data: AdminOverviewData) {
   let score = 100;
 
-  // Penalise for gmail sync errors
   const syncErrorRate = (data.syncErrors?.length || 0) / Math.max(data.gmailConnections, 1);
   if (syncErrorRate >= 0.5) score -= 30;
   else if (syncErrorRate >= 0.2) score -= 15;
   else if (syncErrorRate > 0) score -= 5;
 
-  // Penalise for failed analyses
   const failRate = (data.failedAnalysesCount || 0) / Math.max(data.totalAnalyses, 1);
   if (failRate >= 0.3) score -= 25;
   else if (failRate >= 0.1) score -= 12;
@@ -48,7 +46,7 @@ function computeHealth(data: AdminOverviewData) {
   } as const;
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
+// ─── KPI card ─────────────────────────────────────────────────────────────────
 
 interface KpiCardProps {
   icon: LucideIcon;
@@ -68,8 +66,8 @@ function KpiCard({ icon: Icon, label, value, sub, href, tone = "default" }: KpiC
         "group w-full rounded-xl border bg-card p-4 text-left transition-all duration-150",
         href && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20",
         !href && "cursor-default",
-        tone === "destructive" && "border-destructive/25 bg-destructive/5",
-        tone === "warning" && "border-warning/25 bg-warning/5",
+        tone === "destructive" && "border-destructive/25 bg-destructive/[0.03]",
+        tone === "warning" && "border-warning/25 bg-warning/[0.03]",
       )}
     >
       <div className="flex items-start justify-between mb-3">
@@ -81,6 +79,9 @@ function KpiCard({ icon: Icon, label, value, sub, href, tone = "default" }: KpiC
         )}>
           <Icon className="h-4 w-4" />
         </div>
+        {href && (
+          <ArrowRight className="h-3 w-3 text-muted-foreground/20 group-hover:text-primary/40 transition-colors" />
+        )}
       </div>
       <p className={cn(
         "text-2xl font-bold tabular-nums leading-none tracking-tight",
@@ -91,58 +92,52 @@ function KpiCard({ icon: Icon, label, value, sub, href, tone = "default" }: KpiC
         {typeof value === "number" ? value.toLocaleString() : value}
       </p>
       <p className="mt-1.5 text-xs font-medium text-foreground/70">{label}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/60">{sub}</p>}
+      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/55">{sub}</p>}
     </button>
   );
 }
 
-function QuickAction({ icon: Icon, label, desc, href, variant = "outline" }: {
+// ─── Quick action ─────────────────────────────────────────────────────────────
+
+function QuickAction({ icon: Icon, label, desc, href }: {
   icon: LucideIcon;
   label: string;
   desc: string;
   href: string;
-  variant?: "outline" | "default";
 }) {
   const navigate = useNavigate();
   return (
     <button
       onClick={() => navigate(href)}
-      className="group flex items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-all hover:border-primary/20 hover:bg-accent/50 hover:shadow-sm"
+      className="group flex items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-all hover:border-primary/20 hover:bg-accent/40 hover:shadow-sm"
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
         <Icon className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-foreground">{label}</p>
-        <p className="text-[11px] text-muted-foreground/70 truncate">{desc}</p>
+        <p className="text-[11px] text-muted-foreground/60 truncate">{desc}</p>
       </div>
-      <ArrowRight className="h-3 w-3 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
+      <ArrowRight className="h-3 w-3 text-muted-foreground/25 group-hover:text-primary/50 transition-colors shrink-0" />
     </button>
   );
 }
 
-// ─── Loading skeleton ──────────────────────────────────────────────────────────
+// ─── Loading skeleton (inside AdminPageLayout) ─────────────────────────────────
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6 p-6 max-w-[1400px]">
-      <div className="flex justify-between items-start">
-        <div className="space-y-1.5">
-          <Skeleton className="h-6 w-44" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-8 w-24" />
-        </div>
-      </div>
-      <Skeleton className="h-20 w-full rounded-xl" />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+    <div className="space-y-6">
+      <Skeleton className="h-[88px] w-full rounded-xl" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-[104px] rounded-xl" />)}
       </div>
       <div className="grid md:grid-cols-2 gap-6">
         <Skeleton className="h-64 rounded-xl" />
         <Skeleton className="h-64 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
       </div>
     </div>
   );
@@ -168,11 +163,53 @@ export default function AdminDashboard() {
     return Math.round(((data.totalAnalyses - failed) / data.totalAnalyses) * 100);
   }, [data]);
 
-  if (loading) return <DashboardSkeleton />;
+  const headerActions = (
+    <>
+      {totalIssues > 0 && (
+        <Button
+          variant="destructive"
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          onClick={() => navigate("/admin/issues")}
+        >
+          <AlertTriangle className="h-3.5 w-3.5" />
+          {totalIssues} Issue{totalIssues > 1 ? "s" : ""}
+        </Button>
+      )}
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 gap-1.5 text-xs"
+        onClick={() => void refetch()}
+        disabled={loading}
+      >
+        <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+        Refresh
+      </Button>
+    </>
+  );
+
+  if (loading) {
+    return (
+      <AdminPageLayout
+        title="Platform Overview"
+        description={<Skeleton className="h-4 w-44 inline-block" />}
+        actions={headerActions}
+        maxWidth="max-w-[1400px]"
+      >
+        <DashboardSkeleton />
+      </AdminPageLayout>
+    );
+  }
 
   if (error || !data) {
     return (
-      <div className="p-6">
+      <AdminPageLayout
+        title="Platform Overview"
+        description="Real-time metrics"
+        actions={headerActions}
+        maxWidth="max-w-[1400px]"
+      >
         <Card className="border-destructive/30">
           <CardContent className="p-8 text-center">
             <XCircle className="mx-auto h-8 w-8 text-destructive mb-3" />
@@ -181,7 +218,7 @@ export default function AdminDashboard() {
             <Button size="sm" variant="outline" onClick={() => void refetch()}>Retry</Button>
           </CardContent>
         </Card>
-      </div>
+      </AdminPageLayout>
     );
   }
 
@@ -189,33 +226,10 @@ export default function AdminDashboard() {
     <AdminPageLayout
       title="Platform Overview"
       description={`${format(new Date(), "EEEE, MMMM d")} · Real-time metrics`}
-      actions={
-        <>
-          {totalIssues > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-8 gap-1.5 text-xs"
-              onClick={() => navigate("/admin/issues")}
-            >
-              <AlertTriangle className="h-3.5 w-3.5" />
-              {totalIssues} Active Issue{totalIssues > 1 ? "s" : ""}
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            onClick={() => void refetch()}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-        </>
-      }
+      actions={headerActions}
       maxWidth="max-w-[1400px]"
     >
-      {/* ── Alert banner ───────────────────────────────────────────── */}
+      {/* ── Alert banner ─────────────────────────────────────────── */}
       {totalIssues > 0 && (
         <div className="flex items-start justify-between gap-4 rounded-xl border border-l-[3px] border-destructive/20 border-l-destructive bg-destructive/[0.04] px-4 py-3.5">
           <div className="flex items-start gap-2.5">
@@ -241,18 +255,16 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ── Health + key metrics bar ────────────────────────────────── */}
+      {/* ── Health + summary bar ──────────────────────────────────── */}
       <Card>
         <CardContent className="p-5">
           <div className="flex items-center gap-6 flex-wrap">
             {/* Health score */}
             <div className="flex items-center gap-4 min-w-[200px]">
               <div className={cn(
-                "flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-2xl font-black tabular-nums shadow-sm",
-                health?.tone === "healthy"
-                  ? "bg-success/10 text-success"
-                  : health?.tone === "fair"
-                  ? "bg-warning/10 text-warning"
+                "flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-2xl font-black tabular-nums",
+                health?.tone === "healthy" ? "bg-success/10 text-success"
+                  : health?.tone === "fair" ? "bg-warning/10 text-warning"
                   : "bg-destructive/10 text-destructive",
               )}>
                 {health?.score}
@@ -261,7 +273,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between mb-1.5">
                   <p className="text-xs font-semibold text-foreground">Platform Health</p>
                   <span className={cn(
-                    "text-[10px] font-medium",
+                    "text-[10px] font-semibold",
                     health?.tone === "healthy" ? "text-success"
                       : health?.tone === "fair" ? "text-warning"
                       : "text-destructive",
@@ -283,19 +295,15 @@ export default function AdminDashboard() {
 
             <Separator orientation="vertical" className="h-10 hidden sm:block" />
 
-            {/* Platform summary */}
+            {/* Key stats */}
             <div className="flex items-center gap-6 flex-wrap flex-1">
               {[
-                { label: "Total Users", value: data.totalUsers.toLocaleString(), icon: Users },
-                { label: "Workspaces", value: data.totalWorkspaces.toLocaleString(), icon: Building2 },
-                { label: "Active Workspaces", value: (data.activeWorkspaces || 0).toLocaleString(), icon: Activity },
-                { label: "New This Week", value: data.recentSignups.toLocaleString(), icon: TrendingUp },
-                {
-                  label: "Analysis Success",
-                  value: `${analysisSuccessRate}%`,
-                  icon: analysisSuccessRate >= 90 ? CheckCircle : AlertCircle,
-                },
-              ].map(({ label, value, icon: Icon }) => (
+                { label: "Total Users", value: data.totalUsers.toLocaleString() },
+                { label: "Active Workspaces", value: (data.activeWorkspaces || 0).toLocaleString() },
+                { label: "New This Week", value: data.recentSignups.toLocaleString() },
+                { label: "Analysis Success", value: `${analysisSuccessRate}%` },
+                { label: "Today's Signups", value: (data.newUsersToday || 0).toLocaleString() },
+              ].map(({ label, value }) => (
                 <div key={label} className="text-center min-w-[72px]">
                   <p className="text-lg font-bold tabular-nums leading-none text-foreground">{value}</p>
                   <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{label}</p>
@@ -306,18 +314,48 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* ── KPI grid ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        <KpiCard icon={Users} label="Total Users" value={data.totalUsers} sub={`${data.newUsersToday || 0} today`} href="/admin/users" />
-        <KpiCard icon={Building2} label="Workspaces" value={data.totalWorkspaces} sub={`${data.activeWorkspaces || 0} active (30d)`} href="/admin/workspaces" />
-        <KpiCard icon={Mail} label="Gmail Connections" value={data.gmailConnections}
+      {/* ── KPI grid — 8 cards, 2×4 ──────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <KpiCard
+          icon={Users}
+          label="Total Users"
+          value={data.totalUsers}
+          sub={`${data.newUsersToday || 0} joined today`}
+          href="/admin/users"
+        />
+        <KpiCard
+          icon={Building2}
+          label="Workspaces"
+          value={data.totalWorkspaces}
+          sub={`${data.activeWorkspaces || 0} active (30d)`}
+          href="/admin/workspaces"
+        />
+        <KpiCard
+          icon={Mail}
+          label="Gmail Connections"
+          value={data.gmailConnections}
           sub={data.syncErrors?.length ? `${data.syncErrors.length} with errors` : "All healthy"}
           tone={data.syncErrors?.length ? "destructive" : "default"}
           href="/admin/integrations"
         />
-        <KpiCard icon={Newspaper} label="Newsletters" value={data.totalNewsletters} sub="Ingested total" href="/admin/workspaces" />
-        <KpiCard icon={Target} label="Competitors" value={data.totalCompetitors} sub="Monitored" />
-        <KpiCard icon={BarChart3} label="Total Analyses" value={data.totalAnalyses} sub="Completed jobs" />
+        <KpiCard
+          icon={Newspaper}
+          label="Newsletters"
+          value={data.totalNewsletters}
+          sub="Ingested total"
+        />
+        <KpiCard
+          icon={Target}
+          label="Competitors"
+          value={data.totalCompetitors}
+          sub="Monitored"
+        />
+        <KpiCard
+          icon={BarChart3}
+          label="Total Analyses"
+          value={data.totalAnalyses}
+          sub="Jobs completed"
+        />
         <KpiCard
           icon={AlertTriangle}
           label="Failed Analyses"
@@ -326,24 +364,17 @@ export default function AdminDashboard() {
           tone={(data.failedAnalysesCount || 0) > 0 ? "warning" : "default"}
           href="/admin/issues"
         />
-        <KpiCard icon={Lightbulb} label="Insights" value={data.totalInsights} sub="AI-generated" />
-        <KpiCard icon={Megaphone} label="Meta Ads" value={data.totalMetaAds} sub="Tracked" />
-        <KpiCard icon={Activity} label="Rate Limit Hits" value={data.rateLimitHits}
-          tone={(data.rateLimitHits || 0) > 100 ? "warning" : "default"}
-          sub="API calls logged"
-          href="/admin/integrations"
-        />
-        <KpiCard icon={Users} label="New This Week" value={data.recentSignups} sub="User signups" />
         <KpiCard
-          icon={(data.syncErrors?.length || 0) === 0 ? CheckCircle : XCircle}
-          label="Sync Status"
-          value={(data.syncErrors?.length || 0) === 0 ? "Healthy" : `${data.syncErrors.length} Errors`}
-          tone={(data.syncErrors?.length || 0) > 0 ? "destructive" : "default"}
-          href="/admin/issues"
+          icon={Activity}
+          label="Rate Limit Hits"
+          value={data.rateLimitHits}
+          sub="API calls logged"
+          tone={(data.rateLimitHits || 0) > 100 ? "warning" : "default"}
+          href="/admin/integrations"
         />
       </div>
 
-      {/* ── Trend + activity ─────────────────────────────────────────── */}
+      {/* ── Trend + activity ─────────────────────────────────────── */}
       <div className="grid md:grid-cols-2 gap-6">
 
         {/* 7-day signup trend */}
@@ -409,7 +440,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent activity feed */}
+        {/* Recent activity */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -419,7 +450,7 @@ export default function AdminDashboard() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-0.5 max-h-[215px] overflow-y-auto scrollbar-thin">
+          <CardContent className="space-y-0.5 max-h-[215px] overflow-y-auto">
             {(!data.recentActivity || data.recentActivity.length === 0) ? (
               <div className="py-8 text-center">
                 <Activity className="mx-auto h-5 w-5 text-muted-foreground/30 mb-2" />
@@ -428,16 +459,18 @@ export default function AdminDashboard() {
             ) : (
               data.recentActivity.map((log) => {
                 const isAdmin = log.action?.startsWith("admin.");
-                const dotColor = isAdmin ? "bg-primary" : "bg-muted-foreground/40";
                 return (
                   <div key={log.id} className="flex items-start justify-between gap-2.5 rounded-md px-2.5 py-1.5 hover:bg-muted/40 transition-colors">
-                    <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} />
+                    <span className={cn(
+                      "mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full",
+                      isAdmin ? "bg-primary" : "bg-muted-foreground/40",
+                    )} />
                     <div className="min-w-0 flex-1">
                       <p className="text-[12px] font-mono text-foreground/80 truncate leading-snug">
                         {log.action}
                       </p>
                       {log.entity_type && (
-                        <p className="text-[11px] text-muted-foreground/60 truncate">
+                        <p className="text-[11px] text-muted-foreground/55 truncate">
                           {log.entity_type}
                           {log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""}
                         </p>
@@ -454,7 +487,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* ── Integration issues ───────────────────────────────────────── */}
+      {/* ── Gmail sync errors ────────────────────────────────────── */}
       {(data.syncErrors?.length || 0) > 0 && (
         <Card className="border-destructive/25">
           <CardHeader className="pb-3">
@@ -477,14 +510,14 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="space-y-2">
               {data.syncErrors.slice(0, 3).map((conn) => (
-                <div key={conn.id} className="flex items-start justify-between gap-3 rounded-lg border border-destructive/15 bg-destructive/5 px-3.5 py-2.5">
+                <div key={conn.id} className="flex items-start justify-between gap-3 rounded-lg border border-destructive/15 bg-destructive/[0.04] px-3.5 py-2.5">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[13px] font-medium text-foreground">{conn.email_address}</span>
                       <Badge variant="destructive" className="text-[10px]">{conn.sync_status}</Badge>
                     </div>
                     {conn.sync_error && (
-                      <p className="text-[11px] font-mono text-destructive/80 line-clamp-1">{conn.sync_error}</p>
+                      <p className="text-[11px] font-mono text-destructive/75 line-clamp-1">{conn.sync_error}</p>
                     )}
                   </div>
                   <Button
@@ -515,21 +548,21 @@ export default function AdminDashboard() {
         </Card>
       )}
 
-      {/* ── Quick actions ────────────────────────────────────────────── */}
-      <div>
+      {/* ── Quick actions ────────────────────────────────────────── */}
+      <section>
         <div className="flex items-center gap-2 mb-3">
-          <Zap className="h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Quick Actions</p>
+          <Zap className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">Quick Actions</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-          <QuickAction icon={Users} label="Manage Users" desc="View and moderate" href="/admin/users" />
+          <QuickAction icon={Users} label="Users" desc="View and moderate" href="/admin/users" />
           <QuickAction icon={Building2} label="Workspaces" desc="Inspect and manage" href="/admin/workspaces" />
           <QuickAction icon={AlertTriangle} label="Issues" desc="Triage incidents" href="/admin/issues" />
           <QuickAction icon={Plug} label="Integrations" desc="Connection health" href="/admin/integrations" />
           <QuickAction icon={CreditCard} label="Billing" desc="Plans & subscriptions" href="/admin/billing" />
           <QuickAction icon={ScrollText} label="Audit Logs" desc="Platform activity" href="/admin/logs" />
         </div>
-      </div>
+      </section>
 
     </AdminPageLayout>
   );
