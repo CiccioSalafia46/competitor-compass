@@ -27,7 +27,8 @@ export default function NewsletterDetail() {
   const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentWorkspace) return;
+    const workspaceId = currentWorkspace.id;
     const fetch = async () => {
       setLoading(true);
       try {
@@ -35,6 +36,7 @@ export default function NewsletterDetail() {
           .from("newsletter_entries")
           .select("*")
           .eq("id", id)
+          .eq("workspace_id", workspaceId)
           .single();
 
         if (error || !entryData) {
@@ -65,7 +67,7 @@ export default function NewsletterDetail() {
       }
     };
     void fetch();
-  }, [id, navigate, toast]);
+  }, [id, currentWorkspace, navigate, toast]);
 
   const handleAnalyze = async () => {
     if (!entry || !currentWorkspace) return;

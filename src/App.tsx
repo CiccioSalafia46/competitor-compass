@@ -109,14 +109,14 @@ const App = () => (
                     <Route path="/newsletters" element={<RouteGuard><Newsletters /></RouteGuard>} />
                     <Route path="/newsletters/new" element={<RouteGuard minimumRole="analyst" requireVerified><NewNewsletter /></RouteGuard>} />
                     <Route path="/newsletters/:id" element={<RouteGuard requireVerified><NewsletterDetail /></RouteGuard>} />
-                    <Route path="/competitors" element={<RouteGuard><Competitors /></RouteGuard>} />
+                    <Route path="/competitors" element={<RouteGuard requireVerified><Competitors /></RouteGuard>} />
                     <Route path="/meta-ads" element={<RouteGuard minimumRole="analyst" requireVerified><MetaAds /></RouteGuard>} />
                     <Route path="/meta-ads/compare" element={<RouteGuard minimumRole="analyst" requireVerified><MetaAdsCompare /></RouteGuard>} />
                     <Route path="/insights" element={<RouteGuard minimumRole="analyst" requireVerified><Insights /></RouteGuard>} />
                     <Route path="/weekly-briefing" element={<RouteGuard minimumRole="analyst" requireVerified><WeeklyBriefing /></RouteGuard>} />
                     <Route path="/analytics" element={<RouteGuard><Analytics /></RouteGuard>} />
                     <Route path="/reports" element={<RouteGuard requireVerified><Reports /></RouteGuard>} />
-                    <Route path="/alerts" element={<RouteGuard><Alerts /></RouteGuard>} />
+                    <Route path="/alerts" element={<RouteGuard requireVerified><Alerts /></RouteGuard>} />
                     <Route path="/analyses/:id" element={<RouteGuard requireVerified><AnalysisView /></RouteGuard>} />
                     <Route path="/settings" element={<RouteGuard><SettingsPage /></RouteGuard>} />
                     <Route path="/settings/team" element={<RouteGuard minimumRole="admin"><TeamManagement /></RouteGuard>} />

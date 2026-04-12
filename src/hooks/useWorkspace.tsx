@@ -24,6 +24,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchedUserId, setLastFetchedUserId] = useState<string | null>(null);
   const initializedRef = useRef(false);
 
   const fetchWorkspaces = useCallback(async () => {
@@ -32,6 +33,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       setCurrentWorkspace(null);
       setLoading(false);
       setError(null);
+      setLastFetchedUserId(null);
       initializedRef.current = false;
       return;
     }
@@ -40,7 +42,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase
       .from("workspaces")
       .select("*")
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(50);
 
     if (error) {
       console.error("Error fetching workspaces:", error);
@@ -65,6 +68,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     }
 
     setLoading(false);
+    setLastFetchedUserId(userId);
   }, [userId]);
 
   useEffect(() => {
@@ -95,9 +99,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     return data;
   };
 
+  // Guard against the brief render window after auth loads but before the workspace fetch
+  // for the new userId has started — prevents premature redirects to /onboarding.
+  const effectiveLoading = loading || (userId !== null && userId !== lastFetchedUserId);
+
   return (
     <WorkspaceContext.Provider
-      value={{ workspaces, currentWorkspace, setCurrentWorkspace, createWorkspace, loading, error, refetch: fetchWorkspaces }}
+      value={{ workspaces, currentWorkspace, setCurrentWorkspace, createWorkspace, loading: effectiveLoading, error, refetch: fetchWorkspaces }}
     >
       {children}
     </WorkspaceContext.Provider>

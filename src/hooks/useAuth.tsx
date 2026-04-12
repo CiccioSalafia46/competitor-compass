@@ -23,6 +23,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Use onAuthStateChange as the single source of truth.
+    // Supabase v2 fires INITIAL_SESSION synchronously on mount with the
+    // stored session — calling getSession() in parallel creates a race
+    // where loading briefly becomes false with user=null, causing
+    // RouteGuard to redirect to /auth before the real session arrives.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -30,12 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, []);

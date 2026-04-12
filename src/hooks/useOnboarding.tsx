@@ -50,16 +50,18 @@ function saveState(state: OnboardingState, workspaceId?: string) {
 export function useOnboarding() {
   const { user } = useAuth();
   const { currentWorkspace, workspaces } = useWorkspace();
-  const { isConnected: gmailConnected } = useGmailConnection();
+  const { isConnected: gmailConnected, loading: gmailLoading } = useGmailConnection();
   const emailVerified = !!user?.email_confirmed_at;
   const [state, setState] = useState<OnboardingState>(() => loadState(currentWorkspace?.id));
   const [competitorCount, setCompetitorCount] = useState<number | null>(null);
   const [inboxCount, setInboxCount] = useState<number | null>(null);
   const [insightCount, setInsightCount] = useState<number | null>(null);
+  const [countsLoaded, setCountsLoaded] = useState(false);
 
   // Reload state when workspace changes
   useEffect(() => {
     setState(loadState(currentWorkspace?.id));
+    setCountsLoaded(false);
   }, [currentWorkspace?.id]);
 
   // Fetch live counts
@@ -75,6 +77,7 @@ export function useOnboarding() {
         setCompetitorCount(comp.count || 0);
         setInboxCount(inbox.count || 0);
         setInsightCount(insights.count || 0);
+        setCountsLoaded(true);
       } catch (err) {
         console.error("[useOnboarding] failed to fetch counts", err);
       }
@@ -172,6 +175,10 @@ export function useOnboarding() {
 
   const isComplete = progress === 100;
 
+  // loading=true until both Gmail state and live counts are resolved,
+  // so callers can gate on accurate data before computing the current step.
+  const loading = gmailLoading || (!!currentWorkspace && !countsLoaded);
+
   return {
     currentStep,
     completeStep,
@@ -183,6 +190,7 @@ export function useOnboarding() {
     checklist,
     progress,
     isComplete,
+    loading,
     competitorCount,
     inboxCount,
     insightCount,

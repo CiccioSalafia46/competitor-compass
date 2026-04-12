@@ -36,24 +36,38 @@ export default function Onboarding() {
 function OnboardingContent() {
   const { t } = useTranslation("onboarding");
   const navigate = useNavigate();
-  const { workspaces, currentWorkspace } = useWorkspace();
+  const { workspaces, currentWorkspace, loading: wsLoading } = useWorkspace();
   const {
     currentStep, completeStep, skipStep, isStepComplete,
-    progress, checklist, stepOrder,
+    progress, checklist, stepOrder, loading: onboardingLoading,
   } = useOnboarding();
 
   type VisibleStep = Exclude<OnboardingStep, "done">;
 
-  const [activeStep, setActiveStep] = useState<VisibleStep>(
-    workspaces.length === 0 ? "welcome" : currentStep === "done" ? "insights" : currentStep
-  );
+  // Don't initialise activeStep until all async data (Gmail, counts) has loaded,
+  // otherwise we'd snapshot a stale currentStep computed with missing data.
+  const [activeStep, setActiveStep] = useState<VisibleStep>("welcome");
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // If workspace exists, skip workspace step
+  const isLoading = wsLoading || onboardingLoading;
+
+  // One-shot initialisation once data is ready
   useEffect(() => {
-    if (workspaces.length > 0 && activeStep === "welcome") {
-      setActiveStep(currentStep === "workspace" ? "competitors" : currentStep === "done" ? "insights" : currentStep);
+    if (isLoading || isInitialized) return;
+    if (currentStep === "done") {
+      navigate("/dashboard", { replace: true });
+      return;
     }
-  }, [activeStep, currentStep, workspaces.length]);
+    setActiveStep(workspaces.length === 0 ? "welcome" : currentStep);
+    setIsInitialized(true);
+  }, [isLoading, isInitialized, currentStep, workspaces.length, navigate]);
+
+  // Redirect to dashboard whenever onboarding becomes fully complete
+  useEffect(() => {
+    if (!isLoading && isInitialized && currentStep === "done") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isLoading, isInitialized, currentStep, navigate]);
 
   const visibleSteps = stepOrder.filter((s): s is VisibleStep => s !== "done");
   const stepIndex = visibleSteps.indexOf(activeStep);
@@ -85,6 +99,14 @@ function OnboardingContent() {
     },
     [completeStep, goNext]
   );
+
+  if (isLoading || !isInitialized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -313,8 +335,8 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
   const { t } = useTranslation("onboarding");
   const { currentWorkspace } = useWorkspace();
   const { toast } = useToast();
-  const [competitors, setCompetitors] = useState<{ name: string; website: string }[]>([
-    { name: "", website: "" },
+  const [competitors, setCompetitors] = useState<{ id: string; name: string; website: string }[]>([
+    { id: crypto.randomUUID(), name: "", website: "" },
   ]);
   const [saving, setSaving] = useState(false);
 
@@ -324,7 +346,7 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
 
   const addRow = () => {
     if (competitors.length < 10) {
-      setCompetitors((prev) => [...prev, { name: "", website: "" }]);
+      setCompetitors((prev) => [...prev, { id: crypto.randomUUID(), name: "", website: "" }]);
     }
   };
 
@@ -369,7 +391,7 @@ function CompetitorStep({ onComplete, onSkip }: { onComplete: () => void; onSkip
       <Card className="border">
         <CardContent className="p-5 space-y-3">
           {competitors.map((comp, i) => (
-            <div key={i} className="flex items-start gap-2">
+            <div key={comp.id} className="flex items-start gap-2">
               <div className="flex-1 grid grid-cols-2 gap-2">
                 <Input
                   placeholder={t("competitors.namePlaceholder")}
@@ -487,19 +509,28 @@ function GmailStep({ onComplete, onSkip }: { onComplete: () => void; onSkip: () 
   const { isVerified, requireVerification } = useEmailVerification();
   const [connecting, setConnecting] = useState(false);
   const { toast } = useToast();
+  // Prevent onComplete from being called multiple times when onComplete reference
+  // changes between renders (it depends on completeStep which depends on state).
+  const completedRef = useRef(false);
 
   // Check URL params for OAuth result
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("gmail_connected") === "true") {
       toast({ title: t("gmail.connected") });
-      onComplete();
+      if (!completedRef.current) {
+        completedRef.current = true;
+        onComplete();
+      }
     }
   }, [onComplete, toast, t]);
 
-  // If already connected
+  // If already connected, auto-advance
   useEffect(() => {
-    if (!loading && isConnected) onComplete();
+    if (!loading && isConnected && !completedRef.current) {
+      completedRef.current = true;
+      onComplete();
+    }
   }, [loading, isConnected, onComplete]);
 
   const handleConnect = async () => {

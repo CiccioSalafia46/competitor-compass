@@ -74,7 +74,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     checkSubscription();
   }, [checkSubscription]);
 
-  // Subscribe to workspace_billing changes via Realtime instead of polling every 60s
+  // Subscribe to workspace_billing changes via Realtime for instant updates.
+  // A 5-minute interval poll acts as a safety net in case the Realtime channel
+  // drops (mobile networks, corporate firewalls) so billing state never stays
+  // permanently stale after a plan change.
   useRealtimeTable({
     channelName: `workspace-billing:${workspaceId ?? "none"}`,
     table: "workspace_billing",
@@ -82,6 +85,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     enabled: !!workspaceId && !!accessToken,
     onEvent: checkSubscription,
   });
+
+  useEffect(() => {
+    if (!workspaceId || !accessToken) return;
+    const interval = setInterval(checkSubscription, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [workspaceId, accessToken, checkSubscription]);
 
   // Check on checkout return
   useEffect(() => {
@@ -95,17 +104,23 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const checkout = async (plan: Exclude<PlanTier, "free">) => {
     if (!workspaceId) throw new Error("No workspace selected.");
     const pendingWindow = window.open("about:blank", "_blank");
-    const data = await invokeEdgeFunction<{ url?: string }>("create-checkout", {
-      body: { workspaceId, plan },
-    });
-    if (data?.url) {
-      if (pendingWindow) {
-        pendingWindow.location.href = data.url;
-      } else {
-        window.location.assign(data.url);
+    try {
+      const data = await invokeEdgeFunction<{ url?: string }>("create-checkout", {
+        body: { workspaceId, plan },
+      });
+      if (data?.url) {
+        if (pendingWindow) {
+          pendingWindow.location.href = data.url;
+        } else {
+          window.location.assign(data.url);
+        }
+      } else if (pendingWindow) {
+        pendingWindow.close();
       }
-    } else if (pendingWindow) {
-      pendingWindow.close();
+    } catch (err) {
+      // Close the blank window so it doesn't dangle on network / API errors.
+      pendingWindow?.close();
+      throw err;
     }
   };
 

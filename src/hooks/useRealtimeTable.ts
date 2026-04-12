@@ -15,6 +15,12 @@ interface UseRealtimeTableOptions {
    * Does not need to be wrapped in useCallback — it is held in a ref internally.
    */
   onEvent: () => void;
+  /**
+   * Called when the Realtime channel enters an error or timeout state.
+   * Use to set up a polling fallback so data doesn't go permanently stale.
+   * Does not need to be wrapped in useCallback — it is held in a ref internally.
+   */
+  onError?: () => void;
 }
 
 /**
@@ -29,12 +35,15 @@ export function useRealtimeTable({
   filter,
   enabled = true,
   onEvent,
+  onError,
 }: UseRealtimeTableOptions): void {
-  // Hold the latest callback in a ref so subscription deps stay stable
-  // even when the caller's closure updates between renders.
+  // Hold the latest callbacks in refs so subscription deps stay stable
+  // even when the caller's closures update between renders.
   const callbackRef = useRef(onEvent);
+  const onErrorRef = useRef(onError);
   useEffect(() => {
     callbackRef.current = onEvent;
+    onErrorRef.current = onError;
   });
 
   useEffect(() => {
@@ -52,11 +61,15 @@ export function useRealtimeTable({
         },
         () => callbackRef.current(),
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          onErrorRef.current?.();
+        }
+      });
 
     return () => {
       void supabase.removeChannel(channel);
     };
-    // onEvent intentionally omitted — managed via ref above.
+    // onEvent/onError intentionally omitted — managed via refs above.
   }, [channelName, table, filter, enabled]);
 }

@@ -61,6 +61,14 @@ const TopBar = memo(function TopBar() {
   const { currentWorkspace } = useWorkspace();
   const { t } = useTranslation("common");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [realtimeFailed, setRealtimeFailed] = useState(false);
+
+  // Reset fallback state when workspace changes (new channel will be created)
+  useEffect(() => {
+    setRealtimeFailed(false);
+  }, [currentWorkspace?.id]);
+
+  const handleRealtimeError = useCallback(() => setRealtimeFailed(true), []);
 
   // Lightweight unread count query — only counts, no full data fetch
   const fetchUnread = useCallback(async () => {
@@ -95,7 +103,15 @@ const TopBar = memo(function TopBar() {
     filter: currentWorkspace ? `workspace_id=eq.${currentWorkspace.id}` : undefined,
     enabled: !!currentWorkspace,
     onEvent: fetchUnread,
+    onError: handleRealtimeError,
   });
+
+  // Polling fallback when Realtime subscription fails (e.g. mobile network, corporate firewall)
+  useEffect(() => {
+    if (!realtimeFailed || !currentWorkspace) return;
+    const interval = setInterval(fetchUnread, 30_000);
+    return () => clearInterval(interval);
+  }, [realtimeFailed, currentWorkspace, fetchUnread]);
 
   return (
     <header className="h-12 flex items-center justify-between border-b bg-card/95 backdrop-blur-sm px-3 shrink-0 sticky top-0 z-20">

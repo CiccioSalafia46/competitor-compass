@@ -142,8 +142,12 @@ export function useMetaAdAnalysis(metaAdId: string | null) {
         } else {
           setAnalysis(data as MetaAdAnalysis | null);
         }
-        setLoading(false);
-      });
+      })
+      .catch((err) => {
+        console.error("Meta ad analysis fetch failed:", err);
+        setAnalysis(null);
+      })
+      .finally(() => setLoading(false));
   }, [metaAdId]);
 
   return { analysis, loading };

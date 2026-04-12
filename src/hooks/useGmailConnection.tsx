@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import type { GmailConnection, GmailSyncResult } from "@/types/gmail";
@@ -43,17 +43,20 @@ export function useGmailConnection() {
     void fetchConnection();
   }, [fetchConnection]);
 
-  // Check URL params for OAuth callback result
+  // Check URL params for OAuth callback result — run only once on mount.
+  // fetchConnection is captured via ref to avoid re-running on workspace changes.
+  const fetchConnectionRef = useRef(fetchConnection);
+  fetchConnectionRef.current = fetchConnection;
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("gmail_connected") === "true") {
-      fetchConnection();
+      void fetchConnectionRef.current();
       window.history.replaceState({}, "", window.location.pathname);
     }
     if (params.get("gmail_error")) {
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, [fetchConnection]);
+  }, []);
 
   const connect = async () => {
     if (!currentWorkspace) return;

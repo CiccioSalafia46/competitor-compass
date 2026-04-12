@@ -58,6 +58,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -228,7 +229,10 @@ function CreateEditRuleDialog({
       .eq("workspace_id", currentWorkspace.id)
       .order("name")
       .then(({ data, error }) => {
-        if (error) console.error("Failed to fetch competitors for rule editor:", error);
+        if (error) {
+          toast.error("Failed to load competitors");
+          return;
+        }
         setCompetitors(data || []);
       });
   }, [open, currentWorkspace]);
@@ -262,7 +266,9 @@ function CreateEditRuleDialog({
 
   const handleTypeChange = (value: string) => {
     setRuleType(value as AlertRuleType);
-    setConfig({ cooldown_hours: config.cooldown_hours ?? 24 });
+    // Preserve the full config across type changes — user-entered values (threshold,
+    // keywords, cooldown, etc.) are not lost if they switch type and switch back.
+    // Type-specific fields that don't apply to the new type are simply ignored on save.
   };
 
   const toggleCompetitor = (id: string) => {
@@ -686,7 +692,10 @@ export default function Alerts() {
       .eq("workspace_id", currentWorkspace.id)
       .order("name")
       .then(({ data, error }) => {
-        if (error) console.error("Failed to fetch competitors for alert list:", error);
+        if (error) {
+          toast.error("Failed to load competitors");
+          return;
+        }
         setCompetitors(data || []);
       });
   }, [currentWorkspace]);
