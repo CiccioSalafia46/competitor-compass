@@ -137,16 +137,12 @@ function IssueCard({
 
 function IssuesSkeleton() {
   return (
-    <div className="space-y-4 p-6 max-w-5xl">
-      <div className="space-y-1">
-        <Skeleton className="h-6 w-44" />
-        <Skeleton className="h-4 w-32" />
-      </div>
+    <AdminPageLayout title="Issues & Incidents" description={<Skeleton className="h-4 w-32 inline-block" />} maxWidth="max-w-5xl">
       <div className="flex gap-2">
         {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-8 w-24" />)}
       </div>
       {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
-    </div>
+    </AdminPageLayout>
   );
 }
 

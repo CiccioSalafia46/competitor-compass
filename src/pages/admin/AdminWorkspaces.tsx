@@ -45,11 +45,7 @@ export default function AdminWorkspaces() {
 
   if (loading) {
     return (
-      <div className="space-y-4 p-6 max-w-7xl">
-        <div className="space-y-1">
-          <Skeleton className="h-6 w-56" />
-          <Skeleton className="h-4 w-36" />
-        </div>
+      <AdminPageLayout title="Workspace Management" description={<Skeleton className="h-4 w-36 inline-block" />}>
         <Skeleton className="h-8 w-72" />
         <TableShell>
           <div className="divide-y">
@@ -66,17 +62,17 @@ export default function AdminWorkspaces() {
             ))}
           </div>
         </TableShell>
-      </div>
+      </AdminPageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <AdminPageLayout title="Workspace Management">
         <Card className="border-destructive/30">
           <CardContent className="p-6 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
-      </div>
+      </AdminPageLayout>
     );
   }
 

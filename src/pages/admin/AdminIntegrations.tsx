@@ -60,11 +60,7 @@ export default function AdminIntegrations() {
 
   if (loading) {
     return (
-      <div className="space-y-6 p-6 max-w-7xl">
-        <div className="space-y-1">
-          <Skeleton className="h-6 w-52" />
-          <Skeleton className="h-4 w-40" />
-        </div>
+      <AdminPageLayout title="Integrations Monitor" description="Gmail connections and API usage">
         <TableShell>
           <div className="divide-y">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -77,17 +73,17 @@ export default function AdminIntegrations() {
             ))}
           </div>
         </TableShell>
-      </div>
+      </AdminPageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <AdminPageLayout title="Integrations Monitor" description="Gmail connections and API usage">
         <Card className="border-destructive/30">
           <CardContent className="p-6 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
-      </div>
+      </AdminPageLayout>
     );
   }
 
@@ -99,6 +95,12 @@ export default function AdminIntegrations() {
     <AdminPageLayout
       title="Integrations Monitor"
       description="Gmail connections and API usage"
+      actions={
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => void refetch()}>
+          <RefreshCw className="h-3.5 w-3.5" />
+          Refresh
+        </Button>
+      }
     >
       {/* Gmail connections table */}
       <section className="space-y-3">

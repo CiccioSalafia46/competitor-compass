@@ -119,11 +119,7 @@ export default function AdminLogs() {
 
   if (loading) {
     return (
-      <div className="space-y-4 p-6 max-w-7xl">
-        <div className="space-y-1">
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-4 w-32" />
-        </div>
+      <AdminPageLayout title="Audit Logs" description={<Skeleton className="h-4 w-32 inline-block" />}>
         <Skeleton className="h-8 w-72" />
         <TableShell>
           <div className="divide-y">
@@ -138,17 +134,17 @@ export default function AdminLogs() {
             ))}
           </div>
         </TableShell>
-      </div>
+      </AdminPageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <AdminPageLayout title="Audit Logs">
         <Card className="border-destructive/30">
           <CardContent className="p-6 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
-      </div>
+      </AdminPageLayout>
     );
   }
 
