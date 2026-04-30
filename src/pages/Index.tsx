@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, Sparkles, Zap, ArrowRight, Check, Users,
@@ -70,8 +69,8 @@ export default function Index() {
     <div className="min-h-screen bg-background">
 
       {/* ─── Header ─── */}
-      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 h-14">
+      <header className="border-b border-border/40 bg-background sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <BarChart3 className="h-4 w-4 text-primary-foreground" />
@@ -98,7 +97,7 @@ export default function Index() {
             <LanguageSelector />
             <DarkModeToggle />
             {user ? (
-              <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => navigate("/dashboard")}>
+              <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex bg-foreground text-background hover:bg-foreground/90" onClick={() => navigate("/dashboard")}>
                 {t("nav.dashboard")} <ArrowRight className="h-3 w-3" />
               </Button>
             ) : (
@@ -106,7 +105,7 @@ export default function Index() {
                 <Button variant="ghost" size="sm" className="h-8 text-xs hidden md:inline-flex" onClick={() => navigate("/auth")}>
                   {t("nav.signIn")}
                 </Button>
-                <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => navigate("/auth")}>
+                <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex bg-foreground text-background hover:bg-foreground/90" onClick={() => navigate("/auth")}>
                   {t("nav.startFree")} <ArrowRight className="h-3 w-3" />
                 </Button>
               </>
@@ -193,7 +192,7 @@ export default function Index() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 size="lg"
-                className="h-11 px-8 text-sm gap-2 w-full sm:w-auto font-semibold"
+                className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90"
                 onClick={() => navigate(cta)}
               >
                 {ctaLabel} <ArrowRight className="h-4 w-4" />
@@ -201,7 +200,7 @@ export default function Index() {
               <Button
                 variant="outline"
                 size="lg"
-                className="h-11 px-7 text-sm gap-2 w-full sm:w-auto"
+                className="h-12 px-7 text-sm gap-2 w-full sm:w-auto rounded-full"
                 onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}
               >
                 {t("hero.ctaSeeHow")} <ChevronDown className="h-4 w-4" />
@@ -273,61 +272,57 @@ export default function Index() {
       <section id="why" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
 
         {/* Problem */}
-        <div className="text-center mb-10">
-          <Badge variant="outline" className="badge-section mb-5 border-destructive/25 bg-destructive/5 text-destructive">
-            {t("problem.badge")}
-          </Badge>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
+        <div className="text-center mb-12">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("problem.badge")}</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
             {t("problem.headline")}<br className="hidden sm:block" />
-            <span className="text-muted-foreground font-normal">{t("problem.headlineSub")}</span>
+            <span className="text-muted-foreground/60 font-normal">{t("problem.headlineSub")}</span>
           </h2>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        <div className="grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
           {[
             { icon: Layers, title: t("problem.card1Title"), desc: t("problem.card1Desc") },
             { icon: Clock, title: t("problem.card2Title"), desc: t("problem.card2Desc") },
             { icon: Eye, title: t("problem.card3Title"), desc: t("problem.card3Desc") },
           ].map((p) => (
-            <div key={p.title} className="rounded-xl border border-destructive/15 bg-destructive/[0.03] p-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 mb-4">
-                <p.icon className="h-4 w-4 text-destructive/70" />
+            <div key={p.title} className="rounded-lg border p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/60 mb-5">
+                <p.icon className="h-5 w-5 text-muted-foreground" />
               </div>
-              <h3 className="text-sm font-semibold text-foreground mb-2">{p.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+              <h3 className="text-base font-semibold text-foreground mb-2">{p.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
             </div>
           ))}
         </div>
 
         {/* Problem → Solution transition */}
-        <div className="my-12 max-w-xs mx-auto">
-          <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+        <div className="my-16 max-w-xs mx-auto">
+          <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
         </div>
 
         {/* Solution */}
-        <div className="text-center mb-10">
-          <Badge variant="outline" className="badge-section mb-5 border-primary/25 bg-primary/5 text-primary">
-            {t("solution.badge")}
-          </Badge>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
+        <div className="text-center mb-12">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/60 mb-4">{t("solution.badge")}</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
             {t("solution.headline")}<br className="hidden sm:block" />
             {t("solution.headlineSub")}
           </h2>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto mt-4 leading-relaxed">
+          <p className="text-base text-muted-foreground max-w-lg mx-auto mt-5 leading-relaxed">
             {t("solution.desc")}
           </p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        <div className="grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
           {[
             { icon: Zap, title: t("solution.card1Title"), desc: t("solution.card1Desc") },
             { icon: Brain, title: t("solution.card2Title"), desc: t("solution.card2Desc") },
             { icon: Target, title: t("solution.card3Title"), desc: t("solution.card3Desc") },
           ].map((s) => (
-            <div key={s.title} className="rounded-xl border border-primary/15 bg-primary/[0.03] p-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 mb-4">
-                <s.icon className="h-4 w-4 text-primary" />
+            <div key={s.title} className="rounded-lg border p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-5">
+                <s.icon className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold text-foreground mb-2">{s.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+              <h3 className="text-base font-semibold text-foreground mb-2">{s.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
             </div>
           ))}
         </div>
@@ -336,12 +331,12 @@ export default function Index() {
       {/* ─── How It Works ─── */}
       <section id="how" className="bg-muted/20 border-y border-border/40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          <div className="text-center mb-12">
-            <Badge variant="outline" className="badge-section mb-5">{t("howItWorks.badge")}</Badge>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("howItWorks.badge")}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
               {t("howItWorks.headline")}
             </h2>
-            <p className="text-sm text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
+            <p className="text-base text-muted-foreground mt-4 max-w-md mx-auto leading-relaxed">
               {t("howItWorks.desc")}
             </p>
           </div>
@@ -354,7 +349,7 @@ export default function Index() {
             ].map((s, i) => (
               <div
                 key={s.step}
-                className="relative rounded-xl border bg-card p-5 hover:border-primary/20 hover:shadow-md transition-all duration-200"
+                className="relative rounded-lg border bg-card p-6 hover:border-border hover:shadow-sm transition-all duration-200"
               >
                 <div className="absolute top-4 right-4 text-caption font-bold tabular-nums text-muted-foreground/20">
                   {s.step}
@@ -372,10 +367,10 @@ export default function Index() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-10">
+          <div className="text-center mt-12">
             <Button
               size="lg"
-              className="h-11 px-8 text-sm gap-2 font-semibold transition-colors"
+              className="h-12 px-8 text-sm gap-2 font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90"
               onClick={() => navigate(cta)}
             >
               {ctaShort} <ArrowRight className="h-4 w-4" />
@@ -386,12 +381,12 @@ export default function Index() {
 
       {/* ─── Platform Features ─── */}
       <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-        <div className="text-center mb-12">
-          <Badge variant="outline" className="badge-section mb-5">{t("platform.badge")}</Badge>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+        <div className="text-center mb-16">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("platform.badge")}</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
             {t("platform.headline")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-3 max-w-lg mx-auto leading-relaxed">
+          <p className="text-base text-muted-foreground mt-4 max-w-lg mx-auto leading-relaxed">
             {t("platform.desc")}
           </p>
         </div>
@@ -565,7 +560,7 @@ export default function Index() {
           ].map((f) => (
             <div
               key={f.title}
-              className="rounded-xl border bg-card p-5 hover:border-primary/15 hover:shadow-md transition-all duration-200"
+              className="rounded-lg border bg-card p-6 hover:border-border hover:shadow-sm transition-all duration-200"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -584,8 +579,8 @@ export default function Index() {
       <section className="border-y border-border/40 bg-muted/20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
           <div className="text-center mb-12">
-            <Badge variant="outline" className="badge-section mb-5">{t("socialProof.badge")}</Badge>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("socialProof.badge")}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
               {t("socialProof.headline")}
             </h2>
           </div>
@@ -597,7 +592,7 @@ export default function Index() {
             ].map((testimonial, i) => (
               <div
                 key={i}
-                className="rounded-xl border bg-card p-5 sm:p-6 flex flex-col hover:shadow-md transition-all duration-200"
+                className="rounded-lg border bg-card p-6 flex flex-col hover:shadow-sm transition-all duration-200"
               >
                 {/* Stars */}
                 <div className="flex gap-0.5 mb-4 text-primary/50">
@@ -628,12 +623,12 @@ export default function Index() {
 
       {/* ─── Pricing ─── */}
       <section id="pricing" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="text-center mb-12">
-          <Badge variant="outline" className="badge-section mb-5">{t("pricing.badge")}</Badge>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+        <div className="text-center mb-14">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("pricing.badge")}</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
             {t("pricing.headline")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
+          <p className="text-base text-muted-foreground mt-4 max-w-md mx-auto leading-relaxed">
             {t("pricing.desc")}
           </p>
         </div>
@@ -703,8 +698,8 @@ export default function Index() {
       <section id="faq" className="bg-muted/10 border-y border-border/40">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center mb-12">
-            <Badge variant="outline" className="badge-section mb-5">{t("faq.badge")}</Badge>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("faq.badge")}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
               {t("faq.headline")}
             </h2>
           </div>
@@ -719,7 +714,7 @@ export default function Index() {
               { q: t("faq.q7"), a: t("faq.a7") },
               { q: t("faq.q8"), a: t("faq.a8") },
             ].map((faq, i) => (
-              <details key={i} className="group rounded-xl border bg-card overflow-hidden">
+              <details key={i} className="group rounded-lg border bg-card overflow-hidden">
                 <summary className="cursor-pointer px-5 py-3.5 text-sm font-medium text-foreground flex items-center justify-between list-none hover:bg-accent/30 transition-colors">
                   {faq.q}
                   <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-open:rotate-180 shrink-0 ml-3" />
@@ -738,20 +733,17 @@ export default function Index() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-transparent to-transparent pointer-events-none" />
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2 h-[300px] w-[600px] rounded-full bg-primary/[0.03] blur-3xl pointer-events-none" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center relative">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3.5 py-1.5 mb-8">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span className="text-caption font-semibold text-primary tracking-wide">{t("finalCta.badge")}</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-5 leading-tight">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/50 mb-4">{t("finalCta.badge")}</p>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-6 leading-[1.1]">
             {t("finalCta.headline")}<br className="hidden sm:block" />
             <span className="text-primary">{t("finalCta.headlineSub")}</span>
           </h2>
-          <p className="text-base text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
             {t("finalCta.desc")}
           </p>
           <Button
             size="lg"
-            className="h-11 px-9 text-sm gap-2 font-semibold transition-colors"
+            className="h-12 px-10 text-sm gap-2 font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90"
             onClick={() => navigate(cta)}
           >
             {ctaLabel} <ArrowRight className="h-4 w-4" />
@@ -837,14 +829,14 @@ function PricingCard({
 }: PricingCardProps) {
   return (
     <div className={cn(
-      "relative rounded-xl border flex flex-col transition-all duration-200",
+      "relative rounded-lg border flex flex-col transition-all duration-200",
       highlighted
         ? "border-primary/30 shadow-md bg-card"
         : "bg-card hover:border-border hover:shadow-sm",
     )}>
       {highlighted && (
         <>
-          <div className="absolute inset-x-0 top-0 h-px rounded-t-xl bg-primary/50" />
+          <div className="absolute inset-x-0 top-0 h-px rounded-t-lg bg-primary/50" />
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <Badge className="text-caption font-semibold px-2.5 py-0.5">{mostPopularLabel}</Badge>
           </div>
