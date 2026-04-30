@@ -10,4 +10,7 @@ if (storedTheme === "dark" || (!storedTheme && window.matchMedia("(prefers-color
   document.documentElement.classList.add("dark");
 }
 
+// Grain texture for depth
+document.documentElement.classList.add("grain");
+
 createRoot(document.getElementById("root")!).render(<App />);

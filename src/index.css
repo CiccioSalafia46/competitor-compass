@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,450;14..32,500;14..32,550;14..32,600;14..32,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,450;14..32,500;14..32,550;14..32,600;14..32,700;14..32,800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 24% 12%;
 
-    --primary: 222 82% 52%;
+    --primary: 222 72% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 95%;
@@ -24,33 +24,33 @@
     --muted: 220 14% 95%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 222 47% 95%;
-    --accent-foreground: 222 82% 45%;
+    --accent: 222 40% 96%;
+    --accent-foreground: 222 72% 42%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 222 82% 52%;
+    --ring: 222 72% 50%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 9% 46%;
-    --sidebar-primary: 222 82% 52%;
+    --sidebar-primary: 222 72% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 95%;
-    --sidebar-accent-foreground: 222 82% 45%;
+    --sidebar-accent: 222 40% 96%;
+    --sidebar-accent-foreground: 222 72% 42%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 222 82% 52%;
+    --sidebar-ring: 222 72% 50%;
 
     /* Semantic tokens */
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 32 95% 44%;
     --warning-foreground: 0 0% 100%;
-    --info: 222 82% 52%;
+    --info: 222 72% 50%;
     --info-foreground: 0 0% 100%;
 
     --surface-raised: 0 0% 100%;
@@ -60,7 +60,7 @@
     --shadow-md: 0 2px 4px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
     --shadow-lg: 0 4px 8px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
 
-    --chart-1: 222 82% 52%;
+    --chart-1: 222 72% 50%;
     --chart-2: 160 84% 39%;
     --chart-3: 32 95% 44%;
     --chart-4: 270 60% 55%;
@@ -283,20 +283,43 @@
   }
 }
 
-/* Slide-up entrance animation — for page sections and modals */
+/* ── Animations ────────────────────────────────────────────────────── */
+
 @keyframes slide-up-fade {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @layer utilities {
   .animate-slide-up {
     animation: slide-up-fade 0.2s ease-out both;
   }
+
+  /* Section entrance — staggered reveal for landing page sections */
+  .animate-reveal {
+    animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* ── Subtle grain texture ─────────────────────────────────────────── */
+
+.grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+.dark .grain::before {
+  opacity: 0.04;
+  mix-blend-mode: screen;
 }

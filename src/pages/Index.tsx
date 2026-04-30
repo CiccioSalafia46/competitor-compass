@@ -163,30 +163,29 @@ export default function Index() {
 
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-transparent to-transparent pointer-events-none" />
-        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[300px] sm:h-[500px] w-[80vw] sm:w-[800px] rounded-full bg-primary/[0.03] blur-3xl pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-16 sm:pb-24 relative">
-          <div className="max-w-3xl mx-auto text-center">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_-20%,hsl(var(--primary)/0.08),transparent)] pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-16 sm:pb-20 relative">
+          <div className="max-w-3xl mx-auto text-center animate-reveal">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3.5 py-1.5 mb-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/12 bg-primary/[0.04] px-3.5 py-1.5 mb-8">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              <span className="text-xs font-medium text-primary tracking-wide">{t("hero.badge")}</span>
+              <span className="text-xs font-medium text-primary/80 tracking-wide">{t("hero.badge")}</span>
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.08]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-foreground leading-[1.05]">
               {t("hero.headline")}<br className="hidden sm:block" />{" "}
               <span className="text-primary inline-block min-h-[1.15em]">
                 {typeText}
                 <span
-                  className="text-primary/60"
-                  style={{ opacity: cursorOn ? 1 : 0, transition: "opacity 0.1s" }}
+                  className="text-primary/30 font-light"
+                  style={{ opacity: cursorOn ? 1 : 0, transition: "opacity 0.15s" }}
                 >|</span>
               </span>
             </h1>
 
             {/* Subheadline */}
-            <p className="mx-auto mt-6 max-w-lg text-muted-foreground text-base sm:text-lg leading-relaxed">
+            <p className="mx-auto mt-6 max-w-md text-muted-foreground text-[1.05rem] leading-[1.7] font-normal">
               {t("hero.subheadline")}
             </p>
 
@@ -194,7 +193,7 @@ export default function Index() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 size="lg"
-                className="h-11 px-8 text-sm gap-2 w-full sm:w-auto font-semibold transition-colors"
+                className="h-11 px-8 text-sm gap-2 w-full sm:w-auto font-semibold"
                 onClick={() => navigate(cta)}
               >
                 {ctaLabel} <ArrowRight className="h-4 w-4" />
@@ -202,7 +201,7 @@ export default function Index() {
               <Button
                 variant="outline"
                 size="lg"
-                className="h-11 px-7 text-sm gap-2 w-full sm:w-auto hover:bg-accent/40 transition-colors"
+                className="h-11 px-7 text-sm gap-2 w-full sm:w-auto"
                 onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}
               >
                 {t("hero.ctaSeeHow")} <ChevronDown className="h-4 w-4" />
@@ -210,7 +209,7 @@ export default function Index() {
             </div>
 
             {/* Trust signals */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground/70">
               {[
                 t("hero.trustFreeplan"),
                 t("hero.trustSetup"),
@@ -218,15 +217,15 @@ export default function Index() {
                 t("hero.trustCancel"),
               ].map((label) => (
                 <span key={label} className="flex items-center gap-1.5">
-                  <Check className="h-3 w-3 text-primary/70" /> {label}
+                  <Check className="h-3 w-3 text-primary/50" /> {label}
                 </span>
               ))}
             </div>
           </div>
 
           {/* Metrics strip */}
-          <div className="mt-14 max-w-2xl mx-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-4 rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden">
+          <div className="mt-16 max-w-2xl mx-auto animate-reveal" style={{ animationDelay: "0.15s" }}>
+            <div className="grid grid-cols-2 sm:grid-cols-4 rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm overflow-hidden">
               {[
                 { value: "10×", label: t("metrics.fasterLabel") },
                 { value: "100%", label: t("metrics.automatedLabel") },
@@ -236,12 +235,12 @@ export default function Index() {
                 <div key={m.label} className={cn(
                   "flex flex-col items-center justify-center px-4 py-5 text-center",
                   i < 2 && "border-b sm:border-b-0",
-                  i % 2 === 0 && "border-r",
-                  i === 1 && "sm:border-r",
-                  i === 2 && "sm:border-r",
+                  i % 2 === 0 && "border-r border-border/50",
+                  i === 1 && "sm:border-r sm:border-border/50",
+                  i === 2 && "sm:border-r sm:border-border/50",
                 )}>
-                  <p className="text-2xl sm:text-3xl font-bold text-primary tracking-tight stat-value">{m.value}</p>
-                  <p className="text-caption font-medium text-muted-foreground mt-1 leading-tight">{m.label}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight stat-value">{m.value}</p>
+                  <p className="text-caption font-medium text-muted-foreground/60 mt-1">{m.label}</p>
                 </div>
               ))}
             </div>
@@ -271,7 +270,7 @@ export default function Index() {
       </section>
 
       {/* ─── Problem / Solution ─── */}
-      <section id="why" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <section id="why" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
 
         {/* Problem */}
         <div className="text-center mb-10">
@@ -335,7 +334,7 @@ export default function Index() {
       </section>
 
       {/* ─── How It Works ─── */}
-      <section id="how" className="bg-muted/30 border-y border-border/60">
+      <section id="how" className="bg-muted/20 border-y border-border/40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center mb-12">
             <Badge variant="outline" className="badge-section mb-5">{t("howItWorks.badge")}</Badge>
@@ -386,7 +385,7 @@ export default function Index() {
       </section>
 
       {/* ─── Platform Features ─── */}
-      <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
         <div className="text-center mb-12">
           <Badge variant="outline" className="badge-section mb-5">{t("platform.badge")}</Badge>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -426,7 +425,7 @@ export default function Index() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-xl border bg-gradient-to-br from-muted/60 to-muted/20 p-6 sm:p-8 flex items-center justify-center">
+            <div className="rounded-xl border border-border/40 bg-gradient-to-br from-muted/40 to-background p-6 sm:p-8 flex items-center justify-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
               <div className="w-full max-w-[280px] space-y-2.5">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
@@ -453,7 +452,7 @@ export default function Index() {
 
           {/* Feature 2 */}
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <div className="order-2 lg:order-1 rounded-xl border bg-gradient-to-br from-muted/60 to-muted/20 p-6 sm:p-8 flex items-center justify-center">
+            <div className="order-2 lg:order-1 rounded-xl border border-border/40 bg-gradient-to-br from-muted/40 to-background p-6 sm:p-8 flex items-center justify-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
               <div className="w-full max-w-[260px] space-y-2.5">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
@@ -532,7 +531,7 @@ export default function Index() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-xl border bg-gradient-to-br from-muted/60 to-muted/20 p-6 sm:p-8 flex items-center justify-center">
+            <div className="rounded-xl border border-border/40 bg-gradient-to-br from-muted/40 to-background p-6 sm:p-8 flex items-center justify-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
               <div className="w-full max-w-[280px] space-y-2.5">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="h-1.5 w-1.5 rounded-full bg-destructive/50" />
@@ -582,8 +581,8 @@ export default function Index() {
       </section>
 
       {/* ─── Social Proof ─── */}
-      <section className="border-y border-border/60 bg-muted/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <section className="border-y border-border/40 bg-muted/20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
           <div className="text-center mb-12">
             <Badge variant="outline" className="badge-section mb-5">{t("socialProof.badge")}</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -701,7 +700,7 @@ export default function Index() {
       </section>
 
       {/* ─── FAQ ─── */}
-      <section id="faq" className="bg-muted/20 border-y border-border/60">
+      <section id="faq" className="bg-muted/10 border-y border-border/40">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center mb-12">
             <Badge variant="outline" className="badge-section mb-5">{t("faq.badge")}</Badge>
@@ -773,43 +772,43 @@ export default function Index() {
       </section>
 
       {/* ─── Footer ─── */}
-      <footer className="border-t border-border/60 bg-card/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-          <div className="grid sm:grid-cols-4 gap-8">
+      <footer className="border-t border-border/50 bg-muted/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-16">
+          <div className="grid sm:grid-cols-4 gap-10">
             <div className="sm:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-                  <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
+              <div className="flex items-center gap-2.5 mb-5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                  <BarChart3 className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <span className="text-sm font-bold text-foreground">Tracklyze</span>
+                <span className="text-base font-bold text-foreground tracking-tight">Tracklyze</span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
+              <p className="text-sm text-muted-foreground/70 leading-relaxed max-w-xs">
                 {t("footer.tagline")}
               </p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-foreground mb-4">{t("footer.productLabel")}</p>
-              <div className="space-y-2.5">
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-5">{t("footer.productLabel")}</p>
+              <div className="space-y-3">
                 {[
                   { label: t("footer.featuresLink"), href: "#platform" },
                   { label: t("footer.pricingLink"), href: "#pricing" },
                   { label: t("footer.faqLink"), href: "#faq" },
                 ].map((l) => (
-                  <a key={l.label} href={l.href} className="block text-xs text-muted-foreground hover:text-foreground transition-colors">{l.label}</a>
+                  <a key={l.label} href={l.href} className="block text-sm text-muted-foreground/70 hover:text-foreground transition-colors">{l.label}</a>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-foreground mb-4">{t("footer.accountLabel")}</p>
-              <div className="space-y-2.5">
-                <a href="/auth" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">{t("footer.signInLink")}</a>
-                <a href="/auth" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">{t("footer.createAccountLink")}</a>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-5">{t("footer.accountLabel")}</p>
+              <div className="space-y-3">
+                <a href="/auth" className="block text-sm text-muted-foreground/70 hover:text-foreground transition-colors">{t("footer.signInLink")}</a>
+                <a href="/auth" className="block text-sm text-muted-foreground/70 hover:text-foreground transition-colors">{t("footer.createAccountLink")}</a>
               </div>
             </div>
           </div>
-          <div className="border-t border-border/40 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">{t("footer.copyright", { year: new Date().getFullYear() })}</p>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="border-t border-border/30 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground/50">{t("footer.copyright", { year: new Date().getFullYear() })}</p>
+            <div className="flex items-center gap-5 text-xs text-muted-foreground/50">
               <a href="/privacy" className="hover:text-foreground transition-colors">{t("footer.privacyPolicy")}</a>
               <a href="/terms" className="hover:text-foreground transition-colors">{t("footer.termsOfService")}</a>
             </div>
