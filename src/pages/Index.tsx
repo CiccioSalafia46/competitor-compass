@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +65,18 @@ export default function Index() {
     }
   }, [typeText, typeMode, typePhrase, typewriterPhrases]);
 
+  // ── Mouse parallax ─────────────────────────────────────────────────────────
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!heroRef.current) return;
+    const rect = heroRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setMousePos({ x, y });
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
 
@@ -97,7 +109,7 @@ export default function Index() {
             <LanguageSelector />
             <DarkModeToggle />
             {user ? (
-              <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex bg-foreground text-background hover:bg-foreground/90" onClick={() => navigate("/dashboard")}>
+              <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/dashboard")}>
                 {t("nav.dashboard")} <ArrowRight className="h-3 w-3" />
               </Button>
             ) : (
@@ -105,7 +117,7 @@ export default function Index() {
                 <Button variant="ghost" size="sm" className="h-8 text-xs hidden md:inline-flex" onClick={() => navigate("/auth")}>
                   {t("nav.signIn")}
                 </Button>
-                <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex bg-foreground text-background hover:bg-foreground/90" onClick={() => navigate("/auth")}>
+                <Button size="sm" className="h-8 text-xs gap-1.5 hidden sm:inline-flex bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/auth")}>
                   {t("nav.startFree")} <ArrowRight className="h-3 w-3" />
                 </Button>
               </>
@@ -161,8 +173,23 @@ export default function Index() {
       </header>
 
       {/* ─── Hero ─── */}
-      <section className="relative overflow-hidden">
+      <section ref={heroRef} onMouseMove={handleMouseMove} className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_-20%,hsl(var(--primary)/0.08),transparent)] pointer-events-none" />
+        {/* Parallax floating elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div
+            className="absolute top-[15%] left-[10%] w-72 h-72 rounded-full bg-primary/[0.07] blur-3xl"
+            style={{ transform: `translate(${mousePos.x * 20}px, ${mousePos.y * 15}px)` }}
+          />
+          <div
+            className="absolute top-[60%] right-[5%] w-96 h-96 rounded-full bg-primary/[0.05] blur-3xl"
+            style={{ transform: `translate(${mousePos.x * -15}px, ${mousePos.y * -10}px)` }}
+          />
+          <div
+            className="absolute top-[30%] right-[25%] w-48 h-48 rounded-full bg-primary/[0.04] blur-2xl"
+            style={{ transform: `translate(${mousePos.x * 30}px, ${mousePos.y * 20}px)` }}
+          />
+        </div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-16 sm:pb-20 relative">
           <div className="max-w-3xl mx-auto text-center animate-reveal">
             {/* Badge */}
@@ -192,7 +219,7 @@ export default function Index() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 size="lg"
-                className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90"
+                className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={() => navigate(cta)}
               >
                 {ctaLabel} <ArrowRight className="h-4 w-4" />
@@ -244,23 +271,111 @@ export default function Index() {
               ))}
             </div>
           </div>
+
+          {/* ─── Dashboard preview mockup ─── */}
+          <div className="mt-16 max-w-4xl mx-auto animate-reveal" style={{ animationDelay: "0.3s" }}>
+            <div className="relative rounded-xl border border-border/40 bg-card shadow-lg overflow-hidden">
+              {/* Mockup header bar */}
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/30 bg-muted/20">
+                <div className="flex gap-1.5">
+                  <div className="h-2.5 w-2.5 rounded-full bg-red-400/60" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-green-400/60" />
+                </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="h-5 w-48 rounded-md bg-muted/40" />
+                </div>
+              </div>
+              {/* Mockup content */}
+              <div className="p-6 grid grid-cols-3 gap-4">
+                {/* Left panel */}
+                <div className="col-span-2 space-y-4">
+                  <div className="flex gap-3">
+                    {["Competitors", "Signals", "Insights"].map((label, i) => (
+                      <div key={label} className={cn(
+                        "rounded-lg px-4 py-2.5 text-xs font-medium",
+                        i === 0 ? "bg-primary/10 text-primary" : "bg-muted/40 text-muted-foreground"
+                      )}>
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2.5">
+                    {[
+                      { name: "Acme Corp", signals: 14, change: "+23%" },
+                      { name: "Globex Inc", signals: 9, change: "+8%" },
+                      { name: "Initech", signals: 5, change: "-3%" },
+                    ].map((row) => (
+                      <div key={row.name} className="flex items-center justify-between rounded-lg border border-border/30 px-4 py-3 bg-background/50">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                            {row.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{row.name}</p>
+                            <p className="text-xs text-muted-foreground">{row.signals} signals</p>
+                          </div>
+                        </div>
+                        <span className={cn(
+                          "text-xs font-semibold",
+                          row.change.startsWith("+") ? "text-green-600 dark:text-green-400" : "text-red-500"
+                        )}>{row.change}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Right panel */}
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-border/30 p-4 bg-background/50">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">AI Insight</p>
+                    <div className="space-y-1.5">
+                      <div className="h-2.5 w-full rounded bg-muted/50" />
+                      <div className="h-2.5 w-4/5 rounded bg-muted/40" />
+                      <div className="h-2.5 w-3/5 rounded bg-muted/30" />
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-border/30 p-4 bg-background/50">
+                    <p className="text-xs font-medium text-muted-foreground mb-3">Activity</p>
+                    <div className="flex items-end gap-1.5 h-16">
+                      {[40, 65, 45, 80, 55, 70, 90, 60, 75, 50, 85, 65].map((h, i) => (
+                        <div
+                          key={i}
+                          className="flex-1 rounded-sm bg-primary/20"
+                          style={{ height: `${h}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ─── Built For ─── */}
-      <section className="border-y border-border/60 bg-muted/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-            <p className="text-caption font-semibold text-muted-foreground/50 uppercase tracking-widest shrink-0">{t("builtFor.label")}</p>
+      {/* ─── Trusted By (logo marquee) ─── */}
+      <section className="border-y border-border/40 bg-muted/10 py-6 overflow-hidden">
+        <p className="text-center text-xs font-semibold text-muted-foreground/40 uppercase tracking-[0.2em] mb-5">{t("builtFor.label")}</p>
+        <div className="relative">
+          {/* Fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-muted/10 to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-muted/10 to-transparent z-10 pointer-events-none" />
+          {/* Scrolling logos */}
+          <div className="flex animate-marquee gap-12 items-center">
             {[
               { icon: TrendingUp, label: t("builtFor.growthTeams") },
               { icon: Target, label: t("builtFor.marketingTeams") },
               { icon: BarChart3, label: t("builtFor.ecommerceBrands") },
               { icon: Users, label: t("builtFor.dtcCompanies") },
               { icon: Lightbulb, label: t("builtFor.productStrategists") },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/50">
-                <Icon className="h-3.5 w-3.5" />
+              { icon: TrendingUp, label: t("builtFor.growthTeams") },
+              { icon: Target, label: t("builtFor.marketingTeams") },
+              { icon: BarChart3, label: t("builtFor.ecommerceBrands") },
+              { icon: Users, label: t("builtFor.dtcCompanies") },
+              { icon: Lightbulb, label: t("builtFor.productStrategists") },
+            ].map(({ icon: Icon, label }, i) => (
+              <div key={`${label}-${i}`} className="flex items-center gap-2 shrink-0 text-sm font-medium text-muted-foreground/40">
+                <Icon className="h-4 w-4" />
                 {label}
               </div>
             ))}
@@ -370,7 +485,7 @@ export default function Index() {
           <div className="text-center mt-12">
             <Button
               size="lg"
-              className="h-12 px-8 text-sm gap-2 font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90"
+              className="h-12 px-8 text-sm gap-2 font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => navigate(cta)}
             >
               {ctaShort} <ArrowRight className="h-4 w-4" />
@@ -743,7 +858,7 @@ export default function Index() {
           </p>
           <Button
             size="lg"
-            className="h-12 px-10 text-sm gap-2 font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90"
+            className="h-12 px-10 text-sm gap-2 font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => navigate(cta)}
           >
             {ctaLabel} <ArrowRight className="h-4 w-4" />
