@@ -56,6 +56,11 @@ type TokenRow = {
   id: string;
   token_expires_at: string | null;
 };
+type TokenHealthRow = {
+  gmail_connection_id: string;
+  token_expires_at: string | null;
+  refresh_token: string | null;
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -393,6 +398,41 @@ Deno.serve(async (req) => {
           .select("*")
           .order("created_at", { ascending: false });
 
+        // Fetch token health per connection (access via service role only)
+        const { data: tokenHealth } = await supabaseAdmin
+          .from("gmail_tokens")
+          .select("gmail_connection_id, token_expires_at, refresh_token");
+
+        const tokenMap = new Map(
+          ((tokenHealth ?? []) as TokenHealthRow[]).map((t) => [t.gmail_connection_id, t]),
+        );
+
+        const now = new Date();
+        const enrichedConns = (gmailConns || []).map((conn: { id: string; sync_error: string | null }) => {
+          const token = tokenMap.get(conn.id);
+          let tokenStatus: "healthy" | "expired_refreshable" | "revoked" | "missing" = "missing";
+          if (token) {
+            const expired = token.token_expires_at ? new Date(token.token_expires_at) <= now : true;
+            const hasRefresh = Boolean(token.refresh_token);
+            const hasRevokeError = conn.sync_error?.toLowerCase().includes("revoked") ||
+                                   conn.sync_error?.toLowerCase().includes("reconnect");
+            if (hasRevokeError) {
+              tokenStatus = "revoked";
+            } else if (!expired) {
+              tokenStatus = "healthy";
+            } else if (hasRefresh) {
+              tokenStatus = "expired_refreshable";
+            } else {
+              tokenStatus = "revoked";
+            }
+          }
+          return {
+            ...conn,
+            token_status: tokenStatus,
+            token_expires_at: token?.token_expires_at ?? null,
+          };
+        });
+
         const { data: rateLimits } = await supabaseAdmin
           .from("rate_limits")
           .select("endpoint, called_at, user_id")
@@ -406,7 +446,7 @@ Deno.serve(async (req) => {
         });
 
         return jsonResponse({
-          gmailConnections: gmailConns || [],
+          gmailConnections: enrichedConns,
           rateLimitsByEndpoint: endpointCounts,
         });
       }

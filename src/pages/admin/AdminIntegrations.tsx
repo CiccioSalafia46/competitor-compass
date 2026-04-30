@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -12,11 +13,74 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
-import { RefreshCw, Unplug, Plug } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { format, formatDistanceToNow } from "date-fns";
+import { RefreshCw, Unplug, Plug, ShieldCheck, ShieldAlert, KeyRound, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { AdminGmailConnection, AdminIntegrationsResponse } from "@/types/admin";
+import type { AdminGmailConnection, AdminIntegrationsResponse, GmailTokenStatus } from "@/types/admin";
+
+const TOKEN_STATUS_CONFIG: Record<GmailTokenStatus, {
+  label: string;
+  description: string;
+  dot: string;
+  badge: string;
+  icon: typeof ShieldCheck;
+}> = {
+  healthy: {
+    label: "Healthy",
+    description: "Access token is valid. Sync will work without refresh.",
+    dot: "bg-success",
+    badge: "border-success/20 bg-success/10 text-success",
+    icon: ShieldCheck,
+  },
+  expired_refreshable: {
+    label: "Expired — auto-refresh",
+    description: "Access token expired but refresh token is available. Will auto-refresh on next sync.",
+    dot: "bg-warning",
+    badge: "border-warning/20 bg-warning/10 text-warning",
+    icon: KeyRound,
+  },
+  revoked: {
+    label: "Revoked — reconnect required",
+    description: "Token has been revoked or refresh failed. User must disconnect and reconnect Gmail.",
+    dot: "bg-destructive",
+    badge: "border-destructive/20 bg-destructive/10 text-destructive",
+    icon: ShieldAlert,
+  },
+  missing: {
+    label: "No token",
+    description: "No OAuth token found for this connection. User must reconnect.",
+    dot: "bg-destructive",
+    badge: "border-destructive/20 bg-destructive/10 text-destructive",
+    icon: AlertTriangle,
+  },
+};
+
+function ConnectionHealthBadge({ conn }: { conn: AdminGmailConnection }) {
+  const status = conn.token_status ?? "missing";
+  const config = TOKEN_STATUS_CONFIG[status];
+  const StatusIcon = config.icon;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-caption font-medium cursor-default", config.badge)}>
+          <StatusIcon className="h-3 w-3" />
+          {config.label}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[260px] text-xs">
+        <p>{config.description}</p>
+        {conn.token_expires_at && (
+          <p className="mt-1 text-muted-foreground">
+            Token expired {formatDistanceToNow(new Date(conn.token_expires_at), { addSuffix: true })}
+          </p>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 function SyncStatusDot({ conn }: { conn: AdminGmailConnection }) {
   const hasError = Boolean(conn.sync_error);
@@ -26,7 +90,7 @@ function SyncStatusDot({ conn }: { conn: AdminGmailConnection }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", dotClass)} />
-      <span className={cn("text-[12px]", textClass)}>{conn.sync_status}</span>
+      <span className={cn("text-xs", textClass)}>{conn.sync_status}</span>
     </div>
   );
 }
@@ -102,6 +166,60 @@ export default function AdminIntegrations() {
         </Button>
       }
     >
+      {/* Health summary banner */}
+      {(() => {
+        const revokedConns = gmailConns.filter((c) => c.token_status === "revoked" || c.token_status === "missing");
+        const expiredConns = gmailConns.filter((c) => c.token_status === "expired_refreshable");
+        const errorConns = gmailConns.filter((c) => c.sync_error);
+        const hasIssues = revokedConns.length > 0 || errorConns.length > 0;
+
+        if (!hasIssues && expiredConns.length === 0) return null;
+
+        return (
+          <div className="space-y-2">
+            {revokedConns.length > 0 && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
+                <ShieldAlert className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-destructive">
+                    {revokedConns.length} connection{revokedConns.length > 1 ? "s" : ""} revoked
+                  </p>
+                  <p className="text-xs text-destructive/80 mt-0.5">
+                    {revokedConns.map((c) => c.email_address).join(", ")} — user must disconnect and reconnect Gmail.
+                  </p>
+                </div>
+              </div>
+            )}
+            {expiredConns.length > 0 && !revokedConns.length && (
+              <div className="flex items-start gap-3 rounded-lg border border-warning/20 bg-warning/5 px-4 py-3">
+                <KeyRound className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-warning">
+                    {expiredConns.length} token{expiredConns.length > 1 ? "s" : ""} expired — will auto-refresh
+                  </p>
+                  <p className="text-xs text-warning/80 mt-0.5">
+                    Access tokens expired but refresh tokens are available. Click "Resync" to trigger a refresh now, or wait for the next automatic sync.
+                  </p>
+                </div>
+              </div>
+            )}
+            {errorConns.length > 0 && !revokedConns.length && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-destructive">
+                    {errorConns.length} sync error{errorConns.length > 1 ? "s" : ""}
+                  </p>
+                  <p className="text-xs text-destructive/80 mt-0.5">
+                    {errorConns.map((c) => c.email_address).join(", ")}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Gmail connections table */}
       <section className="space-y-3">
         <div className="flex items-baseline gap-2">
@@ -113,11 +231,11 @@ export default function AdminIntegrations() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[260px]">Account</TableHead>
-                <TableHead className="w-[100px]">Status</TableHead>
-                <TableHead className="w-[130px]">Last sync</TableHead>
+                <TableHead className="w-[220px]">Account</TableHead>
+                <TableHead className="w-[180px]">Token Health</TableHead>
+                <TableHead className="w-[90px]">Sync</TableHead>
+                <TableHead className="w-[110px]">Last sync</TableHead>
                 <TableHead>Error</TableHead>
-                <TableHead className="w-[120px]">Connected</TableHead>
                 <TableHead className="w-[1%] whitespace-nowrap" />
               </TableRow>
             </TableHeader>
@@ -127,39 +245,45 @@ export default function AdminIntegrations() {
               )}
               {gmailConns.map((conn) => (
                 <TableRow key={conn.id} className="group">
-                  {/* PRIMARY */}
-                  <TableCell className="text-nav font-medium text-foreground">
-                    {conn.email_address}
+                  {/* ACCOUNT */}
+                  <TableCell>
+                    <div>
+                      <p className="text-nav font-medium text-foreground">{conn.email_address}</p>
+                      <p className="text-caption text-muted-foreground/50">
+                        Connected {format(new Date(conn.connected_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
                   </TableCell>
 
-                  {/* STATUS */}
+                  {/* TOKEN HEALTH */}
+                  <TableCell>
+                    <ConnectionHealthBadge conn={conn} />
+                  </TableCell>
+
+                  {/* SYNC STATUS */}
                   <TableCell>
                     <SyncStatusDot conn={conn} />
                   </TableCell>
 
-                  {/* META: timestamps */}
+                  {/* LAST SYNC */}
                   <TableCell className="tabular-nums text-xs text-muted-foreground">
                     {conn.last_sync_at
                       ? format(new Date(conn.last_sync_at), "MMM d, HH:mm")
                       : <span className="text-muted-foreground/40">Never</span>}
                   </TableCell>
 
-                  {/* ERROR — destructive when present */}
-                  <TableCell className="max-w-[280px]">
+                  {/* ERROR */}
+                  <TableCell className="max-w-[260px]">
                     {conn.sync_error ? (
                       <span className="line-clamp-2 text-xs leading-relaxed text-destructive">
                         {conn.sync_error}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground/40">—</span>
+                      <span className="text-muted-foreground/30">—</span>
                     )}
                   </TableCell>
 
-                  <TableCell className="tabular-nums text-xs text-muted-foreground">
-                    {format(new Date(conn.connected_at), "MMM d, yyyy")}
-                  </TableCell>
-
-                  {/* ACTIONS — hover-reveal */}
+                  {/* ACTIONS */}
                   <TableCell>
                     <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                       <Button

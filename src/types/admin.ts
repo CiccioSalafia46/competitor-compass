@@ -69,6 +69,8 @@ export type AdminLogsResponse = {
 
 // ─── Gmail / integration types ────────────────────────────────────────────────
 
+export type GmailTokenStatus = "healthy" | "expired_refreshable" | "revoked" | "missing";
+
 export type AdminGmailConnection = {
   id: string;
   email_address: string;
@@ -77,6 +79,8 @@ export type AdminGmailConnection = {
   last_sync_at: string | null;
   connected_at: string;
   workspace_id?: string | null;
+  token_status?: GmailTokenStatus;
+  token_expires_at?: string | null;
 };
 
 export type AdminIntegrationsResponse = {
