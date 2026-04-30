@@ -63,8 +63,8 @@ export default function AdminLayout() {
             <Shield className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-foreground leading-none">Admin Console</p>
-            <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-none">Internal Operations</p>
+            <p className="text-nav font-semibold text-foreground leading-none">Admin Console</p>
+            <p className="text-caption text-muted-foreground/70 mt-0.5 leading-none">Internal Operations</p>
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default function AdminLayout() {
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-5">
           {navSections.map((section) => (
             <div key={section.label}>
-              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50 select-none">
+              <p className="mb-1.5 px-2.5 text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground/50 select-none">
                 {section.label}
               </p>
               <div className="space-y-px">
@@ -83,7 +83,7 @@ export default function AdminLayout() {
                     end={item.end}
                     className={({ isActive }) =>
                       cn(
-                        "relative flex items-center gap-2.5 rounded-md px-2.5 py-[6px] text-[13px] transition-all duration-100",
+                        "relative flex items-center gap-2.5 rounded-md px-2.5 py-[6px] text-nav transition-all duration-100",
                         isActive
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -110,7 +110,7 @@ export default function AdminLayout() {
         <div className="border-t p-2 space-y-px">
           <NavLink
             to="/dashboard"
-            className="flex items-center gap-2.5 px-2.5 py-[6px] rounded-md text-[13px] text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+            className="flex items-center gap-2.5 px-2.5 py-[6px] rounded-md text-nav text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
             Back to App

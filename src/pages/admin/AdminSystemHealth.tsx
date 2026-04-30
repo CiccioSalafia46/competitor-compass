@@ -62,7 +62,7 @@ function CheckCard({ check }: { check: AdminHealthCheck }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[13px] font-medium text-foreground">{check.name}</p>
+          <p className="text-nav font-medium text-foreground">{check.name}</p>
           {check.value != null && (
             <span className={cn("tabular-nums text-xs font-mono font-medium", cfg.color)}>
               {check.value}
@@ -117,9 +117,9 @@ function StatStrip({
             <Icon className={cn("h-4 w-4", iconCls)} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">{label}</p>
+            <p className="text-caption font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">{label}</p>
             <p className={cn("mt-1 text-2xl font-bold tabular-nums", valueCls)}>{value}</p>
-            {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/70">{sub}</p>}
+            {sub && <p className="mt-0.5 text-caption text-muted-foreground/70">{sub}</p>}
           </div>
         </div>
       </CardContent>
@@ -282,7 +282,7 @@ export default function AdminSystemHealth() {
       {/* Health checks grid */}
       {checks.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">
+          <h2 className="text-caption font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">
             Health Checks
           </h2>
           <div className="grid gap-2.5 sm:grid-cols-2">

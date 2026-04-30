@@ -154,12 +154,12 @@ export default function AdminSecrets() {
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {integration.productionReady ? (
-                      <span className="inline-flex items-center gap-1 rounded-md border border-success/25 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-success/25 bg-success/10 px-1.5 py-0.5 text-caption font-medium text-success">
                         <CheckCircle className="h-2.5 w-2.5" />
                         Prod Ready
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-md border border-warning/25 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-warning/25 bg-warning/10 px-1.5 py-0.5 text-caption font-medium text-warning">
                         <AlertTriangle className="h-2.5 w-2.5" />
                         Dev/Test
                       </span>
@@ -171,7 +171,7 @@ export default function AdminSecrets() {
               <CardContent className="space-y-4">
                 {/* Credentials */}
                 <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
+                  <p className="text-caption font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
                     Credentials
                   </p>
                   <div className="divide-y rounded-lg border overflow-hidden">
@@ -186,7 +186,7 @@ export default function AdminSecrets() {
                           <span className="font-mono text-[12px] text-foreground">{secret.name}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-caption text-muted-foreground">
                             {secret.configured ? secret.masked : "Not configured"}
                           </code>
                           {secret.configured ? (
@@ -203,14 +203,14 @@ export default function AdminSecrets() {
                 {/* Health metrics */}
                 {Object.keys(integration.health).length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
+                    <p className="text-caption font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
                       Health Metrics
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {Object.entries(integration.health).map(([key, value]) => (
                         <div key={key} className="rounded-lg border bg-muted/30 p-3">
                           <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground capitalize">
+                          <p className="mt-0.5 text-caption text-muted-foreground capitalize">
                             {key.replace(/([A-Z])/g, " $1").trim()}
                           </p>
                         </div>
@@ -245,7 +245,7 @@ export default function AdminSecrets() {
                 {/* Test Results */}
                 {testResults[integration.id] && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
+                    <p className="text-caption font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
                       Test Results
                     </p>
                     <div className="divide-y rounded-lg border overflow-hidden">
@@ -259,9 +259,9 @@ export default function AdminSecrets() {
                             ) : (
                               <XCircle className="h-3.5 w-3.5 text-destructive" />
                             )}
-                            <span className="text-[13px]">{r.test}</span>
+                            <span className="text-nav">{r.test}</span>
                           </div>
-                          <span className="text-[11px] text-muted-foreground">{r.message}</span>
+                          <span className="text-caption text-muted-foreground">{r.message}</span>
                         </div>
                       ))}
                     </div>
@@ -295,7 +295,7 @@ export default function AdminSecrets() {
             <CardContent className="space-y-5">
               {flagCategories.map((category) => (
                 <div key={category}>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
+                  <p className="mb-2 text-caption font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">
                     {category}
                   </p>
                   <div className="divide-y rounded-lg border overflow-hidden">
@@ -306,9 +306,9 @@ export default function AdminSecrets() {
                           <div className="flex items-center gap-2.5 min-w-0">
                             <Zap className={cn("h-3.5 w-3.5 shrink-0", flag.enabled ? "text-primary" : "text-muted-foreground/40")} />
                             <div className="min-w-0">
-                              <p className="text-[13px] font-medium text-foreground">{flag.label}</p>
+                              <p className="text-nav font-medium text-foreground">{flag.label}</p>
                               {flag.description && (
-                                <p className="text-[11px] text-muted-foreground">{flag.description}</p>
+                                <p className="text-caption text-muted-foreground">{flag.description}</p>
                               )}
                             </div>
                           </div>

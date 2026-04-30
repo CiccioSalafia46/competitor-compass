@@ -32,7 +32,7 @@ function UserAvatar({ name, email }: { name: string | null; email: string | null
   const bg = AVATAR_PALETTE[label.charCodeAt(0) % AVATAR_PALETTE.length];
   return (
     <div className={cn(
-      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white",
+      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-caption font-semibold text-white",
       bg,
     )}>
       {initial}
@@ -191,7 +191,7 @@ export default function AdminUsers() {
                   <div className="flex items-center gap-2.5">
                     <UserAvatar name={user.display_name} email={user.email} />
                     <div className="space-y-0.5 min-w-0">
-                      <p className="text-[13px] font-medium leading-snug text-foreground truncate">
+                      <p className="text-nav font-medium leading-snug text-foreground truncate">
                         {user.display_name || "—"}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
@@ -212,12 +212,12 @@ export default function AdminUsers() {
                   {user.roles?.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
                       {user.roles.slice(0, 2).map((r) => (
-                        <Badge key={r.workspace_id + r.role} variant="secondary" className="text-[10px] py-0">
+                        <Badge key={r.workspace_id + r.role} variant="secondary" className="text-caption py-0">
                           {r.role}
                         </Badge>
                       ))}
                       {user.roles.length > 2 && (
-                        <span className="text-[11px] text-muted-foreground/60">+{user.roles.length - 2}</span>
+                        <span className="text-caption text-muted-foreground/60">+{user.roles.length - 2}</span>
                       )}
                     </div>
                   ) : (

@@ -136,7 +136,7 @@ function OnboardingContent() {
                   key={step}
                   onClick={() => setActiveStep(step)}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap",
+                    "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-medium transition-colors whitespace-nowrap",
                     active
                       ? "bg-primary text-primary-foreground"
                       : done
@@ -147,7 +147,7 @@ function OnboardingContent() {
                   {done ? (
                     <Check className="h-3 w-3" />
                   ) : (
-                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border text-[9px]">
+                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border text-caption">
                       {i + 1}
                     </span>
                   )}
@@ -202,7 +202,7 @@ function OnboardingContent() {
             <Button variant="ghost" size="sm" onClick={goBack} disabled={!canGoBack} className="gap-1.5 text-xs">
               <ArrowLeft className="h-3 w-3" /> {t("back")}
             </Button>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-caption text-muted-foreground">
               {t("stepOf", { current: stepIndex + 1, total: visibleSteps.length })}
             </span>
             <div />
@@ -313,7 +313,7 @@ function WorkspaceStep({ onComplete }: { onComplete: () => void }) {
                 autoFocus
                 required
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-caption text-muted-foreground">
                 {t("workspace.hint")}
               </p>
             </div>

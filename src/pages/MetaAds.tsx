@@ -54,7 +54,7 @@ export default function MetaAdsPage() {
           <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             <Megaphone className="h-6 w-6 text-primary" />
             {t("title")}
-            <Badge variant="outline" className="text-[10px] gap-1 font-normal ml-1">
+            <Badge variant="outline" className="text-caption gap-1 font-normal ml-1">
               <Beaker className="h-2.5 w-2.5" /> {t("titleBadge")}
             </Badge>
           </h1>
@@ -117,7 +117,7 @@ export default function MetaAdsPage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-medium text-foreground">{t("samplePreview.title")}</h3>
-          <Badge variant="secondary" className="text-[9px] gap-1">
+          <Badge variant="secondary" className="text-caption gap-1">
             <Clock className="h-2 w-2" /> {t("samplePreview.badge")}
           </Badge>
         </div>
@@ -131,7 +131,7 @@ export default function MetaAdsPage() {
             />
           ))}
         </div>
-        <p className="text-[11px] text-muted-foreground italic">
+        <p className="text-caption text-muted-foreground italic">
           {t("samplePreview.disclaimer")}
         </p>
       </div>
@@ -160,7 +160,7 @@ export default function MetaAdsPage() {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Eye className="h-4 w-4" /> {t("adDetail.title")}
-              <Badge variant="secondary" className="text-[9px]">{t("adDetail.demoBadge")}</Badge>
+              <Badge variant="secondary" className="text-caption">{t("adDetail.demoBadge")}</Badge>
             </SheetTitle>
           </SheetHeader>
           {selectedAdData && (
@@ -217,7 +217,7 @@ export default function MetaAdsPage() {
               <div className="space-y-2">
                 <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
                   {t("adDetail.estimatedMetrics")}
-                  <Badge variant="outline" className="text-[10px]">{t("adDetail.sampleRanges")}</Badge>
+                  <Badge variant="outline" className="text-caption">{t("adDetail.sampleRanges")}</Badge>
                 </h4>
                 <EstimatedMetric label={t("adDetail.spend")} range={selectedAdData.spend_range} prefix="$" />
                 <EstimatedMetric label={t("adDetail.impressions")} range={selectedAdData.impressions_range} />

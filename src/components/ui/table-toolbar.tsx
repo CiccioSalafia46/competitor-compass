@@ -104,7 +104,7 @@ export function TableShell({ children, className }: { children: ReactNode; class
     <div className={cn(
       "rounded-xl border bg-card overflow-hidden",
       "[&_thead_tr]:border-b [&_thead_tr]:bg-muted/30",
-      "[&_thead_th]:text-[11px] [&_thead_th]:font-semibold [&_thead_th]:tracking-wide [&_thead_th]:uppercase [&_thead_th]:text-muted-foreground/60",
+      "[&_thead_th]:text-caption [&_thead_th]:font-semibold [&_thead_th]:tracking-wide [&_thead_th]:uppercase [&_thead_th]:text-muted-foreground/60",
       "[&_tbody_tr]:border-b [&_tbody_tr:last-child]:border-0",
       "[&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-muted/30",
       className,

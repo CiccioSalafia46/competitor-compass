@@ -92,7 +92,7 @@ function KpiCard({ icon: Icon, label, value, sub, href, tone = "default" }: KpiC
         {typeof value === "number" ? value.toLocaleString() : value}
       </p>
       <p className="mt-1.5 text-xs font-medium text-foreground/70">{label}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/55">{sub}</p>}
+      {sub && <p className="mt-0.5 text-caption text-muted-foreground/55">{sub}</p>}
     </button>
   );
 }
@@ -116,7 +116,7 @@ function QuickAction({ icon: Icon, label, desc, href }: {
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-foreground">{label}</p>
-        <p className="text-[11px] text-muted-foreground/60 truncate">{desc}</p>
+        <p className="text-caption text-muted-foreground/60 truncate">{desc}</p>
       </div>
       <ArrowRight className="h-3 w-3 text-muted-foreground/25 group-hover:text-primary/50 transition-colors shrink-0" />
     </button>
@@ -273,7 +273,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between mb-1.5">
                   <p className="text-xs font-semibold text-foreground">Platform Health</p>
                   <span className={cn(
-                    "text-[10px] font-semibold",
+                    "text-caption font-semibold",
                     health?.tone === "healthy" ? "text-success"
                       : health?.tone === "fair" ? "text-warning"
                       : "text-destructive",
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
               ].map(({ label, value }) => (
                 <div key={label} className="text-center min-w-[72px]">
                   <p className="text-lg font-bold tabular-nums leading-none text-foreground">{value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{label}</p>
+                  <p className="text-caption text-muted-foreground mt-1 leading-tight">{label}</p>
                 </div>
               ))}
             </div>
@@ -382,7 +382,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">User Signups — Last 7 Days</CardTitle>
-              <Badge variant="secondary" className="text-[10px]">{data.recentSignups} this week</Badge>
+              <Badge variant="secondary" className="text-caption">{data.recentSignups} this week</Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
-              <Button variant="ghost" size="sm" className="h-8 text-[11px] gap-1 text-muted-foreground" onClick={() => navigate("/admin/logs")}>
+              <Button variant="ghost" size="sm" className="h-8 text-caption gap-1 text-muted-foreground" onClick={() => navigate("/admin/logs")}>
                 View all <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
@@ -470,13 +470,13 @@ export default function AdminDashboard() {
                         {log.action}
                       </p>
                       {log.entity_type && (
-                        <p className="text-[11px] text-muted-foreground/55 truncate">
+                        <p className="text-caption text-muted-foreground/55 truncate">
                           {log.entity_type}
                           {log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""}
                         </p>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted-foreground/50 shrink-0 tabular-nums">
+                    <span className="text-caption text-muted-foreground/50 shrink-0 tabular-nums">
                       {format(new Date(log.created_at), "HH:mm")}
                     </span>
                   </div>
@@ -495,7 +495,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 Gmail Sync Errors
-                <Badge variant="destructive" className="text-[10px]">{data.syncErrors.length}</Badge>
+                <Badge variant="destructive" className="text-caption">{data.syncErrors.length}</Badge>
               </CardTitle>
               <Button
                 variant="outline"
@@ -513,17 +513,17 @@ export default function AdminDashboard() {
                 <div key={conn.id} className="flex items-start justify-between gap-3 rounded-lg border border-destructive/15 bg-destructive/[0.04] px-3.5 py-2.5">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[13px] font-medium text-foreground">{conn.email_address}</span>
-                      <Badge variant="destructive" className="text-[10px]">{conn.sync_status}</Badge>
+                      <span className="text-nav font-medium text-foreground">{conn.email_address}</span>
+                      <Badge variant="destructive" className="text-caption">{conn.sync_status}</Badge>
                     </div>
                     {conn.sync_error && (
-                      <p className="text-[11px] font-mono text-destructive/75 line-clamp-1">{conn.sync_error}</p>
+                      <p className="text-caption font-mono text-destructive/75 line-clamp-1">{conn.sync_error}</p>
                     )}
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-6 text-[11px] gap-1 shrink-0"
+                    className="h-6 text-caption gap-1 shrink-0"
                     disabled={acting}
                     onClick={async () => {
                       await execute("force_resync", { connection_id: conn.id });
@@ -552,7 +552,7 @@ export default function AdminDashboard() {
       <section>
         <div className="flex items-center gap-2 mb-3">
           <Zap className="h-3.5 w-3.5 text-muted-foreground/60" />
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">Quick Actions</p>
+          <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">Quick Actions</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           <QuickAction icon={Users} label="Users" desc="View and moderate" href="/admin/users" />

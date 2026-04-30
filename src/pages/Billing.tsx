@@ -241,10 +241,10 @@ export default function Billing() {
                       )}
                     />
                   ) : (
-                    <p className="text-[10px] text-primary font-medium">{t("billing.unlimited")}</p>
+                    <p className="text-caption text-primary font-medium">{t("billing.unlimited")}</p>
                   )}
                   {pct >= 90 && !isUnlimited && (
-                    <p className="text-[10px] text-destructive mt-0.5 font-medium">{t("billing.upgradeToIncrease")}</p>
+                    <p className="text-caption text-destructive mt-0.5 font-medium">{t("billing.upgradeToIncrease")}</p>
                   )}
                 </div>
               );
@@ -272,15 +272,15 @@ export default function Billing() {
               )}
             >
               {isCurrent && (
-                <Badge className="absolute -top-2.5 left-4 text-[10px]">{t("billing.yourPlan")}</Badge>
+                <Badge className="absolute -top-2.5 left-4 text-caption">{t("billing.yourPlan")}</Badge>
               )}
               {isRecommended && !isCurrent && (
-                <Badge className="absolute -top-2.5 left-4 text-[10px] bg-primary">
+                <Badge className="absolute -top-2.5 left-4 text-caption bg-primary">
                   <Zap className="h-2.5 w-2.5 mr-0.5" /> {t("billing.recommended")}
                 </Badge>
               )}
               {isBestValue && !isCurrent && (
-                <Badge className="absolute -top-2.5 left-4 text-[10px] bg-primary">
+                <Badge className="absolute -top-2.5 left-4 text-caption bg-primary">
                   <TrendingUp className="h-2.5 w-2.5 mr-0.5" /> {t("billing.bestValue")}
                 </Badge>
               )}
@@ -291,7 +291,7 @@ export default function Billing() {
                   <span className="text-3xl font-bold text-foreground">{price.amount}</span>
                   <span className="text-sm text-muted-foreground">{price.period}</span>
                 </div>
-                <p className="text-[10px] text-primary font-medium mt-0.5">{t(`billing.plans.${plan}.tagline`)}</p>
+                <p className="text-caption text-primary font-medium mt-0.5">{t(`billing.plans.${plan}.tagline`)}</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Value buckets */}
@@ -300,7 +300,7 @@ export default function Billing() {
                     <div key={bucket.name}>
                       <div className="flex items-center gap-1.5 mb-1">
                         <bucket.icon className="h-3 w-3 text-primary" />
-                        <span className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{bucket.name}</span>
+                        <span className="text-caption font-semibold text-foreground uppercase tracking-wider">{bucket.name}</span>
                       </div>
                       <ul className="space-y-0.5">
                         {bucket.features.map((f) => {
@@ -312,7 +312,7 @@ export default function Billing() {
                               ) : (
                                 <Check className="h-3 w-3 text-primary shrink-0 mt-0.5" />
                               )}
-                              <span className={cn("text-[11px]", isComingSoon ? "text-muted-foreground italic" : "text-foreground")}>
+                              <span className={cn("text-caption", isComingSoon ? "text-muted-foreground italic" : "text-foreground")}>
                                 {f}
                               </span>
                             </li>
@@ -381,7 +381,7 @@ export default function Billing() {
                           ) : isDash ? (
                             <X className="h-3 w-3 text-muted-foreground/30 mx-auto" />
                           ) : isComingSoon ? (
-                            <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-caption px-1.5 py-0">
                               <Clock className="h-2.5 w-2.5 mr-0.5" /> {t("billing.comingSoon")}
                             </Badge>
                           ) : (

@@ -395,22 +395,22 @@ export default function Competitors() {
             <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
               <div className="flex items-center justify-between border-b bg-muted/20 px-4 py-3">
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground">{t("trackedSet")}</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-nav font-semibold text-foreground">{t("trackedSet")}</p>
+                  <p className="text-caption text-muted-foreground">
                     {generatedAt ? t("refreshedAt", { time: dateTime(generatedAt) }) : t("intelligenceNotLoaded")}
                   </p>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-caption font-semibold text-primary">
                   {t("tracked", { count: sortedCompetitors.length })}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 p-3">
                 <div className="rounded-lg border bg-card p-3 shadow-sm">
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{t("totalSignals")}</p>
+                  <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("totalSignals")}</p>
                   <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.totalSignals, 0)}</p>
                 </div>
                 <div className="rounded-lg border bg-card p-3 shadow-sm">
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{t("activeAds")}</p>
+                  <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("activeAds")}</p>
                   <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.activeAds, 0)}</p>
                 </div>
               </div>
@@ -445,15 +445,15 @@ export default function Competitors() {
                           <CompetitorLogo name={competitor.name} website={competitor.website} size="sm" />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <p className="truncate text-[13px] font-semibold text-foreground">{competitor.name}</p>
+                              <p className="truncate text-nav font-semibold text-foreground">{competitor.name}</p>
                               {snapshot && snapshot.activity.totalSignals > 0 && (
-                                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-caption font-semibold text-primary">
                                   {snapshot.activity.totalSignals}
                                 </span>
                               )}
                             </div>
                             {competitor.website && (
-                              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                              <p className="mt-0.5 truncate text-caption text-muted-foreground">
                                 {competitor.website.replace(/^https?:\/\//, "")}
                               </p>
                             )}
@@ -468,7 +468,7 @@ export default function Competitors() {
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <div className="mb-3 mt-2.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <div className="mb-3 mt-2.5 flex items-center gap-3 text-caption text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Newspaper className="h-3 w-3" />
                           {snapshot?.activity.newsletters ?? 0}
@@ -482,7 +482,7 @@ export default function Competitors() {
                           {snapshot?.activity.insights ?? 0}
                         </span>
                         {snapshot?.activity.lastActivityAt && (
-                          <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/60">
+                          <span className="ml-auto flex items-center gap-1 text-caption text-muted-foreground/60">
                             <Clock className="h-2.5 w-2.5" />
                             {dateTime(snapshot.activity.lastActivityAt)}
                           </span>
@@ -495,7 +495,7 @@ export default function Competitors() {
                         onClick={() => setSelectedCompetitorId(competitor.id)}
                         className="block w-full border-t px-4 pb-3 pt-2.5 text-left"
                       >
-                        <div className="mb-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
+                        <div className="mb-1.5 flex items-center justify-between text-caption text-muted-foreground">
                           <span>{t("shareOfActivity")}</span>
                           <span className="font-semibold text-foreground/70">{percent(snapshot.activity.shareOfVoice)}</span>
                         </div>
@@ -510,7 +510,7 @@ export default function Competitors() {
                         </div>
                       </button>
                     ) : (
-                      <div className="border-t px-4 py-2.5 text-[11px] text-muted-foreground/60">
+                      <div className="border-t px-4 py-2.5 text-caption text-muted-foreground/60">
                         {t("addSenderDomains")}
                       </div>
                     )}
@@ -718,7 +718,7 @@ function CompetitorDetail({
             </div>
 
             <div className="shrink-0 rounded-xl border bg-muted/20 px-4 py-3">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{t("lastActivity")}</p>
+              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("lastActivity")}</p>
               <p className="mt-1 text-sm font-semibold">{dateTime(snapshot?.activity.lastActivityAt ?? null, t("noRecentActivity", { defaultValue: "—" }))}</p>
               <p className="mt-1.5 text-xs text-muted-foreground">{t("lastActivityWindow")}</p>
             </div>
@@ -734,7 +734,7 @@ function CompetitorDetail({
             { label: t("kpi.aiSignals"), value: snapshot?.activity.insights ?? 0, sub: t("kpi.aiSignalsSub") },
           ].map((kpi) => (
             <div key={kpi.label} className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{kpi.label}</p>
+              <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{kpi.label}</p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{kpi.value}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{kpi.sub}</p>
             </div>
@@ -826,19 +826,19 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-4">
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.promoRate")}</p>
+              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.promoRate")}</p>
               <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{percent(promoBehavior.promoRate)}</p>
             </div>
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.avgDiscount")}</p>
+              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.avgDiscount")}</p>
               <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.averageDiscount)}%</p>
             </div>
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.maxDiscount")}</p>
+              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.maxDiscount")}</p>
               <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.maxDiscount)}%</p>
             </div>
             <div className={cn("rounded-xl border p-4", profileBadgeClass(promoBehavior.profile).includes("destructive") ? "border-destructive/20 bg-destructive/5" : promoBehavior.profile === "moderate" ? "border-amber-400/25 bg-amber-50/50 dark:bg-amber-950/15" : "border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/15")}>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{t("profile.profile")}</p>
+              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.profile")}</p>
               <p className={cn("mt-2 text-xl font-bold capitalize", promoBehavior.profile === "aggressive" ? "text-destructive" : promoBehavior.profile === "moderate" ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
                 {promoBehavior.profile}
               </p>
@@ -969,15 +969,15 @@ function TimelineEventRow({ event }: { event: CompetitorTimelineEvent }) {
       <div className="mb-4 min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2 pb-1">
           <span className={cn(
-            "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium text-white",
+            "inline-flex items-center rounded-full px-2 py-0.5 text-caption font-medium text-white",
             config.dot,
           )}>{sourceLabel}</span>
           {event.campaignType && (
-            <Badge variant="secondary" className="text-[10px] capitalize">
+            <Badge variant="secondary" className="text-caption capitalize">
               {event.campaignType.replace(/_/g, " ")}
             </Badge>
           )}
-          <span className="text-[11px] text-muted-foreground">{dateTime(event.happenedAt)}</span>
+          <span className="text-caption text-muted-foreground">{dateTime(event.happenedAt)}</span>
         </div>
         <p className="text-sm font-medium leading-snug">{event.title}</p>
         <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{event.summary}</p>
@@ -1099,7 +1099,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentThemes")}</p>
+              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentThemes.length > 0
                   ? messagingEvolution.currentThemes.map((theme) => <Badge key={theme} variant="secondary" className="text-xs [overflow-wrap:anywhere]">{theme}</Badge>)
@@ -1107,7 +1107,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.emergingAngles")}</p>
+              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.emergingAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.emergingAngles.length > 0
                   ? messagingEvolution.emergingAngles.map((a) => <Badge key={a} variant="outline" className="border-primary/30 bg-primary/5 text-primary text-xs [overflow-wrap:anywhere]">{a}</Badge>)
@@ -1115,7 +1115,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentAngles")}</p>
+              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentAngles.length > 0
                   ? messagingEvolution.currentAngles.map((a) => <Badge key={a} variant="secondary" className="text-xs [overflow-wrap:anywhere]">{a}</Badge>)
@@ -1123,7 +1123,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.previousThemes")}</p>
+              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.previousThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.previousThemes.length > 0
                   ? messagingEvolution.previousThemes.map((theme) => <Badge key={theme} variant="outline" className="text-xs [overflow-wrap:anywhere]">{theme}</Badge>)
@@ -1186,11 +1186,11 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
                 )}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[13px] font-semibold text-foreground">{signal.title}</p>
-                  <Badge variant="outline" className={cn("text-[10px]", priorityTone(signal.priority))}>
+                  <p className="text-nav font-semibold text-foreground">{signal.title}</p>
+                  <Badge variant="outline" className={cn("text-caption", priorityTone(signal.priority))}>
                     {INSIGHT_PRIORITY_LABELS[signal.priority]}
                   </Badge>
-                  <Badge variant="outline" className={cn("text-[10px]", impactTone(signal.impact))}>
+                  <Badge variant="outline" className={cn("text-caption", impactTone(signal.impact))}>
                     {INSIGHT_IMPACT_LABELS[signal.impact]}
                   </Badge>
                 </div>
@@ -1246,7 +1246,7 @@ function OpportunitiesTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapsh
                 key={`opp-${index}`}
                 className="flex gap-3 rounded-xl border border-l-[3px] border-l-primary bg-background p-3 transition-colors hover:bg-accent/10"
               >
-                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-caption font-bold text-primary-foreground">
                   {index + 1}
                 </div>
                 <p className="text-sm leading-6 text-foreground">{opp}</p>

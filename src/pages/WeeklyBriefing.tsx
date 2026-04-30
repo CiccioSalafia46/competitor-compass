@@ -43,7 +43,7 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: number
   return (
     <div className="rounded-xl border bg-muted/20 p-4">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+        <p className="text-caption uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
       <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
@@ -189,7 +189,7 @@ export default function WeeklyBriefingPage() {
                         <p className="text-sm text-foreground leading-5">{item.action}</p>
                         <Badge
                           variant="outline"
-                          className={cn("mt-1.5 text-[10px] capitalize", urgencyTone[item.urgency])}
+                          className={cn("mt-1.5 text-caption capitalize", urgencyTone[item.urgency])}
                         >
                           {t("priority", { level: item.urgency })}
                         </Badge>
@@ -220,7 +220,7 @@ export default function WeeklyBriefingPage() {
                           <Badge
                             variant="outline"
                             className={cn(
-                              "text-[10px] capitalize",
+                              "text-caption capitalize",
                               insight.priority === "high" ? "border-destructive/20 bg-destructive/10 text-destructive" :
                               insight.priority === "medium" ? "border-warning/20 bg-warning/10 text-warning" :
                               "border-primary/20 bg-primary/10 text-primary"

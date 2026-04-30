@@ -247,11 +247,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-[1360px] space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className="max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8 animate-fade-in">
 
       {/* ── Zone 1: Command Header ──────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="page-title">{currentWorkspace.name}</h1>
             {urgentSignals.map((s) => (
@@ -259,13 +259,13 @@ export default function Dashboard() {
                 key={s.label}
                 onClick={() => navigate(s.href)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all hover:opacity-90 hover:shadow-sm",
-                  s.tone === "red" && "border-destructive/25 bg-destructive/10 text-destructive",
-                  s.tone === "amber" && "border-warning/25 bg-warning/10 text-warning",
-                  s.tone === "blue" && "border-primary/25 bg-primary/10 text-primary",
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-caption font-semibold transition-all hover:opacity-90",
+                  s.tone === "red" && "border-destructive/20 bg-destructive/8 text-destructive",
+                  s.tone === "amber" && "border-warning/20 bg-warning/8 text-warning",
+                  s.tone === "blue" && "border-primary/20 bg-primary/8 text-primary",
                 )}
               >
-                <span className={cn("h-1.5 w-1.5 animate-pulse rounded-full", s.tone === "red" && "bg-destructive", s.tone === "amber" && "bg-warning", s.tone === "blue" && "bg-primary")} />
+                <span className={cn("h-1.5 w-1.5 rounded-full", s.tone === "red" && "bg-destructive", s.tone === "amber" && "bg-warning", s.tone === "blue" && "bg-primary")} />
                 {s.count} {s.label}
               </button>
             ))}
@@ -275,11 +275,11 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-medium" onClick={() => navigate("/newsletters/new")}>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/newsletters/new")}>
             <Plus className="h-3.5 w-3.5" />
             {t("importData")}
           </Button>
-          <Button size="sm" className="h-9 gap-1.5 text-xs font-medium" onClick={() => navigate("/insights")}>
+          <Button size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/insights")}>
             <Sparkles className="h-3.5 w-3.5" />
             {t("generateInsights")}
           </Button>
@@ -290,14 +290,14 @@ export default function Dashboard() {
 
       {hasData && (
         /* ── Zone 3: Intelligence Brief (hero position) ────────────────────── */
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2.5 border-b bg-muted/40 px-5 py-3.5">
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="flex items-center gap-2.5 border-b bg-muted/30 px-5 py-3">
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
             </div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground/70">{t("intelligenceBrief")}</p>
+            <p className="section-label text-foreground/60">{t("intelligenceBrief")}</p>
             {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ml-auto text-[10px] font-medium">
+              <Badge variant="secondary" className="ml-auto text-caption font-medium">
                 {t("filteredActive", { count: activeFilterCount })}
               </Badge>
             )}
@@ -328,8 +328,8 @@ export default function Dashboard() {
       )}
 
       {/* ── Zone 2: KPI Strip ──────────────────────────────────────────────── */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="grid grid-cols-3 sm:grid-cols-6">
+      <div className="rounded-xl border bg-card overflow-hidden">
+        <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-border/50">
           <KpiStrip label={t("kpiInbox")} value={stats.inboxItems} href="/inbox" />
           <KpiStrip label={t("kpiCompetitors")} value={stats.competitors} href="/competitors" />
           <KpiStrip label={t("kpiAnalyses")} value={stats.completedAnalyses} href="/analytics" />
@@ -347,7 +347,7 @@ export default function Dashboard() {
         <>
           {/* ── Filter Strip (only if filters are meaningful) ───────────────── */}
           {(competitorOptions.length > 0 || campaignTypeOptions.length > 0) && (
-            <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 px-3 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:py-2">
+            <div className="flex flex-col gap-2 rounded-lg px-3 py-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
               <div className="flex items-center justify-between sm:justify-start">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Filter className="h-3 w-3" />
@@ -442,7 +442,7 @@ export default function Dashboard() {
               {filteredCompetitorSummary.length === 0 ? (
                 <EmptyZone icon={Users} title={t("noCompetitorData")} desc={t("noCompetitorDataDesc")} />
               ) : (
-                <Card className="border shadow-sm divide-y">
+                <Card className="border divide-y">
                   {filteredCompetitorSummary.map((entry) => (
                     <CompetitorPressureRow key={entry.competitor} entry={entry} maxSignals={filteredCompetitorSummary[0].newsletters + filteredCompetitorSummary[0].ads} website={competitorWebsiteByName.get(entry.competitor) ?? null} onClick={() => navigate("/competitors")} />
                   ))}
@@ -542,56 +542,31 @@ export default function Dashboard() {
 
       <SystemHealthPanel />
 
-      {/* ── Quick nav ──────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-1">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[
-            { icon: Newspaper, label: t("quickNavImportData"), desc: t("quickNavImportDataDesc"), path: "/newsletters/new" },
-            { icon: Users, label: t("quickNavCompetitors"), desc: t("quickNavCompetitorsDesc"), path: "/competitors" },
-            { icon: TrendingUp, label: t("quickNavAnalytics"), desc: t("quickNavAnalyticsDesc"), path: "/analytics" },
-            { icon: Megaphone, label: t("quickNavMetaAds"), desc: t("quickNavMetaAdsDesc"), path: "/meta-ads" },
-          ].map((a) => (
-            <button
-              key={a.path}
-              onClick={() => navigate(a.path)}
-              className="group flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-background hover:shadow-sm"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/15 text-primary shadow-sm">
-                <a.icon className="h-3.5 w-3.5 group-hover:scale-105 transition-transform" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground">{a.label}</p>
-                <p className="text-[10px] text-muted-foreground/70">{a.desc}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Quick nav removed — all destinations are in the sidebar */}
     </div>
   );
 }
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
 
-function SectionHeader({ label, sub, action, variant = "default" }: {
+function SectionHeader({ label, sub, action }: {
   label: string;
   sub?: string;
   action?: { label: string; onClick: () => void };
   variant?: "primary" | "default";
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 pb-2">
-      <div className="flex items-center gap-2.5">
-        <span className={cn("h-4 w-[3px] rounded-full shrink-0", variant === "primary" ? "bg-primary" : "bg-primary/50")} />
-        <p className={cn("tracking-tight", variant === "primary" ? "text-sm font-bold text-foreground" : "text-sm font-semibold text-foreground")}>{label}</p>
+    <div className="flex items-center justify-between gap-3 pb-1">
+      <div className="flex items-baseline gap-2 min-w-0">
+        <p className="text-sm font-semibold text-foreground truncate">{label}</p>
         {sub && (
-          <p className="text-[11px] text-muted-foreground/70 hidden sm:block">{sub}</p>
+          <p className="text-caption text-muted-foreground/50 hidden sm:block truncate">{sub}</p>
         )}
       </div>
       {action && (
         <button
           onClick={action.onClick}
-          className="flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors shrink-0"
+          className="flex items-center gap-0.5 text-xs font-medium text-muted-foreground/60 hover:text-primary transition-colors shrink-0"
         >
           {action.label}
           <ChevronRight className="h-3 w-3" />
@@ -608,10 +583,10 @@ function EmptyZone({ icon: Icon, title, desc, action }: {
   action?: { label: string; onClick: () => void };
 }) {
   return (
-    <div className="rounded-xl border border-dashed bg-muted/10 py-7 text-center">
-      <Icon className="mx-auto mb-2 h-5 w-5 text-muted-foreground/30" />
-      <p className="text-xs font-medium text-muted-foreground">{title}</p>
-      <p className="mx-auto mt-0.5 max-w-[200px] text-[11px] text-muted-foreground/60">{desc}</p>
+    <div className="rounded-xl border border-dashed py-8 text-center">
+      <Icon className="mx-auto mb-3 h-6 w-6 text-muted-foreground/40" />
+      <p className="text-sm font-medium text-muted-foreground">{title}</p>
+      <p className="mx-auto mt-1.5 max-w-[240px] text-xs text-muted-foreground/60 leading-relaxed">{desc}</p>
       {action && (
         <Button variant="outline" size="sm" className="mt-3 h-8 gap-1 text-xs" onClick={action.onClick}>
           {action.label}
@@ -717,17 +692,17 @@ const KpiStrip = memo(function KpiStrip({ label, value, href, accent }: {
     <button
       onClick={() => navigate(href)}
       className={cn(
-        "group flex flex-col gap-0.5 border-b border-r px-4 py-3.5 text-left transition-colors hover:bg-muted/40",
-        accent && "bg-destructive/[0.03] hover:bg-destructive/[0.06]",
+        "group flex flex-col gap-1 px-4 py-3.5 text-left transition-colors hover:bg-muted/20",
+        accent && "bg-destructive/[0.03]",
       )}
     >
       <p className={cn(
-        "text-xl font-bold leading-tight tracking-tight tabular-nums",
+        "text-xl font-semibold leading-none tracking-tight stat-value",
         accent ? "text-destructive" : "text-foreground",
       )}>
         {value}
       </p>
-      <p className="truncate text-[11px] font-medium text-foreground/60">{label}</p>
+      <p className="truncate text-xs text-muted-foreground/70">{label}</p>
     </button>
   );
 });
@@ -743,14 +718,14 @@ function BriefColumn({ icon: Icon, label, text, accent, cta, onNavigate }: {
   onNavigate?: ReturnType<typeof useNavigate>;
 }) {
   return (
-    <div className={cn("flex flex-col gap-3.5 p-5", accent && "bg-gradient-to-b from-primary/[0.04] to-transparent")}>
+    <div className={cn("flex flex-col gap-3 p-4 sm:p-5", accent && "bg-primary/[0.02]")}>
       <div className="flex items-center gap-2">
         <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
           <Icon className="h-3.5 w-3.5" />
         </div>
-        <p className={cn("text-[10px] font-semibold uppercase tracking-[0.16em]", accent ? "text-primary/70" : "text-muted-foreground")}>{label}</p>
+        <p className={cn("section-label", accent ? "text-primary/60" : "text-muted-foreground/60")}>{label}</p>
       </div>
-      <p className="text-sm leading-[1.65] text-foreground">{text}</p>
+      <p className="text-sm leading-relaxed text-foreground">{text}</p>
       {cta && onNavigate && (
         <div className="mt-auto pt-1">
           <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onNavigate(cta.href)}>
@@ -772,36 +747,23 @@ function ActionCard({ action, rank, onNavigate }: {
 }) {
   const priority = normalizeDashboardPriority(action.priority);
   return (
-    <div className={cn("rounded-xl border border-l-[3px] bg-background p-4 transition-all duration-200 hover:bg-accent/20 hover:shadow-md hover:-translate-y-0.5", PRIORITY_BORDER[priority])}>
-      <div className="flex items-start gap-3.5">
-        <div className={cn("mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white shadow-sm", priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-primary")}>
-          {rank}
-        </div>
+    <div className={cn("rounded-xl border border-l-2 bg-card px-4 py-3.5 transition-colors hover:bg-accent/10", PRIORITY_BORDER[priority])}>
+      <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold">{action.title}</p>
-            <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
+            <p className="text-sm font-medium text-foreground">{action.title}</p>
+            <Badge variant="outline" className={cn("text-caption capitalize", PRIORITY_BADGE[priority])}>
               {INSIGHT_PRIORITY_LABELS[priority]}
             </Badge>
           </div>
-          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{action.detail}</p>
-          {(action.competitors?.length || action.campaignTypes?.length) ? (
-            <div className="mt-1.5 flex flex-wrap gap-1">
-              {action.competitors?.slice(0, 2).map((c) => (
-                <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
-              ))}
-              {action.campaignTypes?.slice(0, 1).map((ct) => (
-                <Badge key={ct} variant="outline" className="text-[10px] capitalize">{fmt(ct, "campaign")}</Badge>
-              ))}
-            </div>
-          ) : null}
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{action.detail}</p>
         </div>
-        <Button size="sm" className="hidden h-8 shrink-0 gap-1 text-xs sm:inline-flex" onClick={onNavigate}>
+        <Button size="sm" variant="outline" className="hidden h-8 shrink-0 gap-1 text-xs sm:inline-flex" onClick={onNavigate}>
           {action.cta}
           <ArrowRight className="h-3 w-3" />
         </Button>
       </div>
-      <Button size="sm" className="mt-3 h-9 w-full gap-1.5 text-xs sm:hidden" onClick={onNavigate}>
+      <Button size="sm" className="mt-3 h-8 w-full gap-1.5 text-xs sm:hidden" onClick={onNavigate}>
         {action.cta}
         <ArrowRight className="h-3 w-3" />
       </Button>
@@ -818,30 +780,27 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
     <button
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border p-5 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:bg-accent/15",
-        priority === "high" && "bg-gradient-to-br from-destructive/[0.04] to-transparent",
-        priority === "medium" && "bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10 dark:to-transparent",
-        priority === "low" && "bg-card",
+        "w-full rounded-xl border bg-card px-4 py-3.5 text-left transition-colors hover:bg-accent/10",
+        priority === "high" && "border-l-2 border-l-destructive",
       )}
     >
-      <div className="min-w-0 space-y-2">
+      <div className="min-w-0 space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_BADGE[priority])}>
+          <p className="text-sm font-medium leading-snug [overflow-wrap:anywhere]">{insight.title}</p>
+          <Badge variant="outline" className={cn("text-caption capitalize", PRIORITY_BADGE[priority])}>
             {INSIGHT_PRIORITY_LABELS[priority]}
           </Badge>
         </div>
-        <p className="text-sm font-semibold leading-snug [overflow-wrap:anywhere]">{insight.title}</p>
-        <p className="text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway || insight.what_is_happening}</p>
+        <p className="text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway || insight.what_is_happening}</p>
         {insight.why_it_matters && (
-          <div className="rounded-lg bg-muted/40 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("whyItMatters")}</p>
-            <p className="mt-1 text-xs leading-5 text-foreground/80 [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
-          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground/70 [overflow-wrap:anywhere] italic">
+            {insight.why_it_matters}
+          </p>
         )}
         {(insight.affected_competitors ?? []).length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 pt-0.5">
             {(insight.affected_competitors ?? []).slice(0, 2).map((c) => (
-              <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
+              <Badge key={c} variant="secondary" className="text-caption">{c}</Badge>
             ))}
           </div>
         )}
@@ -855,19 +814,14 @@ function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; on
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-xl border bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md"
+      className="flex w-full items-start gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/10"
     >
       <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", PRIORITY_DOT[priority])} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{insight.title}</p>
+        <p className="truncate text-sm font-medium">{insight.title}</p>
         <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{insight.strategic_takeaway}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          {(insight.affected_competitors ?? []).slice(0, 1).map((c) => (
-            <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
-          ))}
-        </div>
       </div>
-      <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+      <ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground/25" />
     </button>
   );
 }
@@ -884,36 +838,36 @@ function CompetitorPressureRow({ entry, maxSignals, website, onClick }: {
   const total = entry.newsletters + entry.ads;
   const pct = maxSignals > 0 ? Math.round((total / maxSignals) * 100) : 0;
   return (
-    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-4 py-3.5 text-left transition-colors hover:bg-accent/20">
+    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-4 py-3 text-left transition-colors hover:bg-accent/15">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <CompetitorLogo name={entry.competitor} website={website} size="xs" />
           <p className="truncate text-sm font-medium">{entry.competitor}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-2">
           {entry.newsletters > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-0.5 text-caption text-muted-foreground">
               <Newspaper className="h-2.5 w-2.5" />{entry.newsletters}
             </span>
           )}
           {entry.ads > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-0.5 text-caption text-muted-foreground">
               <Megaphone className="h-2.5 w-2.5" />{entry.ads}
             </span>
           )}
         </div>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
+      <div className="h-1 w-full overflow-hidden rounded-full bg-muted/50">
         <div
           className={cn(
             "h-full rounded-full transition-all",
-            pct > 60 ? "bg-destructive/70" : pct > 30 ? "bg-amber-400/80" : "bg-primary/70",
+            pct > 60 ? "bg-destructive/60" : pct > 30 ? "bg-amber-400/70" : "bg-primary/60",
           )}
           style={{ width: `${pct}%` }}
         />
       </div>
       {typeof entry.promoRate === "number" && entry.promoRate > 0 && (
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-caption text-muted-foreground">
           {t("promoIntensity", { value: Math.round(entry.promoRate * 100) })}
         </p>
       )}
@@ -936,17 +890,17 @@ function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
     campaign: "bg-primary",
   };
   return (
-    <div className={cn("rounded-xl border px-4 py-3 shadow-sm", toneBg[highlight.tone])}>
+    <div className={cn("rounded-xl border bg-card px-4 py-3", highlight.tone !== "neutral" && toneBg[highlight.tone])}>
       <div className="flex items-start gap-2.5">
         <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", kindDot[highlight.kind])} />
         <div className="min-w-0">
           <p className="text-xs font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">{highlight.title}</p>
-          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]">{highlight.detail}</p>
+          <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{highlight.detail}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {highlight.competitors?.slice(0, 1).map((c) => (
-              <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+              <Badge key={c} variant="secondary" className="text-caption">{c}</Badge>
             ))}
-            <span className="text-[9px] uppercase tracking-wide text-muted-foreground/50">
+            <span className="text-caption uppercase tracking-wide text-muted-foreground/40">
               {highlight.kind === "competitor_action" ? t("highlightKindMove") : highlight.kind === "promotion" ? t("highlightKindPromo") : t("highlightKindCampaign")}
             </span>
           </div>
@@ -963,7 +917,7 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
   return (
     <button
       onClick={onNavigate}
-      className="w-full rounded-xl border bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md"
+      className="w-full rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/10"
     >
       <div className="flex items-start gap-2">
         {(() => {
@@ -976,7 +930,7 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
         })()}
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-foreground [overflow-wrap:anywhere]">{anomaly.title}</p>
-          <p className="mt-0.5 text-[11px] leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]">{anomaly.detail}</p>
+          <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{anomaly.detail}</p>
         </div>
       </div>
     </button>
@@ -995,11 +949,11 @@ function InboxCompactRow({ item, competitorName, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl border bg-card px-3.5 py-2.5 text-left shadow-sm transition-all hover:bg-accent/20 hover:shadow-md"
+      className="flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/10"
     >
       <div className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
-        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/15 text-primary ring-1 ring-primary/20 shadow-sm",
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-caption font-semibold",
+        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary ring-1 ring-primary/15",
       )}>
         {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
       </div>
@@ -1009,11 +963,11 @@ function InboxCompactRow({ item, competitorName, onClick }: {
           {!item.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <p className="truncate text-[10px] text-muted-foreground">{item.from_name || item.from_email || tCommon("unknown")}</p>
-          {competitorName && <Badge variant="outline" className="text-[9px]">{competitorName}</Badge>}
+          <p className="truncate text-caption text-muted-foreground">{item.from_name || item.from_email || tCommon("unknown")}</p>
+          {competitorName && <Badge variant="outline" className="text-caption">{competitorName}</Badge>}
         </div>
       </div>
-      <span className="shrink-0 text-[10px] text-muted-foreground/60 whitespace-nowrap">
+      <span className="shrink-0 text-caption text-muted-foreground/50 whitespace-nowrap">
         {item.received_at ? formatDistanceToNow(new Date(item.received_at), { addSuffix: true }) : "—"}
       </span>
     </button>
@@ -1025,18 +979,18 @@ function InboxCompactRow({ item, competitorName, onClick }: {
 function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardCompetitorPreview; onClick: () => void }) {
   const { t } = useTranslation("dashboard");
   return (
-    <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
+    <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition-all hover:border-primary/15 hover:shadow-sm">
       <CompetitorLogo name={competitor.name} website={competitor.website} size="md" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{competitor.name}</p>
+        <p className="truncate text-sm font-medium text-foreground">{competitor.name}</p>
         {competitor.website && (
-          <p className="truncate text-[11px] text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
+          <p className="truncate text-caption text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
         )}
         {!competitor.is_monitored && (
-          <span className="text-[10px] text-muted-foreground/50">{t("notMonitored")}</span>
+          <span className="text-caption text-muted-foreground/40">{t("notMonitored")}</span>
         )}
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-primary/50" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/25 transition-transform group-hover:translate-x-0.5 group-hover:text-primary/40" />
     </button>
   );
 }

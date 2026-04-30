@@ -12,7 +12,7 @@ export default function MetaAdsCompare() {
         <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
           <Scale className="h-6 w-6 text-primary" />
           Ad Comparison
-          <Badge variant="outline" className="text-[10px] gap-1 font-normal ml-1">
+          <Badge variant="outline" className="text-caption gap-1 font-normal ml-1">
             <Beaker className="h-2.5 w-2.5" /> Beta · Coming Soon
           </Badge>
         </h1>

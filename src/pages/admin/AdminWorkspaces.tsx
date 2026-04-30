@@ -117,7 +117,7 @@ export default function AdminWorkspaces() {
                 {/* PRIMARY */}
                 <TableCell>
                   <div className="space-y-0.5">
-                    <p className="text-[13px] font-medium leading-snug text-foreground">{ws.name}</p>
+                    <p className="text-nav font-medium leading-snug text-foreground">{ws.name}</p>
                     <p className="text-xs text-muted-foreground font-mono">{ws.slug}</p>
                   </div>
                 </TableCell>

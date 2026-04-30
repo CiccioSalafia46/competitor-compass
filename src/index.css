@@ -56,9 +56,9 @@
     --surface-raised: 0 0% 100%;
     --surface-sunken: 220 14% 96%;
 
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 2px 4px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 4px 8px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
 
     --chart-1: 222 82% 52%;
     --chart-2: 160 84% 39%;
@@ -162,27 +162,42 @@
     background-color: hsl(var(--surface-sunken));
   }
 
-  /* Page header pattern */
+  /* ── Page layout ─────────────────────────────────────────────────────── */
   .page-header {
     @apply flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between;
   }
 
   .page-title {
-    @apply text-[1.125rem] font-semibold text-foreground tracking-tight leading-snug;
+    @apply text-lg font-semibold text-foreground tracking-tight leading-snug;
   }
 
   .page-description {
     @apply text-sm text-muted-foreground leading-relaxed;
   }
 
-  /* Compact page wrapper — reduces default page padding for denser layouts */
   .page-compact {
     @apply p-4 sm:p-5 lg:p-6;
   }
 
-  /* Section label — consistent uppercase eyebrow text */
+  .page-padding {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+
+  /* ── Typography utilities ────────────────────────────────────────────── */
+
+  /* Eyebrow / section label — replaces text-[10px], text-[11px] uppercase patterns */
   .section-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground;
+  }
+
+  /* Caption text — small labels, metadata, badge text */
+  .text-caption {
+    @apply text-[11px] font-normal leading-snug tracking-[0.01em];
+  }
+
+  /* Nav-size text — sidebar items, secondary headings */
+  .text-nav {
+    @apply text-[13px] font-normal leading-snug;
   }
 
   /* Stat value — tabular numerals for KPI displays */
@@ -191,22 +206,26 @@
     font-feature-settings: 'tnum';
   }
 
-  /* Interactive card hover state */
+  /* ── Interactive states ──────────────────────────────────────────────── */
   .card-interactive {
     @apply cursor-pointer transition-all duration-150 hover:shadow-md hover:-translate-y-px;
   }
 
-  /* Interactive data row */
   .data-row {
     @apply cursor-pointer transition-colors duration-100 hover:bg-muted/40;
   }
 
-  /* Pill badge — compact status labels */
+  /* ── Badge / pill ────────────────────────────────────────────────────── */
   .pill {
     @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none;
   }
 
-  /* Scrollbar styling */
+  /* Section badge — for landing page eyebrow badges (replaces text-[10px] badge patterns) */
+  .badge-section {
+    @apply text-[11px] font-semibold tracking-wide px-3 py-1;
+  }
+
+  /* ── Scrollbar ───────────────────────────────────────────────────────── */
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;

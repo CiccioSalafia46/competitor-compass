@@ -19,7 +19,7 @@ interface CompetitorLogoProps {
 }
 
 const SIZE_CLASSES = {
-  xs: { container: "h-7 w-7 rounded-lg", text: "text-[11px] font-bold" },
+  xs: { container: "h-7 w-7 rounded-lg", text: "text-caption font-bold" },
   sm: { container: "h-8 w-8 rounded-lg", text: "text-xs font-semibold" },
   md: { container: "h-10 w-10 rounded-xl", text: "text-sm font-semibold" },
 } as const;

@@ -28,7 +28,7 @@ function StripeStatusBadge({ status }: { status: string | null }) {
   if (!status) return <span className="text-muted-foreground/40 text-xs">—</span>;
   const cfg = STATUS_CONFIG[status] ?? { label: status, className: "border-border bg-muted/50 text-muted-foreground" };
   return (
-    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium", cfg.className)}>
+    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-caption font-medium", cfg.className)}>
       {cfg.label}
     </span>
   );
@@ -54,9 +54,9 @@ function KpiCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">{label}</p>
+            <p className="text-caption font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">{label}</p>
             <p className="mt-1.5 text-2xl font-bold tabular-nums text-foreground">{value}</p>
-            {sub && <p className="mt-0.5 text-[11px] text-muted-foreground/70">{sub}</p>}
+            {sub && <p className="mt-0.5 text-caption text-muted-foreground/70">{sub}</p>}
           </div>
           <div className={cn("rounded-lg p-2 shrink-0", iconBg)}>
             <Icon className={cn("h-4 w-4", iconColor)} />
@@ -209,8 +209,8 @@ export default function AdminBilling() {
               <TableRow key={sub.workspace_id} className="group">
                 <TableCell>
                   <div className="space-y-0.5">
-                    <p className="text-[13px] font-medium text-foreground">{sub.workspace_name}</p>
-                    <p className="font-mono text-[10px] text-muted-foreground/50">
+                    <p className="text-nav font-medium text-foreground">{sub.workspace_name}</p>
+                    <p className="font-mono text-caption text-muted-foreground/50">
                       {sub.workspace_id.slice(0, 8)}
                     </p>
                   </div>
@@ -241,7 +241,7 @@ export default function AdminBilling() {
                     : <span className="text-muted-foreground/40">—</span>}
                 </TableCell>
 
-                <TableCell className="font-mono text-[11px] text-muted-foreground/60">
+                <TableCell className="font-mono text-caption text-muted-foreground/60">
                   {sub.stripe_customer_id
                     ? sub.stripe_customer_id
                     : <span className="text-muted-foreground/40">—</span>}

@@ -41,7 +41,7 @@ function MetaCell({ metadata }: { metadata: Record<string, unknown> | null }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="cursor-default font-mono text-[11px] text-muted-foreground">
+          <span className="cursor-default font-mono text-caption text-muted-foreground">
             {summary}
             {hasMore && (
               <span className="ml-1 text-muted-foreground/50">+{entries.length - 2}</span>
@@ -49,7 +49,7 @@ function MetaCell({ metadata }: { metadata: Record<string, unknown> | null }) {
           </span>
         </TooltipTrigger>
         <TooltipContent side="left" className="max-w-xs">
-          <pre className="text-[10px] leading-relaxed whitespace-pre-wrap break-all">{full}</pre>
+          <pre className="text-caption leading-relaxed whitespace-pre-wrap break-all">{full}</pre>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -64,7 +64,7 @@ function UuidCell({ value }: { value: string | null | undefined }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="cursor-default font-mono text-[11px] text-muted-foreground/70">
+          <span className="cursor-default font-mono text-caption text-muted-foreground/70">
             {value.slice(0, 8)}
           </span>
         </TooltipTrigger>
@@ -211,14 +211,14 @@ export default function AdminLogs() {
                 <TableCell>
                   <Badge
                     variant={log.action?.startsWith("admin.") ? "default" : "outline"}
-                    className="font-mono text-[10px]"
+                    className="font-mono text-caption"
                   >
                     {log.action}
                   </Badge>
                 </TableCell>
 
                 {/* SECONDARY: entity type */}
-                <TableCell className="text-[13px] text-foreground/80">
+                <TableCell className="text-nav text-foreground/80">
                   {log.entity_type || <span className="text-muted-foreground/40">—</span>}
                 </TableCell>
 

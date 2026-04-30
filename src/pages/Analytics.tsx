@@ -170,7 +170,7 @@ function SectionDivider({
       ) : (
         <span className="h-4 w-[3px] shrink-0 rounded-full bg-primary/50" />
       )}
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70 shrink-0">
+      <p className="text-caption font-semibold uppercase tracking-[0.16em] text-muted-foreground/70 shrink-0">
         {label}
       </p>
       <div className="h-px flex-1 bg-border/50" />
@@ -318,7 +318,7 @@ export default function Analytics() {
               {t("refresh")}
             </Button>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[11px] text-muted-foreground/70">
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-caption text-muted-foreground/70">
             <span>
               {t("newslettersSynced")}{" "}
               <span className="font-medium text-foreground/80">
@@ -429,7 +429,7 @@ export default function Analytics() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[10px] font-medium capitalize",
+                            "text-caption font-medium capitalize",
                             getPriorityBadgeClass(action.priority),
                           )}
                         >
@@ -487,7 +487,7 @@ export default function Analytics() {
                   <Badge
                     variant="outline"
                     className={cn(
-                      "shrink-0 text-[10px] font-semibold uppercase tracking-wide",
+                      "shrink-0 text-caption font-semibold uppercase tracking-wide",
                       getHealthBadgeClass(item.status),
                     )}
                   >
@@ -573,7 +573,7 @@ export default function Analytics() {
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[10px] font-medium capitalize",
+                        "text-caption font-medium capitalize",
                         getPriorityBadgeClass(anomaly.severity),
                       )}
                     >
@@ -714,7 +714,7 @@ export default function Analytics() {
             </div>
             <div className="grid gap-2.5 sm:grid-cols-2">
               <div className="rounded-xl border bg-card px-4 py-4 shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {t("matched")}
                 </p>
                 <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">
@@ -722,7 +722,7 @@ export default function Analytics() {
                 </p>
               </div>
               <div className="rounded-xl border bg-card px-4 py-4 shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {t("needsReview")}
                 </p>
                 <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">
@@ -755,7 +755,7 @@ export default function Analytics() {
                     <div className="flex items-start gap-3">
                       <div
                         className={cn(
-                          "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold",
+                          "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-caption font-bold",
                           index === 0
                             ? "bg-destructive/10 text-destructive"
                             : index === 1
@@ -771,11 +771,11 @@ export default function Analytics() {
                             <p className="truncate text-sm font-semibold text-foreground">
                               {item.competitor}
                             </p>
-                            <Badge variant="outline" className="shrink-0 text-[10px] font-medium">
+                            <Badge variant="outline" className="shrink-0 text-caption font-medium">
                               {item.pressureScore.toFixed(1)}
                             </Badge>
                           </div>
-                          <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground shrink-0">
+                          <div className="flex items-center gap-2.5 text-caption text-muted-foreground shrink-0">
                             <span className="flex items-center gap-0.5">
                               <Inbox className="h-2.5 w-2.5" />
                               {item.newsletters}
@@ -787,7 +787,7 @@ export default function Analytics() {
                             <span>{item.promos} promos</span>
                           </div>
                         </div>
-                        <p className="mt-0.5 text-[10px] text-muted-foreground/60">
+                        <p className="mt-0.5 text-caption text-muted-foreground/60">
                           {t("lastActivity", { time: formatDateTime(item.latestActivityAt, t("noRecentActivity")) })}
                         </p>
                         <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted/70">
@@ -831,17 +831,17 @@ export default function Analytics() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[10px] font-medium",
+                          "text-caption font-medium",
                           getSignalBadgeClass(signal.sourceType),
                         )}
                       >
                         {signal.sourceType === "newsletter" ? t("newsletter") : signal.sourceType === "meta_ad" ? t("metaAd") : t("insight")}
                       </Badge>
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                      <span className="text-caption font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
                         {signal.competitor}
                       </span>
                     </div>
-                    <p className="shrink-0 whitespace-nowrap text-[10px] text-muted-foreground/60">
+                    <p className="shrink-0 whitespace-nowrap text-caption text-muted-foreground/60">
                       {formatDateTime(signal.happenedAt, t("noRecentActivity"))}
                     </p>
                   </div>
@@ -900,7 +900,7 @@ export default function Analytics() {
           return (
             <div key={m.label} className="min-w-0 rounded-xl border bg-card p-4 shadow-sm">
               <div className="mb-2.5 flex items-center justify-between">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">
+                <p className="text-caption font-semibold uppercase tracking-[0.13em] text-muted-foreground">
                   {m.label}
                 </p>
                 <span
@@ -911,7 +911,7 @@ export default function Analytics() {
                 />
               </div>
               <p className="text-xl font-bold tabular-nums text-foreground">{m.value}</p>
-              <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{m.detail}</p>
+              <p className="mt-1 text-caption leading-relaxed text-muted-foreground">{m.detail}</p>
               <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted/50">
                 <div
                   className={cn(
@@ -981,7 +981,7 @@ export default function Analytics() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[10px] font-medium",
+                            "text-caption font-medium",
                             item.hasDomains
                               ? "border-primary/20 bg-primary/10 text-primary"
                               : "border-destructive/20 bg-destructive/10 text-destructive",
@@ -990,17 +990,17 @@ export default function Analytics() {
                           {item.hasDomains ? t("domainsReady") : t("domainsMissing")}
                         </Badge>
                       </div>
-                      <p className="text-[10px] text-muted-foreground/60">
+                      <p className="text-caption text-muted-foreground/60">
                         Last: {formatDateTime(item.latestActivityAt, t("noRecentActivity"))}
                       </p>
                     </div>
-                    <div className="shrink-0 text-right text-[10px] text-muted-foreground">
+                    <div className="shrink-0 text-right text-caption text-muted-foreground">
                       <p>{item.newsletters} {t("newsletters").toLowerCase()}</p>
                       <p>{item.ads} {t("ads").toLowerCase()}</p>
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="mb-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
+                    <div className="mb-1.5 flex items-center justify-between text-caption text-muted-foreground">
                       <span>{t("extractionCoverage")}</span>
                       <span className="font-semibold text-foreground/70">
                         {item.extractionCoverageRate.toFixed(1)}%
@@ -1040,7 +1040,7 @@ export default function Analytics() {
                 { label: t("freeShipping"), value: `${summary.freeShippingRate.toFixed(1)}%` },
               ].map((m) => (
                 <div key={m.label} className="min-w-0 rounded-xl border bg-card px-4 py-4 shadow-sm">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {m.label}
                   </p>
                   <p className="mt-2.5 text-2xl font-bold tabular-nums text-foreground">{m.value}</p>
@@ -1287,7 +1287,7 @@ export default function Analytics() {
             </div>
             <Badge
               variant="outline"
-              className="h-fit shrink-0 border-warning/30 bg-background text-[11px] font-medium text-warning"
+              className="h-fit shrink-0 border-warning/30 bg-background text-caption font-medium text-warning"
             >
               Inbox cleanup needed
             </Badge>
@@ -1295,7 +1295,7 @@ export default function Analytics() {
         </div>
       )}
 
-      <p className="text-center text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50">
+      <p className="text-center text-caption uppercase tracking-[0.14em] text-muted-foreground/50">
         Analytics are generated from imported workspace data. No external estimates are injected.
       </p>
     </div>

@@ -107,7 +107,7 @@ export const AppSidebar = memo(function AppSidebar() {
       if (filtered.length === 0) return null;
       return (
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">
+          <SidebarGroupLabel className="section-label opacity-70">
             {label}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -123,10 +123,10 @@ export const AppSidebar = memo(function AppSidebar() {
                       isActive={active}
                       onClick={() => navigate(item.path)}
                       className={cn(
-                        "gap-2.5 h-9 text-[13px] font-normal transition-colors",
+                        "gap-2.5 h-9 text-nav transition-colors",
                         active
                           ? "bg-accent text-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-muted hover:text-foreground"
+                          : "font-normal text-sidebar-foreground hover:bg-muted/50 hover:text-foreground"
                       )}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
@@ -134,7 +134,7 @@ export const AppSidebar = memo(function AppSidebar() {
                         <span className="flex-1 flex items-center justify-between">
                           {item.label}
                           {item.badge && (
-                            <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 font-normal ml-1">
+                            <Badge variant="outline" className="text-caption px-1.5 py-0 h-4 font-normal ml-1">
                               {item.badge}
                             </Badge>
                           )}
@@ -169,11 +169,11 @@ export const AppSidebar = memo(function AppSidebar() {
         <div className="px-2 pb-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex w-full items-center gap-2 rounded-lg border bg-background px-2.5 py-2.5 text-left text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/15 text-[10px] font-bold uppercase text-primary">
+              <button className="flex w-full items-center gap-2.5 rounded-lg bg-muted/40 px-2.5 py-2 text-left text-xs transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-caption font-bold uppercase text-primary">
                   {currentWorkspace.name.charAt(0)}
                 </div>
-                <span className="flex-1 truncate text-[13px] font-medium text-foreground">
+                <span className="flex-1 truncate text-nav font-medium text-foreground">
                   {currentWorkspace.name}
                 </span>
                 <ChevronsUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -186,7 +186,7 @@ export const AppSidebar = memo(function AppSidebar() {
                   onSelect={() => setCurrentWorkspace(ws)}
                   className="gap-2"
                 >
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/15 text-[10px] font-bold uppercase text-primary">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-caption font-bold uppercase text-primary">
                     {ws.name.charAt(0)}
                   </div>
                   <span className="flex-1 truncate">{ws.name}</span>
@@ -228,7 +228,7 @@ export const AppSidebar = memo(function AppSidebar() {
               <div className="flex items-center justify-between px-2 py-1">
                 <Badge
                   variant="secondary"
-                  className="capitalize text-[10px] font-medium h-5 px-2"
+                  className="capitalize text-caption font-medium h-5 px-2"
                 >
                   {roles[0]}
                 </Badge>
@@ -238,7 +238,7 @@ export const AppSidebar = memo(function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleSignOut}
-              className="gap-2.5 h-9 text-[13px] text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+              className="gap-2.5 h-9 text-nav text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>{t("signOut")}</span>}

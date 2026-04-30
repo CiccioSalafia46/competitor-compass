@@ -377,7 +377,7 @@ export default function NewsletterInbox() {
         <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/60 px-5 py-3 shadow-sm">
           <div className="flex items-center gap-2">
             <InboxIcon className="h-3.5 w-3.5 text-muted-foreground/60" />
-            <span className="text-[13px] font-semibold tabular-nums text-foreground">{totalCount}</span>
+            <span className="text-nav font-semibold tabular-nums text-foreground">{totalCount}</span>
             <span className="text-xs text-muted-foreground">{t("totalItems")}</span>
           </div>
           <div className="h-3 w-px bg-border" />
@@ -406,7 +406,7 @@ export default function NewsletterInbox() {
               {t("demoModeDesc")}
             </p>
           </div>
-          <Badge variant="outline" className="shrink-0 text-[10px]">
+          <Badge variant="outline" className="shrink-0 text-caption">
             {t("demoSample")}
           </Badge>
         </div>
@@ -427,7 +427,7 @@ export default function NewsletterInbox() {
                   </p>
                 </div>
               </div>
-              <Badge variant="secondary" className="h-fit text-[10px] font-medium">
+              <Badge variant="secondary" className="h-fit text-caption font-medium">
                 {t("suggestionCount", { count: suggestions.length })}
               </Badge>
             </div>
@@ -449,7 +449,7 @@ export default function NewsletterInbox() {
                                 senderDomain: suggestion.senderDomain,
                               })}
                           </p>
-                          <Badge variant="outline" className="text-[10px] font-medium">
+                          <Badge variant="outline" className="text-caption font-medium">
                             {t("emailBadge", { count: suggestion.newsletterCount })}
                           </Badge>
                         </div>
@@ -519,29 +519,29 @@ export default function NewsletterInbox() {
                     : t("syncCompleted")}
               </p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{lastSyncResult.message}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground/80">
+              <p className="mt-1 text-caption text-muted-foreground/80">
                 {lastSyncResult.sync_mode === "full" ? t("fullSync") : t("incrementalSync")} · {new Date(lastSyncResult.synced_at).toLocaleString()}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="text-[11px]">
+            <Badge variant="outline" className="text-caption">
               {t("checked", { count: lastSyncResult.total })}
             </Badge>
-            <Badge variant="outline" className="text-[11px]">
+            <Badge variant="outline" className="text-caption">
               {t("imported", { count: lastSyncResult.imported })}
             </Badge>
-            <Badge variant="outline" className="text-[11px]">
+            <Badge variant="outline" className="text-caption">
               {t("matched", { count: lastSyncResult.attributed })}
             </Badge>
-            <Badge variant="outline" className="text-[11px]">
+            <Badge variant="outline" className="text-caption">
               {t("needsReview", { count: lastSyncResult.needs_review })}
             </Badge>
-            <Badge variant="outline" className="text-[11px]">
+            <Badge variant="outline" className="text-caption">
               {t("skipped", { count: lastSyncResult.skipped })}
             </Badge>
             {lastSyncResult.errors > 0 && (
-              <Badge variant="outline" className="border-destructive/20 bg-destructive/10 text-[11px] text-destructive">
+              <Badge variant="outline" className="border-destructive/20 bg-destructive/10 text-caption text-destructive">
                 {t("errors", { count: lastSyncResult.errors })}
               </Badge>
             )}
@@ -664,7 +664,7 @@ export default function NewsletterInbox() {
 
                 {/* Avatar */}
                 <div className={cn(
-                  "hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
+                  "hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-caption font-semibold",
                   !item.is_read ? "bg-primary/12 text-primary" : "bg-muted/60 text-muted-foreground",
                 )}>
                   {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
@@ -673,7 +673,7 @@ export default function NewsletterInbox() {
                 {/* Sender — fixed width, primary info */}
                 <div className="w-32 shrink-0 truncate sm:w-40">
                   <p className={cn(
-                    "truncate text-[13px] leading-snug",
+                    "truncate text-nav",
                     !item.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80",
                   )}>
                     {item.from_name || item.from_email || t("unknownSender")}
@@ -683,7 +683,7 @@ export default function NewsletterInbox() {
                 {/* Subject + competitor assignment */}
                 <div className="min-w-0 flex-1">
                   <p className={cn(
-                    "truncate text-[13px] leading-snug",
+                    "truncate text-nav",
                     !item.is_read ? "font-medium text-foreground" : "text-foreground/70",
                   )}>
                     {item.subject || t("noSubject")}
@@ -704,7 +704,7 @@ export default function NewsletterInbox() {
                             disabled={assigningInboxId === item.id}
                           >
                             <SelectTrigger className={cn(
-                              "h-6 px-2 text-[10px] font-medium",
+                              "h-6 px-2 text-caption font-medium",
                               item.competitor_id
                                 ? "border-primary/20 bg-primary/5 text-primary"
                                 : "border-dashed text-muted-foreground",
@@ -722,12 +722,12 @@ export default function NewsletterInbox() {
                           </Select>
                         </div>
                       ) : competitor ? (
-                        <Badge variant="secondary" className="h-5 text-[10px] font-medium">
+                        <Badge variant="secondary" className="h-5 text-caption font-medium">
                           <Users className="mr-1 h-3 w-3" />
                           {competitor.name}
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="h-5 border-warning/30 bg-warning/5 text-[10px] font-medium text-warning">
+                        <Badge variant="outline" className="h-5 border-warning/30 bg-warning/5 text-caption font-medium text-warning">
                           {t("needsCompetitorBadge")}
                         </Badge>
                       )}
@@ -738,15 +738,15 @@ export default function NewsletterInbox() {
                 {/* Type badges — hidden on mobile */}
                 <div className="hidden shrink-0 items-center gap-1 md:flex">
                   {item.is_demo && (
-                    <Badge variant="outline" className="h-4 px-1.5 py-0 text-[9px]">{t("demoBadge")}</Badge>
+                    <Badge variant="outline" className="h-4 px-1.5 py-0 text-caption">{t("demoBadge")}</Badge>
                   )}
                   {item.is_newsletter && (
-                    <Badge variant="secondary" className="h-4 px-1.5 py-0 text-[9px]">{t("newsletterBadge")}</Badge>
+                    <Badge variant="secondary" className="h-4 px-1.5 py-0 text-caption">{t("newsletterBadge")}</Badge>
                   )}
                 </div>
 
                 {/* Date */}
-                <span className="w-12 shrink-0 text-right tabular-nums text-[11px] text-muted-foreground sm:w-16">
+                <span className="w-12 shrink-0 text-right tabular-nums text-caption text-muted-foreground sm:w-16">
                   {item.received_at
                     ? new Date(item.received_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
                     : "—"}

@@ -36,7 +36,7 @@ export function LanguageSelector() {
             )}
           >
             <span>{LANGUAGE_NAMES[lang]}</span>
-            <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
+            <span className="text-caption text-muted-foreground uppercase tracking-wide">
               {lang}
             </span>
           </DropdownMenuItem>

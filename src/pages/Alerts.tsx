@@ -182,9 +182,9 @@ function StatCard({ icon: Icon, label, value, detail, accent }: {
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+        <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
         <p className={cn("text-xl font-bold tabular-nums leading-tight", accent && "text-destructive")}>{value}</p>
-        {detail && <p className="text-[10px] text-muted-foreground/70 truncate">{detail}</p>}
+        {detail && <p className="text-caption text-muted-foreground/70 truncate">{detail}</p>}
       </div>
     </div>
   );
@@ -327,7 +327,7 @@ function CreateEditRuleDialog({
         onChange={(e) => setConfig((c) => ({ ...c, cooldown_hours: Number(e.target.value) }))}
         className="h-8"
       />
-      <p className="text-[11px] text-muted-foreground">{t("dialog.cooldownHint")}</p>
+      <p className="text-caption text-muted-foreground">{t("dialog.cooldownHint")}</p>
     </div>
   );
 
@@ -344,7 +344,7 @@ function CreateEditRuleDialog({
             onChange={(e) => setConfig((c) => ({ ...c, threshold: Number(e.target.value) }))}
             className="h-9"
           />
-          <p className="text-[11px] text-muted-foreground">{t("dialog.discountThresholdHint")}</p>
+          <p className="text-caption text-muted-foreground">{t("dialog.discountThresholdHint")}</p>
         </div>
         {commonCooldown}
       </div>
@@ -364,7 +364,7 @@ function CreateEditRuleDialog({
             placeholder={t("dialog.keywordsPlaceholder")}
             className="h-9"
           />
-          <p className="text-[11px] text-muted-foreground">{t("dialog.keywordsHint")}</p>
+          <p className="text-caption text-muted-foreground">{t("dialog.keywordsHint")}</p>
         </div>
         {commonCooldown}
       </div>
@@ -384,7 +384,7 @@ function CreateEditRuleDialog({
             placeholder={t("dialog.campaignTypesPlaceholder")}
             className="h-9"
           />
-          <p className="text-[11px] text-muted-foreground">{t("dialog.campaignTypesHint")}</p>
+          <p className="text-caption text-muted-foreground">{t("dialog.campaignTypesHint")}</p>
         </div>
         {commonCooldown}
       </div>
@@ -414,7 +414,7 @@ function CreateEditRuleDialog({
             />
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground">{t("dialog.spikeHint", { multiplier: config.spike_multiplier ?? 2, events: config.minimum_events ?? 3 })}</p>
+        <p className="text-caption text-muted-foreground">{t("dialog.spikeHint", { multiplier: config.spike_multiplier ?? 2, events: config.minimum_events ?? 3 })}</p>
         {commonCooldown}
       </div>
     ),
@@ -461,7 +461,7 @@ function CreateEditRuleDialog({
               </SelectContent>
             </Select>
             {getRuleTypeMeta(ruleType) && (
-              <p className="text-[11px] text-muted-foreground">{getRuleTypeMeta(ruleType)!.description}</p>
+              <p className="text-caption text-muted-foreground">{getRuleTypeMeta(ruleType)!.description}</p>
             )}
           </div>
 
@@ -478,7 +478,7 @@ function CreateEditRuleDialog({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
               {ALERT_EVALUATION_MODES.find((m) => m.value === evaluationMode)?.description}
             </p>
           </div>
@@ -490,7 +490,7 @@ function CreateEditRuleDialog({
           {competitors.length > 0 && (
             <div className="space-y-2">
               <Label className="text-xs">{t("dialog.competitorScope")}</Label>
-              <p className="text-[11px] text-muted-foreground">{t("dialog.competitorScopeHint")}</p>
+              <p className="text-caption text-muted-foreground">{t("dialog.competitorScopeHint")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {competitors.map((c) => (
                   <button
@@ -498,7 +498,7 @@ function CreateEditRuleDialog({
                     type="button"
                     onClick={() => toggleCompetitor(c.id)}
                     className={cn(
-                      "flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                      "flex items-center gap-1 rounded-full border px-2.5 py-1 text-caption font-medium transition-colors",
                       selectedCompetitorIds.includes(c.id)
                         ? "border-primary/40 bg-primary/10 text-primary"
                         : "border-border bg-background text-muted-foreground hover:border-primary/20 hover:text-foreground",
@@ -585,10 +585,10 @@ const RuleCard = memo(function RuleCard({
           <RuleIcon className="h-3.5 w-3.5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className={cn("text-[13px] font-semibold leading-tight", !rule.is_active && "text-muted-foreground")}>
+          <p className={cn("text-nav font-semibold leading-tight", !rule.is_active && "text-muted-foreground")}>
             {rule.name}
           </p>
-          <p className="text-[10px] text-muted-foreground">{meta?.label ?? rule.rule_type}</p>
+          <p className="text-caption text-muted-foreground">{meta?.label ?? rule.rule_type}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Switch
@@ -607,14 +607,14 @@ const RuleCard = memo(function RuleCard({
 
       <div className="space-y-2.5 px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-caption">
             {getRuleConfigSummary(rule)}
           </Badge>
           {mode && (
-            <Badge variant="secondary" className="text-[10px]">{mode.label}</Badge>
+            <Badge variant="secondary" className="text-caption">{mode.label}</Badge>
           )}
           {(rule.delivery_channels as string[] | null)?.includes("email") && (
-            <Badge variant="outline" className="text-[10px]">{t("rules.emailPlanned")}</Badge>
+            <Badge variant="outline" className="text-caption">{t("rules.emailPlanned")}</Badge>
           )}
         </div>
 
@@ -622,7 +622,7 @@ const RuleCard = memo(function RuleCard({
           <div className="flex flex-wrap items-center gap-1">
             <Users className="h-3 w-3 text-muted-foreground/60" />
             {scopedCompetitorNames.map((name) => (
-              <Badge key={name} variant="outline" className="text-[10px] border-primary/20 bg-primary/5 text-primary">
+              <Badge key={name} variant="outline" className="text-caption border-primary/20 bg-primary/5 text-primary">
                 {name}
               </Badge>
             ))}
@@ -630,15 +630,15 @@ const RuleCard = memo(function RuleCard({
         )}
 
         <div className="flex items-center justify-between gap-2 border-t pt-2">
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-caption text-muted-foreground">
             {t("rules.checked", { when: toRelativeDate(rule.last_evaluated_at, t) })}
           </p>
           {rule.last_triggered_at ? (
-            <p className="text-[10px] text-amber-600 dark:text-amber-400">
+            <p className="text-caption text-amber-600 dark:text-amber-400">
               {t("rules.triggered", { when: toRelativeDate(rule.last_triggered_at, t) })}
             </p>
           ) : (
-            <p className="text-[10px] text-muted-foreground/50">{t("rules.neverTriggered")}</p>
+            <p className="text-caption text-muted-foreground/50">{t("rules.neverTriggered")}</p>
           )}
         </div>
       </div>
@@ -761,7 +761,7 @@ export default function Alerts() {
           <div className="flex items-center gap-2.5">
             <h1 className="page-title">{t("title")}</h1>
             {highAlerts > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-destructive/25 bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+              <span className="inline-flex items-center gap-1 rounded-full border border-destructive/25 bg-destructive/10 px-2 py-0.5 text-caption font-semibold text-destructive">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
                 {t("criticalBadge", { count: highAlerts })}
               </span>
@@ -814,7 +814,7 @@ export default function Alerts() {
             <Bell className="h-3.5 w-3.5" />
             {t("tabs.notifications")}
             {unreadCount > 0 && (
-              <Badge className="h-4 min-w-4 px-1 text-[9px] leading-none">{unreadCount > 99 ? "99+" : unreadCount}</Badge>
+              <Badge className="h-4 min-w-4 px-1 text-caption leading-none">{unreadCount > 99 ? "99+" : unreadCount}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="rules" className="h-8 gap-1.5 text-xs">
@@ -954,20 +954,20 @@ export default function Alerts() {
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <p className={cn("text-[13px] leading-snug", !alert.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80")}>
+                        <p className={cn("text-nav leading-snug", !alert.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80")}>
                           {alert.title}
                         </p>
                         {!alert.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
-                        <Badge variant="outline" className={cn("text-[10px] capitalize", sev.badge)}>{alert.severity}</Badge>
-                        <Badge variant="secondary" className="text-[10px] capitalize">{alert.category}</Badge>
+                        <Badge variant="outline" className={cn("text-caption capitalize", sev.badge)}>{alert.severity}</Badge>
+                        <Badge variant="secondary" className="text-caption capitalize">{alert.category}</Badge>
                         {ownerRule && (
-                          <Badge variant="outline" className="text-[10px]">{ownerRule.name}</Badge>
+                          <Badge variant="outline" className="text-caption">{ownerRule.name}</Badge>
                         )}
                       </div>
                       {alert.description && (
                         <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">{alert.description}</p>
                       )}
-                      <p className="text-[10px] text-muted-foreground/50">{new Date(alert.created_at).toLocaleString()}</p>
+                      <p className="text-caption text-muted-foreground/50">{new Date(alert.created_at).toLocaleString()}</p>
                     </div>
                     <div className="flex shrink-0 gap-0.5 mt-0.5">
                       {!alert.is_read && (
@@ -1001,7 +1001,7 @@ export default function Alerts() {
                 <Zap className="h-3.5 w-3.5" />
               </div>
               <p className="text-[12px] font-semibold text-foreground">{t("rules.quickPresetsTitle")}</p>
-              <p className="ml-1 text-[11px] text-muted-foreground hidden sm:block">{t("rules.quickPresetsSubtitle")}</p>
+              <p className="ml-1 text-caption text-muted-foreground hidden sm:block">{t("rules.quickPresetsSubtitle")}</p>
               <Button size="sm" className="ml-auto h-8 gap-1.5 text-xs" onClick={() => openCreate()}>
                 <Plus className="h-3.5 w-3.5" />
                 {t("rules.customRule")}
@@ -1020,10 +1020,10 @@ export default function Alerts() {
                       <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", getRuleColor(preset.ruleType))}>
                         <PresetIcon className="h-3.5 w-3.5" />
                       </div>
-                      <p className="text-[13px] font-semibold text-foreground">{t(preset.labelKey)}</p>
+                      <p className="text-nav font-semibold text-foreground">{t(preset.labelKey)}</p>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">{t(preset.descriptionKey)}</p>
-                    <div className="flex items-center gap-1 text-[10px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                    <p className="text-caption leading-relaxed text-muted-foreground">{t(preset.descriptionKey)}</p>
+                    <div className="flex items-center gap-1 text-caption font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
                       {t("rules.useThisPreset")} <ChevronRight className="h-3 w-3" />
                     </div>
                   </button>
@@ -1087,7 +1087,7 @@ export default function Alerts() {
             </div>
             {rules.length > 0 && (
               <Select value={logRuleFilter} onValueChange={setLogRuleFilter}>
-                <SelectTrigger className="h-8 w-44 text-[11px] bg-background">
+                <SelectTrigger className="h-8 w-44 text-caption bg-background">
                   <SelectValue placeholder={t("filters.allRules")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -1098,7 +1098,7 @@ export default function Alerts() {
                 </SelectContent>
               </Select>
             )}
-            <p className="ml-auto text-[11px] text-muted-foreground/60">
+            <p className="ml-auto text-caption text-muted-foreground/60">
               {t("filters.entries", { filtered: filteredLogs.length, total: logs.length })}
             </p>
           </div>
@@ -1140,11 +1140,11 @@ export default function Alerts() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <p className="text-[13px] font-medium text-foreground">{entry.title}</p>
+                        <p className="text-nav font-medium text-foreground">{entry.title}</p>
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[10px] capitalize",
+                            "text-caption capitalize",
                             isTriggered && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
                             isSuppressed && "border-border bg-muted text-muted-foreground",
                             isFailed && "border-destructive/25 bg-destructive/10 text-destructive",
@@ -1152,18 +1152,18 @@ export default function Alerts() {
                         >
                           {entry.status}
                         </Badge>
-                        <Badge variant="secondary" className="text-[10px] capitalize">
+                        <Badge variant="secondary" className="text-caption capitalize">
                           {entry.event_source.replace(/_/g, " ")}
                         </Badge>
                         {ownerRule && (
-                          <Badge variant="outline" className="text-[10px]">{ownerRule.name}</Badge>
+                          <Badge variant="outline" className="text-caption">{ownerRule.name}</Badge>
                         )}
                       </div>
                       {entry.message && (
                         <p className="mt-0.5 text-xs text-muted-foreground">{entry.message}</p>
                       )}
                     </div>
-                    <p className="shrink-0 whitespace-nowrap text-[10px] text-muted-foreground/60">
+                    <p className="shrink-0 whitespace-nowrap text-caption text-muted-foreground/60">
                       {toRelativeDate(entry.created_at)}
                     </p>
                   </div>

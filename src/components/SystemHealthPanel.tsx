@@ -153,8 +153,8 @@ export function SystemHealthPanel() {
                 )}>
                   {statusIcon(sys.status)}
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-medium truncate">{sys.label}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{sys.detail}</p>
+                    <p className="text-caption font-medium truncate">{sys.label}</p>
+                    <p className="text-caption text-muted-foreground truncate">{sys.detail}</p>
                   </div>
                 </div>
               </TooltipTrigger>

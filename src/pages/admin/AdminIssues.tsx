@@ -68,7 +68,7 @@ function SeverityChip({ severity }: { severity: IssueSeverity }) {
   const cfg = SEVERITY_CONFIG[severity];
   return (
     <span className={cn(
-      "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium",
+      "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-caption font-medium",
       cfg.chipClass,
     )}>
       <cfg.icon className="h-2.5 w-2.5" />
@@ -105,10 +105,10 @@ function IssueCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="text-[13px] font-medium text-foreground">{title}</span>
+            <span className="text-nav font-medium text-foreground">{title}</span>
             <SeverityChip severity={severity} />
-            <Badge variant="secondary" className="text-[10px]">{category}</Badge>
-            <Badge variant="outline" className="text-[10px] border-destructive/30 text-destructive">
+            <Badge variant="secondary" className="text-caption">{category}</Badge>
+            <Badge variant="outline" className="text-caption border-destructive/30 text-destructive">
               {statusLabel}
             </Badge>
           </div>
@@ -123,10 +123,10 @@ function IssueCard({
         )}
 
         {/* Metadata */}
-        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-caption text-muted-foreground">
           {meta.map(({ label, value }) => (
             <span key={label}>
-              {label}: <span className="font-mono text-[10px]">{value}</span>
+              {label}: <span className="font-mono text-caption">{value}</span>
             </span>
           ))}
         </div>
@@ -317,7 +317,7 @@ export default function AdminIssues() {
       {/* Gmail sync errors */}
       {filteredSync.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">
+          <h2 className="text-caption font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">
             Gmail Sync Errors ({filteredSync.length})
           </h2>
           {filteredSync.map((conn) => (
@@ -358,7 +358,7 @@ export default function AdminIssues() {
       {/* Failed analyses */}
       {filteredAnalysis.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">
+          <h2 className="text-caption font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">
             Failed Analyses ({filteredAnalysis.length})
           </h2>
           {filteredAnalysis.map((a) => (

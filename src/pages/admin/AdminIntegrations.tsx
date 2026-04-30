@@ -128,7 +128,7 @@ export default function AdminIntegrations() {
               {gmailConns.map((conn) => (
                 <TableRow key={conn.id} className="group">
                   {/* PRIMARY */}
-                  <TableCell className="text-[13px] font-medium text-foreground">
+                  <TableCell className="text-nav font-medium text-foreground">
                     {conn.email_address}
                   </TableCell>
 

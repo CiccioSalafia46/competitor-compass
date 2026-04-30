@@ -90,7 +90,7 @@ export default function Auth() {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-xs">{t("passwordLabel")}</Label>
                   {!isSignUp && (
-                    <Link to="/forgot-password" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+                    <Link to="/forgot-password" className="text-caption text-muted-foreground hover:text-foreground transition-colors">
                       {t("forgotPassword")}
                     </Link>
                   )}

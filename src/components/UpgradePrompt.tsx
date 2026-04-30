@@ -81,7 +81,7 @@ const UpgradePrompt = memo(function UpgradePrompt({
         <Button size="sm" className="gap-1.5" onClick={() => navigate("/settings/billing")}>
           {t("upgradeTo", { plan: suggestedPlan })} <ArrowRight className="h-3 w-3" />
         </Button>
-        <p className="text-[10px] text-muted-foreground mt-2">
+        <p className="text-caption text-muted-foreground mt-2">
           {t("startingAt", { price })}
         </p>
       </CardContent>

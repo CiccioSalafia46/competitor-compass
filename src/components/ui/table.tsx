@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  *
  * Design decisions:
  * - TableHead: h-9 (36px) instead of h-12 (48px) — denser, more Stripe-like
- * - TableHead: text-[11px] uppercase tracking — clear column labels, not body text
+ * - TableHead: text-caption uppercase tracking — clear column labels, not body text
  * - TableCell: px-4 py-2.5 instead of p-4 — reduces row height by ~11px per row
  * - TableRow: includes `group` by default — enables .group-hover: child reveal patterns
  * - TableHeader: very subtle bg-muted/40 band — separates header from body at a glance
@@ -86,7 +86,7 @@ const TableHead = React.forwardRef<
     ref={ref}
     className={cn(
       "h-9 px-4 text-left align-middle",
-      "text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
+      "text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground",
       "first:pl-5 last:pr-5",
       "[&:has([role=checkbox])]:pr-0",
       className,

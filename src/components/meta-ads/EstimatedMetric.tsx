@@ -29,7 +29,7 @@ export function EstimatedMetric({ label, range, prefix = "", suffix = "", method
       <span className="font-medium">{lower} – {upper}</span>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 gap-0.5 cursor-help text-warning border-warning/30">
+          <Badge variant="outline" className="text-caption px-1 py-0 h-4 gap-0.5 cursor-help text-warning border-warning/30">
             <Info className="h-2.5 w-2.5" />
             Est.
           </Badge>

@@ -480,13 +480,13 @@ function ReportBuilderDialog({
                 onChange={(event) => setCompetitorInput(event.target.value)}
                 placeholder={t("builderDialog.competitorFilterPlaceholder")}
               />
-              <p className="text-[11px] text-muted-foreground">{t("builderDialog.competitorFilterHint")}</p>
+              <p className="text-caption text-muted-foreground">{t("builderDialog.competitorFilterHint")}</p>
             </div>
           </div>
 
           {sections.length > 0 ? (
             <div className="rounded-xl border bg-muted/20 px-4 py-3">
-              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("builderDialog.previewLabel")}</p>
+              <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("builderDialog.previewLabel")}</p>
               <p className="mt-1 text-sm font-medium text-foreground">{title.trim() || t("builderDialog.reportTitlePlaceholder")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {sections.map((s) => CUSTOM_REPORT_SECTION_LABELS[s]).join(" · ")}
@@ -628,19 +628,19 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t bg-muted/20 px-6 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.competitors")}</span>
+            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.competitors")}</span>
             <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.activeCompetitors}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.signals")}</span>
+            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.signals")}</span>
             <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.trackedSignals}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.insights")}</span>
+            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.insights")}</span>
             <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.structuredInsights}</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.generated")}</span>
+            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.generated")}</span>
             <span className="text-xs font-medium text-muted-foreground">{formatDateTime(payload.generatedAt, t("schedules.notScheduled"))}</span>
           </div>
         </div>
@@ -652,17 +652,17 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
             <TrendingUp className="h-4 w-4" />
           </div>
-          <h3 className="text-[13px] font-semibold text-foreground">{t("viewer.executiveBrief")}</h3>
-          <span className="ml-auto text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">{t("viewer.topLineSummary")}</span>
+          <h3 className="text-nav font-semibold text-foreground">{t("viewer.executiveBrief")}</h3>
+          <span className="ml-auto text-caption uppercase tracking-[0.15em] text-muted-foreground/60">{t("viewer.topLineSummary")}</span>
         </div>
         <div className="grid gap-0 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
           <div className="px-6 py-5">
-            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatChanged")}</p>
-            <p className="text-[13px] leading-7 text-foreground">{payload.summary.whatChanged}</p>
+            <p className="mb-2.5 text-caption font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatChanged")}</p>
+            <p className="text-nav leading-7 text-foreground">{payload.summary.whatChanged}</p>
           </div>
           <div className="px-6 py-5">
-            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatMatters")}</p>
-            <p className="text-[13px] leading-7 text-foreground">{payload.summary.whatMatters}</p>
+            <p className="mb-2.5 text-caption font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatMatters")}</p>
+            <p className="text-nav leading-7 text-foreground">{payload.summary.whatMatters}</p>
           </div>
         </div>
       </div>
@@ -673,7 +673,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
           {payload.charts.map((chart) => (
             <Card key={chart.id} className="border shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-[13px] font-semibold">{chart.title}</CardTitle>
+                <CardTitle className="text-nav font-semibold">{chart.title}</CardTitle>
                 {chart.description ? <CardDescription className="text-xs">{chart.description}</CardDescription> : null}
               </CardHeader>
               <CardContent>
@@ -691,11 +691,11 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
             <div key={section.id} className="overflow-hidden rounded-xl border bg-card shadow-sm">
               {/* Section header */}
               <div className="flex items-start gap-3 border-b bg-muted/15 px-6 py-4">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/12 text-[11px] font-bold text-primary">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/12 text-caption font-bold text-primary">
                   {sectionIndex + 1}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13px] font-semibold text-foreground">{section.title}</h3>
+                  <h3 className="text-nav font-semibold text-foreground">{section.title}</h3>
                   {section.summary && (
                     <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{section.summary}</p>
                   )}
@@ -708,7 +708,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {section.metrics.map((metric) => (
                       <div key={`${section.id}-${metric.label}`} className="rounded-lg border bg-card p-4 shadow-sm">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
+                        <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
                         <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{metric.value}</p>
                         {metric.detail ? (
                           <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{metric.detail}</p>
@@ -741,7 +741,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                           </div>
                           <div className="min-w-0">
                             <p className={cn(
-                              "text-[13px] font-semibold",
+                              "text-nav font-semibold",
                               isWarning && "text-amber-700 dark:text-amber-300",
                               isPositive && "text-emerald-700 dark:text-emerald-300",
                               !isWarning && !isPositive && "text-foreground",
@@ -772,7 +772,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                 {section.table ? (
                   <div className="overflow-x-auto rounded-lg border">
                     <table className="w-full min-w-[640px] text-left text-sm">
-                      <thead className="bg-muted/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                      <thead className="bg-muted/30 text-caption uppercase tracking-[0.12em] text-muted-foreground">
                         <tr>
                           {section.table.columns.map((column) => (
                             <th key={`${section.id}-${column}`} className="px-4 py-3 font-medium">
@@ -809,8 +809,8 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
               <Lightbulb className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-[13px] font-semibold text-foreground">{t("viewer.prioritizedInsights")}</h3>
-              <p className="text-[11px] text-muted-foreground">
+              <h3 className="text-nav font-semibold text-foreground">{t("viewer.prioritizedInsights")}</h3>
+              <p className="text-caption text-muted-foreground">
                 {t("viewer.insightsSubtitle", { count: insights.length })}
               </p>
             </div>
@@ -828,7 +828,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                   )}
                 >
                   <div className={cn(
-                    "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                    "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-caption font-bold",
                     p === "high" && "bg-destructive/15 text-destructive",
                     p === "medium" && "bg-amber-400/20 text-amber-600 dark:text-amber-400",
                     p === "low" && "bg-muted text-muted-foreground",
@@ -837,16 +837,16 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-[13px] font-semibold text-foreground">{insight.title}</p>
+                      <p className="text-nav font-semibold text-foreground">{insight.title}</p>
                       <span className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-caption font-semibold uppercase tracking-wide",
                         p === "high" && "bg-destructive/10 text-destructive",
                         p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
                         p === "low" && "bg-muted text-muted-foreground",
                       )}>
                         {insight.priorityLevel}
                       </span>
-                      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] capitalize text-muted-foreground">
+                      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-caption capitalize text-muted-foreground">
                         {insight.impactArea}
                       </span>
                     </div>
@@ -867,8 +867,8 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
               <ArrowRight className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-[13px] font-semibold text-foreground">{t("viewer.recommendedActions")}</h3>
-              <p className="text-[11px] text-muted-foreground">
+              <h3 className="text-nav font-semibold text-foreground">{t("viewer.recommendedActions")}</h3>
+              <p className="text-caption text-muted-foreground">
                 {t("viewer.actionsSubtitle")}
               </p>
             </div>
@@ -879,7 +879,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
               return (
                 <div key={action.title} className="flex gap-4 px-6 py-4 transition-colors hover:bg-muted/20">
                   <div className={cn(
-                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold",
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-caption font-bold",
                     p === "high" && "bg-destructive/10 text-destructive",
                     p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
                     p === "low" && "bg-primary/10 text-primary",
@@ -888,9 +888,9 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-[13px] font-semibold text-foreground">{action.title}</p>
+                      <p className="text-nav font-semibold text-foreground">{action.title}</p>
                       <span className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-caption font-semibold uppercase tracking-wide",
                         p === "high" && "bg-destructive/10 text-destructive",
                         p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
                         p === "low" && "bg-emerald-400/15 text-emerald-600 dark:text-emerald-400",
@@ -1100,12 +1100,12 @@ export default function Reports() {
                       {icon}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[13px] font-semibold leading-snug text-foreground">{template.label}</p>
-                      <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{template.description}</p>
+                      <p className="text-nav font-semibold leading-snug text-foreground">{template.label}</p>
+                      <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground">{template.description}</p>
                     </div>
                   </div>
                   <div className="space-y-3 p-4">
-                    <p className="text-[11px] text-muted-foreground/70">
+                    <p className="text-caption text-muted-foreground/70">
                       {isCustom
                         ? t("configurableRange")
                         : t("defaultRange", { count: template.defaultRangeDays })}
@@ -1151,8 +1151,8 @@ export default function Reports() {
                   <CalendarClock className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground">{t("schedules.title")}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("schedules.subtitle")}</p>
+                  <p className="text-nav font-semibold text-foreground">{t("schedules.title")}</p>
+                  <p className="text-caption text-muted-foreground">{t("schedules.subtitle")}</p>
                 </div>
               </div>
               <div className="divide-y">
@@ -1172,19 +1172,19 @@ export default function Reports() {
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-[13px] font-medium text-foreground">{schedule.name}</p>
+                          <p className="text-nav font-medium text-foreground">{schedule.name}</p>
                           <span className={cn(
                             "inline-flex h-2 w-2 rounded-full",
                             schedule.isActive ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.4)]" : "bg-muted-foreground/30",
                           )} />
-                          <span className="text-[11px] text-muted-foreground">{REPORT_TEMPLATES[schedule.templateKey].label}</span>
+                          <span className="text-caption text-muted-foreground">{REPORT_TEMPLATES[schedule.templateKey].label}</span>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {schedule.frequency === "weekly"
                             ? t("schedules.weekly", { day: weekdayOptions.find((option) => Number(option.value) === (schedule.dayOfWeek ?? 1))?.label ?? t("weekdays.1") })
                             : t("schedules.daily")} {t("schedules.at")} {`${String(schedule.hourOfDay).padStart(2, "0")}:${String(schedule.minuteOfHour).padStart(2, "0")}`}
                         </p>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground/60">
+                        <p className="mt-0.5 text-caption text-muted-foreground/60">
                           {t("schedules.next")} {formatDateTime(schedule.nextRunAt, t("schedules.notScheduled"))} · {t("schedules.last")} {formatDateTime(schedule.lastRunAt, t("schedules.notScheduled"))}
                         </p>
                       </div>
@@ -1223,8 +1223,8 @@ export default function Reports() {
                   <FileBarChart className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground">{t("recentRuns.title")}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("recentRuns.subtitle")}</p>
+                  <p className="text-nav font-semibold text-foreground">{t("recentRuns.title")}</p>
+                  <p className="text-caption text-muted-foreground">{t("recentRuns.subtitle")}</p>
                 </div>
               </div>
               <div className="divide-y">
@@ -1247,11 +1247,11 @@ export default function Reports() {
                       )}
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[13px] font-medium text-foreground">{run.title}</p>
+                        <p className="text-nav font-medium text-foreground">{run.title}</p>
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[10px] py-0",
+                            "text-caption py-0",
                             run.status === "completed" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
                             run.status === "running" && "border-amber-400/30 bg-amber-400/10 text-amber-600 dark:text-amber-400",
                             run.status === "failed" && "border-destructive/30 bg-destructive/10 text-destructive",
@@ -1269,7 +1269,7 @@ export default function Reports() {
                             : run.status}
                         </Badge>
                       </div>
-                      <p className="mt-1 text-[11px] text-muted-foreground">
+                      <p className="mt-1 text-caption text-muted-foreground">
                         {REPORT_TEMPLATES[run.templateKey].label} · {formatDateTime(run.generatedAt, t("schedules.notScheduled"))}
                       </p>
                       {run.errorMessage ? (
@@ -1306,15 +1306,15 @@ export default function Reports() {
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm leading-6 text-muted-foreground">
                   <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">1</div>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-caption font-bold text-primary">1</div>
                     <p>{t("pipeline.step1")}</p>
                   </div>
                   <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">2</div>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-caption font-bold text-primary">2</div>
                     <p>{t("pipeline.step2")}</p>
                   </div>
                   <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">3</div>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-caption font-bold text-primary">3</div>
                     <p>{t("pipeline.step3")}</p>
                   </div>
                 </CardContent>

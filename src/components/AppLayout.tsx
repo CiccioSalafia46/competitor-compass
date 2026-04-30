@@ -114,28 +114,28 @@ const TopBar = memo(function TopBar() {
   }, [realtimeFailed, currentWorkspace, fetchUnread]);
 
   return (
-    <header className="h-14 flex items-center justify-between border-b bg-card/95 backdrop-blur-sm px-3 sm:px-4 shrink-0 sticky top-0 z-20">
-      <div className="flex items-center gap-2">
-        <SidebarTrigger className="h-10 w-10 shrink-0" />
+    <header className="h-14 flex items-center justify-between border-b border-border/60 bg-background/95 backdrop-blur-sm shadow-sm px-4 sm:px-6 shrink-0 sticky top-0 z-20">
+      <div className="flex items-center gap-2.5">
+        <SidebarTrigger className="h-9 w-9 shrink-0" />
         {currentWorkspace && (
-          <span className="hidden sm:block text-[13px] font-medium text-muted-foreground/70 select-none truncate max-w-[200px]">
+          <span className="hidden sm:block text-nav font-medium text-muted-foreground/60 select-none truncate max-w-[200px]">
             {currentWorkspace.name}
           </span>
         )}
       </div>
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1">
         <LanguageSelector />
         <DarkModeToggle />
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 relative"
+          className="h-9 w-9 relative"
           onClick={() => navigate("/alerts")}
           aria-label={t("alerts")}
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[9px] flex items-center justify-center leading-none">
+            <Badge className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-caption flex items-center justify-center leading-none">
               {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}

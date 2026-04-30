@@ -39,24 +39,24 @@ export function MetaAdCard({ ad, onAnalyze, onSelect, analyzing, isDemo }: MetaA
             <div className="flex items-center gap-2 mb-1">
               <span className="font-medium text-sm text-foreground truncate">{ad.page_name || "Unknown Page"}</span>
               {isDemo && (
-                <Badge variant="outline" className="text-[10px] shrink-0">Demo</Badge>
+                <Badge variant="outline" className="text-caption shrink-0">Demo</Badge>
               )}
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {ad.is_active ? (
-                <Badge className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
+                <Badge className="text-caption bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
                   Active
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="text-[10px]">Inactive</Badge>
+                <Badge variant="secondary" className="text-caption">Inactive</Badge>
               )}
               {(ad.publisher_platforms || []).map((p) => (
-                <Badge key={p} variant="outline" className={`text-[10px] border-0 ${platformColors[p] || ""}`}>
+                <Badge key={p} variant="outline" className={`text-caption border-0 ${platformColors[p] || ""}`}>
                   {p}
                 </Badge>
               ))}
               {ad.cta_type && (
-                <Badge variant="outline" className="text-[10px]">{ad.cta_type.replace(/_/g, " ")}</Badge>
+                <Badge variant="outline" className="text-caption">{ad.cta_type.replace(/_/g, " ")}</Badge>
               )}
             </div>
           </div>

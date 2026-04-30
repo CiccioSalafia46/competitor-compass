@@ -137,7 +137,7 @@ export default function AnalysisView() {
             )}
           </div>
           {analysis.confidence && (
-            <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-wider">
+            <p className="text-caption text-muted-foreground/60 mt-1 uppercase tracking-wider">
               {confidenceLabel(analysis.confidence)}
             </p>
           )}

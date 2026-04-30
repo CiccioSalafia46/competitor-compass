@@ -11,7 +11,7 @@ function ConfidenceBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   const pct = Math.round(value * 100);
   const color = pct >= 75 ? "text-success" : pct >= 50 ? "text-warning" : "text-destructive";
-  return <Badge variant="outline" className={`text-[10px] ${color}`}>{pct}% confidence</Badge>;
+  return <Badge variant="outline" className={`text-caption ${color}`}>{pct}% confidence</Badge>;
 }
 
 export function AdAnalysisPanel({ analysis }: AdAnalysisPanelProps) {
@@ -89,7 +89,7 @@ export function AdAnalysisPanel({ analysis }: AdAnalysisPanelProps) {
           </div>
         )}
 
-        <p className="text-[10px] text-muted-foreground pt-1 border-t border-border">
+        <p className="text-caption text-muted-foreground pt-1 border-t border-border">
           Analyzed by {analysis.model_used || "AI"} · {new Date(analysis.created_at).toLocaleDateString()}
         </p>
       </CardContent>
