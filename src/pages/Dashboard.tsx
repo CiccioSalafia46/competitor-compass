@@ -600,12 +600,58 @@ function EmptyZone({ icon: Icon, title, desc, action }: {
 // ─── State components ─────────────────────────────────────────────────────────
 
 function LoadingState() {
-  const { t } = useTranslation("dashboard");
   return (
-    <div className="flex h-full items-center justify-center p-8">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-xs text-muted-foreground">{t("loading")}</p>
+    <div className="max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8 animate-fade-in">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-5 w-40 rounded bg-muted animate-pulse" />
+          <div className="h-3 w-56 rounded bg-muted/60 animate-pulse" />
+        </div>
+        <div className="hidden sm:flex gap-2">
+          <div className="h-8 w-28 rounded-md bg-muted animate-pulse" />
+          <div className="h-8 w-32 rounded-md bg-muted animate-pulse" />
+        </div>
+      </div>
+      {/* Intelligence Brief skeleton */}
+      <div className="rounded-xl border overflow-hidden">
+        <div className="h-10 bg-muted/30 border-b" />
+        <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="p-5 space-y-3">
+              <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-3 w-full rounded bg-muted/60 animate-pulse" />
+                <div className="h-3 w-3/4 rounded bg-muted/40 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* KPI strip skeleton */}
+      <div className="rounded-xl border overflow-hidden">
+        <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-border/50">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className={cn("px-4 py-3.5 space-y-2", i >= 3 && "hidden sm:block")}>
+              <div className="h-5 w-10 rounded bg-muted animate-pulse" />
+              <div className="h-2.5 w-16 rounded bg-muted/50 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Content skeleton */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {[0, 1].map((i) => (
+          <div key={i} className="space-y-3">
+            <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+            {[0, 1, 2].map((j) => (
+              <div key={j} className="rounded-xl border p-4 space-y-2">
+                <div className="h-3.5 w-3/4 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-full rounded bg-muted/40 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -692,8 +738,8 @@ const KpiStrip = memo(function KpiStrip({ label, value, href, accent }: {
     <button
       onClick={() => navigate(href)}
       className={cn(
-        "group flex flex-col gap-1 px-4 py-3.5 text-left transition-colors hover:bg-muted/20",
-        accent && "bg-destructive/[0.03]",
+        "group flex flex-col gap-1 px-4 py-3.5 text-left cursor-pointer transition-colors duration-200 hover:bg-muted/20",
+        accent && "bg-destructive/[0.04]",
       )}
     >
       <p className={cn(
@@ -702,7 +748,7 @@ const KpiStrip = memo(function KpiStrip({ label, value, href, accent }: {
       )}>
         {value}
       </p>
-      <p className="truncate text-xs text-muted-foreground/70">{label}</p>
+      <p className="truncate text-xs text-muted-foreground/60">{label}</p>
     </button>
   );
 });
@@ -747,7 +793,7 @@ function ActionCard({ action, rank, onNavigate }: {
 }) {
   const priority = normalizeDashboardPriority(action.priority);
   return (
-    <div className={cn("rounded-xl border border-l-2 bg-card px-4 py-3.5 transition-colors hover:bg-accent/10", PRIORITY_BORDER[priority])}>
+    <div className={cn("rounded-xl border border-l-2 bg-card px-4 py-3.5 cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm", PRIORITY_BORDER[priority])}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -780,7 +826,7 @@ function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; 
     <button
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border bg-card px-4 py-3.5 text-left transition-colors hover:bg-accent/10",
+        "w-full rounded-xl border bg-card px-4 py-3.5 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm",
         priority === "high" && "border-l-2 border-l-destructive",
       )}
     >
@@ -814,7 +860,7 @@ function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; on
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/10"
+      className="flex w-full items-start gap-3 rounded-xl border bg-card px-4 py-3 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm"
     >
       <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", PRIORITY_DOT[priority])} />
       <div className="min-w-0 flex-1">
@@ -838,7 +884,7 @@ function CompetitorPressureRow({ entry, maxSignals, website, onClick }: {
   const total = entry.newsletters + entry.ads;
   const pct = maxSignals > 0 ? Math.round((total / maxSignals) * 100) : 0;
   return (
-    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-4 py-3 text-left transition-colors hover:bg-accent/15">
+    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-4 py-3 text-left cursor-pointer transition-colors duration-200 hover:bg-accent/10">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <CompetitorLogo name={entry.competitor} website={website} size="xs" />
@@ -917,7 +963,7 @@ function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly;
   return (
     <button
       onClick={onNavigate}
-      className="w-full rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/10"
+      className="w-full rounded-xl border bg-card px-4 py-3 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm"
     >
       <div className="flex items-start gap-2">
         {(() => {
@@ -949,7 +995,7 @@ function InboxCompactRow({ item, competitorName, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/10"
+      className="flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm"
     >
       <div className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-caption font-semibold",
@@ -979,7 +1025,7 @@ function InboxCompactRow({ item, competitorName, onClick }: {
 function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardCompetitorPreview; onClick: () => void }) {
   const { t } = useTranslation("dashboard");
   return (
-    <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition-all hover:border-primary/15 hover:shadow-sm">
+    <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left cursor-pointer transition-all duration-200 hover:border-border hover:shadow-sm">
       <CompetitorLogo name={competitor.name} website={competitor.website} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-foreground">{competitor.name}</p>
