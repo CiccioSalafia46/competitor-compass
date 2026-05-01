@@ -91,7 +91,7 @@ export default function SignalRadar({ className }: SignalRadarProps) {
       const rect = el.getBoundingClientRect();
       const nx = (e.clientX - rect.left) / rect.width - 0.5;
       const ny = (e.clientY - rect.top) / rect.height - 0.5;
-      setTilt({ rx: -ny * 16, ry: nx * 16 });
+      setTilt({ rx: -ny * 22, ry: nx * 22 });
     },
     [isMobile],
   );
@@ -131,7 +131,7 @@ export default function SignalRadar({ className }: SignalRadarProps) {
       <div
         style={{
           transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-          transition: "transform 0.15s ease-out",
+          transition: "transform 0.08s ease-out",
           willChange: "transform",
         }}
       >
@@ -146,11 +146,13 @@ export default function SignalRadar({ className }: SignalRadarProps) {
               <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.25" />
               <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
             </linearGradient>
-            {/* Glow filter */}
-            <filter id="nodeGlow">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+            {/* Glow filter — visible violet halo on hover */}
+            <filter id="nodeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur2" />
               <feMerge>
-                <feMergeNode in="blur" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
@@ -260,6 +262,21 @@ export default function SignalRadar({ className }: SignalRadarProps) {
 
             return (
               <g key={node.id}>
+                {/* Hover glow ring */}
+                {isHovered && (
+                  <circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r="16"
+                    fill="hsl(var(--primary))"
+                    fillOpacity="0.12"
+                    stroke="hsl(var(--primary))"
+                    strokeOpacity="0.25"
+                    strokeWidth="1"
+                    style={{ transition: "r 0.2s" }}
+                  />
+                )}
+
                 {/* Ripple on sweep */}
                 {isSwept && !prefersReducedMotion && (
                   <circle
