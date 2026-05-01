@@ -342,3 +342,160 @@
   opacity: 0.04;
   mix-blend-mode: screen;
 }
+
+/* ── Stats Strip Animations ──────────────────────────────────────── */
+
+/* Tile 1: Speed bars */
+@keyframes stats-bar-slow {
+  0% { width: 0; }
+  90% { width: 80px; }
+  100% { width: 0; }
+}
+@keyframes stats-bar-fast {
+  0% { width: 0; }
+  9% { width: 80px; }
+  90% { width: 80px; }
+  100% { width: 0; }
+}
+.stats-bar-manual {
+  animation: stats-bar-slow 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.stats-bar-fast {
+  animation: stats-bar-fast 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Tile 2: Auto ring fill */
+@keyframes stats-ring-fill {
+  0% { stroke-dashoffset: var(--ring-circumference); }
+  33% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; }
+}
+.stats-ring-fill {
+  animation: stats-ring-fill 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Tile 2: Data dots flowing in */
+@keyframes stats-dot-flow {
+  0% { opacity: 0; r: 1.5; cx: 34; cy: 8; }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; r: 1; cx: 20; cy: 20; }
+}
+.stats-dot-flow {
+  animation: stats-dot-flow 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Tile 3: ECG line draw */
+@keyframes stats-ecg-draw {
+  0% { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: -200; }
+}
+.stats-ecg-draw {
+  animation: stats-ecg-draw 3s linear infinite;
+}
+
+/* Tile 3: Day/night cycle */
+@keyframes stats-daynight {
+  0%, 100% { background: hsl(var(--primary) / 0.03); }
+  50% { background: hsl(var(--primary) / 0.08); }
+}
+.stats-daynight {
+  animation: stats-daynight 8s ease-in-out infinite;
+}
+
+/* Tile 4: Step activation */
+@keyframes stats-step-activate {
+  0%, 10% { border-color: hsl(var(--primary) / 0.3); background: transparent; }
+  30% { border-color: hsl(160 84% 39%); background: hsl(160 84% 39% / 0.1); }
+  75% { border-color: hsl(160 84% 39%); background: hsl(160 84% 39% / 0.1); }
+  100% { border-color: hsl(var(--primary) / 0.3); background: transparent; }
+}
+.stats-step-activate {
+  animation: stats-step-activate 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Tile 4: Check mark appear */
+@keyframes stats-step-check-appear {
+  0%, 10% { opacity: 0; transform: scale(0.5); }
+  30% { opacity: 1; transform: scale(1); }
+  75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+.stats-step-check {
+  animation: stats-step-check-appear 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Tile 4: Step connector line fill */
+@keyframes stats-step-line-fill {
+  0%, 5% { width: 0; }
+  25% { width: 100%; }
+  75% { width: 100%; }
+  100% { width: 0; }
+}
+.stats-step-line {
+  animation: stats-step-line-fill 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Tile 4: Progress bar */
+@keyframes stats-progress-fill {
+  0% { width: 0; }
+  60% { width: 100%; }
+  75% { width: 100%; }
+  100% { width: 0; }
+}
+.stats-progress-fill {
+  animation: stats-progress-fill 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Live Ticker scroll */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-scroll {
+  animation: ticker-scroll 40s linear infinite;
+}
+.ticker-paused {
+  animation-play-state: paused;
+}
+.ticker-static {
+  animation: none;
+}
+
+/* Reduced motion: freeze all stats animations at final state */
+@media (prefers-reduced-motion: reduce) {
+  .stats-bar-manual,
+  .stats-bar-fast,
+  .stats-ring-fill,
+  .stats-dot-flow,
+  .stats-ecg-draw,
+  .stats-daynight,
+  .stats-step-activate,
+  .stats-step-check,
+  .stats-step-line,
+  .stats-progress-fill,
+  .ticker-scroll {
+    animation: none !important;
+  }
+  .stats-ring-fill {
+    stroke-dashoffset: 0 !important;
+  }
+  .stats-ecg-draw {
+    stroke-dashoffset: 0 !important;
+  }
+  .stats-step-check {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+  }
+  .stats-step-line {
+    width: 100% !important;
+  }
+  .stats-progress-fill {
+    width: 100% !important;
+  }
+  .stats-bar-manual {
+    width: 80px !important;
+  }
+  .stats-bar-fast {
+    width: 80px !important;
+  }
+}

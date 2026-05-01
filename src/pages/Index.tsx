@@ -14,6 +14,7 @@ import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import DashboardPreview from "@/components/homepage/DashboardPreview";
 import SignalRadar from "@/components/homepage/SignalRadar";
+import StatsStrip from "@/components/homepage/StatsStrip";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -235,28 +236,8 @@ export default function Index() {
             </div>
           </div>
 
-          {/* Metrics strip — full width below both columns */}
-          <div className="mt-12 sm:mt-16 max-w-3xl mx-auto animate-reveal" style={{ animationDelay: "0.15s" }}>
-            <div className="grid grid-cols-2 sm:grid-cols-4 rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm overflow-hidden">
-              {[
-                { value: "10×", label: t("metrics.fasterLabel") },
-                { value: "100%", label: t("metrics.automatedLabel") },
-                { value: "24/7", label: t("metrics.monitoringLabel") },
-                { value: "< 5 min", label: t("metrics.insightLabel") },
-              ].map((m, i) => (
-                <div key={m.label} className={cn(
-                  "flex flex-col items-center justify-center px-4 py-5 text-center",
-                  i < 2 && "border-b sm:border-b-0",
-                  i % 2 === 0 && "border-r border-border/50",
-                  i === 1 && "sm:border-r sm:border-border/50",
-                  i === 2 && "sm:border-r sm:border-border/50",
-                )}>
-                  <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight stat-value">{m.value}</p>
-                  <p className="text-caption font-medium text-muted-foreground/60 mt-1">{m.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Metrics strip — animated proof tiles + live ticker */}
+          <StatsStrip />
 
           {/* ─── Interactive dashboard preview ─── */}
           <DashboardPreview />
