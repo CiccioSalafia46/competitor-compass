@@ -4,6 +4,8 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRoles } from "@/hooks/useRoles";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdminCheck } from "@/hooks/useAdmin";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -19,17 +21,19 @@ import {
 } from "@/components/ui/sidebar";
 import {
   BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut,
-  Plus, Shield, Gauge, Inbox, Megaphone, Lightbulb, TrendingUp,
-  Bell, CreditCard,
+  Shield, Inbox, Megaphone, Lightbulb,
+  Bell, CreditCard, UserRound,
   FileText, Sparkles, ChevronsUpDown, Check,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -43,24 +47,67 @@ type NavItem = {
   matchPrefix: string;
   show: boolean;
   badge?: string;
+  count?: number;
 };
 
 export const AppSidebar = memo(function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { currentWorkspace, workspaces, setCurrentWorkspace } = useWorkspace();
   const { isAdmin, isAnalyst, canViewData, roles } = useRoles();
   const { isAdmin: isPlatformAdmin } = useAdminCheck();
   const { tier } = useSubscription();
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const { t } = useTranslation("nav");
+  const workspaceId = currentWorkspace?.id ?? null;
+
+  const { data: counts } = useQuery({
+    queryKey: ["sidebar-counts", workspaceId],
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+    gcTime: 300_000,
+    refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const [inboxResult, insightsResult, alertsResult] = await Promise.all([
+        supabase
+          .from("newsletter_inbox")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspaceId!)
+          .eq("is_read", false),
+        supabase
+          .from("insights")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspaceId!),
+        supabase
+          .from("alerts")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspaceId!)
+          .eq("is_read", false)
+          .eq("is_dismissed", false),
+      ]);
+
+      return {
+        inbox: inboxResult.count ?? 0,
+        insights: insightsResult.count ?? 0,
+        alerts: alertsResult.count ?? 0,
+      };
+    },
+  });
 
   const handleSignOut = useCallback(async () => {
     await signOut();
     navigate("/auth");
   }, [signOut, navigate]);
+
+  const navigateTo = useCallback(
+    (path: string) => {
+      navigate(path);
+      if (isMobile) setOpenMobile(false);
+    },
+    [isMobile, navigate, setOpenMobile],
+  );
 
   const isActive = useCallback(
     (matchPrefix: string) =>
@@ -71,34 +118,22 @@ export const AppSidebar = memo(function AppSidebar() {
   const coreNav = useMemo(
     () => [
       { label: t("dashboard"), icon: LayoutDashboard, path: "/dashboard", matchPrefix: "/dashboard", show: true },
-      { label: t("inbox"), icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true },
-      { label: t("dataSources"), icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
+      { label: t("inbox"), icon: Inbox, path: "/inbox", matchPrefix: "/inbox", show: true, count: counts?.inbox },
       { label: t("competitors"), icon: Users, path: "/competitors", matchPrefix: "/competitors", show: isAnalyst },
+      { label: t("dataSources"), icon: Newspaper, path: "/newsletters", matchPrefix: "/newsletters", show: true },
     ],
-    [isAnalyst, t]
+    [counts?.inbox, isAnalyst, t]
   );
 
   const intelligenceNav = useMemo(
     () => [
-      { label: t("metaAds"), icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? t("common:premium") : undefined },
-      { label: t("insights"), icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst },
+      { label: t("insights"), icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst, count: counts?.insights },
       { label: t("weeklyBriefing"), icon: Sparkles, path: "/weekly-briefing", matchPrefix: "/weekly-briefing", show: isAnalyst },
-      { label: t("analytics"), icon: TrendingUp, path: "/analytics", matchPrefix: "/analytics", show: isAnalyst },
       { label: t("reports"), icon: FileText, path: "/reports", matchPrefix: "/reports", show: canViewData },
-      { label: t("alerts"), icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true },
+      { label: t("alerts"), icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true, count: counts?.alerts },
+      { label: t("metaAds"), icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? t("common:premium") : undefined },
     ],
-    [canViewData, isAnalyst, tier, t]
-  );
-
-  const adminNav = useMemo(
-    () => [
-      { label: t("usage"), icon: Gauge, path: "/settings/usage", matchPrefix: "/settings/usage", show: isAdmin },
-      { label: t("team"), icon: Shield, path: "/settings/team", matchPrefix: "/settings/team", show: isAdmin },
-      { label: t("billing"), icon: CreditCard, path: "/settings/billing", matchPrefix: "/settings/billing", show: isAdmin },
-      { label: t("settings"), icon: Settings, path: "/settings", matchPrefix: "/settings", show: true },
-      { label: t("adminPanel"), icon: Shield, path: "/admin", matchPrefix: "/admin", show: isPlatformAdmin },
-    ],
-    [isAdmin, isPlatformAdmin, t]
+    [canViewData, counts?.alerts, counts?.insights, isAnalyst, tier, t]
   );
 
   const renderNavGroup = useCallback(
@@ -121,23 +156,32 @@ export const AppSidebar = memo(function AppSidebar() {
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={active}
-                      onClick={() => navigate(item.path)}
+                      onClick={() => navigateTo(item.path)}
+                      tooltip={item.label}
                       className={cn(
-                        "gap-2.5 h-9 text-nav transition-colors",
+                        "h-12 gap-2.5 rounded-lg text-nav transition-colors md:h-10",
                         active
                           ? "bg-accent text-accent-foreground font-medium"
                           : "font-normal text-sidebar-foreground hover:bg-muted/50 hover:text-foreground"
                       )}
+                      aria-current={active ? "page" : undefined}
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
+                      <item.icon className="h-4 w-4 shrink-0 stroke-[1.5]" />
                       {!collapsed && (
                         <span className="flex-1 flex items-center justify-between">
                           {item.label}
-                          {item.badge && (
-                            <Badge variant="outline" className="text-caption px-1.5 py-0 h-4 font-normal ml-1">
-                              {item.badge}
-                            </Badge>
-                          )}
+                          <span className="ml-2 flex items-center gap-1.5">
+                            {typeof item.count === "number" && item.count > 0 && (
+                              <span className="stat-value rounded-md bg-primary/10 px-1.5 py-0.5 text-caption font-semibold text-primary">
+                                {item.count > 99 ? "99+" : item.count}
+                              </span>
+                            )}
+                            {item.badge && (
+                              <Badge variant="outline" className="h-5 rounded-md px-1.5 py-0 text-caption font-normal">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </span>
                         </span>
                       )}
                     </SidebarMenuButton>
@@ -149,7 +193,7 @@ export const AppSidebar = memo(function AppSidebar() {
         </SidebarGroup>
       );
     },
-    [collapsed, location.pathname, isActive, navigate]
+    [collapsed, location.pathname, isActive, navigateTo]
   );
 
   return (
@@ -169,7 +213,7 @@ export const AppSidebar = memo(function AppSidebar() {
         <div className="px-2 pb-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex w-full items-center gap-2.5 rounded-lg bg-muted/40 px-2.5 py-2 text-left text-xs transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+              <button className="flex min-h-12 w-full items-center gap-2.5 rounded-lg bg-muted/40 px-2.5 py-2 text-left text-xs transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:min-h-10">
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-caption font-bold uppercase text-primary">
                   {currentWorkspace.name.charAt(0)}
                 </div>
@@ -183,7 +227,10 @@ export const AppSidebar = memo(function AppSidebar() {
               {workspaces.map((ws) => (
                 <DropdownMenuItem
                   key={ws.id}
-                  onSelect={() => setCurrentWorkspace(ws)}
+                  onSelect={() => {
+                    setCurrentWorkspace(ws);
+                    if (isMobile) setOpenMobile(false);
+                  }}
                   className="gap-2"
                 >
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-caption font-bold uppercase text-primary">
@@ -201,48 +248,80 @@ export const AppSidebar = memo(function AppSidebar() {
       )}
 
       <SidebarContent className="scrollbar-thin">
-        {renderNavGroup(coreNav, t("groupCore"))}
-        {renderNavGroup(intelligenceNav, t("groupIntelligence"))}
-
-        {isAnalyst && !collapsed && (
-          <div className="px-3 py-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start gap-2 text-xs h-9"
-              onClick={() => navigate("/newsletters/new")}
-            >
-              <Plus className="h-3 w-3" />
-              {t("importData")}
-            </Button>
-          </div>
-        )}
-
-        {renderNavGroup(adminNav, t("groupManagement"))}
+        <nav aria-label={t("primaryNavigation")}>
+          {renderNavGroup(coreNav, t("groupWorkspace"))}
+          {renderNavGroup(intelligenceNav, t("groupIntelligence"))}
+        </nav>
       </SidebarContent>
 
       <SidebarFooter className="border-t p-2">
         <SidebarMenu>
-          {!collapsed && roles[0] && (
-            <SidebarMenuItem>
-              <div className="flex items-center justify-between px-2 py-1">
-                <Badge
-                  variant="secondary"
-                  className="capitalize text-caption font-medium h-5 px-2"
-                >
-                  {roles[0]}
-                </Badge>
-              </div>
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={handleSignOut}
-              className="gap-2.5 h-9 text-nav text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+              isActive={location.pathname.startsWith("/settings")}
+              onClick={() => navigateTo("/settings")}
+              tooltip={t("settings")}
+              className="h-12 gap-2.5 rounded-lg text-nav text-sidebar-foreground hover:bg-muted/50 hover:text-foreground md:h-10"
+              aria-current={location.pathname.startsWith("/settings") ? "page" : undefined}
             >
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>{t("signOut")}</span>}
+              <Settings className="h-4 w-4 stroke-[1.5]" />
+              {!collapsed && <span>{t("settings")}</span>}
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  tooltip={t("account")}
+                  className="h-12 gap-2.5 rounded-lg text-nav text-sidebar-foreground hover:bg-muted/50 hover:text-foreground"
+                >
+                  <Avatar className="h-7 w-7 rounded-lg">
+                    <AvatarFallback className="rounded-lg bg-primary/10 text-caption font-semibold uppercase text-primary">
+                      {(user?.email || "U").charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!collapsed && (
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="block truncate text-xs font-medium text-foreground">{user?.email || t("account")}</span>
+                      <span className="block truncate text-caption capitalize text-muted-foreground">{roles[0] || t("member")}</span>
+                    </span>
+                  )}
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="right" className="w-56">
+                <DropdownMenuLabel className="text-xs">
+                  <span className="block truncate">{user?.email || t("account")}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => navigateTo("/settings")} className="gap-2">
+                  <UserRound className="h-4 w-4" />
+                  {t("profile")}
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuItem onSelect={() => navigateTo("/settings/billing")} className="gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      {t("billing")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => navigateTo("/settings/team")} className="gap-2">
+                      <Users className="h-4 w-4" />
+                      {t("team")}
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {isPlatformAdmin && (
+                  <DropdownMenuItem onSelect={() => navigateTo("/admin")} className="gap-2">
+                    <Shield className="h-4 w-4" />
+                    {t("adminPanel")}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleSignOut} className="gap-2 text-destructive focus:text-destructive">
+                  <LogOut className="h-4 w-4" />
+                  {t("signOut")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

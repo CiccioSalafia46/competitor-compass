@@ -1,11 +1,11 @@
 {
   "dashboard": "Dashboard",
   "inbox": "Inbox",
-  "dataSources": "Data Sources",
+  "dataSources": "Data sources",
   "competitors": "Competitors",
   "metaAds": "Meta Ads",
   "insights": "Insights",
-  "weeklyBriefing": "Weekly Briefing",
+  "weeklyBriefing": "Weekly briefing",
   "analytics": "Analytics",
   "reports": "Reports",
   "alerts": "Alerts",
@@ -13,10 +13,15 @@
   "team": "Team",
   "billing": "Billing",
   "settings": "Settings",
-  "adminPanel": "Admin Panel",
+  "adminPanel": "Admin panel",
   "importData": "Import data",
   "signOut": "Sign out",
   "groupCore": "Core",
   "groupIntelligence": "Intelligence",
-  "groupManagement": "Management"
+  "groupManagement": "Management",
+  "groupWorkspace": "Workspace",
+  "account": "Account",
+  "profile": "Profile",
+  "member": "Member",
+  "primaryNavigation": "Primary navigation"
 }

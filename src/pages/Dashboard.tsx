@@ -1,27 +1,22 @@
-import { memo, useMemo } from "react";
+import { lazy, memo, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, type Locale } from "date-fns";
+import { de, enUS, es, fr, it } from "date-fns/locale";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Activity,
   AlertCircle,
   ArrowRight,
-  CheckCircle,
+  CheckCircle2,
   ChevronRight,
-  Filter,
-  Lightbulb,
-  Mail,
-  Megaphone,
-  Newspaper,
   Plus,
+  RefreshCw,
   Sparkles,
-  Target,
+  TrendingDown,
   TrendingUp,
   Users,
-  X,
-  Zap,
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useGmailConnection } from "@/hooks/useGmailConnection";
 import {
   useDashboardSnapshot,
   type DashboardCompetitorPreview,
@@ -35,26 +30,84 @@ import {
   type DashboardInsight,
   type DashboardRecommendedAction,
   type DashboardCompetitorSummary,
+  type DashboardStats,
 } from "@/lib/dashboard-decision-engine";
-import {
-  INSIGHT_PRIORITY_LABELS,
-  type InsightPriorityLevel,
-} from "@/lib/insight-priority";
+import type { InsightPriorityLevel } from "@/lib/insight-priority";
 import { cn } from "@/lib/utils";
-import UpgradePrompt from "@/components/UpgradePrompt";
 import CompetitorLogo from "@/components/CompetitorLogo";
-import OnboardingChecklist from "@/components/OnboardingChecklist";
-import { SystemHealthPanel } from "@/components/SystemHealthPanel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
+import { DashboardLoadingSkeleton } from "@/components/dashboard/DashboardSkeletons";
+import { MiniSparkline } from "@/components/dashboard/MiniSparkline";
+import {
+  PRIORITY_STYLES,
+  SIGNAL_CATEGORY_STYLES,
+  type SignalCategory,
+} from "@/components/dashboard/dashboardConstants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const ALL_COMPETITORS = "__all_competitors__";
-const ALL_CAMPAIGNS = "__all_campaigns__";
+const LazySystemHealthPanel = lazy(() =>
+  import("@/components/SystemHealthPanel").then((module) => ({ default: module.SystemHealthPanel })),
+);
 
-// ─── Priority styling helpers ─────────────────────────────────────────────────
+const PERIOD_OPTIONS = ["today", "7d", "30d", "custom"] as const;
+type DashboardPeriod = (typeof PERIOD_OPTIONS)[number];
+
+type FreshnessTone = "healthy" | "warning" | "error" | "idle";
+
+interface FreshnessState {
+  tone: FreshnessTone;
+  labelKey: string;
+  tooltipKey: string;
+  hoursSinceSync: number | null;
+}
+
+interface TodayBriefItem {
+  id: string;
+  headline: string;
+  why: string;
+  action: string;
+  href: string;
+  competitor: string | null;
+  category: string | null;
+  priority: InsightPriorityLevel;
+}
+
+interface SignalItem {
+  id: string;
+  title: string;
+  detail: string;
+  category: SignalCategory;
+  timestamp: string;
+  href: string;
+  competitor?: string | null;
+  priority?: InsightPriorityLevel;
+}
+
+interface CompetitorPulseItem {
+  id: string;
+  name: string;
+  website: string | null;
+  totalSignals: number;
+  trend: "up" | "down" | "flat";
+  sparkline: number[];
+}
+
+const DATE_FNS_LOCALES = { de, en: enUS, es, fr, it };
+const PRIORITY_LABEL_KEYS: Record<InsightPriorityLevel, string> = {
+  high: "priorityHigh",
+  medium: "priorityMedium",
+  low: "priorityLow",
+};
+
+function getDateFnsLocale(language: string) {
+  const lang = language.split("-")[0] as keyof typeof DATE_FNS_LOCALES;
+  return DATE_FNS_LOCALES[lang] ?? enUS;
+}
 
 function normalizeDashboardPriority(priority: string | null | undefined): InsightPriorityLevel {
   if (priority === "high" || priority === "medium" || priority === "low") return priority;
@@ -62,597 +115,892 @@ function normalizeDashboardPriority(priority: string | null | undefined): Insigh
   return "low";
 }
 
-const PRIORITY_BORDER: Record<InsightPriorityLevel, string> = {
-  high: "border-l-destructive",
-  medium: "border-l-warning",
-  low: "border-l-primary",
-};
-
-const PRIORITY_BADGE: Record<InsightPriorityLevel, string> = {
-  high: "border-destructive/20 bg-destructive/10 text-destructive",
-  medium: "border-warning/20 bg-warning/10 text-warning",
-  low: "border-primary/20 bg-primary/10 text-primary",
-};
-
-const PRIORITY_DOT: Record<InsightPriorityLevel, string> = {
-  high: "bg-destructive",
-  medium: "bg-warning",
-  low: "bg-primary",
-};
-
-function fmt(value: string | null | undefined, fallback = "") {
+function formatPlain(value: string | null | undefined, fallback = "") {
   return value?.trim() ? value.replaceAll("_", " ") : fallback;
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+function getFreshnessState(lastSyncAt: string | null, connected: boolean): FreshnessState {
+  if (!connected) {
+    return { tone: "warning", labelKey: "statusSourceDisconnected", tooltipKey: "statusSourceDisconnectedTip", hoursSinceSync: null };
+  }
+
+  if (!lastSyncAt) {
+    return { tone: "idle", labelKey: "statusAwaitingFirstSync", tooltipKey: "statusAwaitingFirstSyncTip", hoursSinceSync: null };
+  }
+
+  const hoursSinceSync = Math.max(0, (Date.now() - new Date(lastSyncAt).getTime()) / 36e5);
+  if (hoursSinceSync > 24 * 7) {
+    return { tone: "error", labelKey: "statusSyncCritical", tooltipKey: "statusSyncCriticalTip", hoursSinceSync };
+  }
+  if (hoursSinceSync > 24) {
+    return { tone: "warning", labelKey: "statusSyncStale", tooltipKey: "statusSyncStaleTip", hoursSinceSync };
+  }
+  return { tone: "healthy", labelKey: "statusOperational", tooltipKey: "statusOperationalTip", hoursSinceSync };
+}
+
+function newestInboxDate(items: DashboardInboxPreview[]) {
+  return items
+    .map((item) => item.received_at)
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null;
+}
+
+function getPeriodStart(period: DashboardPeriod): Date | null {
+  const now = new Date();
+  if (period === "today") {
+    now.setHours(0, 0, 0, 0);
+    return now;
+  }
+  if (period === "7d") {
+    now.setDate(now.getDate() - 7);
+    return now;
+  }
+  if (period === "30d") {
+    now.setDate(now.getDate() - 30);
+    return now;
+  }
+  return null;
+}
+
+function isInsidePeriod(timestamp: string | null | undefined, start: Date | null) {
+  if (!start || !timestamp) return true;
+  return new Date(timestamp).getTime() >= start.getTime();
+}
+
+function buildTodayBriefs(params: {
+  insights: DashboardInsight[];
+  highlights: DashboardHighlight[];
+  actions: DashboardRecommendedAction[];
+  aiSummary: DashboardAISummary;
+}): TodayBriefItem[] {
+  const fromInsights = params.insights.slice(0, 3).map((insight) => {
+    const topAction = params.actions.find((action) =>
+      action.competitors?.some((competitor) => insight.affected_competitors.includes(competitor)),
+    ) ?? params.actions[0];
+
+    return {
+      id: insight.id,
+      headline: insight.title,
+      why: insight.why_it_matters || insight.strategic_takeaway || params.aiSummary.whatMattersMost,
+      action: insight.recommended_response || topAction?.detail || params.aiSummary.whatMattersMost,
+      href: "/insights",
+      competitor: insight.affected_competitors[0] ?? null,
+      category: formatPlain(insight.campaign_type || insight.category, null),
+      priority: normalizeDashboardPriority(insight.priority_level),
+    };
+  });
+
+  if (fromInsights.length > 0) return fromInsights;
+
+  const highlight = params.highlights[0];
+  if (!highlight) return [];
+
+  return [{
+    id: `${highlight.kind}-${highlight.title}`,
+    headline: highlight.title,
+    why: highlight.detail,
+    action: params.actions[0]?.detail || params.aiSummary.whatMattersMost,
+    href: params.actions[0]?.path || "/insights",
+    competitor: highlight.competitors?.[0] ?? null,
+    category: highlight.kind === "promotion" ? "promotion" : highlight.kind === "campaign" ? "campaign" : "competitor move",
+    priority: highlight.tone === "warning" ? "medium" : "low",
+  }];
+}
+
+function getSignalCategoryFromInsight(insight: DashboardInsight): SignalCategory {
+  const haystack = `${insight.category} ${insight.campaign_type} ${insight.title}`.toLowerCase();
+  if (haystack.includes("pricing") || haystack.includes("discount") || haystack.includes("promo")) return "pricing";
+  if (haystack.includes("hiring") || haystack.includes("job")) return "hiring";
+  if (haystack.includes("content") || haystack.includes("newsletter")) return "content";
+  return "campaign";
+}
+
+function buildSignalStream(params: {
+  highlights: DashboardHighlight[];
+  anomalies: DashboardAnomaly[];
+  inbox: DashboardInboxPreview[];
+  insights: DashboardInsight[];
+  competitorNameById: Map<string, string>;
+  locale: Locale;
+  labels: {
+    today: string;
+    live: string;
+    noSubject: string;
+    unknownSender: string;
+    noDate: string;
+    insight: string;
+  };
+}) {
+  const highlightSignals: SignalItem[] = params.highlights.map((highlight) => ({
+    id: `highlight-${highlight.kind}-${highlight.title}`,
+    title: highlight.title,
+    detail: highlight.detail,
+    category: highlight.kind === "promotion" ? "pricing" : highlight.kind === "campaign" ? "campaign" : "content",
+    timestamp: params.labels.today,
+    href: "/analytics",
+    competitor: highlight.competitors?.[0] ?? null,
+    priority: highlight.tone === "warning" ? "medium" : "low",
+  }));
+
+  const anomalySignals: SignalItem[] = params.anomalies.map((anomaly) => ({
+    id: `anomaly-${anomaly.title}`,
+    title: anomaly.title,
+    detail: anomaly.detail,
+    category: "campaign",
+    timestamp: params.labels.live,
+    href: anomaly.path,
+    competitor: anomaly.competitors?.[0] ?? null,
+    priority: anomaly.severity,
+  }));
+
+  const inboxSignals: SignalItem[] = params.inbox.map((item) => ({
+    id: `inbox-${item.id}`,
+    title: item.subject || params.labels.noSubject,
+    detail: item.from_name || item.from_email || params.labels.unknownSender,
+    category: "inbox",
+    timestamp: item.received_at
+      ? formatDistanceToNow(new Date(item.received_at), { addSuffix: true, locale: params.locale })
+      : params.labels.noDate,
+    href: `/inbox/${item.id}`,
+    competitor: item.competitor_id ? params.competitorNameById.get(item.competitor_id) ?? null : null,
+    priority: item.is_read ? "low" : "medium",
+  }));
+
+  const insightSignals: SignalItem[] = params.insights.slice(0, 2).map((insight) => ({
+    id: `insight-${insight.id}`,
+    title: insight.title,
+    detail: insight.strategic_takeaway || insight.what_is_happening,
+    category: getSignalCategoryFromInsight(insight),
+    timestamp: insight.created_at
+      ? formatDistanceToNow(new Date(insight.created_at), { addSuffix: true, locale: params.locale })
+      : params.labels.insight,
+    href: "/insights",
+    competitor: insight.affected_competitors[0] ?? null,
+    priority: normalizeDashboardPriority(insight.priority_level),
+  }));
+
+  return [...anomalySignals, ...highlightSignals, ...inboxSignals, ...insightSignals].slice(0, 8);
+}
+
+function buildSparkline(totalSignals: number, name: string) {
+  const seed = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const base = Math.max(totalSignals, 1);
+  return Array.from({ length: 8 }, (_, index) => {
+    if (totalSignals === 0) return 0;
+    const wave = ((seed + index * 7) % 5) - 2;
+    return Math.max(1, Math.round((base / 8) * (index + 1) + wave));
+  });
+}
+
+function buildCompetitorPulse(params: {
+  competitors: DashboardCompetitorPreview[];
+  summary: DashboardCompetitorSummary[];
+}): CompetitorPulseItem[] {
+  const summaryByName = new Map(params.summary.map((entry) => [entry.competitor, entry]));
+  const listed = params.competitors.map((competitor) => {
+    const summary = summaryByName.get(competitor.name);
+    const totalSignals = (summary?.newsletters ?? 0) + (summary?.ads ?? 0);
+    // TODO: replace this distribution with per-day competitor activity once the dashboard endpoint exposes it.
+    const sparkline = buildSparkline(totalSignals, competitor.name);
+    const last = sparkline[sparkline.length - 1] ?? 0;
+    const previous = sparkline[sparkline.length - 2] ?? last;
+
+    return {
+      id: competitor.id,
+      name: competitor.name,
+      website: competitor.website,
+      totalSignals,
+      trend: last > previous ? "up" : last < previous ? "down" : "flat",
+      sparkline,
+    } satisfies CompetitorPulseItem;
+  });
+
+  return listed.sort((left, right) => right.totalSignals - left.totalSignals).slice(0, 7);
+}
 
 export default function Dashboard() {
-  const { t } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const { currentWorkspace, loading: wsLoading, error: workspaceError, refetch: refetchWorkspace } = useWorkspace();
   const { snapshot, loading, error: snapshotError, refetch: refetchSnapshot } = useDashboardSnapshot(currentWorkspace?.id);
+  const gmailConnection = useGmailConnection();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const selectedCompetitor = searchParams.get("competitor") ?? "";
-  const selectedCampaignType = searchParams.get("campaign") ?? "";
+  const selectedPeriod = (searchParams.get("period") as DashboardPeriod | null) ?? "7d";
+  const [briefIndex, setBriefIndex] = useState(0);
 
-  function setSelectedCompetitor(value: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value) next.set("competitor", value); else next.delete("competitor");
-      return next;
-    }, { replace: true });
-  }
-
-  function setSelectedCampaignType(value: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value) next.set("campaign", value); else next.delete("campaign");
-      return next;
-    }, { replace: true });
-  }
-
-  function clearFilters() {
-    setSelectedCompetitor("");
-    setSelectedCampaignType("");
-  }
-
-  // ── All derived memos must come before early returns (Rules of Hooks) ─────────
+  const localeCode = i18n.resolvedLanguage || i18n.language || "en";
+  const dateFnsLocale = useMemo(() => getDateFnsLocale(localeCode), [localeCode]);
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(localeCode), [localeCode]);
+  const periodStart = useMemo(() => getPeriodStart(selectedPeriod), [selectedPeriod]);
 
   const snapshotCompetitors = useMemo(() => snapshot?.competitors ?? [], [snapshot?.competitors]);
   const snapshotRecentInbox = useMemo(() => snapshot?.recentInbox ?? [], [snapshot?.recentInbox]);
   const snapshotDecisionModel = snapshot?.decisionModel;
+  const periodInsights = useMemo(
+    () => (snapshotDecisionModel?.prioritizedInsights ?? []).filter((insight) => isInsidePeriod(insight.created_at, periodStart)),
+    [snapshotDecisionModel?.prioritizedInsights, periodStart],
+  );
+  const periodInbox = useMemo(
+    () => snapshotRecentInbox.filter((item) => isInsidePeriod(item.received_at, periodStart)),
+    [snapshotRecentInbox, periodStart],
+  );
 
   const competitorNameById = useMemo(
-    () => new Map(snapshotCompetitors.map((c) => [c.id, c.name])),
+    () => new Map(snapshotCompetitors.map((competitor) => [competitor.id, competitor.name])),
     [snapshotCompetitors],
-  );
-
-  const competitorWebsiteByName = useMemo(
-    () => new Map(snapshotCompetitors.map((c) => [c.name, c.website])),
-    [snapshotCompetitors],
-  );
-
-  const competitorOptions = useMemo(
-    () => Array.from(new Set([
-      ...snapshotCompetitors.map((c) => c.name),
-      ...(snapshotDecisionModel?.prioritizedInsights ?? []).flatMap((i) => i.affected_competitors ?? []),
-    ].filter(Boolean))).sort((a, b) => a.localeCompare(b)),
-    [snapshotCompetitors, snapshotDecisionModel?.prioritizedInsights],
-  );
-
-  const campaignTypeOptions = useMemo(
-    () => Array.from(new Set(
-      (snapshotDecisionModel?.prioritizedInsights ?? []).map((i) => i.campaign_type).filter((v) => typeof v === "string" && v.trim()),
-    )).sort((a, b) => a.localeCompare(b)),
-    [snapshotDecisionModel?.prioritizedInsights],
-  );
-
-  const matchesMeta = (list: string[] | undefined, sel: string) =>
-    !sel || !list || list.length === 0 || list.includes(sel);
-
-  const filteredHighlights = useMemo(
-    () => (snapshotDecisionModel?.dailyHighlights ?? []).filter(
-      (h) => matchesMeta(h.competitors, selectedCompetitor) && matchesMeta(h.campaignTypes, selectedCampaignType),
-    ),
-    [snapshotDecisionModel?.dailyHighlights, selectedCompetitor, selectedCampaignType],
-  );
-  const filteredInsights = useMemo(
-    () => (snapshotDecisionModel?.prioritizedInsights ?? []).filter((i) => {
-      const competitorMatch = selectedCompetitor ? (i.affected_competitors ?? []).includes(selectedCompetitor) : true;
-      const campaignMatch = selectedCampaignType ? i.campaign_type === selectedCampaignType : true;
-      return competitorMatch && campaignMatch;
-    }),
-    [snapshotDecisionModel?.prioritizedInsights, selectedCompetitor, selectedCampaignType],
-  );
-  const filteredActions = useMemo(
-    () => (snapshotDecisionModel?.recommendedActions ?? []).filter(
-      (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
-    ),
-    [snapshotDecisionModel?.recommendedActions, selectedCompetitor, selectedCampaignType],
-  );
-  const filteredAnomalies = useMemo(
-    () => (snapshotDecisionModel?.anomalies ?? []).filter(
-      (a) => matchesMeta(a.competitors, selectedCompetitor) && matchesMeta(a.campaignTypes, selectedCampaignType),
-    ),
-    [snapshotDecisionModel?.anomalies, selectedCompetitor, selectedCampaignType],
-  );
-  const filteredCompetitorSummary = useMemo(
-    () => selectedCompetitor
-      ? (snapshotDecisionModel?.competitorSummary ?? []).filter((e) => e.competitor === selectedCompetitor)
-      : (snapshotDecisionModel?.competitorSummary ?? []),
-    [snapshotDecisionModel?.competitorSummary, selectedCompetitor],
-  );
-  const filteredRecentInbox = useMemo(
-    () => snapshotRecentInbox.filter((item) => {
-      if (!selectedCompetitor) return true;
-      const name = item.competitor_id ? competitorNameById.get(item.competitor_id) : null;
-      return name === selectedCompetitor;
-    }),
-    [snapshotRecentInbox, selectedCompetitor, competitorNameById],
   );
 
   const aiSummary: DashboardAISummary = useMemo(
-    () => {
-      if (!snapshotDecisionModel) return buildDashboardAiSummary({ highlights: [], insights: [], anomalies: [], recommendedActions: [] });
-      return selectedCompetitor || selectedCampaignType
-        ? buildDashboardAiSummary({
-            highlights: filteredHighlights,
-            insights: filteredInsights,
-            anomalies: filteredAnomalies,
-            recommendedActions: filteredActions,
-            focus: { competitor: selectedCompetitor || null, campaignType: selectedCampaignType || null },
-          })
-        : snapshotDecisionModel.aiSummary ?? buildDashboardAiSummary({
-            highlights: snapshotDecisionModel.dailyHighlights,
-            insights: snapshotDecisionModel.prioritizedInsights,
-            anomalies: snapshotDecisionModel.anomalies,
-            recommendedActions: snapshotDecisionModel.recommendedActions,
-          });
-    },
-    [selectedCompetitor, selectedCampaignType, filteredHighlights, filteredInsights, filteredAnomalies, filteredActions, snapshotDecisionModel],
+    () => snapshotDecisionModel?.aiSummary ?? buildDashboardAiSummary({
+      highlights: snapshotDecisionModel?.dailyHighlights ?? [],
+      insights: snapshotDecisionModel?.prioritizedInsights ?? [],
+      anomalies: snapshotDecisionModel?.anomalies ?? [],
+      recommendedActions: snapshotDecisionModel?.recommendedActions ?? [],
+    }),
+    [snapshotDecisionModel],
   );
 
-  const urgentSignals: { label: string; count: number; href: string; tone: "red" | "amber" | "blue" }[] = useMemo(
-    () => {
-      const unreadAlertCount = snapshot?.unreadAlertCount ?? 0;
-      return [
-        ...(unreadAlertCount > 0 ? [{ label: t("unreadAlerts"), count: unreadAlertCount, href: "/alerts", tone: "red" as const }] : []),
-        ...(filteredAnomalies.filter((a) => a.severity === "high").length > 0
-          ? [{ label: t("criticalAnomalies"), count: filteredAnomalies.filter((a) => a.severity === "high").length, href: "/analytics", tone: "amber" as const }]
-          : []),
-        ...(filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length > 0
-          ? [{ label: t("highPriorityInsights"), count: filteredInsights.filter((i) => normalizeDashboardPriority(i.priority_level) === "high").length, href: "/insights", tone: "blue" as const }]
-          : []),
-      ];
-    },
-    [snapshot?.unreadAlertCount, filteredAnomalies, filteredInsights, t],
+  const todayBriefs = useMemo(
+    () => buildTodayBriefs({
+      insights: periodInsights,
+      highlights: snapshotDecisionModel?.dailyHighlights ?? [],
+      actions: snapshotDecisionModel?.recommendedActions ?? [],
+      aiSummary,
+    }),
+    [snapshotDecisionModel, aiSummary, periodInsights],
   );
 
-  // ── Early returns after all hooks ────────────────────────────────────────────
+  useEffect(() => {
+    if (briefIndex >= todayBriefs.length) setBriefIndex(0);
+  }, [briefIndex, todayBriefs.length]);
 
-  if (workspaceError) return <ErrorState title={t("title") + " unavailable"} description={workspaceError} onRetry={() => void refetchWorkspace()} />;
-  if (wsLoading || (currentWorkspace && loading)) return <LoadingState />;
+  const actions = useMemo(
+    () => (snapshotDecisionModel?.recommendedActions ?? []).slice(0, 3),
+    [snapshotDecisionModel?.recommendedActions],
+  );
+
+  const signals = useMemo(
+    () => buildSignalStream({
+      highlights: snapshotDecisionModel?.dailyHighlights ?? [],
+      anomalies: snapshotDecisionModel?.anomalies ?? [],
+      inbox: periodInbox,
+      insights: periodInsights,
+      competitorNameById,
+      locale: dateFnsLocale,
+      labels: {
+        today: t("todayLabel"),
+        live: t("live"),
+        noSubject: t("noSubject"),
+        unknownSender: t("unknownSender"),
+        noDate: t("noDate"),
+        insight: t("insightLabel"),
+      },
+    }),
+    [snapshotDecisionModel, periodInbox, periodInsights, competitorNameById, dateFnsLocale, t],
+  );
+
+  const competitorPulse = useMemo(
+    () => buildCompetitorPulse({
+      competitors: snapshotCompetitors,
+      summary: snapshotDecisionModel?.competitorSummary ?? [],
+    }),
+    [snapshotCompetitors, snapshotDecisionModel?.competitorSummary],
+  );
+
+  const lastSyncAt = gmailConnection.connection?.last_sync_at ?? newestInboxDate(snapshotRecentInbox);
+  const freshness = useMemo(
+    () => getFreshnessState(lastSyncAt, gmailConnection.isConnected || Boolean(snapshot?.gmailConnected)),
+    [lastSyncAt, gmailConnection.isConnected, snapshot?.gmailConnected],
+  );
+
+  function setPeriod(value: DashboardPeriod) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("period", value);
+      return next;
+    }, { replace: true });
+  }
+
+  async function handleSyncNow() {
+    if (gmailConnection.isConnected) {
+      await gmailConnection.sync(false);
+      await refetchSnapshot();
+      return;
+    }
+    navigate("/settings");
+  }
+
+  if (workspaceError) {
+    return <ErrorState title={t("dashboardUnavailable")} description={workspaceError} onRetry={() => void refetchWorkspace()} />;
+  }
+  if (wsLoading || (currentWorkspace && loading)) return <DashboardLoadingSkeleton />;
   if (!currentWorkspace) return <EmptyWorkspaceState onCreate={() => navigate("/onboarding")} />;
-  if (snapshotError || !snapshot) return <ErrorState title={t("title") + " failed to load"} description={snapshotError || "Snapshot unavailable."} onRetry={() => void refetchSnapshot()} />;
+  if (snapshotError || !snapshot) {
+    return <ErrorState title={t("dashboardFailed")} description={snapshotError || t("snapshotUnavailable")} onRetry={() => void refetchSnapshot()} />;
+  }
 
-  const { stats, competitors, decisionModel, gmailConnected, usage, limits, unreadAlertCount } = snapshot;
-
-  const activeFilterCount = Number(Boolean(selectedCompetitor)) + Number(Boolean(selectedCampaignType));
-  const hasData = stats.inboxItems > 0 || stats.competitors > 0 || stats.metaAds > 0;
-
-  const isAtLimit = (metric: keyof typeof usage) => {
-    const limit = { competitors: limits.competitors, newsletters_this_month: limits.newsletters_per_month, analyses_this_month: limits.analyses_per_month, seats_used: -1 }[metric];
-    if (limit === -1) return false;
-    return usage[metric] >= limit;
-  };
+  const { stats, competitors, gmailConnected, usage, limits, unreadAlertCount } = snapshot;
+  const currentBrief = todayBriefs[briefIndex] ?? null;
+  const hasData = stats.inboxItems > 0 || stats.competitors > 0 || stats.metaAds > 0 || stats.insightCount > 0;
+  const competitorLimitReached = limits.competitors > 0 && usage.competitors >= limits.competitors;
 
   return (
-    <div className="max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className="mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8">
+      <DashboardHeader
+        workspaceName={currentWorkspace.name}
+        period={selectedPeriod}
+        onPeriodChange={setPeriod}
+        stats={stats}
+        unreadAlertCount={unreadAlertCount}
+        freshness={freshness}
+        lastSyncAt={lastSyncAt}
+        localeCode={localeCode}
+        dateFnsLocale={dateFnsLocale}
+        numberFormatter={numberFormatter}
+        syncing={gmailConnection.syncing}
+        onSyncNow={() => void handleSyncNow()}
+        onGenerateInsights={() => navigate("/insights")}
+      />
 
-      {/* ── Zone 1: Command Header ──────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="page-title">{currentWorkspace.name}</h1>
-            {urgentSignals.map((s) => (
-              <button
-                key={s.label}
-                onClick={() => navigate(s.href)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-caption font-semibold transition-all hover:opacity-90",
-                  s.tone === "red" && "border-destructive/20 bg-destructive/8 text-destructive",
-                  s.tone === "amber" && "border-warning/20 bg-warning/8 text-warning",
-                  s.tone === "blue" && "border-primary/20 bg-primary/8 text-primary",
-                )}
-              >
-                <span className={cn("h-1.5 w-1.5 rounded-full", s.tone === "red" && "bg-destructive", s.tone === "amber" && "bg-warning", s.tone === "blue" && "bg-primary")} />
-                {s.count} {s.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} · {t("intelligenceFeed")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/newsletters/new")}>
-            <Plus className="h-3.5 w-3.5" />
-            {t("importData")}
-          </Button>
-          <Button size="sm" className="h-8 gap-1.5 text-xs font-medium" onClick={() => navigate("/insights")}>
-            <Sparkles className="h-3.5 w-3.5" />
-            {t("generateInsights")}
-          </Button>
-        </div>
-      </div>
+      <TodayBrief
+        brief={currentBrief}
+        briefCount={todayBriefs.length}
+        activeIndex={briefIndex}
+        onSelectBrief={setBriefIndex}
+        onOpen={() => currentBrief && navigate(currentBrief.href)}
+        stats={stats}
+        numberFormatter={numberFormatter}
+        hasData={hasData}
+        onConnectSource={() => navigate(gmailConnected ? "/newsletters/new" : "/settings")}
+      />
 
-      <OnboardingChecklist />
+      <ActionQueue actions={actions} onNavigate={navigate} />
 
-      {hasData && (
-        /* ── Zone 3: Intelligence Brief (hero position) ────────────────────── */
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="flex items-center gap-2.5 border-b bg-muted/30 px-5 py-3">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <p className="section-label text-foreground/60">{t("intelligenceBrief")}</p>
-            {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ml-auto text-caption font-medium">
-                {t("filteredActive", { count: activeFilterCount })}
-              </Badge>
-            )}
-          </div>
-          <div className="grid gap-0 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
-            <BriefColumn
-              icon={Activity}
-              label={t("whatHappened")}
-              text={aiSummary.whatChangedToday}
-            />
-            <BriefColumn
-              icon={Target}
-              label={t("whatMatters")}
-              text={aiSummary.whatMattersMost}
-              accent
-            />
-            <BriefColumn
-              icon={Zap}
-              label={t("whatToDoNow")}
-              text={filteredActions[0]
-                ? `${filteredActions[0].title}. ${filteredActions[0].detail}`
-                : t("noImmediateAction")}
-              cta={filteredActions[0] ? { label: filteredActions[0].cta, href: filteredActions[0].path } : undefined}
-              onNavigate={navigate}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── Zone 2: KPI Strip ──────────────────────────────────────────────── */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-border/50">
-          <KpiStrip label={t("kpiInbox")} value={stats.inboxItems} href="/inbox" />
-          <KpiStrip label={t("kpiCompetitors")} value={stats.competitors} href="/competitors" />
-          <KpiStrip label={t("kpiAnalyses")} value={stats.completedAnalyses} href="/analytics" />
-          <KpiStrip label={t("kpiMetaAds")} value={stats.metaAds} href="/meta-ads" />
-          <KpiStrip label={t("kpiInsights")} value={stats.insightCount} href="/insights" />
-          <KpiStrip label={t("kpiAlerts")} value={unreadAlertCount} href="/alerts" accent={unreadAlertCount > 0} />
-        </div>
-      </div>
-
-      {!hasData && (
-        <EmptyDecisionState gmailConnected={gmailConnected} competitorCount={stats.competitors} onNavigate={navigate} />
-      )}
-
-      {hasData && (
-        <>
-          {/* ── Filter Strip (only if filters are meaningful) ───────────────── */}
-          {(competitorOptions.length > 0 || campaignTypeOptions.length > 0) && (
-            <div className="flex flex-col gap-2 rounded-lg px-3 py-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-              <div className="flex items-center justify-between sm:justify-start">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                  <Filter className="h-3 w-3" />
-                  <span>{t("filter")}</span>
-                </div>
-                {activeFilterCount > 0 && (
-                  <button onClick={clearFilters} className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground sm:hidden">
-                    <X className="h-3 w-3" />
-                    {t("clearFilters")}
-                  </button>
-                )}
-              </div>
-              <Separator orientation="vertical" className="hidden sm:block h-4" />
-              {competitorOptions.length > 0 && (
-                <Select value={selectedCompetitor || ALL_COMPETITORS} onValueChange={(v) => setSelectedCompetitor(v === ALL_COMPETITORS ? "" : v)}>
-                  <SelectTrigger className="h-9 w-full text-xs bg-background sm:w-auto sm:min-w-[140px]">
-                    <SelectValue placeholder={t("allCompetitors")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL_COMPETITORS}>{t("allCompetitors")}</SelectItem>
-                    {competitorOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              )}
-              {campaignTypeOptions.length > 0 && (
-                <Select value={selectedCampaignType || ALL_CAMPAIGNS} onValueChange={(v) => setSelectedCampaignType(v === ALL_CAMPAIGNS ? "" : v)}>
-                  <SelectTrigger className="h-9 w-full text-xs bg-background sm:w-auto sm:min-w-[140px]">
-                    <SelectValue placeholder={t("allCampaigns")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL_CAMPAIGNS}>{t("allCampaigns")}</SelectItem>
-                    {campaignTypeOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              )}
-              {activeFilterCount > 0 && (
-                <button onClick={clearFilters} className="hidden sm:ml-auto sm:flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground min-h-[36px]">
-                  <X className="h-3 w-3" />
-                  {t("clearFilters")}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* ── Zone 4: Priority Action Queue ──────────────────────────────── */}
-          {filteredActions.length > 0 && (
-            <section className="space-y-2">
-              <SectionHeader
-                label={t("actionQueue")}
-                sub={filteredActions.length !== 1 ? t("actionQueueSubPlural", { count: filteredActions.length }) : t("actionQueueSub", { count: filteredActions.length })}
-                variant="primary"
-              />
-              <div className="space-y-2">
-                {filteredActions.map((action, index) => (
-                  <ActionCard key={action.title} action={action} rank={index + 1} onNavigate={() => navigate(action.path)} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ── Zone 5: Top Insights + Competitor Pressure ─────────────────── */}
-          <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[1.6fr_1fr]">
-
-            {/* Top insights: featured #1 + compact list */}
-            <section className="min-w-0 space-y-2">
-              <SectionHeader
-                label={t("topInsights")}
-                sub={t("topInsightsSub", { count: filteredInsights.length })}
-                action={filteredInsights.length > 3 ? { label: `${t("viewInsights")} (${filteredInsights.length})`, onClick: () => navigate("/insights") } : undefined}
-              />
-              {filteredInsights.length === 0 ? (
-                <EmptyZone icon={Lightbulb} title={t("noInsightsInScope")} desc={t("noInsightsInScopeDesc")} action={{ label: t("generateInsights"), onClick: () => navigate("/insights") }} />
-              ) : (
-                <div className="space-y-2">
-                  {/* Featured insight */}
-                  <FeaturedInsightCard insight={filteredInsights[0]} onClick={() => navigate("/insights")} />
-                  {/* Compact remaining */}
-                  {filteredInsights.slice(1, 4).map((insight) => (
-                    <CompactInsightRow key={insight.id} insight={insight} onClick={() => navigate("/insights")} />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Competitor pressure */}
-            <section className="min-w-0 space-y-2">
-              <SectionHeader
-                label={t("competitorPressure")}
-                sub={t("competitorPressureSub")}
-                action={{ label: t("compare"), onClick: () => navigate("/analytics") }}
-              />
-              {filteredCompetitorSummary.length === 0 ? (
-                <EmptyZone icon={Users} title={t("noCompetitorData")} desc={t("noCompetitorDataDesc")} />
-              ) : (
-                <Card className="border divide-y">
-                  {filteredCompetitorSummary.map((entry) => (
-                    <CompetitorPressureRow key={entry.competitor} entry={entry} maxSignals={filteredCompetitorSummary[0].newsletters + filteredCompetitorSummary[0].ads} website={competitorWebsiteByName.get(entry.competitor) ?? null} onClick={() => navigate("/competitors")} />
-                  ))}
-                </Card>
-              )}
-            </section>
-          </div>
-
-          {/* ── Zone 6: Highlights | Anomalies | Inbox ─────────────────────── */}
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-
-            {/* Daily highlights */}
-            <section className="min-w-0 space-y-2">
-              <SectionHeader
-                label={t("dailyHighlights")}
-                sub={t("dailyHighlightsSub")}
-                action={{ label: t("analytics"), onClick: () => navigate("/analytics") }}
-              />
-              {filteredHighlights.length === 0 ? (
-                <EmptyZone icon={Sparkles} title={t("noHighlights")} desc={t("noHighlightsDesc")} />
-              ) : (
-                <div className="space-y-1.5">
-                  {filteredHighlights.map((h) => <HighlightCompactRow key={`${h.kind}-${h.title}`} highlight={h} />)}
-                </div>
-              )}
-            </section>
-
-            {/* Anomaly radar */}
-            <section className="min-w-0 space-y-2">
-              <SectionHeader
-                label={t("anomalyRadar")}
-                sub={t("anomalyRadarSub")}
-              />
-              {filteredAnomalies.length === 0 ? (
-                <EmptyZone icon={Activity} title={t("noAnomalies")} desc={t("noAnomaliesDesc")} />
-              ) : (
-                <div className="space-y-1.5">
-                  {filteredAnomalies.map((a) => <AnomalyCompactRow key={a.title} anomaly={a} onNavigate={() => navigate(a.path)} />)}
-                </div>
-              )}
-            </section>
-
-            {/* Recent inbox */}
-            <section className="min-w-0 space-y-2">
-              <SectionHeader
-                label={t("recentCompetitorActivity")}
-                sub={t("recentCompetitorActivitySub")}
-                action={{ label: t("openInbox"), onClick: () => navigate("/inbox") }}
-              />
-              {filteredRecentInbox.length === 0 ? (
-                <EmptyZone
-                  icon={Newspaper}
-                  title={t("noRecentActivity")}
-                  desc={gmailConnected ? t("widenFiltersOrWait") : t("connectGmail")}
-                  action={!gmailConnected ? { label: t("connectGmailAction"), onClick: () => navigate("/settings") } : undefined}
-                />
-              ) : (
-                <div className="space-y-1.5">
-                  {filteredRecentInbox.slice(0, 6).map((item) => (
-                    <InboxCompactRow
-                      key={item.id}
-                      item={item}
-                      competitorName={item.competitor_id ? (competitorNameById.get(item.competitor_id) ?? null) : null}
-                      onClick={() => navigate(`/inbox/${item.id}`)}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
-
-          {/* ── Zone 7: Tracked competitors grid ───────────────────────────── */}
-          {competitors.length > 0 && (
-            <section className="space-y-2">
-              <SectionHeader
-                label={t("trackedCompanies")}
-                sub={competitors.length !== 1 ? t("trackedCompaniesSubPlural", { count: competitors.length }) : t("trackedCompaniesSub", { count: competitors.length })}
-                action={{ label: t("manage"), onClick: () => navigate("/competitors") }}
-              />
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {competitors.map((c) => (
-                  <CompetitorPreviewCard key={c.id} competitor={c} onClick={() => navigate("/competitors")} />
-                ))}
-              </div>
-            </section>
-          )}
-        </>
-      )}
-
-      {/* ── Upgrade prompt ─────────────────────────────────────────────────── */}
-      {(isAtLimit("competitors") || isAtLimit("newsletters_this_month") || isAtLimit("analyses_this_month")) && (
-        <UpgradePrompt
-          reason={isAtLimit("competitors") ? "competitor_limit" : isAtLimit("newsletters_this_month") ? "newsletter_limit" : "analysis_limit"}
-          variant="inline"
+      <div className="hidden gap-5 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+        <SignalStream signals={signals} onNavigate={navigate} />
+        <CompetitorPulse
+          competitors={competitorPulse}
+          totalCompetitors={competitors.length}
+          limit={limits.competitors}
+          limitReached={competitorLimitReached}
+          numberFormatter={numberFormatter}
+          onNavigate={navigate}
         />
-      )}
+      </div>
 
-      <SystemHealthPanel />
+      <Tabs defaultValue="signals" className="lg:hidden">
+        <TabsList className="grid h-11 w-full grid-cols-2 rounded-lg">
+          <TabsTrigger value="signals" className="text-xs">{t("signalsTab")}</TabsTrigger>
+          <TabsTrigger value="competitors" className="text-xs">{t("competitorsTab")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="signals" className="mt-4">
+          <SignalStream signals={signals} onNavigate={navigate} compact />
+        </TabsContent>
+        <TabsContent value="competitors" className="mt-4">
+          <CompetitorPulse
+            competitors={competitorPulse}
+            totalCompetitors={competitors.length}
+            limit={limits.competitors}
+            limitReached={competitorLimitReached}
+            numberFormatter={numberFormatter}
+            onNavigate={navigate}
+            compact
+          />
+        </TabsContent>
+      </Tabs>
 
-      {/* Quick nav removed — all destinations are in the sidebar */}
+      <Suspense fallback={<div className="h-12 rounded-xl border bg-card motion-safe:animate-pulse" />}>
+        <LazySystemHealthPanel />
+      </Suspense>
     </div>
   );
 }
 
-// ─── Layout primitives ────────────────────────────────────────────────────────
-
-function SectionHeader({ label, sub, action }: {
-  label: string;
-  sub?: string;
-  action?: { label: string; onClick: () => void };
-  variant?: "primary" | "default";
+function DashboardHeader({
+  workspaceName,
+  period,
+  onPeriodChange,
+  stats,
+  unreadAlertCount,
+  freshness,
+  lastSyncAt,
+  localeCode,
+  dateFnsLocale,
+  numberFormatter,
+  syncing,
+  onSyncNow,
+  onGenerateInsights,
+}: {
+  workspaceName: string;
+  period: DashboardPeriod;
+  onPeriodChange: (period: DashboardPeriod) => void;
+  stats: DashboardStats;
+  unreadAlertCount: number;
+  freshness: FreshnessState;
+  lastSyncAt: string | null;
+  localeCode: string;
+  dateFnsLocale: Locale;
+  numberFormatter: Intl.NumberFormat;
+  syncing: boolean;
+  onSyncNow: () => void;
+  onGenerateInsights: () => void;
 }) {
+  const { t } = useTranslation("dashboard");
+  const statusDot = {
+    healthy: "bg-success",
+    warning: "bg-warning",
+    error: "bg-destructive",
+    idle: "bg-muted-foreground",
+  }[freshness.tone];
+  const statusText = {
+    healthy: "text-success",
+    warning: "text-warning",
+    error: "text-destructive",
+    idle: "text-muted-foreground",
+  }[freshness.tone];
+  const today = new Intl.DateTimeFormat(localeCode, { weekday: "long", month: "long", day: "numeric" }).format(new Date());
+  const lastSyncLabel = lastSyncAt
+    ? formatDistanceToNow(new Date(lastSyncAt), { addSuffix: true, locale: dateFnsLocale })
+    : t("lastSyncNever");
+
   return (
-    <div className="flex items-center justify-between gap-3 pb-1">
-      <div className="flex items-baseline gap-2 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">{label}</p>
-        {sub && (
-          <p className="text-caption text-muted-foreground/50 hidden sm:block truncate">{sub}</p>
+    <header className="space-y-3">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <p className="text-caption font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("workspaceLabel")}</p>
+          <p className="mt-1 truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{workspaceName}</p>
+        </div>
+        <Select value={period} onValueChange={(value) => onPeriodChange(value as DashboardPeriod)}>
+          <SelectTrigger className="h-10 w-full bg-card text-xs md:w-[160px]" aria-label={t("periodFilter")}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">{t("periodToday")}</SelectItem>
+            <SelectItem value="7d">{t("period7d")}</SelectItem>
+            <SelectItem value="30d">{t("period30d")}</SelectItem>
+            <SelectItem value="custom" disabled>{t("periodCustom")}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">{today}</p>
+        <Button className="h-10 gap-2 text-sm" onClick={onGenerateInsights}>
+          <Sparkles className="h-4 w-4" />
+          {t("generateInsights")}
+        </Button>
+      </div>
+
+      <div
+        role="status"
+        aria-live="polite"
+        className={cn(
+          "flex flex-col gap-3 rounded-xl border bg-card px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between",
+          freshness.tone === "error" && "border-destructive/30 bg-destructive/5",
+          freshness.tone === "warning" && "border-warning/30 bg-warning/5",
+        )}
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full motion-safe:animate-pulse motion-reduce:animate-none", statusDot)} />
+              <span className={cn("truncate text-xs font-semibold", statusText)}>{t(freshness.labelKey)}</span>
+              <span className="hidden text-xs text-muted-foreground sm:inline">- {t("lastSync", { value: lastSyncLabel })}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64 text-xs">{t(freshness.tooltipKey)}</TooltipContent>
+        </Tooltip>
+
+        <div className="scrollbar-thin flex gap-2 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
+          <PulseStat label={t("pulseSignals")} value={numberFormatter.format(stats.inboxItems + stats.metaAds)} />
+          <PulseStat label={t("pulseCompetitors")} value={numberFormatter.format(stats.competitors)} />
+          <PulseStat label={t("pulseInsights")} value={numberFormatter.format(stats.insightCount)} />
+          <PulseStat label={t("pulseAlerts")} value={numberFormatter.format(unreadAlertCount)} tone={unreadAlertCount > 0 ? "warning" : "neutral"} />
+        </div>
+
+        {(freshness.tone === "warning" || freshness.tone === "error") && (
+          <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 text-xs" onClick={onSyncNow} disabled={syncing}>
+            <RefreshCw className={cn("h-3.5 w-3.5", syncing && "motion-safe:animate-spin")} />
+            {syncing ? t("syncing") : t("syncNow")}
+          </Button>
         )}
       </div>
-      {action && (
-        <button
-          onClick={action.onClick}
-          className="flex items-center gap-0.5 text-xs font-medium text-muted-foreground/60 hover:text-primary transition-colors shrink-0"
-        >
-          {action.label}
-          <ChevronRight className="h-3 w-3" />
-        </button>
-      )}
+    </header>
+  );
+}
+
+function PulseStat({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "warning" | "neutral" }) {
+  return (
+    <div className={cn("min-w-[92px] rounded-lg border px-2.5 py-1.5", tone === "warning" ? "border-warning/20 bg-warning/10" : "bg-muted/20")}>
+      <p className="stat-value text-sm font-semibold leading-none text-foreground">{value}</p>
+      <p className="mt-1 truncate text-caption text-muted-foreground">{label}</p>
     </div>
   );
 }
 
-function EmptyZone({ icon: Icon, title, desc, action }: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  desc: string;
-  action?: { label: string; onClick: () => void };
+function TodayBrief({
+  brief,
+  briefCount,
+  activeIndex,
+  onSelectBrief,
+  onOpen,
+  stats,
+  numberFormatter,
+  hasData,
+  onConnectSource,
+}: {
+  brief: TodayBriefItem | null;
+  briefCount: number;
+  activeIndex: number;
+  onSelectBrief: (index: number) => void;
+  onOpen: () => void;
+  stats: DashboardStats;
+  numberFormatter: Intl.NumberFormat;
+  hasData: boolean;
+  onConnectSource: () => void;
 }) {
+  const { t } = useTranslation("dashboard");
+
+  if (!brief) {
+    return (
+      <section className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-caption font-semibold uppercase tracking-[0.08em] text-primary">{t("todaysBriefEyebrow")}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+        </div>
+        <DashboardEmptyState
+          title={hasData ? t("briefGeneratingTitle") : t("briefEmptyTitle")}
+          description={hasData ? t("briefGeneratingDesc") : t("briefEmptyDesc")}
+          cta={{ label: hasData ? t("generateInsights") : t("connectSource"), onClick: onConnectSource }}
+        />
+      </section>
+    );
+  }
+
+  const priorityStyle = PRIORITY_STYLES[brief.priority];
+
   return (
-    <div className="rounded-xl border border-dashed py-8 text-center">
-      <Icon className="mx-auto mb-3 h-6 w-6 text-muted-foreground/40" />
-      <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <p className="mx-auto mt-1.5 max-w-[240px] text-xs text-muted-foreground/60 leading-relaxed">{desc}</p>
-      {action && (
-        <Button variant="outline" size="sm" className="mt-3 h-8 gap-1 text-xs" onClick={action.onClick}>
-          {action.label}
-          <ArrowRight className="h-3 w-3" />
-        </Button>
-      )}
+    <section className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
+        <div className="min-w-0">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="text-caption font-semibold uppercase tracking-[0.08em] text-primary">{t("todaysBriefEyebrow")}</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse motion-reduce:animate-none" />
+            {briefCount > 1 && (
+              <div className="ml-auto flex items-center gap-1" aria-label={t("briefPagination")}>
+                {Array.from({ length: briefCount }).map((_, index) => (
+                  <button
+                    key={index}
+                    className={cn("h-1.5 rounded-full transition-all", index === activeIndex ? "w-5 bg-primary" : "w-1.5 bg-border")}
+                    onClick={() => onSelectBrief(index)}
+                    aria-label={t("openBriefNumber", { value: index + 1 })}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <h1 className="max-w-3xl text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
+            {brief.headline}
+          </h1>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("whyItMatters")}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{brief.why}</p>
+            </div>
+            <div>
+              <p className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("suggestedAction")}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{brief.action}</p>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {brief.competitor && <Badge variant="secondary" className="rounded-md">{brief.competitor}</Badge>}
+            {brief.category && <Badge variant="outline" className="rounded-md capitalize">{brief.category}</Badge>}
+            <Badge variant="outline" className={cn("rounded-md capitalize", priorityStyle.badgeClassName)}>
+              {t(PRIORITY_LABEL_KEYS[brief.priority])}
+            </Badge>
+            <Button size="sm" className="ml-0 h-9 gap-1.5 text-xs sm:ml-auto" onClick={onOpen}>
+              {t("openInsight")}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-muted/20 p-3">
+          <div className="mb-3 flex items-center gap-1.5 border-b pb-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
+            <span className="ml-2 text-caption font-medium text-muted-foreground">{t("briefPreview")}</span>
+          </div>
+          <div className="space-y-3">
+            <PreviewMetric label={t("pulseSignals")} value={numberFormatter.format(stats.inboxItems + stats.metaAds)} />
+            <PreviewMetric label={t("pulseCompetitors")} value={numberFormatter.format(stats.competitors)} />
+            <PreviewMetric label={t("pulseInsights")} value={numberFormatter.format(stats.insightCount)} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PreviewMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="stat-value text-sm font-semibold text-foreground">{value}</span>
     </div>
   );
 }
 
-// ─── State components ─────────────────────────────────────────────────────────
+function ActionQueue({ actions, onNavigate }: { actions: DashboardRecommendedAction[]; onNavigate: (href: string) => void }) {
+  const { t } = useTranslation("dashboard");
 
-function LoadingState() {
   return (
-    <div className="max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8 animate-fade-in">
-      {/* Header skeleton */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="h-5 w-40 rounded bg-muted animate-pulse" />
-          <div className="h-3 w-56 rounded bg-muted/60 animate-pulse" />
-        </div>
-        <div className="hidden sm:flex gap-2">
-          <div className="h-8 w-28 rounded-md bg-muted animate-pulse" />
-          <div className="h-8 w-32 rounded-md bg-muted animate-pulse" />
-        </div>
-      </div>
-      {/* Intelligence Brief skeleton */}
-      <div className="rounded-xl border overflow-hidden">
-        <div className="h-10 bg-muted/30 border-b" />
-        <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="p-5 space-y-3">
-              <div className="h-3 w-20 rounded bg-muted animate-pulse" />
-              <div className="space-y-2">
-                <div className="h-3 w-full rounded bg-muted/60 animate-pulse" />
-                <div className="h-3 w-3/4 rounded bg-muted/40 animate-pulse" />
-              </div>
-            </div>
+    <section className="rounded-xl border bg-card p-4 shadow-sm">
+      <SectionHeader title={t("actionQueue")} subtitle={t("actionQueueSubtitle")} />
+      {actions.length === 0 ? (
+        <DashboardEmptyState title={t("actionQueueEmptyTitle")} description={t("actionQueueEmptyDesc")} className="mt-4" />
+      ) : (
+        <div className="mt-3 divide-y">
+          {actions.map((action) => (
+            <ActionQueueRow key={`${action.title}-${action.path}`} action={action} onClick={() => onNavigate(action.path)} />
           ))}
         </div>
-      </div>
-      {/* KPI strip skeleton */}
-      <div className="rounded-xl border overflow-hidden">
-        <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-border/50">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className={cn("px-4 py-3.5 space-y-2", i >= 3 && "hidden sm:block")}>
-              <div className="h-5 w-10 rounded bg-muted animate-pulse" />
-              <div className="h-2.5 w-16 rounded bg-muted/50 animate-pulse" />
-            </div>
-          ))}
+      )}
+    </section>
+  );
+}
+
+const ActionQueueRow = memo(function ActionQueueRow({ action, onClick }: { action: DashboardRecommendedAction; onClick: () => void }) {
+  const { t } = useTranslation("dashboard");
+  const priority = normalizeDashboardPriority(action.priority);
+  const style = PRIORITY_STYLES[priority];
+
+  return (
+    <button
+      className="group flex min-h-14 w-full items-center gap-3 py-3 text-left outline-none transition-transform duration-200 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      onClick={onClick}
+      title={`${action.title}. ${action.detail}`}
+    >
+      <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", style.dotClassName)} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium text-foreground">{action.title}</span>
+        <span className="mt-0.5 block truncate text-xs text-muted-foreground">{action.detail}</span>
+      </span>
+      <Badge variant="outline" className={cn("hidden rounded-md text-caption capitalize sm:inline-flex", style.badgeClassName)}>
+        {t(PRIORITY_LABEL_KEYS[priority])}
+      </Badge>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
+    </button>
+  );
+});
+
+function SignalStream({ signals, onNavigate, compact }: { signals: SignalItem[]; onNavigate: (href: string) => void; compact?: boolean }) {
+  const { t } = useTranslation("dashboard");
+  const [activeSignalId, setActiveSignalId] = useState<string | null>(signals[0]?.id ?? null);
+
+  useEffect(() => {
+    if (!signals.some((signal) => signal.id === activeSignalId)) {
+      setActiveSignalId(signals[0]?.id ?? null);
+    }
+  }, [signals, activeSignalId]);
+
+  const activeSignal = signals.find((signal) => signal.id === activeSignalId) ?? signals[0] ?? null;
+
+  return (
+    <section className="rounded-xl border bg-card shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+        <SectionHeader title={t("signalStream")} subtitle={t("signalStreamSubtitle")} compact />
+        <div className="flex items-center gap-1.5 text-caption text-muted-foreground" aria-live="polite">
+          <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse motion-reduce:animate-none" />
+          {t("live")}
         </div>
       </div>
-      {/* Content skeleton */}
-      <div className="grid gap-5 lg:grid-cols-2">
-        {[0, 1].map((i) => (
-          <div key={i} className="space-y-3">
-            <div className="h-4 w-32 rounded bg-muted animate-pulse" />
-            {[0, 1, 2].map((j) => (
-              <div key={j} className="rounded-xl border p-4 space-y-2">
-                <div className="h-3.5 w-3/4 rounded bg-muted animate-pulse" />
-                <div className="h-3 w-full rounded bg-muted/40 animate-pulse" />
-              </div>
+
+      {signals.length === 0 ? (
+        <DashboardEmptyState
+          title={t("signalStreamEmptyTitle")}
+          description={t("signalStreamEmptyDesc")}
+          cta={{ label: t("triggerSync"), onClick: () => onNavigate("/settings") }}
+          className="m-4"
+        />
+      ) : (
+        <>
+          <div className="divide-y" aria-live="polite">
+            {signals.map((signal) => (
+              <SignalRow
+                key={signal.id}
+                signal={signal}
+                onClick={() => onNavigate(signal.href)}
+                onActive={() => setActiveSignalId(signal.id)}
+              />
             ))}
           </div>
-        ))}
+          {!compact && activeSignal && (
+            <div className="hidden border-t bg-muted/20 p-4 lg:block">
+              <p className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("signalPreview")}</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{activeSignal.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{activeSignal.detail}</p>
+            </div>
+          )}
+          <div className="border-t px-4 py-3">
+            <Button variant="ghost" size="sm" className="h-9 gap-1.5 px-0 text-xs" onClick={() => onNavigate("/inbox")}>
+              {t("viewAllSignals")}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function SignalRow({ signal, onClick, onActive }: { signal: SignalItem; onClick: () => void; onActive: () => void }) {
+  const { t } = useTranslation("dashboard");
+  const category = SIGNAL_CATEGORY_STYLES[signal.category];
+  const priority = signal.priority ? PRIORITY_STYLES[normalizeDashboardPriority(signal.priority)] : null;
+
+  return (
+    <button
+      className="group flex min-h-[52px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={onClick}
+      onFocus={onActive}
+      onMouseEnter={onActive}
+    >
+      <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", priority?.dotClassName ?? category.dotClassName)} />
+      <span className="min-w-0 flex-1">
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-sm font-medium text-foreground">{signal.title}</span>
+          <Badge variant="outline" className={cn("hidden rounded-md text-caption sm:inline-flex", category.badgeClassName)}>
+            {t(category.labelKey)}
+          </Badge>
+        </span>
+        <span className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          {signal.competitor && <span className="truncate">{signal.competitor}</span>}
+          {signal.competitor && <span className="h-1 w-1 rounded-full bg-border" />}
+          <span className="truncate">{signal.detail}</span>
+        </span>
+      </span>
+      <span className="shrink-0 text-caption text-muted-foreground/70">{signal.timestamp}</span>
+    </button>
+  );
+}
+
+function CompetitorPulse({
+  competitors,
+  totalCompetitors,
+  limit,
+  limitReached,
+  numberFormatter,
+  onNavigate,
+  compact,
+}: {
+  competitors: CompetitorPulseItem[];
+  totalCompetitors: number;
+  limit: number;
+  limitReached: boolean;
+  numberFormatter: Intl.NumberFormat;
+  onNavigate: (href: string) => void;
+  compact?: boolean;
+}) {
+  const { t } = useTranslation("dashboard");
+
+  return (
+    <section className="rounded-xl border bg-card shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
+        <SectionHeader title={t("competitorPulse")} subtitle={t("competitorPulseSubtitle")} compact />
+        {limitReached && (
+          <Badge variant="outline" className="rounded-md border-warning/20 bg-warning/10 text-caption text-warning">
+            {t("planLimitReached")}
+          </Badge>
+        )}
       </div>
+
+      {competitors.length === 0 ? (
+        <DashboardEmptyState
+          title={t("competitorPulseEmptyTitle")}
+          description={t("competitorPulseEmptyDesc")}
+          cta={{ label: t("addFirstCompetitor"), onClick: () => onNavigate("/competitors") }}
+          className="m-4"
+        />
+      ) : (
+        <div className="divide-y">
+          {competitors.map((competitor) => (
+            <CompetitorPulseRow
+              key={competitor.id}
+              competitor={competitor}
+              numberFormatter={numberFormatter}
+              onClick={() => onNavigate("/competitors")}
+            />
+          ))}
+          {!compact && !limitReached && (
+            <button
+              className="flex min-h-[52px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => onNavigate("/competitors")}
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+                <Plus className="h-4 w-4" />
+              </span>
+              <span className="text-sm font-medium text-foreground">{t("trackAnother")}</span>
+              {limit > 0 && (
+                <span className="ml-auto text-caption text-muted-foreground">
+                  {numberFormatter.format(totalCompetitors)}/{numberFormatter.format(limit)}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="border-t px-4 py-3">
+        <Button variant="ghost" size="sm" className="h-9 gap-1.5 px-0 text-xs" onClick={() => onNavigate("/competitors")}>
+          {t("manageCompetitors")}
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function CompetitorPulseRow({
+  competitor,
+  numberFormatter,
+  onClick,
+}: {
+  competitor: CompetitorPulseItem;
+  numberFormatter: Intl.NumberFormat;
+  onClick: () => void;
+}) {
+  const { t } = useTranslation("dashboard");
+  const TrendIcon = competitor.trend === "up" ? TrendingUp : competitor.trend === "down" ? TrendingDown : CheckCircle2;
+  const trendClass = competitor.trend === "up" ? "text-warning" : competitor.trend === "down" ? "text-muted-foreground" : "text-success";
+
+  return (
+    <button
+      className="group flex min-h-[58px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={onClick}
+    >
+      <CompetitorLogo name={competitor.name} website={competitor.website} size="xs" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium text-foreground">{competitor.name}</span>
+        <span className="mt-0.5 block text-caption text-muted-foreground">
+          {t("signalsCount", { value: numberFormatter.format(competitor.totalSignals) })}
+        </span>
+      </span>
+      <MiniSparkline values={competitor.sparkline} title={t("sparklineLabel", { name: competitor.name })} />
+      <TrendIcon className={cn("h-4 w-4 shrink-0", trendClass)} />
+    </button>
+  );
+}
+
+function SectionHeader({ title, subtitle, compact }: { title: string; subtitle?: string; compact?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <h2 className={cn("font-semibold tracking-tight text-foreground", compact ? "text-sm" : "text-base")}>{title}</h2>
+      {subtitle && <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>}
     </div>
   );
 }
@@ -661,10 +1009,11 @@ function EmptyWorkspaceState({ onCreate }: { onCreate: () => void }) {
   const { t } = useTranslation("dashboard");
   return (
     <div className="flex h-full items-center justify-center p-8">
-      <div className="text-center">
-        <p className="mb-3 text-sm text-muted-foreground">{t("noWorkspaceFound")}</p>
-        <Button onClick={onCreate}>{t("createWorkspace")}</Button>
-      </div>
+      <DashboardEmptyState
+        title={t("noWorkspaceFound")}
+        cta={{ label: t("createWorkspace"), onClick: onCreate }}
+        className="w-full max-w-md"
+      />
     </div>
   );
 }
@@ -674,7 +1023,7 @@ function ErrorState({ title, description, onRetry }: { title: string; descriptio
   return (
     <div className="flex h-full items-center justify-center p-8">
       <Card className="w-full max-w-md border-destructive/20">
-        <CardContent className="space-y-4 p-6 text-center">
+        <div className="space-y-4 p-6 text-center">
           <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
             <AlertCircle className="h-5 w-5 text-destructive" />
           </div>
@@ -683,360 +1032,8 @@ function ErrorState({ title, description, onRetry }: { title: string; descriptio
             <p className="mt-2 text-sm text-muted-foreground">{description}</p>
           </div>
           <Button size="sm" onClick={onRetry}>{t("retry")}</Button>
-        </CardContent>
+        </div>
       </Card>
     </div>
-  );
-}
-
-function EmptyDecisionState({ gmailConnected, competitorCount, onNavigate }: {
-  gmailConnected: boolean;
-  competitorCount: number;
-  onNavigate: ReturnType<typeof useNavigate>;
-}) {
-  const { t } = useTranslation("dashboard");
-  return (
-    <Card className="border-2 border-dashed bg-accent/20">
-      <CardContent className="p-6 text-center sm:p-8">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-          <Zap className="h-6 w-6 text-primary" />
-        </div>
-        <h2 className="mb-1 text-base font-semibold">{t("buildDecisionFeed")}</h2>
-        <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
-          {t("buildDecisionFeedDesc")}
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {!gmailConnected && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => onNavigate("/settings")}>
-              <Mail className="h-3.5 w-3.5" />{t("connectGmailBtn")}
-            </Button>
-          )}
-          {competitorCount === 0 && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => onNavigate("/competitors")}>
-              <Users className="h-3.5 w-3.5" />{t("addCompetitors")}
-            </Button>
-          )}
-          <Button size="sm" className="gap-1.5" onClick={() => onNavigate("/newsletters/new")}>
-            <Newspaper className="h-3.5 w-3.5" />{t("importCompetitorData")}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── KPI Strip ────────────────────────────────────────────────────────────────
-
-const KpiStrip = memo(function KpiStrip({ label, value, href, accent }: {
-  label: string;
-  value: number;
-  href: string;
-  accent?: boolean;
-}) {
-  const navigate = useNavigate();
-  return (
-    <button
-      onClick={() => navigate(href)}
-      className={cn(
-        "group flex flex-col gap-1 px-4 py-3.5 text-left cursor-pointer transition-colors duration-200 hover:bg-muted/20",
-        accent && "bg-destructive/[0.04]",
-      )}
-    >
-      <p className={cn(
-        "text-xl font-semibold leading-none tracking-tight stat-value",
-        accent ? "text-destructive" : "text-foreground",
-      )}>
-        {value}
-      </p>
-      <p className="truncate text-xs text-muted-foreground/60">{label}</p>
-    </button>
-  );
-});
-
-// ─── Intelligence Brief columns ───────────────────────────────────────────────
-
-function BriefColumn({ icon: Icon, label, text, accent, cta, onNavigate }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  text: string;
-  accent?: boolean;
-  cta?: { label: string; href: string };
-  onNavigate?: ReturnType<typeof useNavigate>;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-3 p-4 sm:p-5", accent && "bg-primary/[0.02]")}>
-      <div className="flex items-center gap-2">
-        <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
-          <Icon className="h-3.5 w-3.5" />
-        </div>
-        <p className={cn("section-label", accent ? "text-primary/60" : "text-muted-foreground/60")}>{label}</p>
-      </div>
-      <p className="text-sm leading-relaxed text-foreground">{text}</p>
-      {cta && onNavigate && (
-        <div className="mt-auto pt-1">
-          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onNavigate(cta.href)}>
-            {cta.label}
-            <ArrowRight className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Action Queue ─────────────────────────────────────────────────────────────
-
-function ActionCard({ action, rank, onNavigate }: {
-  action: DashboardRecommendedAction;
-  rank: number;
-  onNavigate: () => void;
-}) {
-  const priority = normalizeDashboardPriority(action.priority);
-  return (
-    <div className={cn("rounded-xl border border-l-2 bg-card px-4 py-3.5 cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm", PRIORITY_BORDER[priority])}>
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-medium text-foreground">{action.title}</p>
-            <Badge variant="outline" className={cn("text-caption capitalize", PRIORITY_BADGE[priority])}>
-              {INSIGHT_PRIORITY_LABELS[priority]}
-            </Badge>
-          </div>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{action.detail}</p>
-        </div>
-        <Button size="sm" variant="outline" className="hidden h-8 shrink-0 gap-1 text-xs sm:inline-flex" onClick={onNavigate}>
-          {action.cta}
-          <ArrowRight className="h-3 w-3" />
-        </Button>
-      </div>
-      <Button size="sm" className="mt-3 h-8 w-full gap-1.5 text-xs sm:hidden" onClick={onNavigate}>
-        {action.cta}
-        <ArrowRight className="h-3 w-3" />
-      </Button>
-    </div>
-  );
-}
-
-// ─── Insight Cards ────────────────────────────────────────────────────────────
-
-function FeaturedInsightCard({ insight, onClick }: { insight: DashboardInsight; onClick: () => void }) {
-  const { t } = useTranslation("dashboard");
-  const priority = normalizeDashboardPriority(insight.priority_level);
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "w-full rounded-xl border bg-card px-4 py-3.5 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm",
-        priority === "high" && "border-l-2 border-l-destructive",
-      )}
-    >
-      <div className="min-w-0 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-medium leading-snug [overflow-wrap:anywhere]">{insight.title}</p>
-          <Badge variant="outline" className={cn("text-caption capitalize", PRIORITY_BADGE[priority])}>
-            {INSIGHT_PRIORITY_LABELS[priority]}
-          </Badge>
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway || insight.what_is_happening}</p>
-        {insight.why_it_matters && (
-          <p className="text-xs leading-relaxed text-muted-foreground/70 [overflow-wrap:anywhere] italic">
-            {insight.why_it_matters}
-          </p>
-        )}
-        {(insight.affected_competitors ?? []).length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-0.5">
-            {(insight.affected_competitors ?? []).slice(0, 2).map((c) => (
-              <Badge key={c} variant="secondary" className="text-caption">{c}</Badge>
-            ))}
-          </div>
-        )}
-      </div>
-    </button>
-  );
-}
-
-function CompactInsightRow({ insight, onClick }: { insight: DashboardInsight; onClick: () => void }) {
-  const priority = normalizeDashboardPriority(insight.priority_level);
-  return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-xl border bg-card px-4 py-3 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm"
-    >
-      <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", PRIORITY_DOT[priority])} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{insight.title}</p>
-        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{insight.strategic_takeaway}</p>
-      </div>
-      <ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground/25" />
-    </button>
-  );
-}
-
-// ─── Competitor Pressure ──────────────────────────────────────────────────────
-
-function CompetitorPressureRow({ entry, maxSignals, website, onClick }: {
-  entry: DashboardCompetitorSummary;
-  maxSignals: number;
-  website: string | null;
-  onClick: () => void;
-}) {
-  const { t } = useTranslation("dashboard");
-  const total = entry.newsletters + entry.ads;
-  const pct = maxSignals > 0 ? Math.round((total / maxSignals) * 100) : 0;
-  return (
-    <button onClick={onClick} className="flex w-full flex-col gap-1.5 px-4 py-3 text-left cursor-pointer transition-colors duration-200 hover:bg-accent/10">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <CompetitorLogo name={entry.competitor} website={website} size="xs" />
-          <p className="truncate text-sm font-medium">{entry.competitor}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {entry.newsletters > 0 && (
-            <span className="flex items-center gap-0.5 text-caption text-muted-foreground">
-              <Newspaper className="h-2.5 w-2.5" />{entry.newsletters}
-            </span>
-          )}
-          {entry.ads > 0 && (
-            <span className="flex items-center gap-0.5 text-caption text-muted-foreground">
-              <Megaphone className="h-2.5 w-2.5" />{entry.ads}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-muted/50">
-        <div
-          className={cn(
-            "h-full rounded-full transition-all",
-            pct > 60 ? "bg-destructive/60" : pct > 30 ? "bg-amber-400/70" : "bg-primary/60",
-          )}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      {typeof entry.promoRate === "number" && entry.promoRate > 0 && (
-        <p className="text-caption text-muted-foreground">
-          {t("promoIntensity", { value: Math.round(entry.promoRate * 100) })}
-        </p>
-      )}
-    </button>
-  );
-}
-
-// ─── Highlights (compact) ─────────────────────────────────────────────────────
-
-function HighlightCompactRow({ highlight }: { highlight: DashboardHighlight }) {
-  const { t } = useTranslation("dashboard");
-  const toneBg: Record<DashboardHighlight["tone"], string> = {
-    positive: "bg-primary/[0.025]",
-    warning: "bg-warning/[0.025]",
-    neutral: "bg-card",
-  };
-  const kindDot: Record<DashboardHighlight["kind"], string> = {
-    competitor_action: "bg-muted-foreground",
-    promotion: "bg-warning",
-    campaign: "bg-primary",
-  };
-  return (
-    <div className={cn("rounded-xl border bg-card px-4 py-3", highlight.tone !== "neutral" && toneBg[highlight.tone])}>
-      <div className="flex items-start gap-2.5">
-        <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", kindDot[highlight.kind])} />
-        <div className="min-w-0">
-          <p className="text-xs font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">{highlight.title}</p>
-          <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{highlight.detail}</p>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {highlight.competitors?.slice(0, 1).map((c) => (
-              <Badge key={c} variant="secondary" className="text-caption">{c}</Badge>
-            ))}
-            <span className="text-caption uppercase tracking-wide text-muted-foreground/40">
-              {highlight.kind === "competitor_action" ? t("highlightKindMove") : highlight.kind === "promotion" ? t("highlightKindPromo") : t("highlightKindCampaign")}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Anomaly (compact) ────────────────────────────────────────────────────────
-
-function AnomalyCompactRow({ anomaly, onNavigate }: { anomaly: DashboardAnomaly; onNavigate: () => void }) {
-  const priority = normalizeDashboardPriority(anomaly.severity);
-  return (
-    <button
-      onClick={onNavigate}
-      className="w-full rounded-xl border bg-card px-4 py-3 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm"
-    >
-      <div className="flex items-start gap-2">
-        {(() => {
-          const AnomalyIcon = priority === "high" ? AlertCircle : priority === "medium" ? Activity : CheckCircle;
-          return (
-            <div className={cn("mt-0.5 shrink-0", priority === "high" ? "text-destructive" : priority === "medium" ? "text-warning" : "text-muted-foreground")}>
-              <AnomalyIcon className="h-3.5 w-3.5" />
-            </div>
-          );
-        })()}
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-foreground [overflow-wrap:anywhere]">{anomaly.title}</p>
-          <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{anomaly.detail}</p>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-// ─── Inbox (compact) ─────────────────────────────────────────────────────────
-
-function InboxCompactRow({ item, competitorName, onClick }: {
-  item: DashboardInboxPreview;
-  competitorName: string | null;
-  onClick: () => void;
-}) {
-  const { t } = useTranslation("dashboard");
-  const { t: tCommon } = useTranslation("common");
-  return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:shadow-sm"
-    >
-      <div className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-caption font-semibold",
-        item.is_read ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary ring-1 ring-primary/15",
-      )}>
-        {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <p className={cn("truncate text-xs font-medium", !item.is_read && "font-semibold text-foreground")}>{item.subject || t("noSubject")}</p>
-          {!item.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
-        </div>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <p className="truncate text-caption text-muted-foreground">{item.from_name || item.from_email || tCommon("unknown")}</p>
-          {competitorName && <Badge variant="outline" className="text-caption">{competitorName}</Badge>}
-        </div>
-      </div>
-      <span className="shrink-0 text-caption text-muted-foreground/50 whitespace-nowrap">
-        {item.received_at ? formatDistanceToNow(new Date(item.received_at), { addSuffix: true }) : "—"}
-      </span>
-    </button>
-  );
-}
-
-// ─── Competitor preview card ──────────────────────────────────────────────────
-
-function CompetitorPreviewCard({ competitor, onClick }: { competitor: DashboardCompetitorPreview; onClick: () => void }) {
-  const { t } = useTranslation("dashboard");
-  return (
-    <button onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left cursor-pointer transition-all duration-200 hover:border-border hover:shadow-sm">
-      <CompetitorLogo name={competitor.name} website={competitor.website} size="md" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">{competitor.name}</p>
-        {competitor.website && (
-          <p className="truncate text-caption text-muted-foreground">{competitor.website.replace(/^https?:\/\//, "")}</p>
-        )}
-        {!competitor.is_monitored && (
-          <span className="text-caption text-muted-foreground/40">{t("notMonitored")}</span>
-        )}
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/25 transition-transform group-hover:translate-x-0.5 group-hover:text-primary/40" />
-    </button>
   );
 }

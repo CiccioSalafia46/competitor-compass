@@ -18,5 +18,10 @@
   "signOut": "Se déconnecter",
   "groupCore": "Principal",
   "groupIntelligence": "Intelligence",
-  "groupManagement": "Gestion"
+  "groupManagement": "Gestion",
+  "groupWorkspace": "[NEEDS TRANSLATION] Workspace",
+  "account": "[NEEDS TRANSLATION] Account",
+  "profile": "[NEEDS TRANSLATION] Profile",
+  "member": "[NEEDS TRANSLATION] Member",
+  "primaryNavigation": "[NEEDS TRANSLATION] Primary navigation"
 }

@@ -52,8 +52,10 @@ export function useDashboardSnapshot(workspaceId: string | null | undefined) {
     queryKey: dashboardSnapshotQueryKey(workspaceId),
     queryFn: () => fetchDashboardSnapshot(workspaceId!),
     enabled: !!workspaceId,
-    staleTime: 60_000,
+    staleTime: 30_000,
     gcTime: 300_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
   });
 
   const refetch = () =>

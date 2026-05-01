@@ -18,5 +18,10 @@
   "signOut": "Esci",
   "groupCore": "Principale",
   "groupIntelligence": "Intelligence",
-  "groupManagement": "Gestione"
+  "groupManagement": "Gestione",
+  "groupWorkspace": "[NEEDS TRANSLATION] Workspace",
+  "account": "[NEEDS TRANSLATION] Account",
+  "profile": "[NEEDS TRANSLATION] Profile",
+  "member": "[NEEDS TRANSLATION] Member",
+  "primaryNavigation": "[NEEDS TRANSLATION] Primary navigation"
 }
