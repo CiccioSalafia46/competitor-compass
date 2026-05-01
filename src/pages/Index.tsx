@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import DashboardPreview from "@/components/homepage/DashboardPreview";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -272,84 +273,8 @@ export default function Index() {
             </div>
           </div>
 
-          {/* ─── Dashboard preview mockup ─── */}
-          <div className="mt-16 max-w-4xl mx-auto animate-reveal" style={{ animationDelay: "0.3s" }}>
-            <div className="relative rounded-xl border border-border/40 bg-card shadow-lg overflow-hidden">
-              {/* Mockup header bar */}
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/30 bg-muted/20">
-                <div className="flex gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-red-400/60" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-green-400/60" />
-                </div>
-                <div className="flex-1 flex justify-center">
-                  <div className="h-5 w-48 rounded-md bg-muted/40" />
-                </div>
-              </div>
-              {/* Mockup content */}
-              <div className="p-6 grid grid-cols-3 gap-4">
-                {/* Left panel */}
-                <div className="col-span-2 space-y-4">
-                  <div className="flex gap-3">
-                    {["Competitors", "Signals", "Insights"].map((label, i) => (
-                      <div key={label} className={cn(
-                        "rounded-lg px-4 py-2.5 text-xs font-medium",
-                        i === 0 ? "bg-primary/10 text-primary" : "bg-muted/40 text-muted-foreground"
-                      )}>
-                        {label}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-2.5">
-                    {[
-                      { name: "Acme Corp", signals: 14, change: "+23%" },
-                      { name: "Globex Inc", signals: 9, change: "+8%" },
-                      { name: "Initech", signals: 5, change: "-3%" },
-                    ].map((row) => (
-                      <div key={row.name} className="flex items-center justify-between rounded-lg border border-border/30 px-4 py-3 bg-background/50">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                            {row.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">{row.name}</p>
-                            <p className="text-xs text-muted-foreground">{row.signals} signals</p>
-                          </div>
-                        </div>
-                        <span className={cn(
-                          "text-xs font-semibold",
-                          row.change.startsWith("+") ? "text-green-600 dark:text-green-400" : "text-red-500"
-                        )}>{row.change}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Right panel */}
-                <div className="space-y-3">
-                  <div className="rounded-lg border border-border/30 p-4 bg-background/50">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">AI Insight</p>
-                    <div className="space-y-1.5">
-                      <div className="h-2.5 w-full rounded bg-muted/50" />
-                      <div className="h-2.5 w-4/5 rounded bg-muted/40" />
-                      <div className="h-2.5 w-3/5 rounded bg-muted/30" />
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-border/30 p-4 bg-background/50">
-                    <p className="text-xs font-medium text-muted-foreground mb-3">Activity</p>
-                    <div className="flex items-end gap-1.5 h-16">
-                      {[40, 65, 45, 80, 55, 70, 90, 60, 75, 50, 85, 65].map((h, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 rounded-sm bg-primary/20"
-                          style={{ height: `${h}%` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* ─── Interactive dashboard preview ─── */}
+          <DashboardPreview />
         </div>
       </section>
 
