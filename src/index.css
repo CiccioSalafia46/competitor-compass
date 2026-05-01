@@ -566,6 +566,61 @@
   opacity: 0;
 }
 
+/* ── Dashboard iteration 2 ─────────────────────────────────── */
+
+/* Brief card entrance */
+@keyframes brief-appear {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-brief-appear {
+  animation: brief-appear 0.4s ease-out both;
+}
+
+/* New signal row highlight */
+@keyframes signal-arrive {
+  0%   { background-color: hsl(var(--primary) / 0.10); }
+  100% { background-color: transparent; }
+}
+.animate-signal-arrive {
+  animation: signal-arrive 2s ease-out both;
+}
+
+/* Stagger entrance for rows */
+@keyframes row-stagger {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-row-stagger {
+  animation: row-stagger 0.35s ease-out both;
+}
+.animate-row-stagger:nth-child(1) { animation-delay: 60ms; }
+.animate-row-stagger:nth-child(2) { animation-delay: 120ms; }
+.animate-row-stagger:nth-child(3) { animation-delay: 180ms; }
+.animate-row-stagger:nth-child(4) { animation-delay: 240ms; }
+.animate-row-stagger:nth-child(5) { animation-delay: 300ms; }
+.animate-row-stagger:nth-child(6) { animation-delay: 360ms; }
+.animate-row-stagger:nth-child(7) { animation-delay: 420ms; }
+.animate-row-stagger:nth-child(8) { animation-delay: 480ms; }
+
+/* Heatmap cells left-to-right stagger */
+@keyframes heatmap-cell-appear {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Dot pattern background */
+.dashboard-dot-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='0.75' fill='%237c3aed' fill-opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Dark mode card glow and border enhancement */
+.dark .dashboard-card-glow {
+  box-shadow: 0 0 12px -4px hsl(var(--primary) / 0.12);
+  border-color: hsl(var(--border) / 0.6);
+}
+
 /* Reduced motion: freeze all stats animations at final state */
 @media (prefers-reduced-motion: reduce) {
   .stats-bar-manual,
@@ -620,5 +675,12 @@
   .solution-tag-rise {
     opacity: 1 !important;
     transform: translateY(0) !important;
+  }
+  .animate-brief-appear,
+  .animate-signal-arrive,
+  .animate-row-stagger {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

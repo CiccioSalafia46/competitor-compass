@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Clock3,
+  CornerDownRight,
   Mail,
   RefreshCw,
   XCircle,
@@ -35,6 +36,8 @@ interface SubsystemStatus {
     label: string;
     path: string;
   };
+  /** When set, this subsystem's failure is caused by the named upstream subsystem. */
+  cascadeOf?: "gmail" | "extraction";
 }
 
 const DATE_FNS_LOCALES = { de, en: enUS, es, fr, it };
@@ -70,6 +73,29 @@ function getSummaryStatus(subsystems: SubsystemStatus[]): Status {
   if (subsystems.some((system) => system.status === "warning")) return "warning";
   if (subsystems.some((system) => system.status === "healthy")) return "healthy";
   return "idle";
+}
+
+const NOT_HEALTHY: Status[] = ["error", "warning", "idle"];
+
+/** FIX 6: Detect cascade relationships between subsystems */
+function classifyCascade(subsystems: SubsystemStatus[]): SubsystemStatus[] {
+  const byId = new Map(subsystems.map((s) => [s.id, s]));
+  const gmail = byId.get("gmail");
+  const extraction = byId.get("extraction");
+  const insights = byId.get("insights");
+
+  // If Gmail is broken and extraction is also not healthy → extraction is downstream
+  if (gmail && NOT_HEALTHY.includes(gmail.status)) {
+    if (extraction && NOT_HEALTHY.includes(extraction.status)) {
+      extraction.cascadeOf = "gmail";
+    }
+    // If extraction is cascaded and insights is also not healthy → insights is downstream
+    if (extraction?.cascadeOf && insights && NOT_HEALTHY.includes(insights.status)) {
+      insights.cascadeOf = "extraction";
+    }
+  }
+
+  return subsystems;
 }
 
 export function SystemHealthPanel() {
@@ -202,7 +228,8 @@ export function SystemHealthPanel() {
       action: alertRuleCount.error ? { label: t("investigate"), path: "/alerts" } : undefined,
     });
 
-    setSubsystems(nextSubsystems);
+    // FIX 6: Classify cascade relationships
+    setSubsystems(classifyCascade(nextSubsystems));
     setLoading(false);
   }, [connection, currentWorkspace, isConnected, relativeTime, t]);
 
@@ -216,6 +243,10 @@ export function SystemHealthPanel() {
     .map((system) => system.lastActivity)
     .filter((value): value is string => Boolean(value))
     .sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0];
+
+  // FIX 6: Detect if there's a cascade (Gmail is the root cause)
+  const hasCascade = subsystems.some((s) => s.cascadeOf);
+  const rootCause = hasCascade ? subsystems.find((s) => s.id === "gmail") : null;
 
   useEffect(() => {
     if (hasIssue) setExpanded(true);
@@ -271,47 +302,148 @@ export function SystemHealthPanel() {
       </button>
 
       {expanded && (
-        <div className="grid gap-2 border-t px-4 py-3 sm:grid-cols-2">
-          {subsystems.map((system) => {
-            const Icon = system.icon;
-            return (
-              <Tooltip key={system.id}>
-                <TooltipTrigger asChild>
-                  <div
-                    className={cn(
-                      "flex min-h-14 items-center gap-3 rounded-lg border bg-background/60 p-2.5",
-                      system.status === "warning" && "border-warning/30 bg-warning/5",
-                      system.status === "error" && "border-destructive/30 bg-destructive/5",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    {getStatusIcon(system.status)}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-medium text-foreground">{system.label}</span>
-                      <span className="block truncate text-caption text-muted-foreground">{system.detail}</span>
-                    </span>
-                    {system.action && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 shrink-0 px-2 text-caption"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(system.action.path);
-                        }}
-                      >
-                        {system.action.label}
-                      </Button>
-                    )}
+        <div className="border-t px-4 py-3">
+          {/* FIX 6: Cascade-aware layout */}
+          {hasCascade && rootCause ? (
+            <div className="space-y-2">
+              {/* ROOT CAUSE — Gmail — prominent */}
+              <div
+                className={cn(
+                  "flex min-h-14 items-center gap-3 rounded-lg border p-3",
+                  rootCause.status === "error" && "border-destructive/30 bg-destructive/5",
+                  rootCause.status === "warning" && "border-warning/30 bg-warning/5",
+                  rootCause.status === "idle" && "border-border bg-muted/20",
+                )}
+              >
+                <Mail className="h-5 w-5 shrink-0 text-muted-foreground" />
+                {getStatusIcon(rootCause.status)}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">{rootCause.label}</span>
+                    <span className="text-caption font-semibold text-destructive">{t("cascadeRootCause")}</span>
                   </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-64 text-xs">
-                  {system.detail}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-          <div className="flex items-center gap-2 px-1 pt-1 text-caption text-muted-foreground sm:col-span-2">
+                  <p className="mt-0.5 text-xs text-muted-foreground">{rootCause.detail}</p>
+                </div>
+                <Button
+                  size="sm"
+                  className="h-9 shrink-0 gap-1.5"
+                  onClick={(e) => { e.stopPropagation(); navigate("/settings"); }}
+                >
+                  {t("reconnectGmail")}
+                </Button>
+              </div>
+
+              <p className="px-1 text-caption text-muted-foreground">{t("reconnectGmailDesc")}</p>
+
+              {/* DOWNSTREAM EFFECTS — indented, muted */}
+              {subsystems
+                .filter((s) => s.cascadeOf)
+                .map((system) => {
+                  const Icon = system.icon;
+                  const sourceLabel = system.cascadeOf === "gmail" ? t("systemHealthGmail") : t("systemHealthExtraction");
+                  return (
+                    <div
+                      key={system.id}
+                      className="ml-6 flex min-h-12 items-center gap-3 rounded-lg border border-border/60 bg-muted/10 p-2.5"
+                    >
+                      <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                      <Icon className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs font-medium text-muted-foreground">{system.label}</span>
+                        <span className="block text-caption text-muted-foreground/70">
+                          {t("cascadeWaitingFor", { source: sourceLabel })}
+                        </span>
+                      </span>
+                      <span className="text-caption text-muted-foreground/50">{t("cascadeEffect")}</span>
+                    </div>
+                  );
+                })}
+
+              {/* INDEPENDENT — Alerts (always shown separately) */}
+              {subsystems
+                .filter((s) => !s.cascadeOf && s.id !== "gmail")
+                .map((system) => {
+                  const Icon = system.icon;
+                  return (
+                    <Tooltip key={system.id}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={cn(
+                            "flex min-h-12 items-center gap-3 rounded-lg border bg-background/60 p-2.5",
+                            system.status === "idle" && "opacity-70",
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          {getStatusIcon(system.status)}
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs font-medium text-foreground">{system.label}</span>
+                            <span className="block truncate text-caption text-muted-foreground">
+                              {system.status === "idle" ? t("setupPending") : system.detail}
+                            </span>
+                          </span>
+                          {system.action && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 shrink-0 px-2 text-caption"
+                              onClick={(event) => { event.stopPropagation(); navigate(system.action!.path); }}
+                            >
+                              {system.action.label}
+                            </Button>
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-64 text-xs">{system.detail}</TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+            </div>
+          ) : (
+            /* NO CASCADE — standard 2×2 grid */
+            <div className="grid gap-2 sm:grid-cols-2">
+              {subsystems.map((system) => {
+                const Icon = system.icon;
+                return (
+                  <Tooltip key={system.id}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={cn(
+                          "flex min-h-14 items-center gap-3 rounded-lg border bg-background/60 p-2.5",
+                          system.status === "warning" && "border-warning/30 bg-warning/5",
+                          system.status === "error" && "border-destructive/30 bg-destructive/5",
+                        )}
+                      >
+                        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        {getStatusIcon(system.status)}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-medium text-foreground">{system.label}</span>
+                          <span className="block truncate text-caption text-muted-foreground">{system.detail}</span>
+                        </span>
+                        {system.action && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 shrink-0 px-2 text-caption"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigate(system.action!.path);
+                            }}
+                          >
+                            {system.action.label}
+                          </Button>
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-64 text-xs">
+                      {system.detail}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-2 flex items-center gap-2 px-1 text-caption text-muted-foreground">
             <RefreshCw className="h-3 w-3" />
             {t("systemHealthRefreshHint")}
           </div>

@@ -1,19 +1,24 @@
 import { lazy, memo, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatDistanceToNow, type Locale } from "date-fns";
+import { formatDistanceToNow, format, subDays, type Locale } from "date-fns";
 import { de, enUS, es, fr, it } from "date-fns/locale";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
   CheckCircle2,
   ChevronRight,
+  Eye,
+  Minus,
   Plus,
   RefreshCw,
   Sparkles,
+  Target,
   TrendingDown,
   TrendingUp,
   Users,
+  Zap,
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
@@ -21,6 +26,8 @@ import {
   useDashboardSnapshot,
   type DashboardCompetitorPreview,
   type DashboardInboxPreview,
+  type HeatmapRow,
+  type WeeklyDelta,
 } from "@/hooks/useDashboardSnapshot";
 import {
   buildDashboardAiSummary,
@@ -40,7 +47,9 @@ import { DashboardLoadingSkeleton } from "@/components/dashboard/DashboardSkelet
 import { MiniSparkline } from "@/components/dashboard/MiniSparkline";
 import {
   PRIORITY_STYLES,
+  SIGNAL_CATEGORIES,
   SIGNAL_CATEGORY_STYLES,
+  getActionIconName,
   type SignalCategory,
 } from "@/components/dashboard/dashboardConstants";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +61,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 const LazySystemHealthPanel = lazy(() =>
   import("@/components/SystemHealthPanel").then((module) => ({ default: module.SystemHealthPanel })),
+);
+
+const LazyActivityHeatmap = lazy(() =>
+  import("@/components/dashboard/ActivityHeatmap").then((module) => ({ default: module.ActivityHeatmap })),
 );
 
 const PERIOD_OPTIONS = ["today", "7d", "30d", "custom"] as const;
@@ -75,6 +88,9 @@ interface TodayBriefItem {
   competitor: string | null;
   category: string | null;
   priority: InsightPriorityLevel;
+  confidence: number | null;
+  createdAt: string | null;
+  sourceType: string | null;
 }
 
 interface SignalItem {
@@ -103,6 +119,8 @@ const PRIORITY_LABEL_KEYS: Record<InsightPriorityLevel, string> = {
   medium: "priorityMedium",
   low: "priorityLow",
 };
+
+const ACTION_ICONS = { target: Target, "alert-triangle": AlertTriangle, eye: Eye, zap: Zap } as const;
 
 function getDateFnsLocale(language: string) {
   const lang = language.split("-")[0] as keyof typeof DATE_FNS_LOCALES;
@@ -167,6 +185,8 @@ function isInsidePeriod(timestamp: string | null | undefined, start: Date | null
   return new Date(timestamp).getTime() >= start.getTime();
 }
 
+// FIXME: tune AI prompt in edge function to produce: title=specific fact (Subject+Verb+Object, max 8 words),
+// why=causal explanation starting with "Because...", action=imperative+specific with timeline.
 function buildTodayBriefs(params: {
   insights: DashboardInsight[];
   highlights: DashboardHighlight[];
@@ -187,6 +207,9 @@ function buildTodayBriefs(params: {
       competitor: insight.affected_competitors[0] ?? null,
       category: formatPlain(insight.campaign_type || insight.category, null),
       priority: normalizeDashboardPriority(insight.priority_level),
+      confidence: insight.confidence,
+      createdAt: insight.created_at,
+      sourceType: insight.source_type,
     };
   });
 
@@ -204,6 +227,9 @@ function buildTodayBriefs(params: {
     competitor: highlight.competitors?.[0] ?? null,
     category: highlight.kind === "promotion" ? "promotion" : highlight.kind === "campaign" ? "campaign" : "competitor move",
     priority: highlight.tone === "warning" ? "medium" : "low",
+    confidence: null,
+    createdAt: null,
+    sourceType: null,
   }];
 }
 
@@ -318,6 +344,51 @@ function buildCompetitorPulse(params: {
   return listed.sort((left, right) => right.totalSignals - left.totalSignals).slice(0, 7);
 }
 
+/** Build heatmap rows from real API data, falling back to zeros when not available. */
+function buildHeatmapData(
+  competitors: DashboardCompetitorPreview[],
+  heatmapRows: HeatmapRow[] | null | undefined,
+) {
+  const top = competitors.slice(0, 7);
+
+  if (!heatmapRows || heatmapRows.length === 0) {
+    return top.map((c) => ({
+      name: c.name,
+      dailySignals: Array(30).fill(0) as number[],
+    }));
+  }
+
+  // Group rows by competitor name, collect daily counts in order
+  const byName = new Map<string, Map<string, number>>();
+  for (const row of heatmapRows) {
+    let dayMap = byName.get(row.competitor_name);
+    if (!dayMap) {
+      dayMap = new Map();
+      byName.set(row.competitor_name, dayMap);
+    }
+    dayMap.set(row.day, row.signal_count);
+  }
+
+  // Build date keys for last 30 days
+  const today = new Date();
+  const dateKeys: string[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dateKeys.push(d.toISOString().slice(0, 10));
+  }
+
+  return top.map((c) => {
+    const dayMap = byName.get(c.name);
+    return {
+      name: c.name,
+      dailySignals: dateKeys.map((key) => dayMap?.get(key) ?? 0),
+    };
+  });
+}
+
+// ─── Main Component ────────────────────────────────────────────────
+
 export default function Dashboard() {
   const { t, i18n } = useTranslation("dashboard");
   const { currentWorkspace, loading: wsLoading, error: workspaceError, refetch: refetchWorkspace } = useWorkspace();
@@ -407,6 +478,11 @@ export default function Dashboard() {
     [snapshotCompetitors, snapshotDecisionModel?.competitorSummary],
   );
 
+  const heatmapData = useMemo(
+    () => buildHeatmapData(snapshotCompetitors, snapshot?.heatmap),
+    [snapshotCompetitors, snapshot?.heatmap],
+  );
+
   const lastSyncAt = gmailConnection.connection?.last_sync_at ?? newestInboxDate(snapshotRecentInbox);
   const freshness = useMemo(
     () => getFreshnessState(lastSyncAt, gmailConnection.isConnected || Boolean(snapshot?.gmailConnected)),
@@ -445,7 +521,7 @@ export default function Dashboard() {
   const competitorLimitReached = limits.competitors > 0 && usage.competitors >= limits.competitors;
 
   return (
-    <div className="mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8">
+    <div className="dashboard-dot-pattern mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8">
       <DashboardHeader
         workspaceName={currentWorkspace.name}
         period={selectedPeriod}
@@ -460,6 +536,7 @@ export default function Dashboard() {
         syncing={gmailConnection.syncing}
         onSyncNow={() => void handleSyncNow()}
         onGenerateInsights={() => navigate("/insights")}
+        weeklyDelta={snapshot.weeklyDelta ?? null}
       />
 
       <TodayBrief
@@ -468,13 +545,19 @@ export default function Dashboard() {
         activeIndex={briefIndex}
         onSelectBrief={setBriefIndex}
         onOpen={() => currentBrief && navigate(currentBrief.href)}
-        stats={stats}
-        numberFormatter={numberFormatter}
         hasData={hasData}
+        dateFnsLocale={dateFnsLocale}
         onConnectSource={() => navigate(gmailConnected ? "/newsletters/new" : "/settings")}
       />
 
       <ActionQueue actions={actions} onNavigate={navigate} />
+
+      {/* Activity Heatmap — between queue and 2-col grid */}
+      {competitors.length > 0 && (
+        <Suspense fallback={<div className="h-20 rounded-xl border bg-card motion-safe:animate-pulse" />}>
+          <LazyActivityHeatmap competitors={heatmapData} />
+        </Suspense>
+      )}
 
       <div className="hidden gap-5 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
         <SignalStream signals={signals} onNavigate={navigate} />
@@ -516,6 +599,8 @@ export default function Dashboard() {
   );
 }
 
+// ─── DashboardHeader (FIX 1) ──────────────────────────────────────
+
 function DashboardHeader({
   workspaceName,
   period,
@@ -530,6 +615,7 @@ function DashboardHeader({
   syncing,
   onSyncNow,
   onGenerateInsights,
+  weeklyDelta,
 }: {
   workspaceName: string;
   period: DashboardPeriod;
@@ -544,6 +630,7 @@ function DashboardHeader({
   syncing: boolean;
   onSyncNow: () => void;
   onGenerateInsights: () => void;
+  weeklyDelta: { signals: WeeklyDelta; insights: WeeklyDelta; alerts: WeeklyDelta } | null;
 }) {
   const { t } = useTranslation("dashboard");
   const statusDot = {
@@ -563,6 +650,8 @@ function DashboardHeader({
     ? formatDistanceToNow(new Date(lastSyncAt), { addSuffix: true, locale: dateFnsLocale })
     : t("lastSyncNever");
 
+  const isCritical = freshness.tone === "error";
+
   return (
     <header className="space-y-3">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -570,73 +659,150 @@ function DashboardHeader({
           <p className="text-caption font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("workspaceLabel")}</p>
           <p className="mt-1 truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{workspaceName}</p>
         </div>
-        <Select value={period} onValueChange={(value) => onPeriodChange(value as DashboardPeriod)}>
-          <SelectTrigger className="h-10 w-full bg-card text-xs md:w-[160px]" aria-label={t("periodFilter")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="today">{t("periodToday")}</SelectItem>
-            <SelectItem value="7d">{t("period7d")}</SelectItem>
-            <SelectItem value="30d">{t("period30d")}</SelectItem>
-            <SelectItem value="custom" disabled>{t("periodCustom")}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">{today}</p>
-        <Button className="h-10 gap-2 text-sm" onClick={onGenerateInsights}>
-          <Sparkles className="h-4 w-4" />
-          {t("generateInsights")}
-        </Button>
-      </div>
-
-      <div
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "flex flex-col gap-3 rounded-xl border bg-card px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between",
-          freshness.tone === "error" && "border-destructive/30 bg-destructive/5",
-          freshness.tone === "warning" && "border-warning/30 bg-warning/5",
-        )}
-      >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex min-w-0 items-center gap-2">
-              <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full motion-safe:animate-pulse motion-reduce:animate-none", statusDot)} />
-              <span className={cn("truncate text-xs font-semibold", statusText)}>{t(freshness.labelKey)}</span>
-              <span className="hidden text-xs text-muted-foreground sm:inline">- {t("lastSync", { value: lastSyncLabel })}</span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64 text-xs">{t(freshness.tooltipKey)}</TooltipContent>
-        </Tooltip>
-
-        <div className="scrollbar-thin flex gap-2 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
-          <PulseStat label={t("pulseSignals")} value={numberFormatter.format(stats.inboxItems + stats.metaAds)} />
-          <PulseStat label={t("pulseCompetitors")} value={numberFormatter.format(stats.competitors)} />
-          <PulseStat label={t("pulseInsights")} value={numberFormatter.format(stats.insightCount)} />
-          <PulseStat label={t("pulseAlerts")} value={numberFormatter.format(unreadAlertCount)} tone={unreadAlertCount > 0 ? "warning" : "neutral"} />
-        </div>
-
-        {(freshness.tone === "warning" || freshness.tone === "error") && (
-          <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 text-xs" onClick={onSyncNow} disabled={syncing}>
-            <RefreshCw className={cn("h-3.5 w-3.5", syncing && "motion-safe:animate-spin")} />
-            {syncing ? t("syncing") : t("syncNow")}
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(value) => onPeriodChange(value as DashboardPeriod)}>
+            <SelectTrigger className="h-10 w-full bg-card text-xs md:w-[160px]" aria-label={t("periodFilter")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">{t("periodToday")}</SelectItem>
+              <SelectItem value="7d">{t("period7d")}</SelectItem>
+              <SelectItem value="30d">{t("period30d")}</SelectItem>
+              <SelectItem value="custom" disabled>{t("periodCustom")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button className="h-10 gap-2 text-sm" onClick={onGenerateInsights}>
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("generateInsights")}</span>
           </Button>
-        )}
+        </div>
       </div>
+
+      <p className="text-sm text-muted-foreground">{today}</p>
+
+      {/* FIX 1: Critical stale → full-width emergency banner hiding metrics */}
+      {isCritical ? (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/8 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-destructive">{t("syncCriticalBanner")}</p>
+              <p className="mt-0.5 text-xs text-destructive/80">
+                {t("syncCriticalBannerDesc", { value: lastSyncLabel })}
+              </p>
+            </div>
+          </div>
+          <Button size="sm" className="h-10 shrink-0 gap-1.5" onClick={onSyncNow} disabled={syncing}>
+            <RefreshCw className={cn("h-4 w-4", syncing && "motion-safe:animate-spin")} />
+            {syncing ? t("syncing") : t("syncNowPrimary")}
+          </Button>
+        </div>
+      ) : (
+        <div
+          role="status"
+          aria-live="polite"
+          className={cn(
+            "flex flex-col gap-3 rounded-xl border bg-card px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between",
+            freshness.tone === "warning" && "border-warning/30 bg-warning/5",
+          )}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full motion-safe:animate-pulse motion-reduce:animate-none", statusDot)} />
+                <span className={cn("truncate text-xs font-semibold", statusText)}>{t(freshness.labelKey)}</span>
+                <span className="hidden text-xs text-muted-foreground sm:inline">· {t("lastSync", { value: lastSyncLabel })}</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-64 text-xs">{t(freshness.tooltipKey)}</TooltipContent>
+          </Tooltip>
+
+          {/* FIX 1: Pulse stats with inline sparklines, weekly delta, hide zero alerts */}
+          <div className="scrollbar-thin flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
+            <PulseStat
+              label={t("pulseSignals")}
+              value={numberFormatter.format(stats.inboxItems + stats.metaAds)}
+              sparkline={buildSparkline(stats.inboxItems + stats.metaAds, "signals")}
+              delta={weeklyDelta?.signals}
+            />
+            <PulseStat
+              label={t("pulseCompetitors")}
+              value={numberFormatter.format(stats.competitors)}
+              sparkline={buildSparkline(stats.competitors, "competitors")}
+            />
+            <PulseStat
+              label={t("pulseInsights")}
+              value={numberFormatter.format(stats.insightCount)}
+              sparkline={buildSparkline(stats.insightCount, "insights")}
+              delta={weeklyDelta?.insights}
+            />
+            {unreadAlertCount > 0 && (
+              <PulseStat
+                label={t("pulseAlerts")}
+                value={numberFormatter.format(unreadAlertCount)}
+                tone="warning"
+                sparkline={buildSparkline(unreadAlertCount, "alerts")}
+                delta={weeklyDelta?.alerts}
+              />
+            )}
+          </div>
+
+          {freshness.tone === "warning" && (
+            <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 text-xs" onClick={onSyncNow} disabled={syncing}>
+              <RefreshCw className={cn("h-3.5 w-3.5", syncing && "motion-safe:animate-spin")} />
+              {syncing ? t("syncing") : t("syncNow")}
+            </Button>
+          )}
+        </div>
+      )}
     </header>
   );
 }
 
-function PulseStat({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "warning" | "neutral" }) {
+function PulseStat({
+  label,
+  value,
+  tone = "neutral",
+  sparkline,
+  delta,
+}: {
+  label: string;
+  value: string;
+  tone?: "warning" | "neutral";
+  sparkline?: number[];
+  delta?: WeeklyDelta | null;
+}) {
+  const deltaNum = delta ? delta.current - delta.previous : null;
+  const deltaLabel = deltaNum != null && deltaNum !== 0
+    ? `${deltaNum > 0 ? "+" : ""}${deltaNum} vs 7d`
+    : null;
+
   return (
-    <div className={cn("min-w-[92px] rounded-lg border px-2.5 py-1.5", tone === "warning" ? "border-warning/20 bg-warning/10" : "bg-muted/20")}>
-      <p className="stat-value text-sm font-semibold leading-none text-foreground">{value}</p>
-      <p className="mt-1 truncate text-caption text-muted-foreground">{label}</p>
+    <div className={cn(
+      "flex min-w-[92px] snap-start items-center gap-2 rounded-lg border px-2.5 py-1.5",
+      tone === "warning" ? "border-warning/20 bg-warning/10" : "bg-muted/20",
+    )}>
+      <div className="min-w-0">
+        <p className="stat-value text-sm font-semibold leading-none text-foreground">{value}</p>
+        <p className="mt-1 truncate text-caption text-muted-foreground">{label}</p>
+        {deltaLabel && (
+          <p className={cn(
+            "mt-0.5 truncate text-[10px] font-medium",
+            deltaNum! > 0 ? "text-primary" : "text-muted-foreground",
+          )}>
+            {deltaLabel}
+          </p>
+        )}
+      </div>
+      {sparkline && <MiniSparkline values={sparkline} height={12} barWidth={4} className="shrink-0 opacity-60" />}
     </div>
   );
 }
+
+// ─── TodayBrief (FIX 2) ──────────────────────────────────────────
 
 function TodayBrief({
   brief,
@@ -644,9 +810,8 @@ function TodayBrief({
   activeIndex,
   onSelectBrief,
   onOpen,
-  stats,
-  numberFormatter,
   hasData,
+  dateFnsLocale,
   onConnectSource,
 }: {
   brief: TodayBriefItem | null;
@@ -654,9 +819,8 @@ function TodayBrief({
   activeIndex: number;
   onSelectBrief: (index: number) => void;
   onOpen: () => void;
-  stats: DashboardStats;
-  numberFormatter: Intl.NumberFormat;
   hasData: boolean;
+  dateFnsLocale: Locale;
   onConnectSource: () => void;
 }) {
   const { t } = useTranslation("dashboard");
@@ -678,10 +842,21 @@ function TodayBrief({
   }
 
   const priorityStyle = PRIORITY_STYLES[brief.priority];
+  const confidencePct = brief.confidence != null ? Math.round(brief.confidence * 100) : null;
+  const detectedLabel = brief.createdAt
+    ? formatDistanceToNow(new Date(brief.createdAt), { addSuffix: true, locale: dateFnsLocale })
+    : null;
+  const sourceLabel = brief.sourceType
+    ? brief.sourceType.toLowerCase().includes("email") || brief.sourceType.toLowerCase().includes("newsletter")
+      ? t("briefFactEmail")
+      : brief.sourceType.toLowerCase().includes("ad")
+        ? t("briefFactAd")
+        : t("briefFactWeb")
+    : null;
 
   return (
-    <section className="rounded-xl border bg-card p-5 shadow-sm">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
+    <section className="motion-safe:animate-brief-appear rounded-xl border-l-4 border border-primary/40 bg-gradient-to-br from-primary/5 via-card to-card p-5 shadow-sm dark:from-primary/8 dark:to-card">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(240px,0.55fr)]">
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="text-caption font-semibold uppercase tracking-[0.08em] text-primary">{t("todaysBriefEyebrow")}</span>
@@ -700,7 +875,8 @@ function TodayBrief({
             )}
           </div>
 
-          <h1 className="max-w-3xl text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
+          {/* FIX 2: Larger title with more visual weight */}
+          <h1 className="max-w-3xl text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl lg:text-4xl">
             {brief.headline}
           </h1>
 
@@ -715,10 +891,11 @@ function TodayBrief({
             </div>
           </div>
 
+          {/* FIX 2: Smaller badges, less prominent */}
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            {brief.competitor && <Badge variant="secondary" className="rounded-md">{brief.competitor}</Badge>}
-            {brief.category && <Badge variant="outline" className="rounded-md capitalize">{brief.category}</Badge>}
-            <Badge variant="outline" className={cn("rounded-md capitalize", priorityStyle.badgeClassName)}>
+            {brief.competitor && <Badge variant="secondary" className="rounded-md text-[10px]">{brief.competitor}</Badge>}
+            {brief.category && <Badge variant="outline" className="rounded-md text-[10px] capitalize">{brief.category}</Badge>}
+            <Badge variant="outline" className={cn("rounded-md text-[10px] capitalize", priorityStyle.badgeClassName)}>
               {t(PRIORITY_LABEL_KEYS[brief.priority])}
             </Badge>
             <Button size="sm" className="ml-0 h-9 gap-1.5 text-xs sm:ml-auto" onClick={onOpen}>
@@ -728,17 +905,35 @@ function TodayBrief({
           </div>
         </div>
 
-        <div className="rounded-lg border bg-muted/20 p-3">
-          <div className="mb-3 flex items-center gap-1.5 border-b pb-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
-            <span className="ml-2 text-caption font-medium text-muted-foreground">{t("briefPreview")}</span>
-          </div>
+        {/* FIX 2: Replace Live preview with BriefFactCard */}
+        <div className="rounded-lg border bg-muted/20 p-4">
+          <p className="mb-3 text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {t("briefFactSource")}
+          </p>
           <div className="space-y-3">
-            <PreviewMetric label={t("pulseSignals")} value={numberFormatter.format(stats.inboxItems + stats.metaAds)} />
-            <PreviewMetric label={t("pulseCompetitors")} value={numberFormatter.format(stats.competitors)} />
-            <PreviewMetric label={t("pulseInsights")} value={numberFormatter.format(stats.insightCount)} />
+            {brief.competitor && (
+              <BriefFactRow label={t("pulseCompetitors")} value={brief.competitor} />
+            )}
+            {sourceLabel && (
+              <BriefFactRow label={t("briefFactSource")} value={sourceLabel} />
+            )}
+            {detectedLabel && (
+              <BriefFactRow label={t("briefFactDetected")} value={detectedLabel} />
+            )}
+            {confidencePct != null && (
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{t("briefFactConfidence")}</span>
+                  <span className="stat-value text-sm font-semibold text-foreground">{confidencePct}%</span>
+                </div>
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${confidencePct}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -746,7 +941,7 @@ function TodayBrief({
   );
 }
 
-function PreviewMetric({ label, value }: { label: string; value: string }) {
+function BriefFactRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-xs text-muted-foreground">{label}</span>
@@ -755,6 +950,8 @@ function PreviewMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
+// ─── ActionQueue (FIX 3) ──────────────────────────────────────────
+
 function ActionQueue({ actions, onNavigate }: { actions: DashboardRecommendedAction[]; onNavigate: (href: string) => void }) {
   const { t } = useTranslation("dashboard");
 
@@ -762,11 +959,21 @@ function ActionQueue({ actions, onNavigate }: { actions: DashboardRecommendedAct
     <section className="rounded-xl border bg-card p-4 shadow-sm">
       <SectionHeader title={t("actionQueue")} subtitle={t("actionQueueSubtitle")} />
       {actions.length === 0 ? (
-        <DashboardEmptyState title={t("actionQueueEmptyTitle")} description={t("actionQueueEmptyDesc")} className="mt-4" />
+        <DashboardEmptyState
+          title={t("actionQueueEmptyTitle")}
+          description={t("actionQueueEmptyDesc")}
+          icon={<CheckCircle2 className="h-8 w-8 text-success" />}
+          className="mt-4"
+        />
       ) : (
         <div className="mt-3 divide-y">
-          {actions.map((action) => (
-            <ActionQueueRow key={`${action.title}-${action.path}`} action={action} onClick={() => onNavigate(action.path)} />
+          {actions.map((action, index) => (
+            <ActionQueueRow
+              key={`${action.title}-${action.path}`}
+              action={action}
+              onClick={() => onNavigate(action.path)}
+              index={index}
+            />
           ))}
         </div>
       )}
@@ -774,20 +981,43 @@ function ActionQueue({ actions, onNavigate }: { actions: DashboardRecommendedAct
   );
 }
 
-const ActionQueueRow = memo(function ActionQueueRow({ action, onClick }: { action: DashboardRecommendedAction; onClick: () => void }) {
+const ActionQueueRow = memo(function ActionQueueRow({
+  action,
+  onClick,
+  index,
+}: {
+  action: DashboardRecommendedAction;
+  onClick: () => void;
+  index: number;
+}) {
   const { t } = useTranslation("dashboard");
   const priority = normalizeDashboardPriority(action.priority);
   const style = PRIORITY_STYLES[priority];
+  const iconName = getActionIconName(action.title);
+  const Icon = ACTION_ICONS[iconName];
 
   return (
     <button
-      className="group flex min-h-14 w-full items-center gap-3 py-3 text-left outline-none transition-transform duration-200 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className={cn(
+        "group flex min-h-14 w-full items-center gap-3 border-l-[3px] border-transparent py-3 pl-3 pr-2 text-left outline-none transition-all duration-200",
+        "hover:-translate-y-0.5 hover:border-l-primary hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring",
+        "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+        // FIX 3: Priority-based background tinting
+        priority === "high" && "border-l-destructive/40 bg-destructive/5",
+        priority === "medium" && "border-l-warning/40 bg-warning/5",
+        "motion-safe:animate-row-stagger",
+      )}
+      style={{ animationDelay: `${index * 60}ms` }}
       onClick={onClick}
       title={`${action.title}. ${action.detail}`}
     >
-      <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", style.dotClassName)} />
+      {/* FIX 3: Context icon instead of dot */}
+      <Icon className={cn("h-4 w-4 shrink-0", style.dotClassName.replace("bg-", "text-"))} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-foreground">{action.title}</span>
+        <span className={cn(
+          "block truncate text-sm text-foreground",
+          priority === "high" ? "font-semibold" : priority === "medium" ? "font-medium" : "font-normal",
+        )}>{action.title}</span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">{action.detail}</span>
       </span>
       <Badge variant="outline" className={cn("hidden rounded-md text-caption capitalize sm:inline-flex", style.badgeClassName)}>
@@ -798,17 +1028,20 @@ const ActionQueueRow = memo(function ActionQueueRow({ action, onClick }: { actio
   );
 });
 
+// ─── SignalStream (FIX 4) ─────────────────────────────────────────
+
 function SignalStream({ signals, onNavigate, compact }: { signals: SignalItem[]; onNavigate: (href: string) => void; compact?: boolean }) {
   const { t } = useTranslation("dashboard");
-  const [activeSignalId, setActiveSignalId] = useState<string | null>(signals[0]?.id ?? null);
+  const [activeFilter, setActiveFilter] = useState<SignalCategory | "all">("all");
 
-  useEffect(() => {
-    if (!signals.some((signal) => signal.id === activeSignalId)) {
-      setActiveSignalId(signals[0]?.id ?? null);
-    }
-  }, [signals, activeSignalId]);
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: signals.length };
+    for (const cat of SIGNAL_CATEGORIES) counts[cat] = 0;
+    for (const s of signals) counts[s.category] = (counts[s.category] ?? 0) + 1;
+    return counts;
+  }, [signals]);
 
-  const activeSignal = signals.find((signal) => signal.id === activeSignalId) ?? signals[0] ?? null;
+  const filtered = activeFilter === "all" ? signals : signals.filter((s) => s.category === activeFilter);
 
   return (
     <section className="rounded-xl border bg-card shadow-sm">
@@ -820,7 +1053,28 @@ function SignalStream({ signals, onNavigate, compact }: { signals: SignalItem[];
         </div>
       </div>
 
-      {signals.length === 0 ? (
+      {/* FIX 4: Filter chips */}
+      {signals.length > 0 && !compact && (
+        <div className="scrollbar-thin flex gap-1.5 overflow-x-auto border-b px-4 py-2">
+          <FilterChip
+            label={t("filterAll")}
+            count={categoryCounts.all}
+            active={activeFilter === "all"}
+            onClick={() => setActiveFilter("all")}
+          />
+          {SIGNAL_CATEGORIES.map((cat) => (
+            <FilterChip
+              key={cat}
+              label={t(SIGNAL_CATEGORY_STYLES[cat].labelKey)}
+              count={categoryCounts[cat] ?? 0}
+              active={activeFilter === cat}
+              onClick={() => setActiveFilter(cat)}
+            />
+          ))}
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
         <DashboardEmptyState
           title={t("signalStreamEmptyTitle")}
           description={t("signalStreamEmptyDesc")}
@@ -829,23 +1083,17 @@ function SignalStream({ signals, onNavigate, compact }: { signals: SignalItem[];
         />
       ) : (
         <>
+          {/* FIX 4: Removed preview block, streamlined rows */}
           <div className="divide-y" aria-live="polite">
-            {signals.map((signal) => (
+            {filtered.map((signal, index) => (
               <SignalRow
                 key={signal.id}
                 signal={signal}
                 onClick={() => onNavigate(signal.href)}
-                onActive={() => setActiveSignalId(signal.id)}
+                index={index}
               />
             ))}
           </div>
-          {!compact && activeSignal && (
-            <div className="hidden border-t bg-muted/20 p-4 lg:block">
-              <p className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("signalPreview")}</p>
-              <p className="mt-2 text-sm font-medium text-foreground">{activeSignal.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{activeSignal.detail}</p>
-            </div>
-          )}
           <div className="border-t px-4 py-3">
             <Button variant="ghost" size="sm" className="h-9 gap-1.5 px-0 text-xs" onClick={() => onNavigate("/inbox")}>
               {t("viewAllSignals")}
@@ -858,36 +1106,56 @@ function SignalStream({ signals, onNavigate, compact }: { signals: SignalItem[];
   );
 }
 
-function SignalRow({ signal, onClick, onActive }: { signal: SignalItem; onClick: () => void; onActive: () => void }) {
+function FilterChip({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-caption transition-colors",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : count === 0
+            ? "border-border bg-muted/20 text-muted-foreground/50"
+            : "border-border bg-muted/20 text-muted-foreground hover:bg-accent/10",
+      )}
+      onClick={onClick}
+    >
+      {label}
+      <span className="font-semibold">{count}</span>
+    </button>
+  );
+}
+
+function SignalRow({ signal, onClick, index }: { signal: SignalItem; onClick: () => void; index: number }) {
   const { t } = useTranslation("dashboard");
   const category = SIGNAL_CATEGORY_STYLES[signal.category];
   const priority = signal.priority ? PRIORITY_STYLES[normalizeDashboardPriority(signal.priority)] : null;
 
   return (
     <button
-      className="group flex min-h-[52px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring"
+      className={cn(
+        "group flex min-h-[44px] w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring",
+        "motion-safe:animate-row-stagger",
+      )}
+      style={{ animationDelay: `${index * 40}ms` }}
       onClick={onClick}
-      onFocus={onActive}
-      onMouseEnter={onActive}
     >
-      <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", priority?.dotClassName ?? category.dotClassName)} />
-      <span className="min-w-0 flex-1">
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-sm font-medium text-foreground">{signal.title}</span>
-          <Badge variant="outline" className={cn("hidden rounded-md text-caption sm:inline-flex", category.badgeClassName)}>
-            {t(category.labelKey)}
-          </Badge>
-        </span>
-        <span className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-          {signal.competitor && <span className="truncate">{signal.competitor}</span>}
-          {signal.competitor && <span className="h-1 w-1 rounded-full bg-border" />}
-          <span className="truncate">{signal.detail}</span>
-        </span>
+      <span className={cn("h-2 w-2 shrink-0 rounded-full", priority?.dotClassName ?? category.dotClassName)} />
+      <Badge variant="outline" className={cn("hidden shrink-0 rounded-md text-caption sm:inline-flex", category.badgeClassName)}>
+        {t(category.labelKey)}
+      </Badge>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+        {signal.title}
+        <span className="ml-2 font-normal text-muted-foreground">· {signal.detail}</span>
       </span>
+      {signal.competitor && (
+        <span className="hidden shrink-0 truncate text-caption text-muted-foreground lg:inline">{signal.competitor}</span>
+      )}
       <span className="shrink-0 text-caption text-muted-foreground/70">{signal.timestamp}</span>
     </button>
   );
 }
+
+// ─── CompetitorPulse (FIX 5) ─────────────────────────────────────
 
 function CompetitorPulse({
   competitors,
@@ -913,9 +1181,11 @@ function CompetitorPulse({
       <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
         <SectionHeader title={t("competitorPulse")} subtitle={t("competitorPulseSubtitle")} compact />
         {limitReached && (
-          <Badge variant="outline" className="rounded-md border-warning/20 bg-warning/10 text-caption text-warning">
-            {t("planLimitReached")}
-          </Badge>
+          <button onClick={() => onNavigate("/billing")}>
+            <Badge variant="outline" className="cursor-pointer rounded-md border-warning/20 bg-warning/10 text-caption text-warning hover:bg-warning/20">
+              {t("planLimitReached")}
+            </Badge>
+          </button>
         )}
       </div>
 
@@ -928,29 +1198,48 @@ function CompetitorPulse({
         />
       ) : (
         <div className="divide-y">
-          {competitors.map((competitor) => (
+          {competitors.map((competitor, index) => (
             <CompetitorPulseRow
               key={competitor.id}
               competitor={competitor}
               numberFormatter={numberFormatter}
               onClick={() => onNavigate("/competitors")}
+              index={index}
             />
           ))}
-          {!compact && !limitReached && (
-            <button
-              className="flex min-h-[52px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => onNavigate("/competitors")}
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
-                <Plus className="h-4 w-4" />
-              </span>
-              <span className="text-sm font-medium text-foreground">{t("trackAnother")}</span>
-              {limit > 0 && (
-                <span className="ml-auto text-caption text-muted-foreground">
-                  {numberFormatter.format(totalCompetitors)}/{numberFormatter.format(limit)}
+          {/* FIX 5: Disabled "+ Track another" with tooltip when at limit */}
+          {!compact && (
+            limitReached ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex min-h-[52px] w-full cursor-not-allowed items-center gap-3 px-4 py-3 opacity-50">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+                      <Plus className="h-4 w-4" />
+                    </span>
+                    <span className="text-sm font-medium text-muted-foreground">{t("trackAnother")}</span>
+                    <span className="ml-auto text-caption text-muted-foreground">
+                      {numberFormatter.format(totalCompetitors)}/{numberFormatter.format(limit)}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs">{t("upgradeToTrackMore")}</TooltipContent>
+              </Tooltip>
+            ) : (
+              <button
+                className="flex min-h-[52px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => onNavigate("/competitors")}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+                  <Plus className="h-4 w-4" />
                 </span>
-              )}
-            </button>
+                <span className="text-sm font-medium text-foreground">{t("trackAnother")}</span>
+                {limit > 0 && (
+                  <span className="ml-auto text-caption text-muted-foreground">
+                    {numberFormatter.format(totalCompetitors)}/{numberFormatter.format(limit)}
+                  </span>
+                )}
+              </button>
+            )
           )}
         </div>
       )}
@@ -969,32 +1258,58 @@ function CompetitorPulseRow({
   competitor,
   numberFormatter,
   onClick,
+  index,
 }: {
   competitor: CompetitorPulseItem;
   numberFormatter: Intl.NumberFormat;
   onClick: () => void;
+  index: number;
 }) {
   const { t } = useTranslation("dashboard");
-  const TrendIcon = competitor.trend === "up" ? TrendingUp : competitor.trend === "down" ? TrendingDown : CheckCircle2;
-  const trendClass = competitor.trend === "up" ? "text-warning" : competitor.trend === "down" ? "text-muted-foreground" : "text-success";
+  const hasActivity = competitor.totalSignals > 0;
 
   return (
     <button
-      className="group flex min-h-[58px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring"
+      className={cn(
+        "group flex min-h-[58px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring",
+        "motion-safe:animate-row-stagger",
+      )}
+      style={{ animationDelay: `${index * 50}ms` }}
       onClick={onClick}
     >
       <CompetitorLogo name={competitor.name} website={competitor.website} size="xs" />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium text-foreground">{competitor.name}</span>
         <span className="mt-0.5 block text-caption text-muted-foreground">
-          {t("signalsCount", { value: numberFormatter.format(competitor.totalSignals) })}
+          {/* FIX 5: "No activity detected" instead of "0 signals" */}
+          {hasActivity
+            ? t("signalsCount", { value: numberFormatter.format(competitor.totalSignals) })
+            : t("noActivityDetected")}
         </span>
       </span>
-      <MiniSparkline values={competitor.sparkline} title={t("sparklineLabel", { name: competitor.name })} />
-      <TrendIcon className={cn("h-4 w-4 shrink-0", trendClass)} />
+      {/* FIX 5: Dashed line for empty sparklines, functional bars otherwise */}
+      <MiniSparkline
+        values={competitor.sparkline}
+        empty={!hasActivity}
+        title={hasActivity ? t("sparklineLabel", { name: competitor.name }) : undefined}
+      />
+      {/* FIX 5: Trend arrows only when data exists, no icon for zero */}
+      {hasActivity ? (
+        competitor.trend === "up" ? (
+          <TrendingUp className="h-4 w-4 shrink-0 text-warning" />
+        ) : competitor.trend === "down" ? (
+          <TrendingDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <Minus className="h-4 w-4 shrink-0 text-success" />
+        )
+      ) : (
+        <span className="h-4 w-4 shrink-0" />
+      )}
     </button>
   );
 }
+
+// ─── Shared UI ────────────────────────────────────────────────────
 
 function SectionHeader({ title, subtitle, compact }: { title: string; subtitle?: string; compact?: boolean }) {
   return (
