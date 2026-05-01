@@ -5,8 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  BarChart3, Sparkles, Zap, ArrowRight, Check, Users,
-  Lightbulb, TrendingUp, Bell, ChevronDown, Brain, LineChart,
+  BarChart3, Sparkles, ArrowRight, Check, Users,
+  Lightbulb, TrendingUp, Bell, ChevronDown, LineChart,
   Target, Search, ShieldCheck, BarChart, Menu, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ import DashboardPreview from "@/components/homepage/DashboardPreview";
 import SignalRadar from "@/components/homepage/SignalRadar";
 import StatsStrip from "@/components/homepage/StatsStrip";
 import ProblemSection from "@/components/homepage/ProblemSection";
+import SolutionSection from "@/components/homepage/SolutionSection";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -286,32 +287,8 @@ export default function Index() {
           <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
         </div>
 
-        {/* Solution */}
-        <div className="text-center mb-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/60 mb-4">{t("solution.badge")}</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
-            {t("solution.headline")}<br className="hidden sm:block" />
-            {t("solution.headlineSub")}
-          </h2>
-          <p className="text-base text-muted-foreground max-w-lg mx-auto mt-5 leading-relaxed">
-            {t("solution.desc")}
-          </p>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
-          {[
-            { icon: Zap, title: t("solution.card1Title"), desc: t("solution.card1Desc") },
-            { icon: Brain, title: t("solution.card2Title"), desc: t("solution.card2Desc") },
-            { icon: Target, title: t("solution.card3Title"), desc: t("solution.card3Desc") },
-          ].map((s) => (
-            <div key={s.title} className="rounded-lg border p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-5">
-                <s.icon className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-base font-semibold text-foreground mb-2">{s.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-            </div>
-          ))}
-        </div>
+        {/* Solution — animated mirror of Problem */}
+        <SolutionSection />
       </section>
 
       {/* ─── How It Works ─── */}

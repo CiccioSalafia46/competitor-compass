@@ -59,11 +59,11 @@
     "headlineSub": "Céntrate en la estrategia, no en recopilar datos.",
     "desc": "Tracklyze se conecta a tus fuentes de datos, monitorea continuamente la actividad de los competidores y utiliza IA para destacar las señales que realmente importan a tu negocio.",
     "card1Title": "Recopilación centralizada",
-    "card1Desc": "Todas las comunicaciones, campañas y señales de la competencia en una plataforma organizada y con búsqueda. Sin más seguimiento disperso.",
-    "card2Title": "Análisis potenciado por IA",
-    "card2Desc": "Modelos avanzados extraen señales de precios, estrategias promocionales, ángulos de mensaje y posicionamiento competitivo — automáticamente.",
-    "card3Title": "Acción estratégica",
-    "card3Desc": "Recibe alertas cuando los competidores hagan movimientos. Obtén recomendaciones generadas por IA sobre las que tu equipo puede actuar de inmediato."
+    "card1Desc": "Todos los movimientos de tus competidores en una vista organizada. Emails, ads, pricing, contenido, contrataciones — un solo lugar, siempre actualizado, siempre buscable.",
+    "card2Title": "Automatización IA que trabaja por ti",
+    "card2Desc": "Mientras trabajas, duermes o estás en reuniones, la IA recopila, compara y analiza por ti. El trabajo manual que te roba horas ya no existe.",
+    "card3Title": "Ninguna señal se te escapa",
+    "card3Desc": "Cambio de precio, nueva campaña, shift de mensaje: recibes la alerta con contexto y recomendación. Ya no persigues — anticipas."
   },
   "howItWorks": {
     "badge": "Cómo funciona",

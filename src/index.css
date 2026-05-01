@@ -499,6 +499,47 @@
   animation: problem-signal-fall 1s ease-in forwards;
 }
 
+/* ── Solution Section Animations ─────────────────────────────────── */
+
+/* Card 3: Sensor pulse */
+@keyframes solution-sensor-pulse {
+  0%, 100% { opacity: 0.4; r: 1.5; }
+  50% { opacity: 0.8; r: 2; }
+}
+.solution-sensor-pulse {
+  animation: solution-sensor-pulse 2s ease-in-out infinite;
+}
+
+/* Card 3: Signal appear */
+@keyframes solution-signal-appear {
+  0% { opacity: 0; transform: scale(0.5); }
+  30% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.solution-signal-appear {
+  animation: solution-signal-appear 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Card 3: Capture ring */
+@keyframes solution-capture-ring {
+  0% { r: 3.5; opacity: 0.6; }
+  100% { r: 8; opacity: 0; }
+}
+.solution-capture-ring {
+  animation: solution-capture-ring 0.6s ease-out forwards;
+}
+
+/* Card 3: Tag rises into position */
+@keyframes solution-tag-rise {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.solution-tag-rise {
+  animation: solution-tag-rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
 /* Reduced motion: freeze all stats animations at final state */
 @media (prefers-reduced-motion: reduce) {
   .stats-bar-manual,
@@ -539,7 +580,19 @@
   .problem-doc-float,
   .problem-signal-pulse,
   .problem-signal-ring,
-  .problem-signal-fall {
+  .problem-signal-fall,
+  .solution-sensor-pulse,
+  .solution-signal-appear,
+  .solution-capture-ring,
+  .solution-tag-rise {
     animation: none !important;
+  }
+  .solution-signal-appear {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+  }
+  .solution-tag-rise {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
   }
 }

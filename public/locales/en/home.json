@@ -59,11 +59,11 @@
     "headlineSub": "Focus on strategy, not data collection.",
     "desc": "Tracklyze connects to your data sources, monitors competitor activity continuously, and uses AI to surface the signals that actually matter to your business.",
     "card1Title": "Centralized collection",
-    "card1Desc": "All competitor communications, campaigns, and signals in one searchable, organized platform. No more scattered tracking.",
-    "card2Title": "AI-powered analysis",
-    "card2Desc": "Advanced models extract pricing signals, promotional strategies, messaging angles, and competitive positioning — automatically.",
-    "card3Title": "Strategic action",
-    "card3Desc": "Get alerts when competitors make moves. Receive AI-generated recommendations your team can act on immediately."
+    "card1Desc": "All your competitors' moves in one organized view. Emails, ads, pricing, content, hiring — one place, always updated, always searchable.",
+    "card2Title": "AI automation that works for you",
+    "card2Desc": "While you work, sleep, or sit in meetings, the AI collects, compares, and analyzes for you. The manual work that steals your hours no longer exists.",
+    "card3Title": "No signal escapes you",
+    "card3Desc": "Pricing change, new campaign, messaging shift: you get the alert with context and recommendation. You no longer chase — you anticipate."
   },
   "howItWorks": {
     "badge": "How it works",

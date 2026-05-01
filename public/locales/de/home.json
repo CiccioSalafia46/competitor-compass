@@ -59,11 +59,11 @@
     "headlineSub": "Fokus auf Strategie, nicht auf Datenerfassung.",
     "desc": "Tracklyze verbindet sich mit deinen Datenquellen, überwacht Wettbewerberaktivitäten kontinuierlich und nutzt KI, um die Signale hervorzuheben, die für dein Business wirklich zählen.",
     "card1Title": "Zentralisierte Erfassung",
-    "card1Desc": "Alle Wettbewerber-Kommunikation, Kampagnen und Signale auf einer durchsuchbaren, organisierten Plattform. Kein zersplittertes Tracking mehr.",
-    "card2Title": "KI-gestützte Analyse",
-    "card2Desc": "Fortschrittliche Modelle extrahieren Preissignale, Promotion-Strategien, Messaging-Ansätze und Wettbewerbs-Positioning — automatisch.",
-    "card3Title": "Strategisches Handeln",
-    "card3Desc": "Erhalte Alerts, wenn Wettbewerber Schritte unternehmen. Nutze KI-generierte Empfehlungen, auf die dein Team sofort reagieren kann."
+    "card1Desc": "Alle Bewegungen deiner Wettbewerber in einer organisierten Ansicht. E-Mails, Ads, Pricing, Content, Hiring — ein Ort, immer aktuell, immer durchsuchbar.",
+    "card2Title": "KI-Automatisierung, die für dich arbeitet",
+    "card2Desc": "Während du arbeitest, schläfst oder in Meetings sitzt, sammelt, vergleicht und analysiert die KI für dich. Die manuelle Arbeit, die dir Stunden raubt, existiert nicht mehr.",
+    "card3Title": "Kein Signal entgeht dir",
+    "card3Desc": "Preisänderung, neue Kampagne, Messaging-Shift: Du erhältst den Alert mit Kontext und Empfehlung. Du jagst nicht mehr hinterher — du antizipierst."
   },
   "howItWorks": {
     "badge": "So funktioniert's",
