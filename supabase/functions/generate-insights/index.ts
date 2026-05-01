@@ -517,6 +517,17 @@ function normalizeInsight(
     return null;
   }
 
+  // Reject insights where title and why_it_matters overlap too heavily.
+  // Content words = words longer than 3 chars (skip "the", "and", "is", etc.).
+  const contentWords = (text: string) =>
+    new Set(text.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter((w) => w.length > 3));
+  const titleWords = contentWords(title);
+  const whyWords = contentWords(whyItMatters);
+  const overlapCount = [...titleWords].filter((w) => whyWords.has(w)).length;
+  if (titleWords.size > 0 && overlapCount > Math.min(titleWords.size, whyWords.size) * 0.5) {
+    return null;
+  }
+
   return {
     category,
     title,
@@ -1443,7 +1454,13 @@ Deno.serve(async (req) => {
         {
           role: "system",
           content:
-            `You are a principal competitive-intelligence analyst and senior marketing strategist. Produce dense, quantified, non-generic insights for a SaaS user monitoring competitor newsletters and paid ads. Each insight must be specific, commercially useful, grounded in the provided data, and written to help a team decide what to do next. Your output must be structurally consistent and analytics-ready. Write all narrative text fields (title, main_message, what_is_happening, why_it_matters, strategic_implication, strategic_takeaway, recommended_response, cta_analysis, positioning_angle, and evidence detail fields) in ${languageName}. JSON keys, competitor names, brand names, URLs, coupon codes, and numeric values must remain unchanged regardless of language.`,
+            `You are a principal competitive-intelligence analyst and senior marketing strategist. Produce dense, quantified, non-generic insights for a SaaS user monitoring competitor newsletters and paid ads. Each insight must be specific, commercially useful, grounded in the provided data, and written to help a team decide what to do next. Your output must be structurally consistent and analytics-ready. Write all narrative text fields (title, main_message, what_is_happening, why_it_matters, strategic_implication, strategic_takeaway, recommended_response, cta_analysis, positioning_angle, and evidence detail fields) in ${languageName}. JSON keys, competitor names, brand names, URLs, coupon codes, and numeric values must remain unchanged regardless of language.
+
+STRICT FIELD DIFFERENTIATION RULES — these override any default tendencies:
+- title: max 8 words. Format: Subject + Verb + Object. NEVER use category labels like "New campaign signal" or "Pricing update detected". Be specific about WHO did WHAT. Good: "Lovable tests email-first campaign coordination". Bad: "New email strategy detected".
+- why_it_matters: MUST explain the strategic IMPLICATION, not restate the fact from the title. Reference market patterns, correlations, or downstream effects on demand, conversion, pricing power, or share of voice. Start with a causal framing ("Because...", "This suggests...", "Historically when competitors..."). 1-2 sentences only.
+- recommended_response: imperative voice, time-bound, specific. Tell the user what to do THIS WEEK. Reference the competitor or pattern by name. Must contain a concrete action verb (audit, launch, test, increase, reduce, compare), never "monitor", "watch closely", or "stay ahead".
+- DEDUPLICATION RULE: title = the FACT, why_it_matters = the CONSEQUENCE, recommended_response = the ACTION. If any two share more than 50% of their meaningful content words, regenerate the overlapping field with stronger distinction. Validate this before returning.`,
         },
         {
           role: "user",

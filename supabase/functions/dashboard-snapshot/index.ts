@@ -107,6 +107,8 @@ Deno.serve(async (req) => {
       analysesUsageCount,
       seatsCount,
       analyticsResult,
+      weeklyDeltaResult,
+      heatmapResult,
     ] = await Promise.all([
       supabase.from("workspaces").select("id, name").eq("id", workspaceId).maybeSingle(),
       supabase.from("workspace_billing").select("plan_key").eq("workspace_id", workspaceId).maybeSingle(),
@@ -165,6 +167,8 @@ Deno.serve(async (req) => {
         .select("id", { count: "exact", head: true })
         .eq("workspace_id", workspaceId),
       supabase.rpc("get_workspace_analytics", { _workspace_id: workspaceId }),
+      supabase.rpc("get_dashboard_weekly_delta", { _workspace_id: workspaceId }),
+      supabase.rpc("get_competitor_daily_activity", { _workspace_id: workspaceId, _days: 30 }),
     ]);
 
     const firstError =
@@ -190,6 +194,12 @@ Deno.serve(async (req) => {
 
     if (analyticsResult.error) {
       console.error("[dashboard-snapshot] analytics RPC failed", analyticsResult.error);
+    }
+    if (weeklyDeltaResult.error) {
+      console.error("[dashboard-snapshot] weekly-delta RPC failed", weeklyDeltaResult.error);
+    }
+    if (heatmapResult.error) {
+      console.error("[dashboard-snapshot] heatmap RPC failed", heatmapResult.error);
     }
 
     const planTier = normalizePlanTier((billingResult.data as BillingRow | null)?.plan_key);
@@ -250,6 +260,8 @@ Deno.serve(async (req) => {
       recentInbox: ((recentInboxResult.data ?? []) as InboxPreview[]),
       competitors: ((competitorsResult.data ?? []) as CompetitorPreview[]),
       decisionModel,
+      weeklyDelta: weeklyDeltaResult.error ? null : (weeklyDeltaResult.data ?? null),
+      heatmap: heatmapResult.error ? null : (Array.isArray(heatmapResult.data) ? heatmapResult.data : null),
     });
   } catch (error) {
     const message = getErrorMessage(error);
