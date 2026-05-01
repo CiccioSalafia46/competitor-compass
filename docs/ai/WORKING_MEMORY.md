@@ -19,13 +19,13 @@ Raccoglie dati competitor da Gmail e da input manuale, li analizza con OpenAI e 
 - Frontend React/Vite funzionante
 - Backend su Supabase funzionante
 - `build`, `test` e `lint` passano localmente
-- il dashboard e stato spostato verso una decision interface:
-  - AI brief con `What changed today` e `What matters most`
-  - highlights giornalieri
-  - filtri rapidi per competitor e campaign type
-  - azioni raccomandate
-  - anomaly radar
-  - competitor pressure summary
+- il dashboard e stato ridisegnato secondo il principio `Daily Brief First`:
+  - header con periodo, micro-stat e stato freshness/sync
+  - una sola card hero `Today's Brief` con headline, why it matters e suggested action
+  - action queue compatta max 3 elementi
+  - signal stream unificato al posto di highlights/activity separati
+  - competitor pulse compatto con sparkline SVG inline
+  - system health collassabile, auto-espanso solo quando stale/fail
 - il dashboard principale legge ora uno snapshot server-side da `dashboard-snapshot`
 - il bootstrap client di dashboard/admin/billing e stato stabilizzato usando dipendenze hook basate su ID/token stabili invece di object reference variabili
 - Analytics usa una RPC Postgres arricchita (`get_workspace_analytics`) con range selector, coverage audit, sender domains, share-of-voice, competitor pressure, discount posture e recent signals

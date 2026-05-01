@@ -69,7 +69,7 @@ Per dettagli architetturali o rischi usare anche:
 | Competitor metadata | Complete | DB `competitors` | supporta `website`, `description`, `domains`, `tags`, `is_monitored` |
 | Competitor-to-inbox backfill | Complete | `sync_competitor_newsletter_attribution`, `sync_workspace_newsletter_attribution`, `src/pages/Competitors.tsx`, `src/pages/NewsletterInbox.tsx` | collega newsletter Gmail storiche ai competitor in base a website/domains, con supporto sottodomini e risoluzione prudente dei casi ambigui |
 | Competitor intelligence profile | Complete | `src/pages/Competitors.tsx`, `src/hooks/useCompetitorIntelligence.tsx`, `supabase/functions/competitor-intelligence`, `src/lib/competitor-intelligence.ts` | vista strategica per competitor con timeline campagne, messaging evolution, promo behavior, category focus, strengths/weaknesses, strategic gaps e opportunities |
-| Competitor overview on dashboard | Complete | `src/pages/Dashboard.tsx` | lista + KPI |
+| Competitor overview on dashboard | Complete | `src/pages/Dashboard.tsx`, `src/components/dashboard/MiniSparkline.tsx` | competitor pulse compatto con conteggi, trend e sparkline SVG inline |
 
 ## 6. Manual Content Ingestion
 
@@ -108,7 +108,7 @@ Per dettagli architetturali o rischi usare anche:
 
 | Feature | Stato | Dove | Note |
 | --- | --- | --- | --- |
-| Main dashboard | Complete | `src/pages/Dashboard.tsx`, `src/hooks/useDashboardSnapshot.tsx`, `supabase/functions/dashboard-snapshot`, `src/lib/dashboard-decision-engine.ts` | snapshot server-side + decision layer con AI brief (`What changed today`, `What matters most`), highlights giornalieri, filtri rapidi competitor/campaign type, azioni raccomandate, anomaly radar e competitor pressure summary |
+| Main dashboard | Complete | `src/pages/Dashboard.tsx`, `src/components/dashboard/*`, `src/hooks/useDashboardSnapshot.tsx`, `supabase/functions/dashboard-snapshot`, `src/lib/dashboard-decision-engine.ts` | snapshot server-side + decision layer presentato come `Daily Brief First`: header freshness, `Today's Brief` singolo, action queue max 3, signal stream unificato, competitor pulse e system health collassabile |
 | Workspace analytics | Complete | `src/pages/Analytics.tsx`, `src/lib/analytics-audit.ts`, RPC `get_workspace_analytics` | range selector 30/90/180, action queue, data health audit, share-of-voice, sender domains, competitor pressure, discount posture, cadence, competitor coverage e recent signals |
 | Insights feed | Complete | `src/pages/Insights.tsx`, `src/hooks/useInsights.tsx` | insight ordinati per priorita persisted `high/medium/low`, con evidence blocks, offers, CTA analysis, positioning angle e strategic takeaway |
 | Alert rules CRUD | Complete | `src/pages/Alerts.tsx`, `src/hooks/useAlerts.tsx` | regole per utente/workspace con modalita `event` / `scheduled` / `both` |

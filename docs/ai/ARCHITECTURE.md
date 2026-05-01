@@ -232,8 +232,11 @@ Il dashboard non e piu solo una raccolta di KPI. Esiste un layer di composizione
 - `competitorSummary`
 - `recommendedActions`
 
-Il consumer UI del dashboard aggiunge inoltre:
-- filtri rapidi per `competitor` e `campaign type`
+Il consumer UI del dashboard ora privilegia il flusso `Daily Brief First`:
+- header con filtro periodo, micro-stat e stato freshness/sync derivato da Gmail o inbox recente
+- `Today's Brief` singolo costruito da insight prioritari o highlight di fallback
+- action queue max 3, signal stream unificato e competitor pulse con sparkline SVG inline
+- system health collassabile, auto-espanso quando una sorgente e stale/fail
 - fallback compatibili con payload snapshot legacy o parziali
 
 Input usati:

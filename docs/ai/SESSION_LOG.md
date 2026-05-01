@@ -101,6 +101,14 @@ Regola:
 - Docs updated: `PROJECT_AUDIT.md`, `docs/ai/WORKING_MEMORY.md`, `docs/ai/HANDOFF_FOR_AI.md`, `docs/ai/ARCHITECTURE.md`, `docs/ai/FEATURES_INVENTORY.md`, `docs/ai/TECH_DEBT.md`, `docs/ai/DECISIONS_LOG.md`, `docs/ai/SESSION_LOG.md`
 - Next steps: verificare la UX reale su `localhost`, decidere se portare action queue/anomaly feed anche lato backend e valutare eventuali ottimizzazioni bundle della pagina Analytics
 
+### 2026-05-01 / dashboard-daily-brief-redesign
+
+- Objective: ridisegnare dashboard e sidebar Tracklyze in chiave `Daily Brief First`, frontend-only e senza modifiche a schema o Edge Functions
+- Changes made: rifatta la dashboard con header freshness, `Today's Brief` singolo, action queue compatta, signal stream unificato, competitor pulse con sparkline SVG inline, skeleton/empty states e system health collassabile con escalation su stale/fail; rifatta la sidebar in gruppi Workspace/Intelligence con contatori, Settings footer, Account menu, drawer mobile e stato collassato persistito in localStorage; aggiornate chiavi i18n dashboard/nav in 5 lingue
+- Files touched: `src/pages/Dashboard.tsx`, `src/components/dashboard/*`, `src/components/SystemHealthPanel.tsx`, `src/components/AppSidebar.tsx`, `src/components/ui/sidebar.tsx`, `src/components/ui/sheet.tsx`, `src/hooks/useDashboardSnapshot.tsx`, `public/locales/*/dashboard.json`, `public/locales/*/nav.json`, `docs/ai/*`
+- Docs updated: `docs/ai/WORKING_MEMORY.md`, `docs/ai/FEATURES_INVENTORY.md`, `docs/ai/ARCHITECTURE.md`, `docs/ai/DECISIONS_LOG.md`, `docs/ai/SESSION_LOG.md`
+- Next steps: verificare la resa browser su dati reali/mock, decidere se aggiungere bottom navigation mobile e se esporre activity giornaliera reale per competitor sparkline invece della distribuzione client-side temporanea
+
 ### 2026-04-06 / analytics-rpc-ordering-fix
 
 - Objective: ripristinare il caricamento della pagina Analytics su database gia migrati

@@ -48,7 +48,7 @@ Il repo e funzionante ma ha gap su scheduler, tipi Supabase, smoke test live del
   - membership role in `workspace_members`
   - app role in `user_roles`
 - `workspace_billing` e `platform_admins` sono nello schema recente ma non nei generated types browser attuali.
-- il dashboard usa `dashboard-snapshot` come fonte primaria e un decision layer condiviso (`src/lib/dashboard-decision-engine.ts`)
+- il dashboard usa `dashboard-snapshot` come fonte primaria e un decision layer condiviso (`src/lib/dashboard-decision-engine.ts`); la UI corrente segue `Daily Brief First` con brief singolo, action queue, signal stream, competitor pulse e health collassabile
 - `Competitors` usa `competitor-intelligence` come snapshot server-side per timeline, promo behavior, category focus e assessment strategico
 - gli insight sono ora persistiti con schema strutturato (`campaign_type`, `main_message`, `offer_*`, `cta_*`, `product_categories`, `positioning_angle`, `strategic_takeaway`, `priority_level`, `impact_area`)
 - il dominio newsletter manuale ha ora una queue leggera basata su `analyses` con `source_snapshot`, `attempt_count`, `max_attempts` e `validation_errors`
