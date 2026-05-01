@@ -5,9 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  BarChart3, Sparkles, ArrowRight, Check, Users,
-  Lightbulb, TrendingUp, Bell, ChevronDown, LineChart,
-  Target, ShieldCheck, BarChart, Menu, X,
+  BarChart3, ArrowRight, Check, Users,
+  Lightbulb, TrendingUp, ChevronDown,
+  Target, Menu, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -18,6 +18,7 @@ import StatsStrip from "@/components/homepage/StatsStrip";
 import ProblemSection from "@/components/homepage/ProblemSection";
 import SolutionSection from "@/components/homepage/SolutionSection";
 import HowItWorksSection from "@/components/homepage/HowItWorksSection";
+import PlatformExplorer from "@/components/homepage/PlatformExplorer";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -295,201 +296,8 @@ export default function Index() {
       {/* ─── How It Works — Interactive Demo ─── */}
       <HowItWorksSection />
 
-      {/* ─── Platform Features ─── */}
-      <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-        <div className="text-center mb-16">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("platform.badge")}</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            {t("platform.headline")}
-          </h2>
-          <p className="text-base text-muted-foreground mt-4 max-w-lg mx-auto leading-relaxed">
-            {t("platform.desc")}
-          </p>
-        </div>
-
-        <div className="space-y-20">
-          {/* Feature 1 */}
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mb-5">
-                <BarChart className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">
-                {t("platform.feature1Headline")}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                {t("platform.feature1Desc")}
-              </p>
-              <ul className="space-y-2.5">
-                {[
-                  t("platform.feature1Bullet1"),
-                  t("platform.feature1Bullet2"),
-                  t("platform.feature1Bullet3"),
-                  t("platform.feature1Bullet4"),
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-xl border border-border/40 bg-gradient-to-br from-muted/40 to-background p-6 sm:p-8 flex items-center justify-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-              <div className="w-full max-w-[280px] space-y-2.5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                  <p className="section-label text-muted-foreground/60">{t("platform.competitorActivityLabel")}</p>
-                </div>
-                {["Competitor A", "Competitor B", "Competitor C"].map((name, i) => (
-                  <div key={name} className="flex items-center justify-between rounded-lg bg-card border px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-caption font-bold text-primary">
-                        {name.charAt(11)}
-                      </div>
-                      <span className="text-xs font-medium text-foreground">{name}</span>
-                    </div>
-                    <Badge variant="outline" className="text-caption bg-background">{[12, 7, 5][i]} {t("platform.signalSuffix")}</Badge>
-                  </div>
-                ))}
-                <div className="flex gap-1.5 pt-1 flex-wrap">
-                  <Badge variant="outline" className="text-caption bg-card">{t("platform.priceChanges")}</Badge>
-                  <Badge variant="outline" className="text-caption bg-card">{t("platform.promotions")}</Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 2 */}
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <div className="order-2 lg:order-1 rounded-xl border border-border/40 bg-gradient-to-br from-muted/40 to-background p-6 sm:p-8 flex items-center justify-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-              <div className="w-full max-w-[260px] space-y-2.5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                  <p className="section-label text-muted-foreground/60">{t("platform.aiExtractionLabel")}</p>
-                </div>
-                {[
-                  { label: t("platform.pricingSignal"), conf: "94%", w: "94%" },
-                  { label: t("platform.campaignType"), conf: "89%", w: "89%" },
-                  { label: t("platform.urgencyLevel"), conf: "91%", w: "91%" },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-lg bg-card border px-3 py-2.5 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-caption text-muted-foreground">{item.label}</span>
-                      <span className="text-caption font-bold text-primary">{item.conf}</span>
-                    </div>
-                    <div className="h-1 rounded-full bg-primary/10 overflow-hidden">
-                      <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: item.w }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="order-1 lg:order-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mb-5">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">
-                {t("platform.feature2Headline")}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                {t("platform.feature2Desc")}
-              </p>
-              <ul className="space-y-2.5">
-                {[
-                  t("platform.feature2Bullet1"),
-                  t("platform.feature2Bullet2"),
-                  t("platform.feature2Bullet3"),
-                  t("platform.feature2Bullet4"),
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Feature 3 */}
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mb-5">
-                <Bell className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">
-                {t("platform.feature3Headline")}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                {t("platform.feature3Desc")}
-              </p>
-              <ul className="space-y-2.5">
-                {[
-                  t("platform.feature3Bullet1"),
-                  t("platform.feature3Bullet2"),
-                  t("platform.feature3Bullet3"),
-                  t("platform.feature3Bullet4"),
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-xl border border-border/40 bg-gradient-to-br from-muted/40 to-background p-6 sm:p-8 flex items-center justify-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-              <div className="w-full max-w-[280px] space-y-2.5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-1.5 w-1.5 rounded-full bg-destructive/50" />
-                  <p className="section-label text-muted-foreground/60">{t("platform.liveAlertsLabel")}</p>
-                </div>
-                {[
-                  { text: t("platform.alertHigh"), sev: t("platform.severityHigh"), dot: "bg-destructive", badge: "border-destructive/25 text-destructive" },
-                  { text: t("platform.alertMedium"), sev: t("platform.severityMedium"), dot: "bg-warning", badge: "border-warning/25 text-warning" },
-                  { text: t("platform.alertLow"), sev: t("platform.severityLow"), dot: "bg-primary", badge: "border-primary/25 text-primary" },
-                ].map((a) => (
-                  <div key={a.text} className="rounded-lg bg-card border px-3 py-2.5 flex items-start gap-2.5">
-                    <div className={cn("h-1.5 w-1.5 rounded-full mt-1.5 shrink-0", a.dot)} />
-                    <div>
-                      <p className="text-caption text-foreground font-medium leading-snug">{a.text}</p>
-                      <Badge variant="outline" className={cn("text-caption mt-1.5", a.badge)}>{a.sev}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Secondary features grid */}
-        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { icon: LineChart, title: t("platform.miniFeature1Title"), desc: t("platform.miniFeature1Desc") },
-            { icon: Users, title: t("platform.miniFeature2Title"), desc: t("platform.miniFeature2Desc") },
-            { icon: ShieldCheck, title: t("platform.miniFeature3Title"), desc: t("platform.miniFeature3Desc") },
-            { icon: Lightbulb, title: t("platform.miniFeature4Title"), desc: t("platform.miniFeature4Desc"), tag: t("platform.comingSoon") },
-          ].map((f) => (
-            <div
-              key={f.title}
-              className="rounded-lg border bg-card p-6 hover:border-border hover:shadow-sm transition-all duration-200"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                  <f.icon className="h-4 w-4 text-primary" />
-                </div>
-                {f.tag && <Badge variant="outline" className="text-caption font-medium">{f.tag}</Badge>}
-              </div>
-              <h3 className="text-sm font-semibold text-foreground mb-1.5">{f.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ─── Platform Explorer ─── */}
+      <PlatformExplorer />
 
       {/* ─── Social Proof ─── */}
       <section className="border-y border-border/40 bg-muted/20">
