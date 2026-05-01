@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, Sparkles, Zap, ArrowRight, Check, Users,
   Lightbulb, TrendingUp, Bell, ChevronDown, Brain, LineChart,
-  Target, Search, ShieldCheck, Clock, Eye, Layers, BarChart, Menu, X,
+  Target, Search, ShieldCheck, BarChart, Menu, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -15,6 +15,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import DashboardPreview from "@/components/homepage/DashboardPreview";
 import SignalRadar from "@/components/homepage/SignalRadar";
 import StatsStrip from "@/components/homepage/StatsStrip";
+import ProblemSection from "@/components/homepage/ProblemSection";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -277,29 +278,8 @@ export default function Index() {
       {/* ─── Problem / Solution ─── */}
       <section id="why" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
 
-        {/* Problem */}
-        <div className="text-center mb-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("problem.badge")}</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
-            {t("problem.headline")}<br className="hidden sm:block" />
-            <span className="text-muted-foreground/60 font-normal">{t("problem.headlineSub")}</span>
-          </h2>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
-          {[
-            { icon: Layers, title: t("problem.card1Title"), desc: t("problem.card1Desc") },
-            { icon: Clock, title: t("problem.card2Title"), desc: t("problem.card2Desc") },
-            { icon: Eye, title: t("problem.card3Title"), desc: t("problem.card3Desc") },
-          ].map((p) => (
-            <div key={p.title} className="rounded-lg border p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/60 mb-5">
-                <p.icon className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <h3 className="text-base font-semibold text-foreground mb-2">{p.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
-            </div>
-          ))}
-        </div>
+        {/* Problem — animated micro-scenes */}
+        <ProblemSection />
 
         {/* Problem → Solution transition */}
         <div className="my-16 max-w-xs mx-auto">

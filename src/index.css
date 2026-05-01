@@ -461,6 +461,44 @@
   animation: none;
 }
 
+/* ── Problem Section Animations ──────────────────────────────────── */
+
+/* Card 1: Floating documents */
+@keyframes problem-doc-float {
+  0%, 100% { transform: translateY(0) rotate(var(--doc-rot, 0deg)); }
+  50% { transform: translateY(-3px) rotate(calc(var(--doc-rot, 0deg) + 1deg)); }
+}
+.problem-doc-float {
+  animation: problem-doc-float 4s ease-in-out infinite;
+}
+
+/* Card 3: Signal pulse */
+@keyframes problem-signal-pulse {
+  0%, 100% { r: 4; opacity: 0.8; }
+  50% { r: 5; opacity: 1; }
+}
+.problem-signal-pulse {
+  animation: problem-signal-pulse 0.8s ease-in-out infinite;
+}
+
+/* Card 3: Signal ring expand */
+@keyframes problem-signal-ring {
+  0% { r: 4; opacity: 0.3; }
+  100% { r: 10; opacity: 0; }
+}
+.problem-signal-ring {
+  animation: problem-signal-ring 1.2s ease-out infinite;
+}
+
+/* Card 3: Missed signal falls */
+@keyframes problem-signal-fall {
+  0% { transform: translateY(0); opacity: 0.3; }
+  100% { transform: translateY(12px); opacity: 0; }
+}
+.problem-signal-fall {
+  animation: problem-signal-fall 1s ease-in forwards;
+}
+
 /* Reduced motion: freeze all stats animations at final state */
 @media (prefers-reduced-motion: reduce) {
   .stats-bar-manual,
@@ -497,5 +535,11 @@
   }
   .stats-bar-fast {
     width: 80px !important;
+  }
+  .problem-doc-float,
+  .problem-signal-pulse,
+  .problem-signal-ring,
+  .problem-signal-fall {
+    animation: none !important;
   }
 }
