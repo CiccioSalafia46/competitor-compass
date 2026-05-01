@@ -71,7 +71,7 @@ export function MiniSparkline({
             width={barWidth}
             height={barH}
             rx="1.5"
-            className={active ? "fill-primary" : "fill-primary/25"}
+            className={active ? "fill-primary/70" : "fill-primary/35"}
           />
         );
       })}

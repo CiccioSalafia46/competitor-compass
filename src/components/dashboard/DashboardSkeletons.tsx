@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 function SkeletonBlock({ className }: { className?: string }) {
-  return <div className={cn("rounded bg-primary/10 motion-safe:animate-pulse", className)} />;
+  return <div className={cn("rounded bg-muted-foreground/8 motion-safe:animate-pulse", className)} />;
 }
 
 export function DashboardLoadingSkeleton() {
