@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, Sparkles, ArrowRight, Check, Users,
   Lightbulb, TrendingUp, Bell, ChevronDown, LineChart,
-  Target, Search, ShieldCheck, BarChart, Menu, X,
+  Target, ShieldCheck, BarChart, Menu, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -17,6 +17,7 @@ import SignalRadar from "@/components/homepage/SignalRadar";
 import StatsStrip from "@/components/homepage/StatsStrip";
 import ProblemSection from "@/components/homepage/ProblemSection";
 import SolutionSection from "@/components/homepage/SolutionSection";
+import HowItWorksSection from "@/components/homepage/HowItWorksSection";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -291,56 +292,8 @@ export default function Index() {
         <SolutionSection />
       </section>
 
-      {/* ─── How It Works ─── */}
-      <section id="how" className="bg-muted/20 border-y border-border/40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 mb-4">{t("howItWorks.badge")}</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-              {t("howItWorks.headline")}
-            </h2>
-            <p className="text-base text-muted-foreground mt-4 max-w-md mx-auto leading-relaxed">
-              {t("howItWorks.desc")}
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-            {[
-              { step: "01", icon: Search, title: t("howItWorks.step1Title"), desc: t("howItWorks.step1Desc") },
-              { step: "02", icon: Users, title: t("howItWorks.step2Title"), desc: t("howItWorks.step2Desc") },
-              { step: "03", icon: Sparkles, title: t("howItWorks.step3Title"), desc: t("howItWorks.step3Desc") },
-              { step: "04", icon: TrendingUp, title: t("howItWorks.step4Title"), desc: t("howItWorks.step4Desc") },
-            ].map((s, i) => (
-              <div
-                key={s.step}
-                className="relative rounded-lg border bg-card p-6 hover:border-border hover:shadow-sm transition-all duration-200"
-              >
-                <div className="absolute top-4 right-4 text-caption font-bold tabular-nums text-muted-foreground/20">
-                  {s.step}
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground mb-4">
-                  <s.icon className="h-4.5 w-4.5" />
-                </div>
-                <h3 className="text-sm font-semibold text-foreground mb-1.5">{s.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
-                {i < 3 && (
-                  <div className="absolute -right-2.5 top-9 hidden lg:flex items-center justify-center z-10">
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-12">
-            <Button
-              size="lg"
-              className="h-12 px-8 text-sm gap-2 font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => navigate(cta)}
-            >
-              {ctaShort} <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* ─── How It Works — Interactive Demo ─── */}
+      <HowItWorksSection />
 
       {/* ─── Platform Features ─── */}
       <section id="platform" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">

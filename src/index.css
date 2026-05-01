@@ -499,6 +499,32 @@
   animation: problem-signal-fall 1s ease-in forwards;
 }
 
+/* ── How It Works Demo Animations ────────────────────────────────── */
+
+@keyframes demo-arrow-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+.demo-arrow-nudge {
+  animation: demo-arrow-nudge 2s ease-in-out infinite;
+}
+
+@keyframes demo-cta-pulse {
+  0%, 80%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+  40% { box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15); }
+}
+.demo-cta-pulse {
+  animation: demo-cta-pulse 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-arrow-nudge,
+  .demo-cta-pulse {
+    animation: none !important;
+  }
+}
+
 /* ── Solution Section Animations ─────────────────────────────────── */
 
 /* Card 3: Sensor pulse */
