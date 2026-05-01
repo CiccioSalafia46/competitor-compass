@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import DashboardPreview from "@/components/homepage/DashboardPreview";
+import SignalRadar from "@/components/homepage/SignalRadar";
 
 export default function Index() {
   const { t } = useTranslation("home");
@@ -65,18 +66,6 @@ export default function Index() {
       return () => clearTimeout(id);
     }
   }, [typeText, typeMode, typePhrase, typewriterPhrases]);
-
-  // ── Mouse parallax ─────────────────────────────────────────────────────────
-  const heroRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!heroRef.current) return;
-    const rect = heroRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setMousePos({ x, y });
-  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,84 +163,80 @@ export default function Index() {
       </header>
 
       {/* ─── Hero ─── */}
-      <section ref={heroRef} onMouseMove={handleMouseMove} className="relative overflow-hidden">
+      <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_-20%,hsl(var(--primary)/0.08),transparent)] pointer-events-none" />
-        {/* Parallax floating elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div
-            className="absolute top-[15%] left-[10%] w-72 h-72 rounded-full bg-primary/[0.07] blur-3xl"
-            style={{ transform: `translate(${mousePos.x * 20}px, ${mousePos.y * 15}px)` }}
-          />
-          <div
-            className="absolute top-[60%] right-[5%] w-96 h-96 rounded-full bg-primary/[0.05] blur-3xl"
-            style={{ transform: `translate(${mousePos.x * -15}px, ${mousePos.y * -10}px)` }}
-          />
-          <div
-            className="absolute top-[30%] right-[25%] w-48 h-48 rounded-full bg-primary/[0.04] blur-2xl"
-            style={{ transform: `translate(${mousePos.x * 30}px, ${mousePos.y * 20}px)` }}
-          />
-        </div>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-16 sm:pb-20 relative">
-          <div className="max-w-3xl mx-auto text-center animate-reveal">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/12 bg-primary/[0.04] px-3.5 py-1.5 mb-8">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              <span className="text-xs font-medium text-primary/80 tracking-wide">{t("hero.badge")}</span>
-            </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 relative">
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-foreground leading-[1.05]">
-              {t("hero.headline")}<br className="hidden sm:block" />{" "}
-              <span className="text-primary inline-block min-h-[1.15em]">
-                {typeText}
-                <span
-                  className="text-primary/30 font-light"
-                  style={{ opacity: cursorOn ? 1 : 0, transition: "opacity 0.15s" }}
-                >|</span>
-              </span>
-            </h1>
+          {/* 2-column layout: text left, radar right */}
+          <div className="grid md:grid-cols-[55%_45%] gap-8 md:gap-4 items-center">
 
-            {/* Subheadline */}
-            <p className="mx-auto mt-6 max-w-md text-muted-foreground text-[1.05rem] leading-[1.7] font-normal">
-              {t("hero.subheadline")}
-            </p>
+            {/* Left column — text */}
+            <div className="text-center md:text-left animate-reveal order-2 md:order-1">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/12 bg-primary/[0.04] px-3.5 py-1.5 mb-6">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="text-xs font-medium text-primary/80 tracking-wide">{t("hero.badge")}</span>
+              </div>
 
-            {/* CTAs */}
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                size="lg"
-                className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => navigate(cta)}
-              >
-                {ctaLabel} <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-12 px-7 text-sm gap-2 w-full sm:w-auto rounded-full"
-                onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}
-              >
-                {t("hero.ctaSeeHow")} <ChevronDown className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Trust signals */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground/70">
-              {[
-                t("hero.trustFreeplan"),
-                t("hero.trustSetup"),
-                t("hero.trustNoCard"),
-                t("hero.trustCancel"),
-              ].map((label) => (
-                <span key={label} className="flex items-center gap-1.5">
-                  <Check className="h-3 w-3 text-primary/50" /> {label}
+              {/* Headline */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.035em] text-foreground leading-[1.08]">
+                {t("hero.headline")}<br className="hidden sm:block" />{" "}
+                <span className="text-primary inline-block min-h-[1.15em]">
+                  {typeText}
+                  <span
+                    className="text-primary/30 font-light"
+                    style={{ opacity: cursorOn ? 1 : 0, transition: "opacity 0.15s" }}
+                  >|</span>
                 </span>
-              ))}
+              </h1>
+
+              {/* Subheadline */}
+              <p className="mt-5 max-w-md text-muted-foreground text-base sm:text-[1.05rem] leading-[1.7] mx-auto md:mx-0">
+                {t("hero.subheadline")}
+              </p>
+
+              {/* CTAs */}
+              <div className="mt-8 flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-3">
+                <Button
+                  size="lg"
+                  className="h-12 px-8 text-sm gap-2 w-full sm:w-auto font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => navigate(cta)}
+                >
+                  {ctaLabel} <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-12 px-7 text-sm gap-2 w-full sm:w-auto rounded-full"
+                  onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}
+                >
+                  {t("hero.ctaSeeHow")} <ChevronDown className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Trust signals */}
+              <div className="mt-6 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-2 text-xs text-muted-foreground/70">
+                {[
+                  t("hero.trustFreeplan"),
+                  t("hero.trustSetup"),
+                  t("hero.trustNoCard"),
+                  t("hero.trustCancel"),
+                ].map((label) => (
+                  <span key={label} className="flex items-center gap-1.5">
+                    <Check className="h-3 w-3 text-primary/50" /> {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Right column — Signal Radar */}
+            <div className="order-1 md:order-2 flex items-center justify-center">
+              <SignalRadar className="w-full max-w-[320px] md:max-w-none h-[320px] md:h-[520px]" />
             </div>
           </div>
 
-          {/* Metrics strip */}
-          <div className="mt-16 max-w-2xl mx-auto animate-reveal" style={{ animationDelay: "0.15s" }}>
+          {/* Metrics strip — full width below both columns */}
+          <div className="mt-12 sm:mt-16 max-w-3xl mx-auto animate-reveal" style={{ animationDelay: "0.15s" }}>
             <div className="grid grid-cols-2 sm:grid-cols-4 rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm overflow-hidden">
               {[
                 { value: "10×", label: t("metrics.fasterLabel") },
