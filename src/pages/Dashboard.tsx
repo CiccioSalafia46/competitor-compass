@@ -378,7 +378,7 @@ export default function Dashboard() {
   const competitorLimitReached = limits.competitors > 0 && usage.competitors >= limits.competitors;
 
   return (
-    <div className="dashboard-bg relative mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8">
+    <div className="dashboard-bg relative mx-auto max-w-[1360px] space-y-6 p-4 sm:p-6 lg:p-8">
       <DashboardHeader
         workspaceName={currentWorkspace.name}
         period={selectedPeriod}
@@ -411,7 +411,7 @@ export default function Dashboard() {
         <ActionQueue actions={actions} onNavigate={navigate} />
       </MacWindow>
 
-      <div className="hidden gap-5 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+      <div className="hidden gap-6 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
         <MacWindow title="Signal stream · Live">
           <SignalStream signals={signals} onNavigate={navigate} />
         </MacWindow>
@@ -542,7 +542,7 @@ function DashboardHeader({
             formatter={numberFormatter}
           />
           <KpiCard
-            eyebrow={unreadAlertCount > 0 ? t("pulseAlerts") : "Health"}
+            eyebrow={unreadAlertCount > 0 ? t("pulseAlerts") : t("pulseHealth")}
             value={unreadAlertCount > 0 ? unreadAlertCount : 100}
             color={healthTone}
             sparkline={unreadAlertCount > 0 ? [0, 1, 0, 2, 1, 0, 1, unreadAlertCount] : [8, 8, 8, 8, 8, 8, 8, 8]}
@@ -636,7 +636,7 @@ function TodayBrief({
             {Array.from({ length: briefCount }).map((_, index) => (
               <button
                 key={index}
-                className={cn("h-1.5 rounded-full transition-all", index === activeIndex ? "w-5 bg-violet-500" : "w-1.5 bg-border")}
+                className={cn("h-1.5 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", index === activeIndex ? "w-5 bg-violet-500" : "w-1.5 bg-border")}
                 onClick={() => onSelectBrief(index)}
                 aria-label={t("openBriefNumber", { value: index + 1 })}
               />
@@ -649,15 +649,15 @@ function TodayBrief({
         {brief.headline}
       </h1>
 
-      <div className="mt-6 grid gap-5 md:grid-cols-2">
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
         <div>
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">
             {t("whyItMatters")}
           </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.why}</p>
         </div>
         <div>
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-violet-600 dark:text-violet-400">
             {t("suggestedAction")}
           </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.action}</p>
@@ -689,7 +689,7 @@ function ActionQueue({ actions, onNavigate }: { actions: DashboardRecommendedAct
       {actions.length === 0 ? (
         <DashboardEmptyState title={t("actionQueueEmptyTitle")} description={t("actionQueueEmptyDesc")} className="mt-4" />
       ) : (
-        <div className="mt-3 space-y-1">
+        <div className="mt-3 space-y-0.5">
           {actions.map((action) => (
             <ActionQueueRow key={`${action.title}-${action.path}`} action={action} onClick={() => onNavigate(action.path)} />
           ))}
@@ -809,7 +809,7 @@ function CompetitorPulse({
       <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
         <SectionHeader title={t("competitorPulse")} subtitle={t("competitorPulseSubtitle")} compact />
         {limitReached && (
-          <button onClick={() => onNavigate("/billing")}>
+          <button onClick={() => onNavigate("/billing")} className="rounded-md focus-visible:ring-2 focus-visible:ring-ring">
             <Badge variant="outline" className="cursor-pointer rounded-md border-warning/20 bg-warning/10 text-caption text-warning hover:bg-warning/20">
               {t("planLimitReached")}
             </Badge>

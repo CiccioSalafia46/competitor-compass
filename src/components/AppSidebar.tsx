@@ -175,7 +175,7 @@ export const AppSidebar = memo(function AppSidebar() {
                           {item.label}
                           <span className="ml-2 flex items-center gap-1.5">
                             {typeof item.count === "number" && item.count > 0 && (
-                              <span className="stat-value rounded-md bg-primary/10 px-1.5 py-0.5 text-caption font-semibold text-primary">
+                              <span className="stat-value tabular-nums rounded-md bg-primary/10 px-1.5 py-0.5 text-caption font-semibold text-primary">
                                 {item.count > 99 ? "99+" : item.count}
                               </span>
                             )}

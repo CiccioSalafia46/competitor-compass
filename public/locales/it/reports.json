@@ -21,6 +21,13 @@
     "saving": "Salvataggio…",
     "edit": "Modifica",
     "delete": "Elimina"
+    "generateNew": "Generate new",
+    "retry": "Retry"
+  },
+
+  "header": {
+    "generatedCount": "{{count}} generated"
+  },
   },
 
   "templates": {

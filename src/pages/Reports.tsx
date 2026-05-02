@@ -416,7 +416,7 @@ function ReportBuilderDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-5 py-2">
+        <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="custom-report-title">{t("builderDialog.reportTitleLabel")}</Label>
             <Input
@@ -485,7 +485,7 @@ function ReportBuilderDialog({
 
           {sections.length > 0 ? (
             <div className="rounded-xl border bg-muted/20 px-4 py-3">
-              <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("builderDialog.previewLabel")}</p>
+              <p className="text-caption uppercase tracking-wider text-muted-foreground">{t("builderDialog.previewLabel")}</p>
               <p className="mt-1 text-sm font-medium text-foreground">{title.trim() || t("builderDialog.reportTitlePlaceholder")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {sections.map((s) => CUSTOM_REPORT_SECTION_LABELS[s]).join(" · ")}
@@ -623,20 +623,20 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
             <TrendingUp className="h-4 w-4" />
           </div>
           <h3 className="text-nav font-semibold text-foreground">{t("viewer.executiveBrief")}</h3>
-          <span className="ml-auto text-caption uppercase tracking-[0.15em] text-muted-foreground/60">{t("viewer.topLineSummary")}</span>
+          <span className="ml-auto text-caption uppercase tracking-wider text-muted-foreground/60">{t("viewer.topLineSummary")}</span>
         </div>
         <div className="grid gap-0 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
-          <div className="px-6 py-5">
-            <p className="mb-2.5 text-caption font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatChanged")}</p>
-            <p className="text-nav leading-7 text-foreground">{payload.summary.whatChanged}</p>
+          <div className="px-6 py-6">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-primary/80">{t("viewer.whatChanged")}</p>
+            <p className="text-sm leading-relaxed text-foreground">{payload.summary.whatChanged}</p>
           </div>
-          <div className="px-6 py-5">
-            <p className="mb-2.5 text-caption font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatMatters")}</p>
-            <p className="text-nav leading-7 text-foreground">{payload.summary.whatMatters}</p>
+          <div className="px-6 py-6">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-primary/80">{t("viewer.whatMatters")}</p>
+            <p className="text-sm leading-relaxed text-foreground">{payload.summary.whatMatters}</p>
           </div>
         </div>
         {/* Inline metadata row */}
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t bg-muted/10 px-6 py-2.5 text-xs">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t bg-muted/10 px-6 py-2 text-xs">
           <span className="text-muted-foreground">{t("viewer.competitors")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.activeCompetitors}</strong></span>
           <span className="text-muted-foreground">{t("viewer.signals")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.trackedSignals}</strong></span>
           <span className="text-muted-foreground">{t("viewer.insights")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.structuredInsights}</strong></span>
@@ -684,8 +684,8 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                 {section.metrics?.length ? (
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {section.metrics.map((metric) => (
-                      <div key={`${section.id}-${metric.label}`} className="rounded-lg border bg-card p-4 shadow-sm">
-                        <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
+                      <div key={`${section.id}-${metric.label}`} className="rounded-lg border bg-muted/30 p-4">
+                        <p className="text-caption uppercase tracking-wider text-muted-foreground">{metric.label}</p>
                         <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{metric.value}</p>
                         {metric.detail ? (
                           <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{metric.detail}</p>
@@ -749,7 +749,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                 {section.table ? (
                   <div className="overflow-x-auto rounded-lg border">
                     <table className="w-full min-w-[640px] text-left text-sm">
-                      <thead className="bg-muted/30 text-caption uppercase tracking-[0.12em] text-muted-foreground">
+                      <thead className="bg-muted/30 text-caption uppercase tracking-wider text-muted-foreground">
                         <tr>
                           {section.table.columns.map((column) => (
                             <th key={`${section.id}-${column}`} className="px-4 py-3 font-medium">
@@ -870,7 +870,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                         "inline-flex items-center rounded-full px-2 py-0.5 text-caption font-semibold uppercase tracking-wide",
                         p === "high" && "bg-destructive/10 text-destructive",
                         p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
-                        p === "low" && "bg-emerald-400/15 text-emerald-600 dark:text-emerald-400",
+                        p === "low" && "bg-primary/10 text-primary",
                       )}>
                         {action.priority}
                       </span>
@@ -1004,7 +1004,7 @@ export default function Reports() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-baseline gap-2">
           <h1 className="page-title">{t("title")}</h1>
-          <span className="text-xs text-muted-foreground">· {recentRuns.length} generated</span>
+          <span className="text-xs text-muted-foreground">· {t("header.generatedCount", { count: recentRuns.length })}</span>
           {!canCreateReports && <span className="text-xs text-muted-foreground/60">({t("readOnly")})</span>}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -1015,7 +1015,7 @@ export default function Reports() {
             disabled={!canCreateReports || generatingTemplate === "weekly_competitor_pulse"}
           >
             <WandSparkles className="h-3.5 w-3.5" />
-            {generatingTemplate === "weekly_competitor_pulse" ? t("buttons.generating") : "Generate new"}
+            {generatingTemplate === "weekly_competitor_pulse" ? t("buttons.generating") : t("buttons.generateNew")}
           </Button>
           {activeSchedules.length > 0 && (
             <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs" onClick={() => openCreateSchedule()}>
@@ -1067,7 +1067,7 @@ export default function Reports() {
           {recentRuns.length > 0 && (
             <MacWindow title={`Report archive · ${recentRuns.length} reports`}>
               <div className="border-b px-4 py-2">
-                <div className="flex items-center gap-0.5 rounded-lg border bg-muted/50 p-0.5 w-fit">
+                <div className="flex items-center gap-1 rounded-lg border bg-muted/50 p-1 w-fit">
                   {(
                     [
                       { value: "all", label: `All (${recentRuns.length})` },
@@ -1079,7 +1079,7 @@ export default function Reports() {
                       key={value}
                       onClick={() => setArchiveFilter(value)}
                       className={cn(
-                        "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                        "rounded-md px-2 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                         archiveFilter === value
                           ? "bg-background text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground",
@@ -1097,7 +1097,7 @@ export default function Reports() {
                     type="button"
                     onClick={() => setSelectedRunId(run.id)}
                     className={cn(
-                      "flex h-10 w-full items-center gap-3 px-4 text-left transition-colors duration-150 hover:bg-accent/5",
+                      "flex h-10 w-full items-center gap-3 px-4 text-left transition-colors duration-150 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-ring",
                       "border-l-[3px]",
                       run.id === selectedRun?.id ? "border-l-primary bg-primary/5" : "border-l-transparent",
                     )}
@@ -1109,7 +1109,7 @@ export default function Reports() {
                     <Badge
                       variant="outline"
                       className={cn(
-                        "shrink-0 text-[10px] py-0",
+                        "shrink-0 text-xs font-medium px-2 py-0.5 rounded-md",
                         run.status === "completed" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
                         run.status === "failed" && "border-destructive/30 bg-destructive/10 text-destructive",
                       )}
@@ -1127,7 +1127,7 @@ export default function Reports() {
                         }}
                         disabled={!!generatingTemplate}
                       >
-                        Retry
+                        {t("buttons.retry")}
                       </Button>
                     )}
                   </button>

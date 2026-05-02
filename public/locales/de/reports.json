@@ -21,6 +21,13 @@
     "saving": "Wird gespeichert…",
     "edit": "Bearbeiten",
     "delete": "Löschen"
+    "generateNew": "Generate new",
+    "retry": "Retry"
+  },
+
+  "header": {
+    "generatedCount": "{{count}} generated"
+  },
   },
 
   "templates": {

@@ -20,7 +20,13 @@
     "updateSchedule": "Update schedule",
     "saving": "Saving…",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "generateNew": "Generate new",
+    "retry": "Retry"
+  },
+
+  "header": {
+    "generatedCount": "{{count}} generated"
   },
 
   "templates": {

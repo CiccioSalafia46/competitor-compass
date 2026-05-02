@@ -277,7 +277,7 @@ export function SystemHealthPanel() {
       )}
     >
       <button
-        className="flex min-h-12 w-full items-center gap-2.5 px-4 py-3 text-left focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-h-12 w-full items-center gap-2.5 px-4 py-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         type="button"
         aria-expanded={expanded}
         onClick={() => setExpanded((value) => !value)}
