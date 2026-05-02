@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { useAdminData } from "@/hooks/useAdmin";
+import { useAdminData, useAdminAction } from "@/hooks/useAdmin";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { TableShell, TableEmptyRow } from "@/components/ui/table-toolbar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { CreditCard, TrendingUp, Users, CheckCircle, XCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type { AdminBillingResponse, AdminWorkspaceBilling } from "@/types/admin";
 
 const STATUS_CONFIG: Record<string, {
@@ -98,7 +100,8 @@ function BillingSkeleton() {
 }
 
 export default function AdminBilling() {
-  const { data, loading, error } = useAdminData<AdminBillingResponse>("billing");
+  const { data, loading, error, refetch } = useAdminData<AdminBillingResponse>("billing");
+  const { execute } = useAdminAction();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   if (loading) return <BillingSkeleton />;
@@ -221,13 +224,27 @@ export default function AdminBilling() {
                 </TableCell>
 
                 <TableCell>
-                  {sub.plan_key ? (
-                    <span className="text-[12px] font-medium text-foreground capitalize">
-                      {sub.plan_key}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground/40 text-xs">free</span>
-                  )}
+                  <Select
+                    value={sub.plan_key || "free"}
+                    onValueChange={async (value) => {
+                      try {
+                        await execute("set_workspace_plan", { workspace_id: sub.workspace_id, plan_key: value });
+                        toast.success(`Plan changed to ${value} for ${sub.workspace_name}`);
+                        void refetch();
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : "Failed to update plan");
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-7 w-[100px] text-xs capitalize">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="starter">Starter</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </TableCell>
 
                 <TableCell className="tabular-nums text-right text-sm text-muted-foreground">

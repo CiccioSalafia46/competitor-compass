@@ -762,6 +762,33 @@ Deno.serve(async (req) => {
         return jsonResponse({ subscriptions, tierCounts, statusCounts, totalPaid });
       }
 
+      case "set_workspace_plan": {
+        const { workspace_id, plan_key } = body;
+        if (!workspace_id || typeof workspace_id !== "string") {
+          return jsonResponse({ error: "workspace_id is required" }, 400);
+        }
+        if (!["free", "starter", "premium"].includes(plan_key)) {
+          return jsonResponse({ error: "plan_key must be free, starter, or premium" }, 400);
+        }
+
+        const { error: upsertError } = await supabaseAdmin
+          .from("workspace_billing")
+          .upsert(
+            {
+              workspace_id,
+              plan_key,
+              stripe_status: plan_key === "free" ? "canceled" : "active",
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "workspace_id" },
+          );
+
+        if (upsertError) return jsonResponse({ error: upsertError.message }, 500);
+
+        await auditLog("admin.set_workspace_plan", "workspace_billing", workspace_id, { plan_key });
+        return jsonResponse({ success: true });
+      }
+
       case "system_health": {
         const [
           { count: totalGmail },
