@@ -271,10 +271,9 @@ export function SystemHealthPanel() {
   return (
     <section
       className={cn(
-        "rounded-xl border bg-card shadow-sm",
-        summaryStatus === "healthy" && "border-emerald-100/60 bg-emerald-50/20 dark:border-emerald-900/30 dark:bg-emerald-950/10",
-        summaryStatus === "warning" && "border-warning/30 bg-warning/5",
-        summaryStatus === "error" && "border-destructive/30 bg-destructive/5",
+        summaryStatus === "healthy" && "bg-emerald-50/20 dark:bg-emerald-950/10",
+        summaryStatus === "warning" && "bg-warning/5",
+        summaryStatus === "error" && "bg-destructive/5",
       )}
     >
       <button

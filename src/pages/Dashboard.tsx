@@ -50,6 +50,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MacWindow } from "@/components/ui/MacWindow";
 
 const LazySystemHealthPanel = lazy(() =>
   import("@/components/SystemHealthPanel").then((module) => ({ default: module.SystemHealthPanel })),
@@ -392,28 +393,36 @@ export default function Dashboard() {
         onGenerateInsights={() => navigate("/insights")}
       />
 
-      <TodayBrief
-        brief={currentBrief}
-        briefCount={todayBriefs.length}
-        activeIndex={briefIndex}
-        onSelectBrief={setBriefIndex}
-        onOpen={() => currentBrief && navigate(currentBrief.href)}
-        hasData={hasData}
-        onConnectSource={() => navigate(gmailConnected ? "/newsletters/new" : "/settings")}
-      />
+      <MacWindow title="Today's Brief">
+        <TodayBrief
+          brief={currentBrief}
+          briefCount={todayBriefs.length}
+          activeIndex={briefIndex}
+          onSelectBrief={setBriefIndex}
+          onOpen={() => currentBrief && navigate(currentBrief.href)}
+          hasData={hasData}
+          onConnectSource={() => navigate(gmailConnected ? "/newsletters/new" : "/settings")}
+        />
+      </MacWindow>
 
-      <ActionQueue actions={actions} onNavigate={navigate} />
+      <MacWindow title="Action queue">
+        <ActionQueue actions={actions} onNavigate={navigate} />
+      </MacWindow>
 
       <div className="hidden gap-5 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
-        <SignalStream signals={signals} onNavigate={navigate} />
-        <CompetitorPulse
-          competitors={competitorPulse}
-          totalCompetitors={competitors.length}
-          limit={limits.competitors}
-          limitReached={competitorLimitReached}
-          numberFormatter={numberFormatter}
-          onNavigate={navigate}
-        />
+        <MacWindow title="Signal stream · Live">
+          <SignalStream signals={signals} onNavigate={navigate} />
+        </MacWindow>
+        <MacWindow title="Competitor pulse">
+          <CompetitorPulse
+            competitors={competitorPulse}
+            totalCompetitors={competitors.length}
+            limit={limits.competitors}
+            limitReached={competitorLimitReached}
+            numberFormatter={numberFormatter}
+            onNavigate={navigate}
+          />
+        </MacWindow>
       </div>
 
       <Tabs defaultValue="signals" className="lg:hidden">
@@ -422,24 +431,30 @@ export default function Dashboard() {
           <TabsTrigger value="competitors" className="text-xs">{t("competitorsTab")}</TabsTrigger>
         </TabsList>
         <TabsContent value="signals" className="mt-4">
-          <SignalStream signals={signals} onNavigate={navigate} compact />
+          <MacWindow title="Signal stream · Live">
+            <SignalStream signals={signals} onNavigate={navigate} compact />
+          </MacWindow>
         </TabsContent>
         <TabsContent value="competitors" className="mt-4">
-          <CompetitorPulse
-            competitors={competitorPulse}
-            totalCompetitors={competitors.length}
-            limit={limits.competitors}
-            limitReached={competitorLimitReached}
-            numberFormatter={numberFormatter}
-            onNavigate={navigate}
-            compact
-          />
+          <MacWindow title="Competitor pulse">
+            <CompetitorPulse
+              competitors={competitorPulse}
+              totalCompetitors={competitors.length}
+              limit={limits.competitors}
+              limitReached={competitorLimitReached}
+              numberFormatter={numberFormatter}
+              onNavigate={navigate}
+              compact
+            />
+          </MacWindow>
         </TabsContent>
       </Tabs>
 
-      <Suspense fallback={<div className="h-12 rounded-xl border bg-card motion-safe:animate-pulse" />}>
-        <LazySystemHealthPanel />
-      </Suspense>
+      <MacWindow title="System health">
+        <Suspense fallback={<div className="h-12 motion-safe:animate-pulse" />}>
+          <LazySystemHealthPanel />
+        </Suspense>
+      </MacWindow>
     </div>
   );
 }
@@ -560,7 +575,7 @@ function TodayBrief({
 
   if (!brief) {
     return (
-      <section className="rounded-xl border bg-card p-5 shadow-sm">
+      <section className="p-5">
         <div className="mb-4 flex items-center gap-2">
           <span className="text-caption font-semibold uppercase tracking-[0.08em] text-primary">{t("todaysBriefEyebrow")}</span>
           <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
@@ -577,7 +592,7 @@ function TodayBrief({
   const priorityStyle = PRIORITY_STYLES[brief.priority];
 
   return (
-    <section className="motion-safe:animate-data-in rounded-xl border bg-card p-5 shadow-sm">
+    <section className="motion-safe:animate-data-in p-5">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="text-caption font-semibold uppercase tracking-[0.08em] text-primary">{t("todaysBriefEyebrow")}</span>
         <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse motion-reduce:animate-none" />
@@ -630,7 +645,7 @@ function TodayBrief({
 function ActionQueue({ actions, onNavigate }: { actions: DashboardRecommendedAction[]; onNavigate: (href: string) => void }) {
   const { t } = useTranslation("dashboard");
   return (
-    <section className="rounded-xl border bg-card p-4 shadow-sm">
+    <section className="p-4">
       <SectionHeader title={t("actionQueue")} subtitle={t("actionQueueSubtitle")} />
       {actions.length === 0 ? (
         <DashboardEmptyState title={t("actionQueueEmptyTitle")} description={t("actionQueueEmptyDesc")} className="mt-4" />
@@ -675,7 +690,7 @@ function SignalStream({ signals, onNavigate, compact }: { signals: SignalItem[];
   const { t } = useTranslation("dashboard");
 
   return (
-    <section className="rounded-xl border bg-card shadow-sm">
+    <section>
       <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
         <SectionHeader title={t("signalStream")} subtitle={t("signalStreamSubtitle")} compact />
         <div className="flex items-center gap-1.5 text-caption text-muted-foreground" aria-live="polite">
@@ -747,7 +762,7 @@ function CompetitorPulse({
   const { t } = useTranslation("dashboard");
 
   return (
-    <section className="rounded-xl border bg-card shadow-sm">
+    <section>
       <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
         <SectionHeader title={t("competitorPulse")} subtitle={t("competitorPulseSubtitle")} compact />
         {limitReached && (
