@@ -50,6 +50,7 @@ import { extractDomainsFromInput, mergeCompetitorDomains } from "@/lib/domains";
 import { syncCompetitorInboxAttribution } from "@/lib/competitor-attribution";
 import { INSIGHT_IMPACT_LABELS, INSIGHT_PRIORITY_LABELS, type InsightImpactArea, type InsightPriorityLevel } from "@/lib/insight-priority";
 import { cn } from "@/lib/utils";
+import { MacWindow } from "@/components/ui/MacWindow";
 
 type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 
@@ -328,11 +329,11 @@ export default function Competitors() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className="mx-auto max-w-[1400px] space-y-5 p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("description")}</p>
+          <h1 className="page-title">{t("title")}</h1>
+          <p className="page-description">{t("description")}</p>
           {!canManageCompetitors && <p className="mt-2 text-xs text-muted-foreground">{t("readOnly")}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -390,33 +391,15 @@ export default function Competitors() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[320px,minmax(0,1fr)]">
-          <div className="space-y-4">
-            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-              <div className="flex items-center justify-between border-b bg-muted/20 px-4 py-3">
-                <div>
-                  <p className="text-nav font-semibold text-foreground">{t("trackedSet")}</p>
-                  <p className="text-caption text-muted-foreground">
-                    {generatedAt ? t("refreshedAt", { time: dateTime(generatedAt) }) : t("intelligenceNotLoaded")}
-                  </p>
-                </div>
-                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-caption font-semibold text-primary">
-                  {t("tracked", { count: sortedCompetitors.length })}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 p-3">
-                <div className="rounded-lg border bg-card p-3 shadow-sm">
-                  <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("totalSignals")}</p>
-                  <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.totalSignals, 0)}</p>
-                </div>
-                <div className="rounded-lg border bg-card p-3 shadow-sm">
-                  <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("activeAds")}</p>
-                  <p className="mt-1.5 text-xl font-bold tabular-nums text-foreground">{snapshots.reduce((sum, s) => sum + s.activity.activeAds, 0)}</p>
-                </div>
-              </div>
-            </div>
+        <>
+        <p className="text-xs text-muted-foreground">
+          {sortedCompetitors.length} tracked · {snapshots.reduce((sum, s) => sum + s.activity.totalSignals, 0)} signals · {snapshots.reduce((sum, s) => sum + s.activity.activeAds, 0)} active ads
+          {generatedAt ? ` · last refreshed ${dateTime(generatedAt)}` : ""}
+        </p>
 
-            <div className="space-y-2.5">
+        <div className="grid gap-5 xl:grid-cols-[320px,minmax(0,1fr)]">
+          <MacWindow title="Tracked competitors">
+            <div className="space-y-2.5 p-3">
               {sortedCompetitors.map((competitor, index) => {
                 const snapshot = snapshotMap.get(competitor.id);
                 const selected = competitor.id === selectedCompetitor?.id;
@@ -517,9 +500,15 @@ export default function Competitors() {
                   </div>
                 );
               })}
+              {isAtLimit("competitors") && (
+                <div className="px-3 pb-3">
+                  <UpgradePrompt reason="competitor_limit" variant="inline" />
+                </div>
+              )}
             </div>
-          </div>
+          </MacWindow>
 
+          <MacWindow title={selectedCompetitor ? selectedCompetitor.name : "Select a competitor"}>
           <div className="min-w-0">
             {intelligenceLoading && !selectedSnapshot ? (
               <div className="space-y-4">
@@ -543,10 +532,10 @@ export default function Competitors() {
               />
             ) : null}
           </div>
+          </MacWindow>
         </div>
+        </>
       )}
-
-      {isAtLimit("competitors") && <UpgradePrompt reason="competitor_limit" variant="inline" />}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
