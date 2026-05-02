@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo, useState, type ElementType } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
-import { useInsights, INSIGHT_CATEGORIES, type Insight, type InsightEvidence } from "@/hooks/useInsights";
+import { useInsights, INSIGHT_CATEGORIES, type Insight } from "@/hooks/useInsights";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   AlertTriangle,
+  Bookmark,
   Calendar,
   Check,
   ChevronDown,
@@ -18,6 +19,7 @@ import {
   Mail,
   Megaphone,
   RefreshCw,
+  Share2,
   Sparkles,
   Target,
   TrendingUp,
@@ -77,6 +79,12 @@ const PRIORITY_BORDER: Record<InsightPriorityLevel, string> = {
   low: "border-l-primary/60",
 };
 
+const PRIORITY_BORDER_WIDTH: Record<InsightPriorityLevel, string> = {
+  high: "border-l-[3px]",
+  medium: "border-l-2",
+  low: "border-l",
+};
+
 // ─── Compact card (list view) ─────────────────────────────────────
 
 const InsightCompactRow = memo(function InsightCompactRow({
@@ -97,7 +105,8 @@ const InsightCompactRow = memo(function InsightCompactRow({
   return (
     <button
       className={cn(
-        "flex w-full items-start gap-3 border-l-[3px] px-4 py-3.5 text-left transition-colors duration-150 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-ring",
+        "flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors duration-150 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-ring",
+        PRIORITY_BORDER_WIDTH[insight.priority_level],
         PRIORITY_BORDER[insight.priority_level],
       )}
       onClick={onClick}
@@ -113,7 +122,11 @@ const InsightCompactRow = memo(function InsightCompactRow({
           </Badge>
           <Badge variant="outline" className="shrink-0 text-[10px] capitalize">{meta.label}</Badge>
         </div>
-        <p className="mt-1.5 truncate text-sm font-medium text-foreground">{insight.title}</p>
+        {/* FIX 6: High priority title slightly larger */}
+        <p className={cn(
+          "mt-1.5 truncate text-foreground",
+          insight.priority_level === "high" ? "text-sm font-semibold" : "text-sm font-medium",
+        )}>{insight.title}</p>
         {(insight.affected_competitors ?? []).length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">
             {insight.affected_competitors.slice(0, 3).map((c) => (
@@ -153,8 +166,14 @@ const InsightCompactRow = memo(function InsightCompactRow({
 });
 
 // ─── Expanded card (detail view) ──────────────────────────────────
+// FIX 2: 3-level hierarchy — L1 core (Why + Response), L2 context (Implication + Positioning), L3 evidence+metadata
 
-function InsightExpanded({ insight, onClose }: { insight: Insight; onClose?: () => void }) {
+// FIXME: tune AI prompt — when generating insight blocks, ensure no two blocks
+// share more than 30% content words. If 'why_it_matters' and 'strategic_implication'
+// overlap, regenerate strategic_implication with a market/macro framing.
+// FIXME: 'why_it_matters' should start with "Because..." for causal framing.
+
+function InsightExpanded({ insight }: { insight: Insight }) {
   const { t } = useTranslation("insights");
   const CATEGORY_META = useCategoryMeta(t);
   const formatSourceLabel = useFormatSourceLabel(t);
@@ -164,7 +183,7 @@ function InsightExpanded({ insight, onClose }: { insight: Insight; onClose?: () 
   const confidencePct = insight.confidence != null ? `${Math.round(insight.confidence * 100)}%` : "–";
   const responseSections = parseRecommendedResponseSections(insight.recommended_response);
   const relDate = insight.created_at ? formatDistanceToNow(new Date(insight.created_at), { addSuffix: true }) : "";
-  const [showMore, setShowMore] = useState(false);
+  const [showEvidence, setShowEvidence] = useState(false);
 
   const handleCopy = useCallback(() => {
     const text = [
@@ -178,14 +197,17 @@ function InsightExpanded({ insight, onClose }: { insight: Insight; onClose?: () 
     toast.success(t("copiedToClipboard"));
   }, [insight, t]);
 
+  const offerSummary = formatOfferSummary(insight);
+  const hasOffer = offerSummary !== t("noOffer");
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
+    <div className="space-y-4">
+      {/* Header: badges + title + confidence */}
       <div className="flex items-start gap-3">
         <div className="shrink-0 rounded-lg bg-primary/10 p-2 text-primary">
           <Icon className="h-4 w-4" />
         </div>
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_TONE[insight.priority_level])}>
               {INSIGHT_PRIORITY_LABELS[insight.priority_level]}
@@ -194,8 +216,11 @@ function InsightExpanded({ insight, onClose }: { insight: Insight; onClose?: () 
             <Badge variant="outline" className="text-[10px] capitalize">{insight.campaign_type}</Badge>
             <Badge variant="outline" className="text-[10px] capitalize">{INSIGHT_IMPACT_LABELS[insight.impact_area]}</Badge>
           </div>
-          <h2 className="text-lg font-semibold leading-tight text-foreground">{insight.title}</h2>
-          <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">{insight.what_is_happening}</p>
+          <h2 className={cn(
+            "leading-tight text-foreground",
+            insight.priority_level === "high" ? "text-lg font-semibold" : "text-base font-semibold",
+          )}>{insight.title}</h2>
+          {/* FIX 4: removed "what_is_happening" — redundant with title */}
         </div>
         <div className="hidden shrink-0 text-right sm:block">
           <p className="stat-value text-xl font-semibold text-foreground">{confidencePct}</p>
@@ -203,114 +228,134 @@ function InsightExpanded({ insight, onClose }: { insight: Insight; onClose?: () 
         </div>
       </div>
 
-      {/* Core analysis — 3 columns */}
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-lg border bg-muted/15 p-3.5">
+      {/* ── LEVEL 1: Core insight (prominent, full-width) ── */}
+      <div className="space-y-3">
+        <div>
           <p className="section-label text-foreground">{t("whyItMatters")}</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
+          <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
         </div>
-        <div className="rounded-lg border bg-muted/15 p-3.5">
-          <p className="section-label text-foreground">{t("strategicImplication")}</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_implication}</p>
-        </div>
-        <div className="rounded-lg border bg-muted/15 p-3.5">
+        <div>
           <p className="section-label text-foreground">{t("recommendedResponse")}</p>
           {responseSections ? (
-            <div className="mt-1.5 space-y-2 text-sm text-muted-foreground">
+            <div className="mt-1.5 space-y-2 text-[15px] leading-relaxed text-muted-foreground">
               <div className="flex items-start gap-2">
-                <Target className="mt-0.5 h-3 w-3 shrink-0 text-foreground" />
+                <Target className="mt-1 h-3.5 w-3.5 shrink-0 text-foreground" />
                 <p><span className="font-medium text-foreground">Immediate:</span> {responseSections.immediate || "—"}</p>
               </div>
               <p><span className="text-foreground">Next 30 days:</span> {responseSections.next30Days || "—"}</p>
               <p className="text-muted-foreground/70"><span className="text-muted-foreground">Measure:</span> {responseSections.measure || "—"}</p>
             </div>
           ) : (
-            <p className="mt-1.5 whitespace-pre-line text-sm text-muted-foreground">{insight.recommended_response}</p>
+            <p className="mt-1.5 whitespace-pre-line text-[15px] leading-relaxed text-muted-foreground">{insight.recommended_response}</p>
           )}
         </div>
       </div>
 
-      {/* Evidence table */}
-      {insight.supporting_evidence.length > 0 && (
+      {/* ── LEVEL 2: Strategic context (secondary, compact) ── */}
+      <div className="grid gap-3 border-t pt-3 md:grid-cols-2">
         <div>
-          <p className="mb-2 text-xs font-semibold text-foreground">
-            {t("evidence")} · {insight.supporting_evidence.length} data points
-          </p>
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b bg-muted/20">
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Label</th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Detail</th>
-                  <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground sm:table-cell">Metric</th>
-                  <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground md:table-cell">Source</th>
-                  <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground lg:table-cell">Competitor</th>
-                  <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground lg:table-cell">Timeframe</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {insight.supporting_evidence.map((ev, i) => (
-                  <tr key={i} className="even:bg-muted/10">
-                    <td className="px-3 py-2 font-medium text-foreground">{ev.label}</td>
-                    <td className="max-w-xs px-3 py-2 text-muted-foreground [overflow-wrap:anywhere]">{ev.detail}</td>
-                    <td className="hidden px-3 py-2 text-muted-foreground sm:table-cell">{ev.metric || "—"}</td>
-                    <td className="hidden px-3 py-2 capitalize text-muted-foreground md:table-cell">{ev.source?.replaceAll("_", " ") || "—"}</td>
-                    <td className="hidden px-3 py-2 text-muted-foreground lg:table-cell">{ev.competitor || "—"}</td>
-                    <td className="hidden px-3 py-2 text-muted-foreground lg:table-cell">{ev.timeframe || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p className="section-label text-foreground">{t("strategicImplication")}</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_implication}</p>
+        </div>
+        <div>
+          <p className="section-label text-foreground">Positioning</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.positioning_angle}</p>
+        </div>
+      </div>
+
+      {/* ── LEVEL 3: Evidence & metadata (collapsed by default) ── */}
+      {insight.supporting_evidence.length > 0 && (
+        <div className="border-t pt-3">
+          <button
+            className="flex w-full items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => setShowEvidence((v) => !v)}
+          >
+            <ChevronDown className={cn("h-3 w-3 transition-transform", showEvidence && "rotate-180")} />
+            {insight.supporting_evidence.length} {t("evidence").toLowerCase()} · {insight.affected_competitors.length} competitors · {relDate}
+          </button>
+
+          {showEvidence && (
+            <div className="mt-3 space-y-3">
+              {/* Evidence table */}
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-muted/20">
+                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Label</th>
+                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Detail</th>
+                      <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground sm:table-cell">Metric</th>
+                      <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground md:table-cell">Source</th>
+                      <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground lg:table-cell">Competitor</th>
+                      <th className="hidden px-3 py-2 text-left font-medium text-muted-foreground lg:table-cell">Timeframe</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {insight.supporting_evidence.map((ev, i) => (
+                      <tr key={i} className="even:bg-muted/10">
+                        <td className="px-3 py-2 font-medium text-foreground">{ev.label}</td>
+                        <td className="max-w-xs px-3 py-2 text-muted-foreground [overflow-wrap:anywhere]">{ev.detail}</td>
+                        <td className="hidden px-3 py-2 text-muted-foreground sm:table-cell">{ev.metric || "—"}</td>
+                        <td className="hidden px-3 py-2 capitalize text-muted-foreground md:table-cell">{ev.source?.replaceAll("_", " ") || "—"}</td>
+                        <td className="hidden px-3 py-2 text-muted-foreground lg:table-cell">{ev.competitor || "—"}</td>
+                        <td className="hidden px-3 py-2 text-muted-foreground lg:table-cell">{ev.timeframe || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Offers + CTA (only when meaningful) */}
+              {(hasOffer || insight.cta_primary) && (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {hasOffer && (
+                    <div className="rounded-lg border bg-muted/10 p-3">
+                      <p className="section-label text-foreground">{t("offerDetails")}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{offerSummary}</p>
+                    </div>
+                  )}
+                  {insight.cta_primary && (
+                    <div className="rounded-lg border bg-muted/10 p-3">
+                      <p className="section-label text-foreground">CTA</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{insight.cta_analysis}</p>
+                      <Badge variant="outline" className="mt-2 text-[10px]">{insight.cta_primary}</Badge>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* More details (offers, CTA, positioning, takeaway) */}
-      <button
-        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-        onClick={() => setShowMore((v) => !v)}
-      >
-        <ChevronDown className={cn("h-3 w-3 transition-transform", showMore && "rotate-180")} />
-        {showMore ? t("lessDetails") : t("moreDetails")}
-      </button>
-
-      {showMore && (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-lg border bg-muted/10 p-3">
-            <p className="section-label text-foreground">{t("offerDetails")}</p>
-            <p className="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">{formatOfferSummary(insight)}</p>
-          </div>
-          <div className="rounded-lg border bg-muted/10 p-3">
-            <p className="section-label text-foreground">CTA</p>
-            <p className="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">{insight.cta_analysis}</p>
-            {insight.cta_primary && <Badge variant="outline" className="mt-2 text-[10px]">{insight.cta_primary}</Badge>}
-          </div>
-          <div className="rounded-lg border bg-muted/10 p-3">
-            <p className="section-label text-foreground">Positioning</p>
-            <p className="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">{insight.positioning_angle}</p>
-          </div>
-          <div className="rounded-lg border bg-muted/10 p-3">
-            <p className="section-label text-foreground">{t("strategicTakeaway")}</p>
-            <p className="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">{insight.strategic_takeaway}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Footer: metadata + actions */}
+      {/* Footer: competitors (left-aligned) + metadata + action bar */}
       <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-1.5">
           {insight.affected_competitors.map((c) => (
             <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
           ))}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-[10px] text-muted-foreground/70">{relDate}</span>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">{insight.created_at ? new Date(insight.created_at).toLocaleString() : ""}</TooltipContent>
+          </Tooltip>
           <span className="text-[10px] text-muted-foreground/70">
-            · {relDate} · {formatSourceLabel(insight.source_type)} · {insight.supporting_evidence.length} sources
+            · {formatSourceLabel(insight.source_type)} · {insight.supporting_evidence.length} sources
           </span>
         </div>
         <div className="flex gap-1">
           <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={handleCopy}>
             <Clipboard className="h-3 w-3" /> {t("copyInsight")}
           </Button>
-          {/* FIXME: needs backend — mark as actioned, save to playbook, share */}
+          {/* FIXME: needs backend — save to playbook */}
+          <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => toast.info(t("comingSoon"))}>
+            <Bookmark className="h-3 w-3" /> {t("savePlaybook")}
+          </Button>
+          {/* FIXME: needs backend — share with team */}
+          <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => toast.info(t("comingSoon"))}>
+            <Share2 className="h-3 w-3" /> {t("share")}
+          </Button>
+          {/* FIXME: needs backend — mark as actioned */}
           <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => toast.info(t("comingSoon"))}>
             <Check className="h-3 w-3" /> {t("markActioned")}
           </Button>
@@ -332,9 +377,10 @@ export default function Insights() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [mobileInsight, setMobileInsight] = useState<Insight | null>(null);
 
-  // Stats for summary line
+  // Stats
   const highCount = useMemo(() => insights.filter((i) => i.priority_level === "high").length, [insights]);
   const competitorCount = useMemo(() => new Set(insights.flatMap((i) => i.affected_competitors)).size, [insights]);
+  const evidenceCount = useMemo(() => insights.reduce((sum, i) => sum + i.supporting_evidence.length, 0), [insights]);
   const avgConfidence = useMemo(() => {
     const vals = insights.map((i) => i.confidence).filter((v): v is number => v != null);
     return vals.length > 0 ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) : null;
@@ -352,7 +398,6 @@ export default function Insights() {
     return { counts, hasHigh };
   }, [insights]);
 
-  // Confirmation for re-generation
   const handleGenerate = useCallback(() => {
     const newestCreatedAt = insights[0]?.created_at;
     if (newestCreatedAt) {
@@ -365,7 +410,6 @@ export default function Insights() {
     void generateInsights(categoryFilter);
   }, [insights, categoryFilter, generateInsights, t]);
 
-  // Mobile: open dialog for insight detail
   const handleCardClick = useCallback((insight: Insight) => {
     if (window.innerWidth < 768) {
       setMobileInsight(insight);
@@ -375,7 +419,7 @@ export default function Insights() {
   }, []);
 
   return (
-    <div className="max-w-7xl space-y-5 p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-[1200px] space-y-5 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="page-header">
         <div>
@@ -393,15 +437,16 @@ export default function Insights() {
         </Tooltip>
       </div>
 
-      {/* Executive summary — single line */}
+      {/* FIX 3: Executive summary — inline stats, compact */}
+      {/* FIXME: replace with AI-generated narrative paragraph once executive summary endpoint exists */}
       {!loading && insights.length > 0 && (
-        <p className="text-sm text-muted-foreground">
-          {insights.length} insights · {highCount} high priority · {competitorCount} competitors
+        <p className="text-xs text-muted-foreground">
+          {insights.length} insights · {highCount} high priority · {evidenceCount} evidence points · {competitorCount} competitors covered
           {avgConfidence != null && ` · ${avgConfidence}% avg confidence`}
         </p>
       )}
 
-      {/* Category tabs with counts */}
+      {/* Category tabs with counts + high-priority dot */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="scrollbar-thin flex h-auto overflow-x-auto bg-muted/50 p-1">
           <TabsTrigger value="all" className="shrink-0 gap-1.5 text-xs">
@@ -412,7 +457,7 @@ export default function Insights() {
             const count = categoryCounts.counts[category] ?? 0;
             const hasHigh = categoryCounts.hasHigh[category];
             return (
-              <TabsTrigger key={category} value={category} className="shrink-0 gap-1.5 text-xs">
+              <TabsTrigger key={category} value={category} className={cn("shrink-0 gap-1.5 text-xs", count === 0 && "opacity-50")}>
                 {CategoryIcon && <CategoryIcon className="h-3 w-3" />}
                 {CATEGORY_META[category]?.label ?? category}
                 <span className="text-muted-foreground">({count})</span>
@@ -458,8 +503,8 @@ export default function Insights() {
                     onClick={() => handleCardClick(insight)}
                   />
                   {expandedId === insight.id && (
-                    <div className="border-t bg-muted/5 px-4 py-4 sm:px-6">
-                      <InsightExpanded insight={insight} onClose={() => setExpandedId(null)} />
+                    <div className="border-t bg-muted/5 px-4 py-5 sm:px-6">
+                      <InsightExpanded insight={insight} />
                     </div>
                   )}
                 </div>
