@@ -407,15 +407,15 @@ export default function Competitors() {
                   <div
                     key={competitor.id}
                     className={cn(
-                      "overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-150",
+                      "overflow-hidden transition-all duration-150",
                       "border-l-[3px]",
                       selected
-                        ? "border-primary/40 border-l-primary bg-primary/[0.03] shadow-md"
+                        ? "border-primary/40 border-l-primary bg-primary/[0.03]"
                         : index === 0
-                        ? "border-l-destructive/50 hover:shadow-md"
+                        ? "border-l-destructive/50"
                         : index === 1
-                        ? "border-l-amber-400/60 hover:shadow-md"
-                        : "border-l-border hover:border-primary/20 hover:shadow-md",
+                        ? "border-l-amber-400/60"
+                        : "border-l-border hover:border-primary/20",
                     )}
                   >
                     <button
