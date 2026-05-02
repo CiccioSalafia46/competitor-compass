@@ -7,7 +7,7 @@ import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, Suspense, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRealtimeTable } from "@/hooks/useRealtimeTable";
@@ -17,6 +17,14 @@ import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useTranslation } from "react-i18next";
 import { isTransientNavigationFetchError } from "@/lib/transient-network";
 import { RadarLoader } from "@/components/RadarLoader";
+
+function ContentLoader() {
+  return (
+    <div className="flex flex-1 items-center justify-center py-24">
+      <RadarLoader label="Loading…" />
+    </div>
+  );
+}
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
@@ -43,7 +51,9 @@ export default function AppLayout() {
                 <div className="px-4 pt-3 sm:px-6 lg:px-8">
                   <EmailVerificationBanner />
                 </div>
-                <Outlet />
+                <Suspense fallback={<ContentLoader />}>
+                  <Outlet />
+                </Suspense>
               </ErrorBoundary>
             </main>
           </SidebarInset>
