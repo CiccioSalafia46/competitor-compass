@@ -10,6 +10,12 @@ interface MiniSparklineProps {
   barWidth?: number;
   /** When true, renders a flat dashed line to indicate no data. */
   empty?: boolean;
+  /** Active bar fill class (default: fill-primary/70) */
+  colorActive?: string;
+  /** Muted bar fill class (default: fill-primary/35) */
+  colorMuted?: string;
+  /** Enable left-to-right drawing animation on mount */
+  animate?: boolean;
 }
 
 export function MiniSparkline({
@@ -19,6 +25,9 @@ export function MiniSparkline({
   height = 20,
   barWidth = 6,
   empty,
+  colorActive,
+  colorMuted,
+  animate,
 }: MiniSparklineProps) {
   const barCount = 8;
   const gap = barWidth < 5 ? 7 : 10;
@@ -71,7 +80,8 @@ export function MiniSparkline({
             width={barWidth}
             height={barH}
             rx="1.5"
-            className={active ? "fill-primary/70" : "fill-primary/35"}
+            className={active ? (colorActive ?? "fill-primary/70") : (colorMuted ?? "fill-primary/35")}
+            style={animate ? { animation: `sparkline-bar-in 600ms ease-out ${index * 60}ms both` } : undefined}
           />
         );
       })}

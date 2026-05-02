@@ -288,7 +288,13 @@ export function SystemHealthPanel() {
             !expanded && "-rotate-90",
           )}
         />
-        {getStatusIcon(summaryStatus)}
+        <span className={cn(
+          "h-2.5 w-2.5 shrink-0 rounded-full",
+          summaryStatus === "healthy" && "bg-emerald-500 dot-live",
+          summaryStatus === "warning" && "bg-amber-500 dot-live",
+          summaryStatus === "error" && "bg-red-500 dot-live",
+          summaryStatus === "idle" && "bg-muted-foreground",
+        )} />
         <span className="min-w-0 flex-1">
           <span className="font-medium text-foreground">{t("systemHealth")}</span>
           <span className="ml-2 text-xs text-muted-foreground">{summaryLabel}</span>

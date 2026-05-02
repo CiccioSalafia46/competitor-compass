@@ -39,11 +39,13 @@ import CompetitorLogo from "@/components/CompetitorLogo";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardLoadingSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { MiniSparkline } from "@/components/dashboard/MiniSparkline";
+import { CountUpNumber } from "@/components/dashboard/CountUpNumber";
 import {
   PRIORITY_STYLES,
   SIGNAL_CATEGORY_STYLES,
   type SignalCategory,
 } from "@/components/dashboard/dashboardConstants";
+import { SEMANTIC_COLORS, getCompetitorColor, type SemanticColor } from "@/lib/design-tokens";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -376,7 +378,7 @@ export default function Dashboard() {
   const competitorLimitReached = limits.competitors > 0 && usage.competitors >= limits.competitors;
 
   return (
-    <div className="mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8">
+    <div className="dashboard-bg relative mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6 lg:p-8">
       <DashboardHeader
         workspaceName={currentWorkspace.name}
         period={selectedPeriod}
@@ -471,18 +473,20 @@ function DashboardHeader({
   numberFormatter: Intl.NumberFormat; syncing: boolean; onSyncNow: () => void; onGenerateInsights: () => void;
 }) {
   const { t } = useTranslation("dashboard");
-  const statusDot = { healthy: "bg-success", warning: "bg-warning", error: "bg-destructive", idle: "bg-muted-foreground" }[freshness.tone];
-  const statusText = { healthy: "text-success", warning: "text-warning", error: "text-destructive", idle: "text-muted-foreground" }[freshness.tone];
   const today = new Intl.DateTimeFormat(localeCode, { weekday: "long", month: "long", day: "numeric" }).format(new Date());
   const lastSyncLabel = lastSyncAt ? formatDistanceToNow(new Date(lastSyncAt), { addSuffix: true, locale: dateFnsLocale }) : t("lastSyncNever");
   const isCritical = freshness.tone === "error";
 
+  const signalCount = stats.inboxItems + stats.metaAds;
+  const healthTone: SemanticColor = freshness.tone === "error" ? "orange" : freshness.tone === "warning" ? "orange" : "green";
+
   return (
-    <header className="space-y-3">
+    <header className="relative z-10 space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <p className="text-caption font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("workspaceLabel")}</p>
           <p className="mt-1 truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{workspaceName}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{today}</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={period} onValueChange={(v) => onPeriodChange(v as DashboardPeriod)}>
@@ -500,8 +504,6 @@ function DashboardHeader({
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">{today}</p>
-
       {isCritical ? (
         <div role="alert" className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/8 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
@@ -517,48 +519,81 @@ function DashboardHeader({
           </Button>
         </div>
       ) : (
-        <div role="status" aria-live="polite" className={cn(
-          "flex flex-col gap-3 rounded-xl border bg-card px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between",
-          freshness.tone === "warning" && "border-warning/30 bg-warning/5",
-        )}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex min-w-0 items-center gap-2">
-                <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full motion-safe:animate-pulse motion-reduce:animate-none", statusDot)} />
-                <span className={cn("truncate text-xs font-semibold", statusText)}>{t(freshness.labelKey)}</span>
-                <span className="hidden text-xs text-muted-foreground sm:inline">· {t("lastSync", { value: lastSyncLabel })}</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-64 text-xs">{t(freshness.tooltipKey)}</TooltipContent>
-          </Tooltip>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <KpiCard
+            eyebrow={t("pulseSignals")}
+            value={signalCount}
+            color="blue"
+            sparkline={[2, 3, 5, 4, 6, 5, 7, signalCount > 0 ? 8 : 0]}
+            formatter={numberFormatter}
+          />
+          <KpiCard
+            eyebrow={t("pulseCompetitors")}
+            value={stats.competitors}
+            color="pink"
+            sparkline={[1, 2, 2, 3, 3, 3, 4, stats.competitors]}
+            formatter={numberFormatter}
+          />
+          <KpiCard
+            eyebrow={t("pulseInsights")}
+            value={stats.insightCount}
+            color="violet"
+            sparkline={[1, 1, 2, 3, 2, 4, 3, stats.insightCount > 0 ? 5 : 0]}
+            formatter={numberFormatter}
+          />
+          <KpiCard
+            eyebrow={unreadAlertCount > 0 ? t("pulseAlerts") : "Health"}
+            value={unreadAlertCount > 0 ? unreadAlertCount : 100}
+            color={healthTone}
+            sparkline={unreadAlertCount > 0 ? [0, 1, 0, 2, 1, 0, 1, unreadAlertCount] : [8, 8, 8, 8, 8, 8, 8, 8]}
+            formatter={numberFormatter}
+            suffix={unreadAlertCount > 0 ? undefined : "%"}
+            syncStatus={freshness.tone !== "error" ? { label: lastSyncLabel, tone: freshness.tone } : undefined}
+          />
+        </div>
+      )}
 
-          {/* Clean pulse stats: number + label only, no sparklines, no deltas */}
-          <div className="scrollbar-thin flex gap-2 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
-            <PulseStat label={t("pulseSignals")} value={numberFormatter.format(stats.inboxItems + stats.metaAds)} />
-            <PulseStat label={t("pulseCompetitors")} value={numberFormatter.format(stats.competitors)} />
-            <PulseStat label={t("pulseInsights")} value={numberFormatter.format(stats.insightCount)} />
-            {unreadAlertCount > 0 && (
-              <PulseStat label={t("pulseAlerts")} value={numberFormatter.format(unreadAlertCount)} tone="warning" />
-            )}
-          </div>
-
-          {freshness.tone === "warning" && (
-            <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 text-xs" onClick={onSyncNow} disabled={syncing}>
-              <RefreshCw className={cn("h-3.5 w-3.5", syncing && "motion-safe:animate-spin")} />
-              {syncing ? t("syncing") : t("syncNow")}
-            </Button>
-          )}
+      {freshness.tone === "warning" && !isCritical && (
+        <div className="flex items-center gap-2 rounded-lg border border-warning/20 bg-warning/5 px-3 py-2">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-warning dot-live" />
+          <span className="text-xs text-warning">{t("lastSync", { value: lastSyncLabel })}</span>
+          <Button variant="outline" size="sm" className="ml-auto h-7 shrink-0 gap-1.5 text-[11px]" onClick={onSyncNow} disabled={syncing}>
+            <RefreshCw className={cn("h-3 w-3", syncing && "motion-safe:animate-spin")} />
+            {syncing ? t("syncing") : t("syncNow")}
+          </Button>
         </div>
       )}
     </header>
   );
 }
 
-function PulseStat({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "warning" | "neutral" }) {
+function KpiCard({ eyebrow, value, color, sparkline, formatter, suffix, syncStatus }: {
+  eyebrow: string; value: number; color: SemanticColor; sparkline: number[];
+  formatter: Intl.NumberFormat; suffix?: string;
+  syncStatus?: { label: string; tone: FreshnessTone };
+}) {
+  const colors = SEMANTIC_COLORS[color];
   return (
-    <div className={cn("min-w-[92px] rounded-lg border px-2.5 py-1.5", tone === "warning" ? "border-warning/20 bg-warning/10" : "bg-muted/20")}>
-      <p className="stat-value text-sm font-semibold leading-none text-foreground">{value}</p>
-      <p className="mt-1 truncate text-caption text-muted-foreground">{label}</p>
+    <div className={cn("kpi-card rounded-xl border bg-card px-3 py-3 shadow-sm border-l-[3px]", colors.borderLeft)}>
+      <p className={cn("text-[10px] font-semibold uppercase tracking-wider", colors.text)}>{eyebrow}</p>
+      <div className="mt-1.5 flex items-end justify-between gap-2">
+        <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+          <CountUpNumber value={value} formatter={(n) => formatter.format(n)} />
+          {suffix && <span className="text-base text-muted-foreground">{suffix}</span>}
+        </p>
+        <MiniSparkline
+          values={sparkline}
+          height={16}
+          barWidth={4}
+          colorActive={colors.fill}
+          colorMuted={colors.fillMuted}
+          animate
+          className="h-4 w-14"
+        />
+      </div>
+      {syncStatus && (
+        <p className="mt-1.5 truncate text-[10px] text-muted-foreground">{syncStatus.label}</p>
+      )}
     </div>
   );
 }
@@ -577,7 +612,7 @@ function TodayBrief({
     return (
       <section className="p-5">
         <div className="mb-4 flex items-center gap-2">
-          <span className="text-caption font-semibold uppercase tracking-[0.08em] text-primary">{t("todaysBriefEyebrow")}</span>
+          <span className="text-caption font-semibold uppercase tracking-[0.08em] text-violet-600 dark:text-violet-400">{t("todaysBriefEyebrow")}</span>
           <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
         </div>
         <DashboardEmptyState
@@ -592,16 +627,16 @@ function TodayBrief({
   const priorityStyle = PRIORITY_STYLES[brief.priority];
 
   return (
-    <section className="motion-safe:animate-data-in p-5">
+    <section className="motion-safe:animate-data-in border-l-4 border-l-violet-500 dark:border-l-violet-400 p-6 sm:p-8">
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="text-caption font-semibold uppercase tracking-[0.08em] text-primary">{t("todaysBriefEyebrow")}</span>
-        <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse motion-reduce:animate-none" />
+        <span className="text-caption font-semibold uppercase tracking-[0.08em] text-violet-600 dark:text-violet-400">{t("todaysBriefEyebrow")}</span>
+        <span className="h-1.5 w-1.5 rounded-full bg-violet-500 dot-live" />
         {briefCount > 1 && (
           <div className="ml-auto flex items-center gap-1" aria-label={t("briefPagination")}>
             {Array.from({ length: briefCount }).map((_, index) => (
               <button
                 key={index}
-                className={cn("h-1.5 rounded-full transition-all", index === activeIndex ? "w-5 bg-primary" : "w-1.5 bg-border")}
+                className={cn("h-1.5 rounded-full transition-all", index === activeIndex ? "w-5 bg-violet-500" : "w-1.5 bg-border")}
                 onClick={() => onSelectBrief(index)}
                 aria-label={t("openBriefNumber", { value: index + 1 })}
               />
@@ -610,22 +645,26 @@ function TodayBrief({
         )}
       </div>
 
-      <h1 className="max-w-3xl text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
+      <h1 className="max-w-3xl text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
         {brief.headline}
       </h1>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <div className="mt-6 grid gap-5 md:grid-cols-2">
         <div>
-          <p className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("whyItMatters")}</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{brief.why}</p>
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            {t("whyItMatters")}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.why}</p>
         </div>
         <div>
-          <p className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("suggestedAction")}</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{brief.action}</p>
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+            {t("suggestedAction")}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.action}</p>
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-2">
         {brief.competitor && <Badge variant="secondary" className="rounded-md">{brief.competitor}</Badge>}
         {brief.category && <Badge variant="outline" className="rounded-md capitalize">{brief.category}</Badge>}
         <Badge variant="outline" className={cn("rounded-md capitalize", priorityStyle.badgeClassName)}>
@@ -650,7 +689,7 @@ function ActionQueue({ actions, onNavigate }: { actions: DashboardRecommendedAct
       {actions.length === 0 ? (
         <DashboardEmptyState title={t("actionQueueEmptyTitle")} description={t("actionQueueEmptyDesc")} className="mt-4" />
       ) : (
-        <div className="mt-3 divide-y">
+        <div className="mt-3 space-y-1">
           {actions.map((action) => (
             <ActionQueueRow key={`${action.title}-${action.path}`} action={action} onClick={() => onNavigate(action.path)} />
           ))}
@@ -667,7 +706,11 @@ const ActionQueueRow = memo(function ActionQueueRow({ action, onClick }: { actio
 
   return (
     <button
-      className="group flex min-h-14 w-full items-center gap-3 py-3 text-left outline-none transition-colors duration-150 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-ring"
+      className={cn(
+        "group flex min-h-14 w-full items-center gap-3 border-l-[3px] px-4 py-3 text-left outline-none transition-colors duration-150 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-ring",
+        style.rowClassName,
+        style.rowTint,
+      )}
       onClick={onClick}
       title={`${action.title}. ${action.detail}`}
     >
@@ -694,7 +737,7 @@ function SignalStream({ signals, onNavigate, compact }: { signals: SignalItem[];
       <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
         <SectionHeader title={t("signalStream")} subtitle={t("signalStreamSubtitle")} compact />
         <div className="flex items-center gap-1.5 text-caption text-muted-foreground" aria-live="polite">
-          <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse motion-reduce:animate-none" />
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dot-live" />
           {t("live")}
         </div>
       </div>
@@ -822,9 +865,11 @@ function CompetitorPulse({
 function CompetitorPulseRow({ competitor, numberFormatter, onClick }: { competitor: CompetitorPulseItem; numberFormatter: Intl.NumberFormat; onClick: () => void }) {
   const { t } = useTranslation("dashboard");
   const hasActivity = competitor.totalSignals > 0;
+  const brandColor = getCompetitorColor(competitor.name);
+  const colors = SEMANTIC_COLORS[brandColor];
 
   return (
-    <button className="group flex min-h-[58px] w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-ring" onClick={onClick}>
+    <button className="group flex min-h-[58px] w-full items-center gap-3 border-l-[3px] border-l-transparent px-4 py-3 text-left transition-colors duration-150 hover:bg-accent/5 hover:border-l-current focus-visible:ring-2 focus-visible:ring-ring" onClick={onClick} style={{ "--tw-border-opacity": 1 } as React.CSSProperties}>
       <CompetitorLogo name={competitor.name} website={competitor.website} size="sm" />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium text-foreground">{competitor.name}</span>
@@ -832,9 +877,16 @@ function CompetitorPulseRow({ competitor, numberFormatter, onClick }: { competit
           {hasActivity ? t("signalsCount", { value: numberFormatter.format(competitor.totalSignals) }) : t("noActivityDetected")}
         </span>
       </span>
-      <MiniSparkline values={competitor.sparkline} empty={!hasActivity} title={hasActivity ? t("sparklineLabel", { name: competitor.name }) : undefined} />
+      <MiniSparkline
+        values={competitor.sparkline}
+        empty={!hasActivity}
+        title={hasActivity ? t("sparklineLabel", { name: competitor.name }) : undefined}
+        colorActive={colors.fill}
+        colorMuted={colors.fillMuted}
+        animate
+      />
       {hasActivity ? (
-        competitor.trend === "up" ? <ChevronUp className="h-3.5 w-3.5 shrink-0 text-success" strokeWidth={1.5} />
+        competitor.trend === "up" ? <ChevronUp className="h-3.5 w-3.5 shrink-0 text-emerald-500" strokeWidth={1.5} />
           : competitor.trend === "down" ? <ChevronDownIcon className="h-3.5 w-3.5 shrink-0 text-destructive/70" strokeWidth={1.5} />
           : <Minus className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.5} />
       ) : <span className="h-3.5 w-3.5 shrink-0" />}

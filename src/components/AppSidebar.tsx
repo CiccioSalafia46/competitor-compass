@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { NAV_ICON_COLORS } from "@/lib/design-tokens";
 import { memo, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -160,12 +161,15 @@ export const AppSidebar = memo(function AppSidebar() {
                       className={cn(
                         "h-12 gap-2.5 rounded-lg text-nav transition-colors md:h-10",
                         active
-                          ? "bg-accent text-accent-foreground font-medium"
-                          : "font-normal text-sidebar-foreground hover:bg-muted/50 hover:text-foreground"
+                          ? "bg-accent text-accent-foreground font-medium border-l-[3px] border-l-current"
+                          : "font-normal text-sidebar-foreground hover:bg-muted/50 hover:text-foreground border-l-[3px] border-l-transparent"
                       )}
                       aria-current={active ? "page" : undefined}
                     >
-                      <item.icon className="h-4 w-4 shrink-0 stroke-[1.5]" />
+                      <item.icon className={cn(
+                        "h-4 w-4 shrink-0 stroke-[1.5]",
+                        active ? NAV_ICON_COLORS[item.matchPrefix] : cn(NAV_ICON_COLORS[item.matchPrefix], "opacity-60"),
+                      )} />
                       {!collapsed && (
                         <span className="flex-1 flex items-center justify-between">
                           {item.label}
