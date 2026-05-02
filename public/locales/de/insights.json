@@ -40,5 +40,14 @@
   "priorityLow": "Niedrige Priorität",
   "impactTraffic": "Traffic",
   "impactConversion": "Konversion",
-  "impactBranding": "Branding"
+  "impactBranding": "Branding",
+  "confidence": "[EN] Confidence",
+  "moreDetails": "[EN] More details",
+  "lessDetails": "[EN] Less details",
+  "copyInsight": "[EN] Copy",
+  "markActioned": "[EN] Mark actioned",
+  "copiedToClipboard": "[EN] Insight copied to clipboard",
+  "comingSoon": "[EN] Coming soon",
+  "generateTooltip": "[EN] Generate fresh insights from your latest signals. Uses AI credits.",
+  "generateConfirm": "[EN] You generated insights {{hours}} hours ago. Generate again? This uses AI credits."
 }
