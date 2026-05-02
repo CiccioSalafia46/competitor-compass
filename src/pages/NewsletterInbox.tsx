@@ -38,6 +38,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import type { GmailSyncResult, NewsletterInboxItem } from "@/types/gmail";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { SEMANTIC_COLORS, getCompetitorColor } from "@/lib/design-tokens";
+import CompetitorLogo from "@/components/CompetitorLogo";
 import { useNewsletterExtraction } from "@/hooks/useNewsletterInbox";
 import { MacWindow } from "@/components/ui/MacWindow";
 import DOMPurify from "dompurify";
@@ -642,15 +644,22 @@ export default function NewsletterInbox() {
           {displayItems.map((item) => {
             const competitor = item.competitor_id ? competitorMap.get(item.competitor_id) : null;
 
+            {/* Competitor color accent */}
+            const competitorColor = competitor ? SEMANTIC_COLORS[getCompetitorColor(competitor.name)] : null;
+
             return (
               <div
                 key={item.id}
                 onClick={() => handleRowClick(item)}
                 className={cn(
-                  "group flex cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors duration-100 sm:gap-3",
+                  "group flex cursor-pointer items-center gap-2 border-l-[3px] px-3.5 py-2 transition-colors duration-100 sm:gap-2.5",
                   "hover:bg-muted/30",
                   !item.is_read && "bg-primary/[0.04] dark:bg-primary/[0.06]",
-                  selectedItemId === item.id && "border-l-[3px] border-l-primary bg-primary/5",
+                  selectedItemId === item.id
+                    ? "border-l-primary bg-primary/5"
+                    : competitorColor
+                      ? competitorColor.borderLeft
+                      : "border-l-transparent",
                 )}
               >
                 {/* Star — always shown, faded unless active */}
@@ -660,14 +669,14 @@ export default function NewsletterInbox() {
                     if (!item.is_demo) void toggleStar(item.id);
                   }}
                   className={cn(
-                    "shrink-0 rounded p-2 transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                    "shrink-0 rounded p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     item.is_starred
                       ? "text-warning"
                       : "text-transparent group-hover:text-muted-foreground/40 hover:!text-muted-foreground/70",
                   )}
                   aria-label={t("toggleStar")}
                 >
-                  <Star className={cn("h-3.5 w-3.5", item.is_starred && "fill-current")} />
+                  <Star className={cn("h-3 w-3", item.is_starred && "fill-current")} />
                 </button>
 
                 {/* Unread dot */}
@@ -677,18 +686,22 @@ export default function NewsletterInbox() {
                   )}
                 </div>
 
-                {/* Avatar */}
-                <div className={cn(
-                  "hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-caption font-semibold",
-                  !item.is_read ? "bg-primary/12 text-primary" : "bg-muted/60 text-muted-foreground",
-                )}>
-                  {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
-                </div>
+                {/* Avatar — CompetitorLogo when assigned, sender initial otherwise */}
+                {competitor ? (
+                  <CompetitorLogo name={competitor.name} website={competitor.website} size="xs" className="hidden sm:flex" />
+                ) : (
+                  <div className={cn(
+                    "hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-caption font-semibold",
+                    !item.is_read ? "bg-primary/12 text-primary" : "bg-muted/60 text-muted-foreground",
+                  )}>
+                    {(item.from_name || item.from_email || "?").charAt(0).toUpperCase()}
+                  </div>
+                )}
 
                 {/* Sender — fixed width, primary info */}
-                <div className="w-32 shrink-0 truncate sm:w-40">
+                <div className="w-28 shrink-0 truncate sm:w-36">
                   <p className={cn(
-                    "truncate text-nav",
+                    "truncate text-xs",
                     !item.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80",
                   )}>
                     {item.from_name || item.from_email || t("unknownSender")}
@@ -698,7 +711,7 @@ export default function NewsletterInbox() {
                 {/* Subject + competitor assignment */}
                 <div className="min-w-0 flex-1">
                   <p className={cn(
-                    "truncate text-nav",
+                    "truncate text-xs",
                     !item.is_read ? "font-medium text-foreground" : "text-foreground/70",
                   )}>
                     {item.subject || t("noSubject")}
@@ -761,7 +774,7 @@ export default function NewsletterInbox() {
                 </div>
 
                 {/* Date */}
-                <span className="w-12 shrink-0 text-right tabular-nums text-caption text-muted-foreground sm:w-16">
+                <span className="w-12 shrink-0 text-right tabular-nums text-caption text-muted-foreground sm:w-14">
                   {item.received_at
                     ? new Date(item.received_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
                     : "—"}
@@ -773,11 +786,11 @@ export default function NewsletterInbox() {
                     event.stopPropagation();
                     if (!item.is_demo) void archive(item.id);
                   }}
-                  className="shrink-0 rounded p-2 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  className="shrink-0 rounded p-1.5 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   title={t("archiveAction")}
                   aria-label={t("archiveAction")}
                 >
-                  <Archive className="h-3.5 w-3.5" />
+                  <Archive className="h-3 w-3" />
                 </button>
               </div>
             );
