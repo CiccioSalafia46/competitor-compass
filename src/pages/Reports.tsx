@@ -63,6 +63,7 @@ import {
 } from "@/lib/reports";
 import { cn } from "@/lib/utils";
 import { MacWindow } from "@/components/ui/MacWindow";
+import { SeverityBadge } from "@/components/ui/SeverityBadge";
 
 const chartTooltipStyle = {
   fontSize: 11,
@@ -616,14 +617,14 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
         </Button>
       </div>
 
-      {/* ── EXECUTIVE BRIEF ── */}
-      <div className="overflow-hidden rounded-xl border bg-gradient-to-br from-primary/[0.04] to-transparent shadow-sm">
+      {/* ── EXECUTIVE BRIEF (integrated into MacWindow, no card-in-card) ── */}
+      <div>
         <div className="flex items-center gap-3 border-b px-6 py-4">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
             <TrendingUp className="h-4 w-4" />
           </div>
-          <h3 className="text-nav font-semibold text-foreground">{t("viewer.executiveBrief")}</h3>
-          <span className="ml-auto text-caption uppercase tracking-wider text-muted-foreground/60">{t("viewer.topLineSummary")}</span>
+          <h3 className="text-sm font-semibold text-foreground">{t("viewer.executiveBrief")}</h3>
+          <span className="ml-auto text-xs uppercase tracking-wider text-muted-foreground/60">{t("viewer.topLineSummary")}</span>
         </div>
         <div className="grid gap-0 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
           <div className="px-6 py-6">
@@ -635,8 +636,7 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
             <p className="text-sm leading-relaxed text-foreground">{payload.summary.whatMatters}</p>
           </div>
         </div>
-        {/* Inline metadata row */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t bg-muted/10 px-6 py-2 text-xs">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t bg-muted/20 px-6 py-2 text-xs">
           <span className="text-muted-foreground">{t("viewer.competitors")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.activeCompetitors}</strong></span>
           <span className="text-muted-foreground">{t("viewer.signals")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.trackedSignals}</strong></span>
           <span className="text-muted-foreground">{t("viewer.insights")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.structuredInsights}</strong></span>
@@ -664,15 +664,12 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
       {/* ── SECTIONS ── */}
       {payload.sections.length > 0 && (
         <div className="space-y-4">
-          {payload.sections.map((section, sectionIndex) => (
+          {payload.sections.map((section) => (
             <div key={section.id} className="overflow-hidden rounded-xl border bg-card shadow-sm">
               {/* Section header */}
               <div className="flex items-start gap-3 border-b bg-muted/15 px-6 py-4">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/12 text-caption font-bold text-primary">
-                  {sectionIndex + 1}
-                </div>
                 <div className="min-w-0">
-                  <h3 className="text-nav font-semibold text-foreground">{section.title}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
                   {section.summary && (
                     <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{section.summary}</p>
                   )}
@@ -814,15 +811,8 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-nav font-semibold text-foreground">{insight.title}</p>
-                      <span className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-caption font-semibold uppercase tracking-wide",
-                        p === "high" && "bg-destructive/10 text-destructive",
-                        p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
-                        p === "low" && "bg-muted text-muted-foreground",
-                      )}>
-                        {insight.priorityLevel}
-                      </span>
+                      <p className="text-sm font-semibold text-foreground">{insight.title}</p>
+                      <SeverityBadge severity={p} />
                       <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-caption capitalize text-muted-foreground">
                         {insight.impactArea}
                       </span>
@@ -865,15 +855,8 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-nav font-semibold text-foreground">{action.title}</p>
-                      <span className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-caption font-semibold uppercase tracking-wide",
-                        p === "high" && "bg-destructive/10 text-destructive",
-                        p === "medium" && "bg-amber-400/15 text-amber-600 dark:text-amber-400",
-                        p === "low" && "bg-primary/10 text-primary",
-                      )}>
-                        {action.priority}
-                      </span>
+                      <p className="text-sm font-semibold text-foreground">{action.title}</p>
+                      <SeverityBadge severity={p} />
                     </div>
                     <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{action.detail}</p>
                   </div>
