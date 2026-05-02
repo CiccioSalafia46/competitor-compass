@@ -667,6 +667,14 @@ export default function Alerts() {
   const { currentWorkspace } = useWorkspace();
 
   const [activeTab, setActiveTab] = useState("notifications");
+  // Default to "rules" tab for new users who have no rules yet
+  const [tabInitDone, setTabInitDone] = useState(false);
+  useEffect(() => {
+    if (!rulesLoading && !tabInitDone) {
+      setTabInitDone(true);
+      if (rules.length === 0) setActiveTab("rules");
+    }
+  }, [rulesLoading, rules.length, tabInitDone]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<AlertRule | null>(null);
   const [activePreset, setActivePreset] = useState<typeof RULE_PRESETS[number] | null>(null);
@@ -794,18 +802,11 @@ export default function Alerts() {
         </div>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard icon={BellOff} label={t("stats.activeRules")} value={stats.activeRules} detail={t("stats.activeRulesDetail")} />
-        <StatCard icon={Bell} label={t("stats.unread")} value={unreadCount} detail={t("stats.unreadDetail")} accent={unreadCount > 0} />
-        <StatCard icon={Activity} label={t("stats.alertsThisWeek")} value={stats.alertsThisWeek} detail={t("stats.alertsThisWeekDetail")} />
-        <StatCard
-          icon={Zap}
-          label={t("stats.triggersFired")}
-          value={stats.triggeredThisWeek}
-          detail={stats.lastEvaluatedAt ? t("stats.lastScan", { when: toRelativeDate(stats.lastEvaluatedAt, t) }) : t("stats.noScansYet")}
-        />
-      </div>
+      {/* Stats — compact inline instead of 4 cards */}
+      <p className="text-xs text-muted-foreground">
+        {stats.activeRules} active rules · {unreadCount} unread · {stats.alertsThisWeek} alerts this week · {stats.triggeredThisWeek} triggers fired
+        {stats.lastEvaluatedAt ? ` · last scan ${toRelativeDate(stats.lastEvaluatedAt, t)}` : " · no scans yet"}
+      </p>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
