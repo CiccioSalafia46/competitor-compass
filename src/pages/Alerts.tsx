@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NotificationLevelBadge, mapAlertSeverityToLevel } from "@/components/ui/NotificationLevelBadge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -959,7 +960,7 @@ export default function Alerts() {
                           {alert.title}
                         </p>
                         {!alert.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
-                        <Badge variant="outline" className={cn("text-caption capitalize", sev.badge)}>{alert.severity}</Badge>
+                        <NotificationLevelBadge level={mapAlertSeverityToLevel(alert.severity)} />
                         <Badge variant="secondary" className="text-caption capitalize">{alert.category}</Badge>
                         {ownerRule && (
                           <Badge variant="outline" className="text-caption">{ownerRule.name}</Badge>
