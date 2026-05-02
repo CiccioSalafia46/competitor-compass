@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Bar,
   BarChart,
@@ -64,6 +64,7 @@ import {
   type ReportTemplateKey,
 } from "@/lib/reports";
 import { cn } from "@/lib/utils";
+import { MacWindow } from "@/components/ui/MacWindow";
 
 const chartTooltipStyle = {
   fontSize: 11,
@@ -932,6 +933,7 @@ export default function Reports() {
   const [editingSchedule, setEditingSchedule] = useState<ReportScheduleRecord | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [archiveFilter, setArchiveFilter] = useState<"all" | "completed" | "failed">("all");
 
   const weekdayOptions = [
     { value: "1", label: t("weekdays.1") },
@@ -943,40 +945,41 @@ export default function Reports() {
     { value: "0", label: t("weekdays.0") },
   ];
 
+  // The latest weekly pulse is the hero
+  const latestWeeklyPulse = useMemo(
+    () => recentRuns.find((run) => run.templateKey === "weekly_competitor_pulse" && run.status === "completed") ?? null,
+    [recentRuns],
+  );
+
   const selectedRun = useMemo(
-    () => recentRuns.find((run) => run.id === selectedRunId) ?? recentRuns[0] ?? null,
-    [recentRuns, selectedRunId],
+    () => recentRuns.find((run) => run.id === selectedRunId) ?? latestWeeklyPulse ?? recentRuns[0] ?? null,
+    [recentRuns, selectedRunId, latestWeeklyPulse],
   );
 
   useEffect(() => {
-    if (!selectedRunId && recentRuns.length > 0) {
+    if (!selectedRunId && latestWeeklyPulse) {
+      setSelectedRunId(latestWeeklyPulse.id);
+    } else if (!selectedRunId && recentRuns.length > 0) {
       setSelectedRunId(recentRuns[0].id);
     }
-  }, [recentRuns, selectedRunId]);
+  }, [recentRuns, selectedRunId, latestWeeklyPulse]);
 
   const dueCount = schedules.filter((schedule) => {
-    if (!schedule.isActive || !schedule.nextRunAt) {
-      return false;
-    }
-
+    if (!schedule.isActive || !schedule.nextRunAt) return false;
     return new Date(schedule.nextRunAt).getTime() <= Date.now();
   }).length;
 
-  const handleGenerate = async (templateKey: ReportTemplateKey, rangeDays?: number) => {
+  const handleGenerate = useCallback(async (templateKey: ReportTemplateKey, rangeDays?: number) => {
     const run = await generate(templateKey, rangeDays);
-    if (run) {
-      setSelectedRunId(run.id);
-    }
-  };
+    if (run) setSelectedRunId(run.id);
+  }, [generate]);
 
-  const handleGenerateCustom = async (config: CustomReportConfig) => {
+  const handleGenerateCustom = useCallback(async (config: CustomReportConfig) => {
     const run = await generate("custom_report", config.rangeDays, config);
-    if (run) {
-      setSelectedRunId(run.id);
-    }
-  };
+    if (run) setSelectedRunId(run.id);
+  }, [generate]);
 
-  const openCreateSchedule = (templateKey?: ReportTemplateKey) => {
+  const openCreateSchedule = useCallback((templateKey?: ReportTemplateKey) => {
     setEditingSchedule(
       templateKey
         ? {
@@ -998,7 +1001,14 @@ export default function Reports() {
         : null,
     );
     setScheduleDialogOpen(true);
-  };
+  }, []);
+
+  const filteredRuns = useMemo(() => {
+    if (archiveFilter === "all") return recentRuns;
+    return recentRuns.filter((run) => run.status === archiveFilter);
+  }, [recentRuns, archiveFilter]);
+
+  const activeSchedules = schedules.filter((s) => s.isActive);
 
   if (!canViewData) {
     return (
@@ -1013,18 +1023,14 @@ export default function Reports() {
   }
 
   return (
-    <div className="max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-      <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-primary via-primary/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
+    <div className="mx-auto max-w-[1200px] space-y-6 p-4 sm:p-6 lg:p-8">
+      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="page-title">{t("title")}</h1>
-          <p className="page-description">
-            {t("description")}
-          </p>
+          <p className="page-description">{t("description")}</p>
           {!canCreateReports && (
-            <p className="text-xs text-muted-foreground/60">
-              {t("readOnly")}
-            </p>
+            <p className="text-xs text-muted-foreground/60">{t("readOnly")}</p>
           )}
         </div>
         <div className="flex flex-wrap shrink-0 items-center gap-1.5">
@@ -1033,294 +1039,217 @@ export default function Reports() {
             {t("buttons.refresh")}
           </Button>
           <Button
-            variant="outline"
             size="sm"
             className="h-9 gap-1.5 text-xs"
-            onClick={() => void runDueSchedules()}
-            disabled={!canCreateReports || runningDue}
+            onClick={() => void handleGenerate("weekly_competitor_pulse", 7)}
+            disabled={!canCreateReports || generatingTemplate === "weekly_competitor_pulse"}
           >
-            <PlayCircle className="h-3.5 w-3.5" />
-            {runningDue
-              ? t("buttons.running")
-              : dueCount > 0
-              ? t("buttons.runDueCount", { count: dueCount })
-              : t("buttons.runDue")}
-          </Button>
-          <Button size="sm" className="h-9 gap-1.5 text-xs" onClick={() => openCreateSchedule()} disabled={!canCreateReports}>
-            <CalendarClock className="h-3.5 w-3.5" />
-            {t("buttons.schedule")}
+            <WandSparkles className="h-3.5 w-3.5" />
+            {generatingTemplate === "weekly_competitor_pulse" ? t("buttons.generating") : "Generate fresh report"}
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="rounded-xl border overflow-hidden">
-              <div className="border-b bg-muted/20 px-4 py-3.5">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="mt-1.5 h-3 w-full" />
-              </div>
-              <div className="p-4 space-y-3">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-8 w-28" />
-              </div>
-            </div>
-          ))}
+        <div className="space-y-4">
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
         </div>
       ) : (
         <>
-          <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-4">
-            {Object.entries(REPORT_TEMPLATES).map(([key, template]) => {
-              const isCustom = key === "custom_report";
-              const icon =
-                key === "weekly_competitor_pulse" ? (
-                  <FileBarChart className="h-4 w-4" />
-                ) : key === "promo_digest" ? (
-                  <FileCog className="h-4 w-4" />
-                ) : key === "custom_report" ? (
-                  <SlidersHorizontal className="h-4 w-4" />
-                ) : (
-                  <FileText className="h-4 w-4" />
-                );
-
-              return (
-                <div
-                  key={key}
-                  className={cn(
-                    "rounded-xl border border-l-[3px] overflow-hidden transition-shadow hover:shadow-md",
-                    key === "weekly_competitor_pulse" && "border-l-primary",
-                    key === "promo_digest" && "border-l-amber-400",
-                    key === "custom_report" && "border-l-violet-500",
-                    key !== "weekly_competitor_pulse" && key !== "promo_digest" && key !== "custom_report" && "border-l-emerald-500",
-                  )}
+          {/* ── SECTION 1: Hero — Latest Weekly Pulse ── */}
+          <MacWindow title={
+            selectedRun
+              ? `${selectedRun.title} · ${formatDateTime(selectedRun.generatedAt, "")}`
+              : "Weekly competitor pulse"
+          }>
+            {selectedRun ? (
+              <ReportViewer run={selectedRun} />
+            ) : (
+              <div className="px-6 py-16 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <FileBarChart className="h-6 w-6" />
+                </div>
+                <h2 className="text-base font-semibold text-foreground">No reports generated yet</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Generate your first Weekly competitor pulse to see an executive snapshot of your competitive landscape.
+                </p>
+                <Button
+                  className="mt-5 gap-1.5"
+                  size="sm"
+                  onClick={() => void handleGenerate("weekly_competitor_pulse", 7)}
+                  disabled={!canCreateReports || generatingTemplate === "weekly_competitor_pulse"}
                 >
-                  <div className="flex items-start gap-3 border-b bg-muted/20 px-4 py-3.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
-                      {icon}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-nav font-semibold leading-snug text-foreground">{template.label}</p>
-                      <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground">{template.description}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3 p-4">
-                    <p className="text-caption text-muted-foreground/70">
-                      {isCustom
-                        ? t("configurableRange")
-                        : t("defaultRange", { count: template.defaultRangeDays })}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {isCustom ? (
-                        <Button
-                          size="sm"
-                          className="h-9 gap-1.5 text-xs"
-                          onClick={() => setBuilderOpen(true)}
-                          disabled={!canCreateReports}
-                        >
-                          <SlidersHorizontal className="h-3.5 w-3.5" />
-                          {t("buttons.buildReport")}
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            size="sm"
-                            className="h-9 gap-1.5 text-xs"
-                            onClick={() => void handleGenerate(key as ReportTemplateKey, template.defaultRangeDays)}
-                            disabled={!canCreateReports || generatingTemplate === key}
-                          >
-                            <WandSparkles className="h-3.5 w-3.5" />
-                            {generatingTemplate === key ? t("buttons.generating") : t("buttons.generate")}
-                          </Button>
-                          <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => openCreateSchedule(key as ReportTemplateKey)} disabled={!canCreateReports}>
-                            {t("buttons.schedule")}
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  <WandSparkles className="h-4 w-4" />
+                  {generatingTemplate === "weekly_competitor_pulse" ? t("buttons.generating") : t("buttons.generate")}
+                </Button>
+              </div>
+            )}
+          </MacWindow>
 
-          <div className="grid gap-4 xl:grid-cols-[0.95fr,1.05fr]">
-            <div className="rounded-xl border overflow-hidden">
-              <div className="flex items-center gap-2.5 border-b bg-muted/20 px-4 py-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <CalendarClock className="h-3.5 w-3.5" />
-                </div>
-                <div>
-                  <p className="text-nav font-semibold text-foreground">{t("schedules.title")}</p>
-                  <p className="text-caption text-muted-foreground">{t("schedules.subtitle")}</p>
-                </div>
-              </div>
-              <div className="divide-y">
-                {schedules.length === 0 ? (
-                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    {t("schedules.empty")}
-                  </div>
-                ) : (
-                  schedules.map((schedule) => (
-                    <div
-                      key={schedule.id}
-                      className={cn(
-                        "flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between transition-colors hover:bg-muted/20",
-                        "border-l-[3px]",
-                        schedule.isActive ? "border-l-primary" : "border-l-border",
-                      )}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-nav font-medium text-foreground">{schedule.name}</p>
-                          <span className={cn(
-                            "inline-flex h-2 w-2 rounded-full",
-                            schedule.isActive ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.4)]" : "bg-muted-foreground/30",
-                          )} />
-                          <span className="text-caption text-muted-foreground">{REPORT_TEMPLATES[schedule.templateKey].label}</span>
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {schedule.frequency === "weekly"
-                            ? t("schedules.weekly", { day: weekdayOptions.find((option) => Number(option.value) === (schedule.dayOfWeek ?? 1))?.label ?? t("weekdays.1") })
-                            : t("schedules.daily")} {t("schedules.at")} {`${String(schedule.hourOfDay).padStart(2, "0")}:${String(schedule.minuteOfHour).padStart(2, "0")}`}
-                        </p>
-                        <p className="mt-0.5 text-caption text-muted-foreground/60">
-                          {t("schedules.next")} {formatDateTime(schedule.nextRunAt, t("schedules.notScheduled"))} · {t("schedules.last")} {formatDateTime(schedule.lastRunAt, t("schedules.notScheduled"))}
-                        </p>
-                      </div>
-                      <div className="flex gap-1.5 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() => {
-                            setEditingSchedule(schedule);
-                            setScheduleDialogOpen(true);
-                          }}
-                          disabled={!canCreateReports}
-                        >
-                          {t("buttons.edit")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/5"
-                          onClick={() => void deleteSchedule(schedule.id)}
-                          disabled={!canCreateReports}
-                        >
-                          {t("buttons.delete")}
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-xl border overflow-hidden">
-              <div className="flex items-center gap-2.5 border-b bg-muted/20 px-4 py-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <FileBarChart className="h-3.5 w-3.5" />
-                </div>
-                <div>
-                  <p className="text-nav font-semibold text-foreground">{t("recentRuns.title")}</p>
-                  <p className="text-caption text-muted-foreground">{t("recentRuns.subtitle")}</p>
-                </div>
-              </div>
-              <div className="divide-y">
-                {recentRuns.length === 0 ? (
-                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    {t("recentRuns.empty")}
-                  </div>
-                ) : (
-                  recentRuns.map((run) => (
+          {/* ── SECTION 2: Past Reports (archive) ── */}
+          {recentRuns.length > 0 && (
+            <MacWindow title={`Report archive · ${recentRuns.length} reports`}>
+              <div className="border-b px-4 py-2">
+                <div className="flex items-center gap-0.5 rounded-lg border bg-muted/50 p-0.5 w-fit">
+                  {(
+                    [
+                      { value: "all", label: `All (${recentRuns.length})` },
+                      { value: "completed", label: `Completed (${recentRuns.filter((r) => r.status === "completed").length})` },
+                      { value: "failed", label: `Failed (${recentRuns.filter((r) => r.status === "failed").length})` },
+                    ] as { value: typeof archiveFilter; label: string }[]
+                  ).map(({ value, label }) => (
                     <button
-                      key={run.id}
-                      type="button"
-                      onClick={() => setSelectedRunId(run.id)}
+                      key={value}
+                      onClick={() => setArchiveFilter(value)}
                       className={cn(
-                        "block w-full px-4 py-3 text-left transition-colors hover:bg-muted/20",
-                        "border-l-[3px]",
-                        run.id === selectedRun?.id
-                          ? "border-l-primary bg-primary/5"
-                          : "border-l-transparent",
+                        "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                        archiveFilter === value
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="divide-y">
+                {filteredRuns.map((run) => (
+                  <button
+                    key={run.id}
+                    type="button"
+                    onClick={() => setSelectedRunId(run.id)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-accent/5",
+                      "border-l-[3px]",
+                      run.id === selectedRun?.id ? "border-l-primary bg-primary/5" : "border-l-transparent",
+                    )}
+                  >
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-nav font-medium text-foreground">{run.title}</p>
+                        <p className="text-sm font-medium text-foreground">{run.title}</p>
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-caption py-0",
+                            "text-[10px] py-0",
                             run.status === "completed" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                            run.status === "running" && "border-amber-400/30 bg-amber-400/10 text-amber-600 dark:text-amber-400",
                             run.status === "failed" && "border-destructive/30 bg-destructive/10 text-destructive",
-                            run.status !== "completed" && run.status !== "running" && run.status !== "failed" && "border-muted text-muted-foreground",
                           )}
                         >
-                          {run.status === "pending"
-                            ? t("status.pending")
-                            : run.status === "running"
-                            ? t("status.running")
-                            : run.status === "completed"
-                            ? t("status.completed")
-                            : run.status === "failed"
-                            ? t("status.failed")
-                            : run.status}
+                          {run.status}
                         </Badge>
                       </div>
-                      <p className="mt-1 text-caption text-muted-foreground">
-                        {REPORT_TEMPLATES[run.templateKey].label} · {formatDateTime(run.generatedAt, t("schedules.notScheduled"))}
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {REPORT_TEMPLATES[run.templateKey]?.label} · {formatDateTime(run.generatedAt, "")}
                       </p>
-                      {run.errorMessage ? (
-                        <p className="mt-1 text-xs text-destructive">{run.errorMessage}</p>
-                      ) : null}
-                    </button>
-                  ))
-                )}
+                      {run.errorMessage && (
+                        <p className="mt-0.5 text-xs text-destructive truncate">{run.errorMessage}</p>
+                      )}
+                    </div>
+                    {run.status === "failed" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 shrink-0 text-[10px]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleGenerate(run.templateKey, run.payload?.rangeDays);
+                        }}
+                        disabled={!!generatingTemplate}
+                      >
+                        Retry
+                      </Button>
+                    )}
+                  </button>
+                ))}
               </div>
-            </div>
-          </div>
+            </MacWindow>
+          )}
 
-          <Tabs defaultValue="report" className="space-y-4">
-            <TabsList className="h-9 bg-muted/40 p-0.5 text-xs">
-              <TabsTrigger value="report" className="h-8 text-xs">{t("tabs.selectedReport")}</TabsTrigger>
-              <TabsTrigger value="process" className="h-8 text-xs">{t("tabs.howItWorks")}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="report">
-              {selectedRun ? (
-                <ReportViewer run={selectedRun} />
-              ) : (
-                <div className="rounded-xl border border-dashed py-16 text-center text-sm text-muted-foreground">
-                  {t("emptyReport")}
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="process">
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base">{t("pipeline.title")}</CardTitle>
-                  <CardDescription>
-                    {t("pipeline.description")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm leading-6 text-muted-foreground">
-                  <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-caption font-bold text-primary">1</div>
-                    <p>{t("pipeline.step1")}</p>
+          {/* ── Active Schedules (only if any) ── */}
+          {activeSchedules.length > 0 && (
+            <MacWindow title={`Active schedules · ${activeSchedules.length}`}>
+              <div className="divide-y">
+                {activeSchedules.map((schedule) => (
+                  <div
+                    key={schedule.id}
+                    className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        <p className="text-sm font-medium text-foreground">{schedule.name}</p>
+                        <span className="text-xs text-muted-foreground">{REPORT_TEMPLATES[schedule.templateKey]?.label}</span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {schedule.frequency === "weekly"
+                          ? t("schedules.weekly", { day: weekdayOptions.find((o) => Number(o.value) === (schedule.dayOfWeek ?? 1))?.label ?? "" })
+                          : t("schedules.daily")} {t("schedules.at")} {`${String(schedule.hourOfDay).padStart(2, "0")}:${String(schedule.minuteOfHour).padStart(2, "0")}`}
+                        {" · "}{t("schedules.next")} {formatDateTime(schedule.nextRunAt, t("schedules.notScheduled"))}
+                      </p>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setEditingSchedule(schedule); setScheduleDialogOpen(true); }} disabled={!canCreateReports}>
+                        {t("buttons.edit")}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => void deleteSchedule(schedule.id)} disabled={!canCreateReports}>
+                        {t("buttons.delete")}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-caption font-bold text-primary">2</div>
-                    <p>{t("pipeline.step2")}</p>
+                ))}
+              </div>
+            </MacWindow>
+          )}
+
+          {/* ── SECTION 3: Report Templates (footer compact) ── */}
+          <MacWindow title="Report templates">
+            <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+              {Object.entries(REPORT_TEMPLATES).map(([key, template]) => {
+                const isCustom = key === "custom_report";
+                const icon =
+                  key === "weekly_competitor_pulse" ? <FileBarChart className="h-4 w-4" />
+                    : key === "promo_digest" ? <FileCog className="h-4 w-4" />
+                    : key === "custom_report" ? <SlidersHorizontal className="h-4 w-4" />
+                    : <FileText className="h-4 w-4" />;
+
+                return (
+                  <div key={key} className="rounded-lg border p-3 transition-colors duration-150 hover:bg-accent/5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        {icon}
+                      </div>
+                      <p className="text-sm font-medium text-foreground">{template.label}</p>
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground">{template.description}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground/60">
+                      {isCustom ? t("configurableRange") : t("defaultRange", { count: template.defaultRangeDays })}
+                    </p>
+                    <div className="mt-2">
+                      {isCustom ? (
+                        <Button size="sm" variant="outline" className="h-7 gap-1 text-[11px]" onClick={() => setBuilderOpen(true)} disabled={!canCreateReports}>
+                          <SlidersHorizontal className="h-3 w-3" />
+                          {t("buttons.buildReport")}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 gap-1 text-[11px]"
+                          onClick={() => void handleGenerate(key as ReportTemplateKey, template.defaultRangeDays)}
+                          disabled={!canCreateReports || generatingTemplate === key}
+                        >
+                          <WandSparkles className="h-3 w-3" />
+                          {generatingTemplate === key ? t("buttons.generating") : t("buttons.generate")}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-3 rounded-xl border bg-muted/20 p-4">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-caption font-bold text-primary">3</div>
-                    <p>{t("pipeline.step3")}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                );
+              })}
+            </div>
+          </MacWindow>
         </>
       )}
 
