@@ -388,7 +388,7 @@ export default function NewsletterInbox() {
       </div>
 
       {!showDemo && !loading && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/60 px-5 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/60 px-4 py-3 shadow-sm">
           <div className="flex items-center gap-2">
             <InboxIcon className="h-3.5 w-3.5 text-muted-foreground/60" />
             <span className="text-nav font-semibold tabular-nums text-foreground">{totalCount}</span>
@@ -451,7 +451,7 @@ export default function NewsletterInbox() {
                 <div key={suggestion.senderDomain} className="rounded-xl border border-l-[3px] border-l-primary/40 bg-background px-4 py-3 shadow-sm transition-colors hover:border-l-primary/70">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[12px] font-bold text-primary">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
                         {(suggestion.suggestedName || suggestion.senderDomain).charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -577,7 +577,7 @@ export default function NewsletterInbox() {
 
         <div className="flex items-center gap-2">
           {/* Segmented type control — 3 options, no point in a dropdown */}
-          <div className="flex rounded-lg border bg-muted/40 p-0.5 gap-0.5">
+          <div className="flex rounded-lg border bg-muted/40 p-0.5 gap-1">
             {(["newsletters", "all", "archived"] as const).map((value) => (
               <button
                 key={value}
@@ -660,7 +660,7 @@ export default function NewsletterInbox() {
                     if (!item.is_demo) void toggleStar(item.id);
                   }}
                   className={cn(
-                    "shrink-0 rounded p-2 transition-colors",
+                    "shrink-0 rounded p-2 transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     item.is_starred
                       ? "text-warning"
                       : "text-transparent group-hover:text-muted-foreground/40 hover:!text-muted-foreground/70",
@@ -773,7 +773,7 @@ export default function NewsletterInbox() {
                     event.stopPropagation();
                     if (!item.is_demo) void archive(item.id);
                   }}
-                  className="shrink-0 rounded p-2 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground"
+                  className="shrink-0 rounded p-2 text-transparent transition-colors group-hover:text-muted-foreground/40 hover:!text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   title={t("archiveAction")}
                   aria-label={t("archiveAction")}
                 >
@@ -877,7 +877,7 @@ function InboxDetailPanel({
       <div className="grid gap-0 divide-y lg:grid-cols-[1fr_340px] lg:divide-x lg:divide-y-0">
         {/* Left: Email content */}
         <div className="min-w-0">
-          <div className="flex items-start justify-between gap-3 border-b px-5 py-4">
+          <div className="flex items-start justify-between gap-3 border-b px-4 py-4">
             <div className="min-w-0 flex-1">
               <h2 className="text-base font-semibold text-foreground">{item.subject || t("noSubject")}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -885,11 +885,11 @@ function InboxDetailPanel({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {competitor && <Badge variant="secondary" className="text-[10px]">{competitor.name}</Badge>}
+              {competitor && <Badge variant="secondary" className="text-xs font-medium px-2 py-0.5 rounded-md">{competitor.name}</Badge>}
               <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClose}>Close</Button>
             </div>
           </div>
-          <div className="max-h-[500px] overflow-y-auto px-5 py-4">
+          <div className="max-h-[500px] overflow-y-auto px-4 py-4">
             {sanitizedHtml ? (
               <div
                 className="prose prose-sm max-w-none text-foreground/80 [&_img]:max-w-full [&_a]:text-primary"
@@ -911,7 +911,7 @@ function InboxDetailPanel({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1 text-[10px]"
+                className="h-7 gap-1 text-xs"
                 onClick={() => void extract()}
                 disabled={extractionLoading}
               >
@@ -934,15 +934,15 @@ function InboxDetailPanel({
                 {/* Signal type */}
                 {extraction.campaign_type && (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Signal type</p>
-                    <Badge variant="outline" className="mt-1 text-[10px] capitalize">{extraction.campaign_type}</Badge>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Signal type</p>
+                    <Badge variant="outline" className="mt-1 text-xs font-medium px-2 py-0.5 rounded-md capitalize">{extraction.campaign_type}</Badge>
                   </div>
                 )}
 
                 {/* Main message */}
                 {extraction.main_message && (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Key message</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Key message</p>
                     <p className="mt-1 text-xs leading-relaxed text-foreground">{extraction.main_message}</p>
                   </div>
                 )}
@@ -950,7 +950,7 @@ function InboxDetailPanel({
                 {/* Strategy takeaways */}
                 {extraction.strategy_takeaways.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Key facts</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Key facts</p>
                     <ul className="mt-1 space-y-1">
                       {extraction.strategy_takeaways.slice(0, 5).map((takeaway, i) => (
                         <li key={i} className="flex items-start gap-1.5 text-xs text-foreground">
@@ -965,10 +965,10 @@ function InboxDetailPanel({
                 {/* Urgency */}
                 {extraction.urgency_signals.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Urgency signals</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Urgency signals</p>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {extraction.urgency_signals.map((signal, i) => (
-                        <Badge key={i} variant="outline" className="text-[10px] border-warning/30 bg-warning/10 text-warning">
+                        <Badge key={i} variant="outline" className="text-xs font-medium px-2 py-0.5 rounded-md border-warning/30 bg-warning/10 text-warning">
                           {signal.signal}
                         </Badge>
                       ))}
@@ -979,7 +979,7 @@ function InboxDetailPanel({
                 {/* Confidence */}
                 {extraction.overall_confidence != null && (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Confidence</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Confidence</p>
                     <div className="mt-1.5 flex items-center gap-2">
                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/40">
                         <div className="h-full rounded-full bg-primary/70" style={{ width: `${Math.round(extraction.overall_confidence * 100)}%` }} />
@@ -992,13 +992,13 @@ function InboxDetailPanel({
                 {/* Offers */}
                 {(extraction.discount_percentage != null || extraction.coupon_code) && (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Offer detected</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Offer detected</p>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {extraction.discount_percentage != null && (
-                        <Badge variant="secondary" className="text-[10px]">{extraction.discount_percentage}% off</Badge>
+                        <Badge variant="secondary" className="text-xs font-medium px-2 py-0.5 rounded-md">{extraction.discount_percentage}% off</Badge>
                       )}
                       {extraction.coupon_code && (
-                        <Badge variant="outline" className="text-[10px] font-mono">{extraction.coupon_code}</Badge>
+                        <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 rounded-md font-mono">{extraction.coupon_code}</Badge>
                       )}
                     </div>
                   </div>
@@ -1007,10 +1007,10 @@ function InboxDetailPanel({
                 {/* Product categories */}
                 {extraction.product_categories.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Categories</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Categories</p>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {extraction.product_categories.map((cat, i) => (
-                        <Badge key={i} variant="secondary" className="text-[10px]">{cat}</Badge>
+                        <Badge key={i} variant="secondary" className="text-xs font-medium px-2 py-0.5 rounded-md">{cat}</Badge>
                       ))}
                     </div>
                   </div>

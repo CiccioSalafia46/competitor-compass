@@ -25,7 +25,7 @@ export default function MetaAdsPage() {
       <div>
         <div className="flex items-center gap-2">
           <h1 className="page-title">{t("title")}</h1>
-          <Badge variant="outline" className="text-[10px] font-normal">Coming Soon</Badge>
+          <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 rounded-md">Coming Soon</Badge>
         </div>
         <p className="page-description mt-1">{t("subtitle")}</p>
       </div>

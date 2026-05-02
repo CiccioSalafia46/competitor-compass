@@ -182,8 +182,8 @@ function StatCard({ icon: Icon, label, value, detail, accent }: {
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
-        <p className={cn("text-xl font-bold tabular-nums leading-tight", accent && "text-destructive")}>{value}</p>
+        <p className="text-caption uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className={cn("text-xl font-semibold tabular-nums leading-tight", accent && "text-destructive")}>{value}</p>
         {detail && <p className="text-caption text-muted-foreground/70 truncate">{detail}</p>}
       </div>
     </div>
@@ -759,7 +759,7 @@ export default function Alerts() {
   const highAlerts = alerts.filter((a) => a.severity === "high" && !a.is_read).length;
 
   return (
-    <div className="max-w-6xl space-y-5 p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className="max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
       {/* Gradient top strip */}
       <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-destructive via-destructive/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
 
@@ -833,13 +833,13 @@ export default function Alerts() {
         <TabsContent value="notifications" className="mt-4 space-y-3">
           {/* Filter bar */}
           <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/20 p-2">
-            <div className="flex rounded-lg border bg-background p-0.5 gap-0.5">
+            <div className="flex rounded-lg border bg-background p-0.5 gap-1">
               {(["all", "unread", "read"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setReadFilter(v)}
                   className={cn(
-                    "h-8 rounded px-2.5 text-xs font-medium transition-colors",
+                    "h-8 rounded px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     readFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -848,13 +848,13 @@ export default function Alerts() {
               ))}
             </div>
 
-            <div className="flex rounded-lg border bg-background p-0.5 gap-0.5">
+            <div className="flex rounded-lg border bg-background p-0.5 gap-1">
               {(["all", "high", "medium", "info"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setSeverityFilter(v)}
                   className={cn(
-                    "h-8 rounded px-2.5 text-xs font-medium transition-colors",
+                    "h-8 rounded px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     severityFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -970,7 +970,7 @@ export default function Alerts() {
                       )}
                       <p className="text-caption text-muted-foreground/50">{new Date(alert.created_at).toLocaleString()}</p>
                     </div>
-                    <div className="flex shrink-0 gap-0.5 mt-0.5">
+                    <div className="flex shrink-0 gap-1 mt-0.5">
                       {!alert.is_read && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void markRead(alert.id)} title={t("notifications.markRead")}>
                           <Check className="h-3.5 w-3.5" />
@@ -997,11 +997,11 @@ export default function Alerts() {
         <TabsContent value="rules" className="mt-4 space-y-4">
           {/* Presets row */}
           <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-            <div className="flex items-center gap-2.5 border-b bg-muted/15 px-4 py-3">
+            <div className="flex items-center gap-3 border-b bg-muted/15 px-4 py-3">
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <Zap className="h-3.5 w-3.5" />
               </div>
-              <p className="text-[12px] font-semibold text-foreground">{t("rules.quickPresetsTitle")}</p>
+              <p className="text-xs font-semibold text-foreground">{t("rules.quickPresetsTitle")}</p>
               <p className="ml-1 text-caption text-muted-foreground hidden sm:block">{t("rules.quickPresetsSubtitle")}</p>
               <Button size="sm" className="ml-auto h-8 gap-1.5 text-xs" onClick={() => openCreate()}>
                 <Plus className="h-3.5 w-3.5" />
@@ -1072,13 +1072,13 @@ export default function Alerts() {
         <TabsContent value="log" className="mt-4 space-y-3">
           {/* Log filter bar */}
           <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/20 p-2">
-            <div className="flex rounded-lg border bg-background p-0.5 gap-0.5">
+            <div className="flex rounded-lg border bg-background p-0.5 gap-1">
               {(["all", "triggered", "suppressed", "failed"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setLogStatusFilter(v)}
                   className={cn(
-                    "h-8 rounded px-2.5 text-xs font-medium transition-colors",
+                    "h-8 rounded px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     logStatusFilter === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                   )}
                 >

@@ -117,23 +117,23 @@ const InsightCompactRow = memo(function InsightCompactRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn("shrink-0 text-[10px] capitalize", PRIORITY_TONE[insight.priority_level])}>
+          <Badge variant="outline" className={cn("shrink-0 text-xs font-medium px-2 py-0.5 rounded-md capitalize", PRIORITY_TONE[insight.priority_level])}>
             {INSIGHT_PRIORITY_LABELS[insight.priority_level]}
           </Badge>
-          <Badge variant="outline" className="shrink-0 text-[10px] capitalize">{meta.label}</Badge>
+          <Badge variant="outline" className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-md capitalize">{meta.label}</Badge>
         </div>
         {/* FIX 6: High priority title slightly larger */}
         <p className={cn(
-          "mt-1.5 truncate text-foreground",
+          "mt-2 truncate text-foreground",
           insight.priority_level === "high" ? "text-sm font-semibold" : "text-sm font-medium",
         )}>{insight.title}</p>
         {(insight.affected_competitors ?? []).length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {insight.affected_competitors.slice(0, 3).map((c) => (
-              <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+              <Badge key={c} variant="secondary" className="text-xs font-medium px-2 py-0.5 rounded-md">{c}</Badge>
             ))}
             {insight.affected_competitors.length > 3 && (
-              <span className="text-[10px] text-muted-foreground">+{insight.affected_competitors.length - 3}</span>
+              <span className="text-xs text-muted-foreground">+{insight.affected_competitors.length - 3}</span>
             )}
           </div>
         )}
@@ -142,19 +142,19 @@ const InsightCompactRow = memo(function InsightCompactRow({
       <div className="hidden shrink-0 items-end gap-3 text-right sm:flex">
         <div>
           <p className="stat-value text-sm font-semibold text-foreground">{confidencePct}</p>
-          <p className="text-[10px] text-muted-foreground">{t("confidence")}</p>
+          <p className="text-xs text-muted-foreground">{t("confidence")}</p>
         </div>
         <div>
           <p className="stat-value text-sm font-semibold text-foreground">{insight.supporting_evidence.length}</p>
-          <p className="text-[10px] text-muted-foreground">{t("evidence")}</p>
+          <p className="text-xs text-muted-foreground">{t("evidence")}</p>
         </div>
       </div>
 
       <div className="hidden shrink-0 text-right lg:block">
-        <p className="text-[10px] text-muted-foreground">{INSIGHT_IMPACT_LABELS[insight.impact_area]}</p>
+        <p className="text-xs text-muted-foreground">{INSIGHT_IMPACT_LABELS[insight.impact_area]}</p>
         <Tooltip>
           <TooltipTrigger asChild>
-            <p className="mt-0.5 text-[10px] text-muted-foreground/70">{relDate}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground/70">{relDate}</p>
           </TooltipTrigger>
           <TooltipContent className="text-xs">{insight.created_at ? new Date(insight.created_at).toLocaleString() : ""}</TooltipContent>
         </Tooltip>
@@ -209,12 +209,12 @@ function InsightExpanded({ insight }: { insight: Insight }) {
         </div>
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_TONE[insight.priority_level])}>
+            <Badge variant="outline" className={cn("text-xs font-medium px-2 py-0.5 rounded-md capitalize", PRIORITY_TONE[insight.priority_level])}>
               {INSIGHT_PRIORITY_LABELS[insight.priority_level]}
             </Badge>
-            <Badge variant="outline" className="text-[10px] capitalize">{meta.label}</Badge>
-            <Badge variant="outline" className="text-[10px] capitalize">{insight.campaign_type}</Badge>
-            <Badge variant="outline" className="text-[10px] capitalize">{INSIGHT_IMPACT_LABELS[insight.impact_area]}</Badge>
+            <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 rounded-md capitalize">{meta.label}</Badge>
+            <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 rounded-md capitalize">{insight.campaign_type}</Badge>
+            <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 rounded-md capitalize">{INSIGHT_IMPACT_LABELS[insight.impact_area]}</Badge>
           </div>
           <h2 className={cn(
             "leading-tight text-foreground",
@@ -224,20 +224,20 @@ function InsightExpanded({ insight }: { insight: Insight }) {
         </div>
         <div className="hidden shrink-0 text-right sm:block">
           <p className="stat-value text-xl font-semibold text-foreground">{confidencePct}</p>
-          <p className="text-[10px] text-muted-foreground">{t("confidence")}</p>
+          <p className="text-xs text-muted-foreground">{t("confidence")}</p>
         </div>
       </div>
 
       {/* ── LEVEL 1: Core insight (prominent, full-width) ── */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
           <p className="section-label text-foreground">{t("whyItMatters")}</p>
-          <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{insight.why_it_matters}</p>
         </div>
         <div>
           <p className="section-label text-foreground">{t("recommendedResponse")}</p>
           {responseSections ? (
-            <div className="mt-1.5 space-y-2 text-[15px] leading-relaxed text-muted-foreground">
+            <div className="mt-2 space-y-2 text-[15px] leading-relaxed text-muted-foreground">
               <div className="flex items-start gap-2">
                 <Target className="mt-1 h-3.5 w-3.5 shrink-0 text-foreground" />
                 <p><span className="font-medium text-foreground">Immediate:</span> {responseSections.immediate || "—"}</p>
@@ -246,7 +246,7 @@ function InsightExpanded({ insight }: { insight: Insight }) {
               <p className="text-muted-foreground/70"><span className="text-muted-foreground">Measure:</span> {responseSections.measure || "—"}</p>
             </div>
           ) : (
-            <p className="mt-1.5 whitespace-pre-line text-[15px] leading-relaxed text-muted-foreground">{insight.recommended_response}</p>
+            <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-muted-foreground">{insight.recommended_response}</p>
           )}
         </div>
       </div>
@@ -267,7 +267,7 @@ function InsightExpanded({ insight }: { insight: Insight }) {
       {insight.supporting_evidence.length > 0 && (
         <div className="border-t pt-3">
           <button
-            className="flex w-full items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            className="flex w-full items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring rounded"
             onClick={() => setShowEvidence((v) => !v)}
           >
             <ChevronDown className={cn("h-3 w-3 transition-transform", showEvidence && "rotate-180")} />
@@ -317,7 +317,7 @@ function InsightExpanded({ insight }: { insight: Insight }) {
                     <div className="rounded-lg border bg-muted/10 p-3">
                       <p className="section-label text-foreground">CTA</p>
                       <p className="mt-1 text-xs text-muted-foreground">{insight.cta_analysis}</p>
-                      <Badge variant="outline" className="mt-2 text-[10px]">{insight.cta_primary}</Badge>
+                      <Badge variant="outline" className="mt-2 text-xs font-medium px-2 py-0.5 rounded-md">{insight.cta_primary}</Badge>
                     </div>
                   )}
                 </div>
@@ -331,15 +331,15 @@ function InsightExpanded({ insight }: { insight: Insight }) {
       <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-1.5">
           {insight.affected_competitors.map((c) => (
-            <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+            <Badge key={c} variant="secondary" className="text-xs font-medium px-2 py-0.5 rounded-md">{c}</Badge>
           ))}
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-[10px] text-muted-foreground/70">{relDate}</span>
+              <span className="text-xs text-muted-foreground/70">{relDate}</span>
             </TooltipTrigger>
             <TooltipContent className="text-xs">{insight.created_at ? new Date(insight.created_at).toLocaleString() : ""}</TooltipContent>
           </Tooltip>
-          <span className="text-[10px] text-muted-foreground/70">
+          <span className="text-xs text-muted-foreground/70">
             · {formatSourceLabel(insight.source_type)} · {insight.supporting_evidence.length} sources
           </span>
         </div>
@@ -419,7 +419,7 @@ export default function Insights() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-5 p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-[1200px] space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="page-header">
         <div>

@@ -102,9 +102,9 @@ function StrategicList({
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{empty}</p>
         ) : (
-          <ul className="space-y-2.5">
+          <ul className="space-y-3">
             {items.map((item) => (
-              <li key={`${title}-${item}`} className="flex gap-2.5">
+              <li key={`${title}-${item}`} className="flex gap-3">
                 {tone === "positive" ? (
                   <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500/70" />
                 ) : tone === "warning" ? (
@@ -329,7 +329,7 @@ export default function Competitors() {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className="mx-auto max-w-[1400px] space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="page-title">{t("title")}</h1>
@@ -397,9 +397,9 @@ export default function Competitors() {
           {generatedAt ? ` · last refreshed ${dateTime(generatedAt)}` : ""}
         </p>
 
-        <div className="grid gap-5 xl:grid-cols-[320px,minmax(0,1fr)]">
+        <div className="grid gap-6 xl:grid-cols-[320px,minmax(0,1fr)]">
           <MacWindow title="Tracked competitors">
-            <div className="space-y-2.5 p-3">
+            <div className="space-y-3 p-3">
               {sortedCompetitors.map((competitor, index) => {
                 const snapshot = snapshotMap.get(competitor.id);
                 const selected = competitor.id === selectedCompetitor?.id;
@@ -421,7 +421,7 @@ export default function Competitors() {
                     <button
                       type="button"
                       onClick={() => setSelectedCompetitorId(competitor.id)}
-                      className="block w-full px-4 pb-0 pt-3.5 text-left"
+                      className="block w-full px-4 pb-0 pt-3.5 text-left focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -444,14 +444,14 @@ export default function Competitors() {
                         </div>
                         <button
                           onClick={(event) => { event.stopPropagation(); setDeleteTarget(competitor); }}
-                          className="shrink-0 rounded-md p-1 text-muted-foreground/40 transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
+                          className="shrink-0 rounded-md p-1 text-muted-foreground/40 transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-ring"
                           disabled={!canManageCompetitors}
                           aria-label={`Delete ${competitor.name}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <div className="mb-3 mt-2.5 flex items-center gap-3 text-caption text-muted-foreground">
+                      <div className="mb-3 mt-3 flex items-center gap-3 text-caption text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Newspaper className="h-3 w-3" />
                           {snapshot?.activity.newsletters ?? 0}
@@ -476,7 +476,7 @@ export default function Competitors() {
                       <button
                         type="button"
                         onClick={() => setSelectedCompetitorId(competitor.id)}
-                        className="block w-full border-t px-4 pb-3 pt-2.5 text-left"
+                        className="block w-full border-t px-4 pb-3 pt-3 text-left focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <div className="mb-1.5 flex items-center justify-between text-caption text-muted-foreground">
                           <span>{t("shareOfActivity")}</span>
@@ -707,7 +707,7 @@ function CompetitorDetail({
             </div>
 
             <div className="shrink-0 rounded-xl border bg-muted/20 px-4 py-3">
-              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("lastActivity")}</p>
+              <p className="text-caption uppercase tracking-wider text-muted-foreground">{t("lastActivity")}</p>
               <p className="mt-1 text-sm font-semibold">{dateTime(snapshot?.activity.lastActivityAt ?? null, t("noRecentActivity", { defaultValue: "—" }))}</p>
               <p className="mt-1.5 text-xs text-muted-foreground">{t("lastActivityWindow")}</p>
             </div>
@@ -723,8 +723,8 @@ function CompetitorDetail({
             { label: t("kpi.aiSignals"), value: snapshot?.activity.insights ?? 0, sub: t("kpi.aiSignalsSub") },
           ].map((kpi) => (
             <div key={kpi.label} className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{kpi.label}</p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{kpi.value}</p>
+              <p className="text-caption uppercase tracking-wider text-muted-foreground">{kpi.label}</p>
+              <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">{kpi.value}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{kpi.sub}</p>
             </div>
           ))}
@@ -754,7 +754,7 @@ function CompetitorDetail({
         </Card>
       ) : (
         <Tabs defaultValue="profile">
-          <TabsList className="h-9 w-full justify-start gap-0.5 bg-muted/40">
+          <TabsList className="h-9 w-full justify-start gap-1 bg-muted/40">
             <TabsTrigger value="profile" className="gap-1.5 text-xs">
               <Activity className="h-3.5 w-3.5" />
               {t("tabProfile")}
@@ -815,20 +815,20 @@ function ProfileTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot }) 
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-4">
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.promoRate")}</p>
-              <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{percent(promoBehavior.promoRate)}</p>
+              <p className="text-caption uppercase tracking-wider text-muted-foreground">{t("profile.promoRate")}</p>
+              <p className="mt-2 text-xl font-semibold tabular-nums text-foreground">{percent(promoBehavior.promoRate)}</p>
             </div>
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.avgDiscount")}</p>
-              <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.averageDiscount)}%</p>
+              <p className="text-caption uppercase tracking-wider text-muted-foreground">{t("profile.avgDiscount")}</p>
+              <p className="mt-2 text-xl font-semibold tabular-nums text-foreground">{Math.round(promoBehavior.averageDiscount)}%</p>
             </div>
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.maxDiscount")}</p>
-              <p className="mt-2 text-xl font-bold tabular-nums text-foreground">{Math.round(promoBehavior.maxDiscount)}%</p>
+              <p className="text-caption uppercase tracking-wider text-muted-foreground">{t("profile.maxDiscount")}</p>
+              <p className="mt-2 text-xl font-semibold tabular-nums text-foreground">{Math.round(promoBehavior.maxDiscount)}%</p>
             </div>
             <div className={cn("rounded-xl border p-4", profileBadgeClass(promoBehavior.profile).includes("destructive") ? "border-destructive/20 bg-destructive/5" : promoBehavior.profile === "moderate" ? "border-amber-400/25 bg-amber-50/50 dark:bg-amber-950/15" : "border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/15")}>
-              <p className="text-caption uppercase tracking-[0.14em] text-muted-foreground">{t("profile.profile")}</p>
-              <p className={cn("mt-2 text-xl font-bold capitalize", promoBehavior.profile === "aggressive" ? "text-destructive" : promoBehavior.profile === "moderate" ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
+              <p className="text-caption uppercase tracking-wider text-muted-foreground">{t("profile.profile")}</p>
+              <p className={cn("mt-2 text-xl font-semibold capitalize", promoBehavior.profile === "aggressive" ? "text-destructive" : promoBehavior.profile === "moderate" ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
                 {promoBehavior.profile}
               </p>
             </div>
@@ -1088,7 +1088,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="min-w-0">
-              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentThemes")}</p>
+              <p className="text-caption font-semibold uppercase tracking-wider text-muted-foreground">{t("strategy.currentThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentThemes.length > 0
                   ? messagingEvolution.currentThemes.map((theme) => <Badge key={theme} variant="secondary" className="text-xs [overflow-wrap:anywhere]">{theme}</Badge>)
@@ -1096,7 +1096,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.emergingAngles")}</p>
+              <p className="text-caption font-semibold uppercase tracking-wider text-muted-foreground">{t("strategy.emergingAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.emergingAngles.length > 0
                   ? messagingEvolution.emergingAngles.map((a) => <Badge key={a} variant="outline" className="border-primary/30 bg-primary/5 text-primary text-xs [overflow-wrap:anywhere]">{a}</Badge>)
@@ -1104,7 +1104,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.currentAngles")}</p>
+              <p className="text-caption font-semibold uppercase tracking-wider text-muted-foreground">{t("strategy.currentAngles")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.currentAngles.length > 0
                   ? messagingEvolution.currentAngles.map((a) => <Badge key={a} variant="secondary" className="text-xs [overflow-wrap:anywhere]">{a}</Badge>)
@@ -1112,7 +1112,7 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("strategy.previousThemes")}</p>
+              <p className="text-caption font-semibold uppercase tracking-wider text-muted-foreground">{t("strategy.previousThemes")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {messagingEvolution.previousThemes.length > 0
                   ? messagingEvolution.previousThemes.map((theme) => <Badge key={theme} variant="outline" className="text-xs [overflow-wrap:anywhere]">{theme}</Badge>)
@@ -1142,9 +1142,9 @@ function StrategyTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapshot })
             <CardDescription>{t("strategy.recurringPatternsDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {recurringPatterns.map((pattern) => (
-                <li key={pattern} className="flex gap-2.5">
+                <li key={pattern} className="flex gap-3">
                   <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" />
                   <p className="text-sm leading-6 text-muted-foreground">{pattern}</p>
                 </li>
@@ -1235,7 +1235,7 @@ function OpportunitiesTab({ snapshot }: { snapshot: CompetitorIntelligenceSnapsh
                 key={`opp-${index}`}
                 className="flex gap-3 rounded-xl border border-l-[3px] border-l-primary bg-background p-3 transition-colors hover:bg-accent/10"
               >
-                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-caption font-bold text-primary-foreground">
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-caption font-semibold text-primary-foreground">
                   {index + 1}
                 </div>
                 <p className="text-sm leading-6 text-foreground">{opp}</p>
