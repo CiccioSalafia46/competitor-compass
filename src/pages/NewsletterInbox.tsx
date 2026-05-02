@@ -38,6 +38,10 @@ import { useDebounce } from "@/hooks/useDebounce";
 import type { GmailSyncResult, NewsletterInboxItem } from "@/types/gmail";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { useNewsletterExtraction } from "@/hooks/useNewsletterInbox";
+import { MacWindow } from "@/components/ui/MacWindow";
+import DOMPurify from "dompurify";
+import { formatDistanceToNow } from "date-fns";
 
 type Competitor = Database["public"]["Tables"]["competitors"]["Row"];
 
@@ -59,6 +63,7 @@ export default function NewsletterInbox() {
   const [creatingSuggestionDomain, setCreatingSuggestionDomain] = useState<string | null>(null);
   const [matchingInbox, setMatchingInbox] = useState(false);
   const [assigningInboxId, setAssigningInboxId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const autoMatchKeyRef = useRef<string | null>(null);
 
   const fetchCompetitors = useCallback(async () => {
@@ -183,8 +188,18 @@ export default function NewsletterInbox() {
     if (!item.is_demo && !item.is_read) {
       void markRead(item.id);
     }
-    navigate(`/inbox/${item.id}${item.is_demo ? "?demo=true" : ""}`);
+    // Mobile: navigate to full page. Desktop: inline detail panel.
+    if (window.innerWidth < 1024) {
+      navigate(`/inbox/${item.id}${item.is_demo ? "?demo=true" : ""}`);
+    } else {
+      setSelectedItemId(item.id);
+    }
   };
+
+  const selectedItem = useMemo(
+    () => displayItems.find((i) => i.id === selectedItemId) ?? null,
+    [displayItems, selectedItemId],
+  );
 
   const handleSync = async () => {
     try {
@@ -335,8 +350,7 @@ export default function NewsletterInbox() {
   };
 
   return (
-    <div className="max-w-6xl space-y-4 p-4 sm:p-6 lg:p-8 animate-fade-in">
-      <div className="-mx-4 -mt-4 mb-0 h-1 w-[calc(100%+2rem)] bg-gradient-to-r from-primary via-primary/50 to-transparent sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]" />
+    <div className="mx-auto max-w-[1400px] space-y-4 p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="page-header">
         <div>
           <h1 className="page-title">{t("competitorInbox")}</h1>
@@ -636,6 +650,7 @@ export default function NewsletterInbox() {
                   "group flex cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors duration-100 sm:gap-3",
                   "hover:bg-muted/30",
                   !item.is_read && "bg-primary/[0.04] dark:bg-primary/[0.06]",
+                  selectedItemId === item.id && "border-l-[3px] border-l-primary bg-primary/5",
                 )}
               >
                 {/* Star — always shown, faded unless active */}
@@ -813,7 +828,206 @@ export default function NewsletterInbox() {
           ))}
         </div>
       )}
+
+      {/* Desktop detail panel — shown below list when an item is selected */}
+      {selectedItem && (
+        <div className="hidden lg:block">
+          <InboxDetailPanel
+            item={selectedItem}
+            competitor={selectedItem.competitor_id ? competitorMap.get(selectedItem.competitor_id) ?? null : null}
+            onClose={() => setSelectedItemId(null)}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+// ─── Detail Panel (inline, desktop only) ──────────────────────────
+
+function InboxDetailPanel({
+  item,
+  competitor,
+  onClose,
+}: {
+  item: NewsletterInboxItem;
+  competitor: Competitor | null;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation("inbox");
+  const { extraction, loading: extractionLoading, extract } = useNewsletterExtraction(item.is_demo ? null : item.id);
+
+  const sanitizedHtml = useMemo(() => {
+    if (!item.html_content) return "";
+    return DOMPurify.sanitize(item.html_content, {
+      ALLOWED_TAGS: [
+        "h1", "h2", "h3", "h4", "h5", "h6", "p", "br", "hr", "a", "img",
+        "strong", "em", "b", "i", "u", "ul", "ol", "li", "div", "span",
+        "table", "thead", "tbody", "tr", "td", "th", "code", "pre", "blockquote",
+      ],
+      ALLOWED_ATTR: ["href", "src", "alt", "style", "class", "width", "height", "target"],
+      ALLOW_DATA_ATTR: false,
+    });
+  }, [item.html_content]);
+
+  const relDate = item.received_at ? formatDistanceToNow(new Date(item.received_at), { addSuffix: true }) : "";
+
+  return (
+    <MacWindow title={item.subject || t("noSubject")}>
+      <div className="grid gap-0 divide-y lg:grid-cols-[1fr_340px] lg:divide-x lg:divide-y-0">
+        {/* Left: Email content */}
+        <div className="min-w-0">
+          <div className="flex items-start justify-between gap-3 border-b px-5 py-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold text-foreground">{item.subject || t("noSubject")}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {item.from_name || item.from_email} · {relDate}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {competitor && <Badge variant="secondary" className="text-[10px]">{competitor.name}</Badge>}
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClose}>Close</Button>
+            </div>
+          </div>
+          <div className="max-h-[500px] overflow-y-auto px-5 py-4">
+            {sanitizedHtml ? (
+              <div
+                className="prose prose-sm max-w-none text-foreground/80 [&_img]:max-w-full [&_a]:text-primary"
+                dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+              />
+            ) : item.text_content ? (
+              <pre className="whitespace-pre-wrap text-sm text-foreground/80">{item.text_content}</pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">No content available.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Right: AI Analysis */}
+        <div className="min-w-0 bg-muted/5">
+          <div className="flex items-center justify-between border-b px-4 py-3">
+            <p className="text-xs font-semibold text-foreground">AI Analysis</p>
+            {!item.is_demo && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 text-[10px]"
+                onClick={() => void extract()}
+                disabled={extractionLoading}
+              >
+                <Sparkles className="h-3 w-3" />
+                {extraction ? "Re-extract" : "Extract"}
+              </Button>
+            )}
+          </div>
+
+          <div className="max-h-[500px] overflow-y-auto p-4">
+            {extractionLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            ) : extraction ? (
+              <div className="space-y-4">
+                {/* Signal type */}
+                {extraction.campaign_type && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Signal type</p>
+                    <Badge variant="outline" className="mt-1 text-[10px] capitalize">{extraction.campaign_type}</Badge>
+                  </div>
+                )}
+
+                {/* Main message */}
+                {extraction.main_message && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Key message</p>
+                    <p className="mt-1 text-xs leading-relaxed text-foreground">{extraction.main_message}</p>
+                  </div>
+                )}
+
+                {/* Strategy takeaways */}
+                {extraction.strategy_takeaways.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Key facts</p>
+                    <ul className="mt-1 space-y-1">
+                      {extraction.strategy_takeaways.slice(0, 5).map((takeaway, i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-xs text-foreground">
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                          {takeaway.insight}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Urgency */}
+                {extraction.urgency_signals.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Urgency signals</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {extraction.urgency_signals.map((signal, i) => (
+                        <Badge key={i} variant="outline" className="text-[10px] border-warning/30 bg-warning/10 text-warning">
+                          {signal.signal}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Confidence */}
+                {extraction.overall_confidence != null && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Confidence</p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/40">
+                        <div className="h-full rounded-full bg-primary/70" style={{ width: `${Math.round(extraction.overall_confidence * 100)}%` }} />
+                      </div>
+                      <span className="stat-value text-xs font-semibold text-foreground">{Math.round(extraction.overall_confidence * 100)}%</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Offers */}
+                {(extraction.discount_percentage != null || extraction.coupon_code) && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Offer detected</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {extraction.discount_percentage != null && (
+                        <Badge variant="secondary" className="text-[10px]">{extraction.discount_percentage}% off</Badge>
+                      )}
+                      {extraction.coupon_code && (
+                        <Badge variant="outline" className="text-[10px] font-mono">{extraction.coupon_code}</Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Product categories */}
+                {extraction.product_categories.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Categories</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {extraction.product_categories.map((cat, i) => (
+                        <Badge key={i} variant="secondary" className="text-[10px]">{cat}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <Sparkles className="mx-auto h-6 w-6 text-muted-foreground/30" />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {item.is_demo ? "AI extraction unavailable for demo data." : "Click Extract to analyze this email for competitive signals."}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </MacWindow>
   );
 }
 
