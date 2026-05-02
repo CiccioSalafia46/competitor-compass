@@ -22,9 +22,7 @@ import {
   FileText,
   Info,
   Lightbulb,
-  PlayCircle,
   Printer,
-  RefreshCcw,
   SlidersHorizontal,
   TrendingUp,
   WandSparkles,
@@ -590,14 +588,12 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
 
   if (!run.payload) {
     return (
-      <Card className="border border-destructive/20 bg-destructive/5">
-        <CardContent className="space-y-2 p-6">
-          <p className="text-sm font-semibold text-foreground">{t("viewer.failed")}</p>
-          <p className="text-sm text-muted-foreground">
-            {run.errorMessage || t("viewer.failedDesc")}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-2 px-6 py-8">
+        <p className="text-sm font-semibold text-foreground">{t("viewer.failed")}</p>
+        <p className="text-sm text-muted-foreground">
+          {run.errorMessage || t("viewer.failedDesc")}
+        </p>
+      </div>
     );
   }
 
@@ -608,39 +604,16 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
   return (
     <div className="space-y-8">
 
-      {/* ── REPORT HEADER ── */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="flex flex-col gap-4 px-6 py-5 xl:flex-row xl:items-start xl:justify-between">
-          <h2 className="text-xl font-bold tracking-tight text-foreground">{payload.title}</h2>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadReportJson(run)}>
-              <Download className="h-4 w-4" />
-              {t("buttons.exportJson")}
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => printReport(payload)}>
-              <Printer className="h-4 w-4" />
-              {t("buttons.printPdf")}
-            </Button>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t bg-muted/20 px-6 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.competitors")}</span>
-            <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.activeCompetitors}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.signals")}</span>
-            <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.trackedSignals}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.insights")}</span>
-            <span className="text-sm font-semibold tabular-nums text-foreground">{payload.metadata.structuredInsights}</span>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-caption uppercase tracking-[0.12em] text-muted-foreground">{t("viewer.generated")}</span>
-            <span className="text-xs font-medium text-muted-foreground">{formatDateTime(payload.generatedAt, t("schedules.notScheduled"))}</span>
-          </div>
-        </div>
+      {/* ── EXPORT TOOLBAR (compact, no duplicate title) ── */}
+      <div className="flex flex-wrap items-center justify-end gap-2 px-2">
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => downloadReportJson(run)}>
+          <Download className="h-3.5 w-3.5" />
+          {t("buttons.exportJson")}
+        </Button>
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => printReport(payload)}>
+          <Printer className="h-3.5 w-3.5" />
+          {t("buttons.printPdf")}
+        </Button>
       </div>
 
       {/* ── EXECUTIVE BRIEF ── */}
@@ -661,6 +634,13 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
             <p className="mb-2.5 text-caption font-semibold uppercase tracking-[0.16em] text-primary/80">{t("viewer.whatMatters")}</p>
             <p className="text-nav leading-7 text-foreground">{payload.summary.whatMatters}</p>
           </div>
+        </div>
+        {/* Inline metadata row */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t bg-muted/10 px-6 py-2.5 text-xs">
+          <span className="text-muted-foreground">{t("viewer.competitors")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.activeCompetitors}</strong></span>
+          <span className="text-muted-foreground">{t("viewer.signals")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.trackedSignals}</strong></span>
+          <span className="text-muted-foreground">{t("viewer.insights")} <strong className="font-semibold tabular-nums text-foreground">{payload.metadata.structuredInsights}</strong></span>
+          <span className="ml-auto text-muted-foreground/70">{formatDateTime(payload.generatedAt, t("schedules.notScheduled"))}</span>
         </div>
       </div>
 
@@ -1117,37 +1097,30 @@ export default function Reports() {
                     type="button"
                     onClick={() => setSelectedRunId(run.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 hover:bg-accent/5",
+                      "flex h-10 w-full items-center gap-3 px-4 text-left transition-colors duration-150 hover:bg-accent/5",
                       "border-l-[3px]",
                       run.id === selectedRun?.id ? "border-l-primary bg-primary/5" : "border-l-transparent",
                     )}
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-medium text-foreground">{run.title}</p>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px] py-0",
-                            run.status === "completed" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                            run.status === "failed" && "border-destructive/30 bg-destructive/10 text-destructive",
-                          )}
-                        >
-                          {run.status}
-                        </Badge>
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {REPORT_TEMPLATES[run.templateKey]?.label} · {formatDateTime(run.generatedAt, "")}
-                      </p>
-                      {run.errorMessage && (
-                        <p className="mt-0.5 text-xs text-destructive truncate">{run.errorMessage}</p>
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{run.title}</p>
+                    <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
+                      {formatDateTime(run.generatedAt, "")}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "shrink-0 text-[10px] py-0",
+                        run.status === "completed" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                        run.status === "failed" && "border-destructive/30 bg-destructive/10 text-destructive",
                       )}
-                    </div>
+                    >
+                      {run.status}
+                    </Badge>
                     {run.status === "failed" && (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 shrink-0 text-[10px]"
+                        className="h-6 shrink-0 text-[10px]"
                         onClick={(e) => {
                           e.stopPropagation();
                           void handleGenerate(run.templateKey, run.payload?.rangeDays);
