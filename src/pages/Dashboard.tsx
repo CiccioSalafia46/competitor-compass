@@ -303,8 +303,8 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedPeriod = (searchParams.get("period") as DashboardPeriod | null) ?? "7d";
   const [briefIndex, setBriefIndex] = useState(0);
-  const [briefPaused, setBriefPaused] = useState(false);
-  const briefContainerRef = useRef<HTMLDivElement>(null);
+  const briefHovering = useRef(false);
+  const [briefTimerReset, setBriefTimerReset] = useState(0);
 
   const localeCode = i18n.resolvedLanguage || i18n.language || "en";
   const dateFnsLocale = useMemo(() => getDateFnsLocale(localeCode), [localeCode]);
@@ -341,29 +341,33 @@ export default function Dashboard() {
   );
   useEffect(() => { if (briefIndex >= todayBriefs.length) setBriefIndex(0); }, [briefIndex, todayBriefs.length]);
 
-  // Auto-slide briefs every 8s, paused on hover or manual interaction
+  // Auto-slide briefs every 8s — skips tick while mouse hovers, resets timer on manual nav
   useEffect(() => {
-    if (briefPaused || todayBriefs.length <= 1) return;
+    if (todayBriefs.length <= 1) return;
     const timer = setInterval(() => {
-      setBriefIndex((prev) => (prev + 1) % todayBriefs.length);
+      if (!briefHovering.current) {
+        setBriefIndex((prev) => (prev + 1) % todayBriefs.length);
+      }
     }, 8000);
     return () => clearInterval(timer);
-  }, [briefPaused, todayBriefs.length]);
+  }, [todayBriefs.length, briefTimerReset]);
+
+  const resetBriefTimer = useCallback(() => setBriefTimerReset((n) => n + 1), []);
 
   const handleBriefSelect = useCallback((i: number) => {
     setBriefIndex(i);
-    setBriefPaused(true);
-  }, []);
+    resetBriefTimer();
+  }, [resetBriefTimer]);
 
   const handleBriefPrev = useCallback(() => {
     setBriefIndex((prev) => (prev - 1 + todayBriefs.length) % todayBriefs.length);
-    setBriefPaused(true);
-  }, [todayBriefs.length]);
+    resetBriefTimer();
+  }, [todayBriefs.length, resetBriefTimer]);
 
   const handleBriefNext = useCallback(() => {
     setBriefIndex((prev) => (prev + 1) % todayBriefs.length);
-    setBriefPaused(true);
-  }, [todayBriefs.length]);
+    resetBriefTimer();
+  }, [todayBriefs.length, resetBriefTimer]);
 
   const actions = useMemo(() => (snapshotDecisionModel?.recommendedActions ?? []).slice(0, 3), [snapshotDecisionModel?.recommendedActions]);
   const signals = useMemo(
@@ -424,9 +428,8 @@ export default function Dashboard() {
 
       <MacWindow title="Today's Brief">
         <div
-          ref={briefContainerRef}
-          onMouseEnter={() => setBriefPaused(true)}
-          onMouseLeave={() => setBriefPaused(false)}
+          onMouseEnter={() => { briefHovering.current = true; }}
+          onMouseLeave={() => { briefHovering.current = false; }}
         >
           <TodayBrief
             brief={currentBrief}
