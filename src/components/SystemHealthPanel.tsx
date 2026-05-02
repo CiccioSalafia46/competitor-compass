@@ -8,20 +8,27 @@ import {
   AlertCircle,
   Bell,
   Brain,
-  CheckCircle2,
   ChevronDown,
-  Clock3,
   CornerDownRight,
   Mail,
   RefreshCw,
-  XCircle,
 } from "lucide-react";
 import { useGmailConnection } from "@/hooks/useGmailConnection";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { NotificationLevelBadge, type NotificationLevel } from "@/components/ui/NotificationLevelBadge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+
+function mapHealthStatusToLevel(status: Status): NotificationLevel {
+  switch (status) {
+    case "healthy": return "success";
+    case "warning": return "warning";
+    case "error": return "error";
+    case "idle": return "info";
+  }
+}
 
 type Status = "healthy" | "warning" | "error" | "idle";
 
@@ -55,18 +62,6 @@ function getStaleStatus(timestamp?: string | null): Status {
   return "healthy";
 }
 
-function getStatusIcon(status: Status) {
-  switch (status) {
-    case "healthy":
-      return <CheckCircle2 className="h-3.5 w-3.5 text-success" />;
-    case "warning":
-      return <Clock3 className="h-3.5 w-3.5 text-warning" />;
-    case "error":
-      return <XCircle className="h-3.5 w-3.5 text-destructive" />;
-    case "idle":
-      return <AlertCircle className="h-3.5 w-3.5 text-muted-foreground/50" />;
-  }
-}
 
 function getSummaryStatus(subsystems: SubsystemStatus[]): Status {
   if (subsystems.some((system) => system.status === "error")) return "error";
@@ -301,9 +296,7 @@ export function SystemHealthPanel() {
           <span className="hidden text-xs text-muted-foreground sm:inline"> · {lastActivityLabel}</span>
         </span>
         {hasIssue && (
-          <span className={cn("text-caption font-semibold", summaryStatus === "error" ? "text-destructive" : "text-warning")}>
-            {t("attentionRequired")}
-          </span>
+          <NotificationLevelBadge level={mapHealthStatusToLevel(summaryStatus)} showIcon />
         )}
       </button>
 
@@ -322,7 +315,7 @@ export function SystemHealthPanel() {
                 )}
               >
                 <Mail className="h-5 w-5 shrink-0 text-muted-foreground" />
-                {getStatusIcon(rootCause.status)}
+                <NotificationLevelBadge level={mapHealthStatusToLevel(rootCause.status)} showIcon />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-foreground">{rootCause.label}</span>
@@ -380,7 +373,7 @@ export function SystemHealthPanel() {
                           )}
                         >
                           <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          {getStatusIcon(system.status)}
+                          <NotificationLevelBadge level={mapHealthStatusToLevel(system.status)} />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-xs font-medium text-foreground">{system.label}</span>
                             <span className="block truncate text-caption text-muted-foreground">
@@ -420,7 +413,7 @@ export function SystemHealthPanel() {
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        {getStatusIcon(system.status)}
+                        <NotificationLevelBadge level={mapHealthStatusToLevel(system.status)} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-medium text-foreground">{system.label}</span>
                           <span className="block truncate text-caption text-muted-foreground">{system.detail}</span>
