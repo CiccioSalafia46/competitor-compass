@@ -320,6 +320,12 @@
   }
 }
 
+/* Brief auto-slide progress bar — 8s linear fill, paused on hover via group */
+@keyframes brief-progress {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
 /* Sparkline bar drawing animation */
 @keyframes sparkline-bar-in {
   from { opacity: 0; transform: scaleY(0); transform-origin: bottom; }
