@@ -606,16 +606,12 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
   const actions = payload.actions ?? [];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
 
       {/* ── REPORT HEADER ── */}
       <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
         <div className="flex flex-col gap-4 px-6 py-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-1.5">
-            <h2 className="text-xl font-bold tracking-tight text-foreground">{payload.title}</h2>
-            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">{payload.subtitle}</p>
-          </div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">{payload.title}</h2>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadReportJson(run)}>
               <Download className="h-4 w-4" />
@@ -668,10 +664,10 @@ function ReportViewer({ run }: { run: ReportRunRecord }) {
         </div>
       </div>
 
-      {/* ── CHARTS ── */}
-      {payload.charts.length > 0 && (
+      {/* ── CHARTS — only render charts that actually have data ── */}
+      {payload.charts.filter((c) => c.data.length > 0).length > 0 && (
         <div className="grid gap-4 xl:grid-cols-2">
-          {payload.charts.map((chart) => (
+          {payload.charts.filter((c) => c.data.length > 0).map((chart) => (
             <Card key={chart.id} className="border shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-nav font-semibold">{chart.title}</CardTitle>
@@ -1023,21 +1019,15 @@ export default function Reports() {
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-6 p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
+    <div className="mx-auto max-w-[1200px] space-y-8 p-4 sm:p-6 lg:p-8">
+      {/* Header — minimal */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-baseline gap-2">
           <h1 className="page-title">{t("title")}</h1>
-          <p className="page-description">{t("description")}</p>
-          {!canCreateReports && (
-            <p className="text-xs text-muted-foreground/60">{t("readOnly")}</p>
-          )}
+          <span className="text-xs text-muted-foreground">· {recentRuns.length} generated</span>
+          {!canCreateReports && <span className="text-xs text-muted-foreground/60">({t("readOnly")})</span>}
         </div>
-        <div className="flex flex-wrap shrink-0 items-center gap-1.5">
-          <Button variant="ghost" size="sm" className="h-9 gap-1.5 text-xs" onClick={() => void refetch()}>
-            <RefreshCcw className="h-3.5 w-3.5" />
-            {t("buttons.refresh")}
-          </Button>
+        <div className="flex shrink-0 items-center gap-1.5">
           <Button
             size="sm"
             className="h-9 gap-1.5 text-xs"
@@ -1045,8 +1035,14 @@ export default function Reports() {
             disabled={!canCreateReports || generatingTemplate === "weekly_competitor_pulse"}
           >
             <WandSparkles className="h-3.5 w-3.5" />
-            {generatingTemplate === "weekly_competitor_pulse" ? t("buttons.generating") : "Generate fresh report"}
+            {generatingTemplate === "weekly_competitor_pulse" ? t("buttons.generating") : "Generate new"}
           </Button>
+          {activeSchedules.length > 0 && (
+            <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs" onClick={() => openCreateSchedule()}>
+              <CalendarClock className="h-3.5 w-3.5" />
+              {t("buttons.schedule")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1121,7 +1117,7 @@ export default function Reports() {
                     type="button"
                     onClick={() => setSelectedRunId(run.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-accent/5",
+                      "flex w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 hover:bg-accent/5",
                       "border-l-[3px]",
                       run.id === selectedRun?.id ? "border-l-primary bg-primary/5" : "border-l-transparent",
                     )}
@@ -1223,9 +1219,6 @@ export default function Reports() {
                       <p className="text-sm font-medium text-foreground">{template.label}</p>
                     </div>
                     <p className="mt-1.5 text-xs text-muted-foreground">{template.description}</p>
-                    <p className="mt-1 text-[10px] text-muted-foreground/60">
-                      {isCustom ? t("configurableRange") : t("defaultRange", { count: template.defaultRangeDays })}
-                    </p>
                     <div className="mt-2">
                       {isCustom ? (
                         <Button size="sm" variant="outline" className="h-7 gap-1 text-[11px]" onClick={() => setBuilderOpen(true)} disabled={!canCreateReports}>
