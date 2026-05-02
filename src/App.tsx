@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -21,44 +22,43 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthRedirect from "./components/AuthRedirect";
 
-// Lazy loaded pages
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Newsletters = lazy(() => import("./pages/Newsletters"));
-const NewNewsletter = lazy(() => import("./pages/NewNewsletter"));
-const NewsletterDetail = lazy(() => import("./pages/NewsletterDetail"));
-const NewsletterInbox = lazy(() => import("./pages/NewsletterInbox"));
-const NewsletterReader = lazy(() => import("./pages/NewsletterReader"));
-const Competitors = lazy(() => import("./pages/Competitors"));
-const AnalysisView = lazy(() => import("./pages/AnalysisView"));
-const SettingsPage = lazy(() => import("./pages/Settings"));
-const TeamManagement = lazy(() => import("./pages/TeamManagement"));
-const UsageDashboard = lazy(() => import("./pages/UsageDashboard"));
-const Billing = lazy(() => import("./pages/Billing"));
-const MetaAds = lazy(() => import("./pages/MetaAds"));
-const MetaAdsCompare = lazy(() => import("./pages/MetaAdsCompare"));
-const Insights = lazy(() => import("./pages/Insights"));
-const Analytics = lazy(() => import("./pages/Analytics"));
-const Alerts = lazy(() => import("./pages/Alerts"));
-const Reports = lazy(() => import("./pages/Reports"));
-const WeeklyBriefing = lazy(() => import("./pages/WeeklyBriefing"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
+// Lazy loaded pages — wrapped with retry for resilient chunk loading after deploys
+const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
+const Onboarding = lazyWithRetry(() => import("./pages/Onboarding"));
+const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+const Newsletters = lazyWithRetry(() => import("./pages/Newsletters"));
+const NewNewsletter = lazyWithRetry(() => import("./pages/NewNewsletter"));
+const NewsletterDetail = lazyWithRetry(() => import("./pages/NewsletterDetail"));
+const NewsletterInbox = lazyWithRetry(() => import("./pages/NewsletterInbox"));
+const NewsletterReader = lazyWithRetry(() => import("./pages/NewsletterReader"));
+const Competitors = lazyWithRetry(() => import("./pages/Competitors"));
+const AnalysisView = lazyWithRetry(() => import("./pages/AnalysisView"));
+const SettingsPage = lazyWithRetry(() => import("./pages/Settings"));
+const TeamManagement = lazyWithRetry(() => import("./pages/TeamManagement"));
+const UsageDashboard = lazyWithRetry(() => import("./pages/UsageDashboard"));
+const Billing = lazyWithRetry(() => import("./pages/Billing"));
+const MetaAds = lazyWithRetry(() => import("./pages/MetaAds"));
+const MetaAdsCompare = lazyWithRetry(() => import("./pages/MetaAdsCompare"));
+const Insights = lazyWithRetry(() => import("./pages/Insights"));
+const Analytics = lazyWithRetry(() => import("./pages/Analytics"));
+const Alerts = lazyWithRetry(() => import("./pages/Alerts"));
+const Reports = lazyWithRetry(() => import("./pages/Reports"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const Privacy = lazyWithRetry(() => import("./pages/Privacy"));
+const Terms = lazyWithRetry(() => import("./pages/Terms"));
 
 // Admin pages
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
-const AdminWorkspaces = lazy(() => import("./pages/admin/AdminWorkspaces"));
-const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
-const AdminIntegrations = lazy(() => import("./pages/admin/AdminIntegrations"));
-const AdminIssues = lazy(() => import("./pages/admin/AdminIssues"));
-const AdminSecrets = lazy(() => import("./pages/admin/AdminSecrets"));
-const AdminBilling = lazy(() => import("./pages/admin/AdminBilling"));
-const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
+const AdminLayout = lazyWithRetry(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazyWithRetry(() => import("./pages/admin/AdminUsers"));
+const AdminWorkspaces = lazyWithRetry(() => import("./pages/admin/AdminWorkspaces"));
+const AdminLogs = lazyWithRetry(() => import("./pages/admin/AdminLogs"));
+const AdminIntegrations = lazyWithRetry(() => import("./pages/admin/AdminIntegrations"));
+const AdminIssues = lazyWithRetry(() => import("./pages/admin/AdminIssues"));
+const AdminSecrets = lazyWithRetry(() => import("./pages/admin/AdminSecrets"));
+const AdminBilling = lazyWithRetry(() => import("./pages/admin/AdminBilling"));
+const AdminSystemHealth = lazyWithRetry(() => import("./pages/admin/AdminSystemHealth"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -113,7 +113,7 @@ const App = () => (
                     <Route path="/meta-ads" element={<RouteGuard minimumRole="analyst" requireVerified><MetaAds /></RouteGuard>} />
                     <Route path="/meta-ads/compare" element={<RouteGuard minimumRole="analyst" requireVerified><MetaAdsCompare /></RouteGuard>} />
                     <Route path="/insights" element={<RouteGuard minimumRole="analyst" requireVerified><Insights /></RouteGuard>} />
-                    <Route path="/weekly-briefing" element={<RouteGuard minimumRole="analyst" requireVerified><WeeklyBriefing /></RouteGuard>} />
+                    <Route path="/weekly-briefing" element={<Navigate to="/reports" replace />} />
                     <Route path="/analytics" element={<RouteGuard><Analytics /></RouteGuard>} />
                     <Route path="/reports" element={<RouteGuard requireVerified><Reports /></RouteGuard>} />
                     <Route path="/alerts" element={<RouteGuard requireVerified><Alerts /></RouteGuard>} />

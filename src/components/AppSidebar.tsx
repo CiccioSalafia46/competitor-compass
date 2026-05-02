@@ -23,7 +23,7 @@ import {
   BarChart3, LayoutDashboard, Newspaper, Users, Settings, LogOut,
   Shield, Inbox, Megaphone, Lightbulb,
   Bell, CreditCard, UserRound,
-  FileText, Sparkles, ChevronsUpDown, Check,
+  FileText, ChevronsUpDown, Check,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -128,7 +128,6 @@ export const AppSidebar = memo(function AppSidebar() {
   const intelligenceNav = useMemo(
     () => [
       { label: t("insights"), icon: Lightbulb, path: "/insights", matchPrefix: "/insights", show: isAnalyst, count: counts?.insights },
-      { label: t("weeklyBriefing"), icon: Sparkles, path: "/weekly-briefing", matchPrefix: "/weekly-briefing", show: isAnalyst },
       { label: t("reports"), icon: FileText, path: "/reports", matchPrefix: "/reports", show: canViewData },
       { label: t("alerts"), icon: Bell, path: "/alerts", matchPrefix: "/alerts", show: true, count: counts?.alerts },
       { label: t("metaAds"), icon: Megaphone, path: "/meta-ads", matchPrefix: "/meta-ads", show: isAnalyst, badge: tier !== "premium" ? t("common:premium") : undefined },
