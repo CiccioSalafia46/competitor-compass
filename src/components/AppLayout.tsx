@@ -16,6 +16,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useTranslation } from "react-i18next";
 import { isTransientNavigationFetchError } from "@/lib/transient-network";
+import { RadarLoader } from "@/components/RadarLoader";
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
@@ -23,10 +24,7 @@ export default function AppLayout() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-xs text-muted-foreground">Loading…</p>{/* pre-i18n intentional — translations may not be ready yet */}
-        </div>
+        <RadarLoader label="Loading…" />
       </div>
     );
   }

@@ -12,6 +12,7 @@ import { SubscriptionProvider } from "@/hooks/useSubscription";
 import AppLayout from "./components/AppLayout";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { RouteGuard } from "@/components/RouteGuard";
+import { RadarLoader } from "@/components/RadarLoader";
 
 function AdminGuardWrapper({ children }: { children: React.ReactNode }) {
   return <AdminGuard>{children}</AdminGuard>;
@@ -74,10 +75,7 @@ const queryClient = new QueryClient({
 function PageLoader() {
   return (
     <div className="flex h-full min-h-[200px] items-center justify-center">
-      <div className="flex flex-col items-center gap-2">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-xs text-muted-foreground">Loading…</p>
-      </div>
+      <RadarLoader label="Loading…" />
     </div>
   );
 }

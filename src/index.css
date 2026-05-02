@@ -320,6 +320,21 @@
   }
 }
 
+/* Radar loader — sweep rotation, dot pulse, dot ping */
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes radar-dot-pulse {
+  0%, 100% { opacity: 0.5; r: 2; }
+  50%      { opacity: 1;   r: 2.5; }
+}
+@keyframes radar-dot-ping {
+  0%, 100% { opacity: 0;   r: 4; }
+  30%      { opacity: 0.5; r: 8; }
+  60%      { opacity: 0;   r: 10; }
+}
+
 /* Brief auto-slide progress bar — 8s linear fill, paused on hover via group */
 @keyframes brief-progress {
   from { transform: scaleX(0); }
