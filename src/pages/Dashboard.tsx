@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDistanceToNow, type Locale } from "date-fns";
 import { de, enUS, es, fr, it } from "date-fns/locale";
@@ -9,6 +9,7 @@ import {
   ArrowRight,
   CheckCircle2,
   ChevronDown as ChevronDownIcon,
+  ChevronLeft,
   ChevronRight,
   ChevronUp,
   Minus,
@@ -302,6 +303,8 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedPeriod = (searchParams.get("period") as DashboardPeriod | null) ?? "7d";
   const [briefIndex, setBriefIndex] = useState(0);
+  const [briefPaused, setBriefPaused] = useState(false);
+  const briefContainerRef = useRef<HTMLDivElement>(null);
 
   const localeCode = i18n.resolvedLanguage || i18n.language || "en";
   const dateFnsLocale = useMemo(() => getDateFnsLocale(localeCode), [localeCode]);
@@ -337,6 +340,30 @@ export default function Dashboard() {
     [snapshotDecisionModel, aiSummary, periodInsights],
   );
   useEffect(() => { if (briefIndex >= todayBriefs.length) setBriefIndex(0); }, [briefIndex, todayBriefs.length]);
+
+  // Auto-slide briefs every 8s, paused on hover or manual interaction
+  useEffect(() => {
+    if (briefPaused || todayBriefs.length <= 1) return;
+    const timer = setInterval(() => {
+      setBriefIndex((prev) => (prev + 1) % todayBriefs.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [briefPaused, todayBriefs.length]);
+
+  const handleBriefSelect = useCallback((i: number) => {
+    setBriefIndex(i);
+    setBriefPaused(true);
+  }, []);
+
+  const handleBriefPrev = useCallback(() => {
+    setBriefIndex((prev) => (prev - 1 + todayBriefs.length) % todayBriefs.length);
+    setBriefPaused(true);
+  }, [todayBriefs.length]);
+
+  const handleBriefNext = useCallback(() => {
+    setBriefIndex((prev) => (prev + 1) % todayBriefs.length);
+    setBriefPaused(true);
+  }, [todayBriefs.length]);
 
   const actions = useMemo(() => (snapshotDecisionModel?.recommendedActions ?? []).slice(0, 3), [snapshotDecisionModel?.recommendedActions]);
   const signals = useMemo(
@@ -396,15 +423,23 @@ export default function Dashboard() {
       />
 
       <MacWindow title="Today's Brief">
-        <TodayBrief
-          brief={currentBrief}
-          briefCount={todayBriefs.length}
-          activeIndex={briefIndex}
-          onSelectBrief={setBriefIndex}
-          onOpen={() => currentBrief && navigate(currentBrief.href)}
-          hasData={hasData}
-          onConnectSource={() => navigate(gmailConnected ? "/newsletters/new" : "/settings")}
-        />
+        <div
+          ref={briefContainerRef}
+          onMouseEnter={() => setBriefPaused(true)}
+          onMouseLeave={() => setBriefPaused(false)}
+        >
+          <TodayBrief
+            brief={currentBrief}
+            briefCount={todayBriefs.length}
+            activeIndex={briefIndex}
+            onSelectBrief={handleBriefSelect}
+            onPrev={handleBriefPrev}
+            onNext={handleBriefNext}
+            onOpen={() => currentBrief && navigate(currentBrief.href)}
+            hasData={hasData}
+            onConnectSource={() => navigate(gmailConnected ? "/newsletters/new" : "/settings")}
+          />
+        </div>
       </MacWindow>
 
       <MacWindow title="Action queue">
@@ -601,12 +636,19 @@ function KpiCard({ eyebrow, value, color, sparkline, formatter, suffix, syncStat
 // ─── TodayBrief ───────────────────────────────────────────────────
 
 function TodayBrief({
-  brief, briefCount, activeIndex, onSelectBrief, onOpen, hasData, onConnectSource,
+  brief, briefCount, activeIndex, onSelectBrief, onPrev, onNext, onOpen, hasData, onConnectSource,
 }: {
   brief: TodayBriefItem | null; briefCount: number; activeIndex: number;
-  onSelectBrief: (i: number) => void; onOpen: () => void; hasData: boolean; onConnectSource: () => void;
+  onSelectBrief: (i: number) => void; onPrev: () => void; onNext: () => void;
+  onOpen: () => void; hasData: boolean; onConnectSource: () => void;
 }) {
   const { t } = useTranslation("dashboard");
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (briefCount <= 1) return;
+    if (e.key === "ArrowLeft") { e.preventDefault(); onPrev(); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); onNext(); }
+  }, [briefCount, onPrev, onNext]);
 
   if (!brief) {
     return (
@@ -627,53 +669,84 @@ function TodayBrief({
   const priorityStyle = PRIORITY_STYLES[brief.priority];
 
   return (
-    <section className="motion-safe:animate-data-in border-l-4 border-l-violet-500 dark:border-l-violet-400 p-6 sm:p-8">
+    <section
+      className="border-l-4 border-l-violet-500 dark:border-l-violet-400 p-6 sm:p-8 outline-none"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-roledescription="carousel"
+      aria-label={t("todaysBriefEyebrow")}
+    >
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="text-caption font-semibold uppercase tracking-[0.08em] text-violet-600 dark:text-violet-400">{t("todaysBriefEyebrow")}</span>
         <span className="h-1.5 w-1.5 rounded-full bg-violet-500 dot-live" />
         {briefCount > 1 && (
-          <div className="ml-auto flex items-center gap-1" aria-label={t("briefPagination")}>
-            {Array.from({ length: briefCount }).map((_, index) => (
-              <button
-                key={index}
-                className={cn("h-1.5 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", index === activeIndex ? "w-5 bg-violet-500" : "w-1.5 bg-border")}
-                onClick={() => onSelectBrief(index)}
-                aria-label={t("openBriefNumber", { value: index + 1 })}
-              />
-            ))}
-          </div>
+          <nav className="ml-auto flex items-center gap-1.5" aria-label={t("briefPagination")}>
+            <button
+              className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={onPrev}
+              aria-label={t("previousBrief", { defaultValue: "Previous brief" })}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: briefCount }).map((_, index) => (
+                <button
+                  key={index}
+                  className={cn(
+                    "rounded-full transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    index === activeIndex ? "h-2 w-6 bg-violet-500" : "h-2 w-2 bg-border hover:bg-muted-foreground/50",
+                  )}
+                  onClick={() => onSelectBrief(index)}
+                  aria-label={t("openBriefNumber", { value: index + 1 })}
+                  aria-current={index === activeIndex ? "step" : undefined}
+                />
+              ))}
+            </div>
+            <button
+              className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={onNext}
+              aria-label={t("nextBrief", { defaultValue: "Next brief" })}
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+            <span className="ml-1 text-xs tabular-nums text-muted-foreground">
+              {activeIndex + 1}/{briefCount}
+            </span>
+          </nav>
         )}
       </div>
 
-      <h1 className="max-w-3xl text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
-        {brief.headline}
-      </h1>
+      <div key={brief.id} className="motion-safe:animate-data-in">
+        <h1 className="max-w-3xl text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
+          {brief.headline}
+        </h1>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <div>
-          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">
-            {t("whyItMatters")}
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.why}</p>
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <div>
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              {t("whyItMatters")}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.why}</p>
+          </div>
+          <div>
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-violet-600 dark:text-violet-400">
+              {t("suggestedAction")}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.action}</p>
+          </div>
         </div>
-        <div>
-          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-violet-600 dark:text-violet-400">
-            {t("suggestedAction")}
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{brief.action}</p>
-        </div>
-      </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        {brief.competitor && <Badge variant="secondary" className="rounded-md">{brief.competitor}</Badge>}
-        {brief.category && <Badge variant="outline" className="rounded-md capitalize">{brief.category}</Badge>}
-        <Badge variant="outline" className={cn("rounded-md capitalize", priorityStyle.badgeClassName)}>
-          {t(PRIORITY_LABEL_KEYS[brief.priority])}
-        </Badge>
-        <Button size="sm" className="ml-0 h-9 gap-1.5 text-xs sm:ml-auto" onClick={onOpen}>
-          {t("openInsight")}
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          {brief.competitor && <Badge variant="secondary" className="rounded-md">{brief.competitor}</Badge>}
+          {brief.category && <Badge variant="outline" className="rounded-md capitalize">{brief.category}</Badge>}
+          <Badge variant="outline" className={cn("rounded-md capitalize", priorityStyle.badgeClassName)}>
+            {t(PRIORITY_LABEL_KEYS[brief.priority])}
+          </Badge>
+          <Button size="sm" className="ml-0 h-9 gap-1.5 text-xs sm:ml-auto" onClick={onOpen}>
+            {t("openInsight")}
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
     </section>
   );
