@@ -335,20 +335,76 @@ function matchesSchedule(input: ReportScheduleInput, date: Date) {
 }
 
 function getTopInsightSummaries(insights: NormalizedInsight[], limit = 5): ReportInsightSummary[] {
-  return [...insights]
-    .sort(compareDashboardInsights)
-    .slice(0, limit)
-    .map((insight) => ({
-      id: insight.id,
-      title: insight.title,
-      takeaway: insight.strategic_takeaway || insight.strategic_implication || insight.why_it_matters,
-      competitorNames: insight.affected_competitors,
-      campaignType: formatCampaignType(insight.campaign_type),
-      priorityLevel: insight.priority_level,
-      impactArea: insight.impact_area,
-      confidence: insight.confidence,
-    }));
+  const sorted = [...insights].sort(compareDashboardInsights);
+  const deduped: NormalizedInsight[] = [];
+
+  // Cross-insight dedup: skip insights whose title overlaps >40% with an already-selected one
+  const contentWords = (text: string) =>
+    new Set(text.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter((w) => w.length > 3));
+  for (const insight of sorted) {
+    const titleWords = contentWords(insight.title);
+    const isDuplicate = deduped.some((existing) => {
+      const existingWords = contentWords(existing.title);
+      if (titleWords.size === 0 || existingWords.size === 0) return false;
+      const overlap = [...titleWords].filter((w) => existingWords.has(w)).length;
+      return overlap > Math.min(titleWords.size, existingWords.size) * 0.4;
+    });
+    if (!isDuplicate) deduped.push(insight);
+    if (deduped.length >= limit) break;
+  }
+
+  return deduped.map((insight) => ({
+    id: insight.id,
+    title: insight.title,
+    takeaway: insight.strategic_takeaway || insight.strategic_implication || insight.why_it_matters,
+    competitorNames: insight.affected_competitors,
+    campaignType: formatCampaignType(insight.campaign_type),
+    priorityLevel: insight.priority_level,
+    impactArea: insight.impact_area,
+    confidence: insight.confidence,
+  }));
 }
+
+// Varied verb templates for recommended actions — each insight gets a different framing
+const INSIGHT_ACTION_TEMPLATES: Array<{
+  title: (insight: ReportInsightSummary) => string;
+  detail: (insight: ReportInsightSummary) => string;
+}> = [
+  {
+    title: (i) => `Counter ${formatCompetitorList(i.competitorNames)}'s ${i.campaignType} move`,
+    detail: (i) => `${i.takeaway} Audit your current positioning against this shift this week.`,
+  },
+  {
+    title: (i) => `Differentiate from ${formatCompetitorList(i.competitorNames)} on ${i.impactArea}`,
+    detail: (i) => `${i.takeaway} Identify where your ${i.impactArea} angle diverges and double down.`,
+  },
+  {
+    title: (i) => `Pre-empt ${formatCompetitorList(i.competitorNames)}'s next step`,
+    detail: (i) => `${i.takeaway} Ship your response before their momentum compounds.`,
+  },
+  {
+    title: (i) => `Test a response to ${i.campaignType} pressure`,
+    detail: (i) => `${i.takeaway} Run a focused experiment this sprint and measure impact within 14 days.`,
+  },
+  {
+    title: (i) => `Block ${formatCompetitorList(i.competitorNames)}'s ${i.impactArea} gain`,
+    detail: (i) => `${i.takeaway} Secure your position before the window closes.`,
+  },
+];
+
+const COMPETITOR_ACTION_TEMPLATES: Array<{
+  title: (name: string) => string;
+  detail: (opportunity: string) => string;
+}> = [
+  {
+    title: (name) => `Capture uncontested ground vs ${name}`,
+    detail: (opp) => opp,
+  },
+  {
+    title: (name) => `Outflank ${name} on underserved segments`,
+    detail: (opp) => opp,
+  },
+];
 
 function buildRecommendedActions(
   insights: ReportInsightSummary[],
@@ -356,25 +412,26 @@ function buildRecommendedActions(
 ): ReportAction[] {
   const actions: ReportAction[] = [];
 
-  for (const insight of insights.slice(0, 3)) {
+  for (let i = 0; i < Math.min(insights.length, 3); i++) {
+    const template = INSIGHT_ACTION_TEMPLATES[i % INSIGHT_ACTION_TEMPLATES.length];
     actions.push({
-      title: `Respond to ${insight.title}`,
-      detail: `${formatCompetitorList(insight.competitorNames)} is signaling ${insight.campaignType}. ${insight.takeaway}`,
-      priority: insight.priorityLevel,
+      title: template.title(insights[i]),
+      detail: template.detail(insights[i]),
+      priority: insights[i].priorityLevel,
     });
   }
 
+  let competitorTemplateIndex = 0;
   for (const competitor of competitorSnapshots.slice(0, 2)) {
     const opportunity = competitor.opportunities[0];
-    if (!opportunity) {
-      continue;
-    }
-
+    if (!opportunity) continue;
+    const template = COMPETITOR_ACTION_TEMPLATES[competitorTemplateIndex % COMPETITOR_ACTION_TEMPLATES.length];
     actions.push({
-      title: `Exploit whitespace against ${competitor.competitorName}`,
-      detail: opportunity,
+      title: template.title(competitor.competitorName),
+      detail: template.detail(opportunity),
       priority: competitor.activity.totalSignals >= 6 ? "high" : "medium",
     });
+    competitorTemplateIndex++;
   }
 
   return actions.slice(0, 5);
@@ -399,14 +456,14 @@ function buildWhatChanged(context: ReportBuilderContext, insights: ReportInsight
 
 function buildWhatMatters(context: ReportBuilderContext, insights: ReportInsightSummary[], actions: ReportAction[]) {
   const topInsight = insights[0];
-  const topAction = actions[0];
 
-  if (topInsight && topAction) {
-    return `${topInsight.title} matters most because it is a ${topInsight.impactArea} issue with ${topInsight.priorityLevel} priority. Recommended next move: ${topAction.title}.`;
+  if (topInsight) {
+    // Use takeaway (consequence) instead of repeating the title (fact) — avoids cross-section redundancy
+    return `The highest-priority signal is a ${topInsight.priorityLevel}-severity ${topInsight.impactArea} shift from ${formatCompetitorList(topInsight.competitorNames)}. ${topInsight.takeaway}`;
   }
 
-  if (topAction) {
-    return topAction.detail;
+  if (actions[0]) {
+    return actions[0].detail;
   }
 
   return "No high-confidence competitor move stands out yet. Keep ingestion active to strengthen the decision layer.";
