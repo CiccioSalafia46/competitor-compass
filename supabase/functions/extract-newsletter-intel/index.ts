@@ -520,15 +520,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    const systemPrompt = `You are a competitive intelligence analyst specializing in newsletter analysis for B2B and B2C companies.
-Extract structured intelligence from the newsletter content provided. Write all text values in ${languageName}. JSON keys, competitor names, brand names, product names, URLs, coupon codes, and numeric values must remain in English.
+    const systemPrompt = `You are a competitive intelligence analyst extracting structured data from newsletter emails. Write all text values in ${languageName}. JSON keys, competitor names, brand names, product names, URLs, coupon codes, and numeric values stay in English.
 
-RULES:
+# RULES
 - Only report what you can directly observe or reasonably infer
 - Never fabricate data not present in the source
 - If a field cannot be determined, use null
-- Provide a confidence score (0.0-1.0) for each field you extract
-- For arrays, only include items you have evidence for`;
+- For arrays, only include items you have evidence for
+
+# FIELD ROLES — distinct jobs, no overlap
+- campaign_type: classify the email's purpose (e.g. "Discount drop", "Product launch", "Lifecycle push")
+- main_message: the core promise or value proposition being communicated. Quote or paraphrase the email's primary pitch. Do NOT describe the email — capture its message.
+- offers: specific commercial offers with exact terms (discount %, coupon code, expiry). Only include if explicitly stated.
+- calls_to_action: the exact CTAs used (button text, link text). Quote directly.
+- urgency_signals: specific urgency/scarcity language used. Quote exact phrases.
+- strategy_takeaways: 2-4 STRATEGIC observations about what this email reveals about the competitor's priorities. Each takeaway must cover a DIFFERENT angle. Do NOT restate main_message — instead explain what the email IMPLIES about their go-to-market.`;
 
     const userPrompt = `Analyze this competitor newsletter and extract structured intelligence:
 

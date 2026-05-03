@@ -517,16 +517,23 @@ function normalizeInsight(
     return null;
   }
 
-  // Reject insights where title and why_it_matters overlap too heavily.
+  // Reject insights where key narrative fields overlap too heavily.
   // Content words = words longer than 3 chars (skip "the", "and", "is", etc.).
   const contentWords = (text: string) =>
     new Set(text.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter((w) => w.length > 3));
-  const titleWords = contentWords(title);
-  const whyWords = contentWords(whyItMatters);
-  const overlapCount = [...titleWords].filter((w) => whyWords.has(w)).length;
-  if (titleWords.size > 0 && overlapCount > Math.min(titleWords.size, whyWords.size) * 0.5) {
-    return null;
-  }
+  const pairOverlap = (a: string, b: string, threshold: number): boolean => {
+    const setA = contentWords(a);
+    const setB = contentWords(b);
+    if (setA.size === 0 || setB.size === 0) return false;
+    const overlap = [...setA].filter((w) => setB.has(w)).length;
+    return overlap > Math.min(setA.size, setB.size) * threshold;
+  };
+  // title ↔ why_it_matters: strict (40%)
+  if (pairOverlap(title, whyItMatters, 0.4)) return null;
+  // why_it_matters ↔ strategic_implication: must be distinct (50%)
+  if (pairOverlap(whyItMatters, strategicImplication, 0.5)) return null;
+  // title ↔ strategic_takeaway: must be distinct (50%)
+  if (pairOverlap(title, strategicTakeaway, 0.5)) return null;
 
   return {
     category,
@@ -1454,13 +1461,32 @@ Deno.serve(async (req) => {
         {
           role: "system",
           content:
-            `You are a principal competitive-intelligence analyst and senior marketing strategist. Produce dense, quantified, non-generic insights for a SaaS user monitoring competitor newsletters and paid ads. Each insight must be specific, commercially useful, grounded in the provided data, and written to help a team decide what to do next. Your output must be structurally consistent and analytics-ready. Write all narrative text fields (title, main_message, what_is_happening, why_it_matters, strategic_implication, strategic_takeaway, recommended_response, cta_analysis, positioning_angle, and evidence detail fields) in ${languageName}. JSON keys, competitor names, brand names, URLs, coupon codes, and numeric values must remain unchanged regardless of language.
+            `You are a principal competitive-intelligence analyst. Produce dense, quantified, non-generic insights for a SaaS team monitoring competitor newsletters and paid ads. Every insight must be specific, commercially useful, grounded in the provided data. Write all narrative text in ${languageName}. JSON keys, competitor names, brand names, URLs, coupon codes, and numeric values stay unchanged.
 
-STRICT FIELD DIFFERENTIATION RULES — these override any default tendencies:
-- title: max 8 words. Format: Subject + Verb + Object. NEVER use category labels like "New campaign signal" or "Pricing update detected". Be specific about WHO did WHAT. Good: "Lovable tests email-first campaign coordination". Bad: "New email strategy detected".
-- why_it_matters: MUST explain the strategic IMPLICATION, not restate the fact from the title. Reference market patterns, correlations, or downstream effects on demand, conversion, pricing power, or share of voice. Start with a causal framing ("Because...", "This suggests...", "Historically when competitors..."). 1-2 sentences only.
-- recommended_response: imperative voice, time-bound, specific. Tell the user what to do THIS WEEK. Reference the competitor or pattern by name. Must contain a concrete action verb (audit, launch, test, increase, reduce, compare), never "monitor", "watch closely", or "stay ahead".
-- DEDUPLICATION RULE: title = the FACT, why_it_matters = the CONSEQUENCE, recommended_response = the ACTION. If any two share more than 50% of their meaningful content words, regenerate the overlapping field with stronger distinction. Validate this before returning.`,
+# FIELD ROLES — each field has ONE distinct job. NEVER repeat the same idea across fields.
+
+1. title — THE FACT. Subject + Verb + Object, max 8 words. Who did what. Good: "Lovable doubles email cadence before launch". Bad: "New campaign signal" or "Email strategy update detected".
+2. main_message — THE COMPETITOR'S PITCH. What value proposition or promise the competitor is pushing. Quote or paraphrase their actual messaging. Do NOT describe the fact again.
+3. what_is_happening — THE CONTEXT. Market backdrop, industry timing, or competitor landscape that makes this fact notable. Different from both title (fact) and why_it_matters (consequence).
+4. why_it_matters — THE CONSEQUENCE for the user. Start with "Because". Reference effects on demand, conversion, pricing power, or share of voice. Never restate the fact from title.
+5. strategic_implication — THE RISK OF INACTION. Start with "If you don't act". What happens if the team ignores this signal. Different from why_it_matters (consequence) — this is about the cost of doing nothing.
+6. strategic_takeaway — EXECUTIVE HEADLINE. One sentence a CMO can act on. Not a restatement of any other field.
+7. recommended_response — THREE-LINE ACTION PLAN formatted as: "Immediate: [action this week]\\nNext 30 days: [follow-up]\\nMeasure: [specific KPI or signal to track]". Imperative voice, specific verbs (audit, launch, test, increase, reduce, compare). Never "monitor", "watch closely", or "stay ahead".
+8. cta_analysis — CTA DECONSTRUCTION. How the competitor's call-to-action tries to move the buyer through the funnel. Analyze the CTA design and psychology, not the product.
+9. positioning_angle — COMPETITIVE FRAMING. How the competitor positions their value vs alternatives. What differentiation lever they're pulling (price, speed, trust, novelty, etc.).
+
+# ANTI-REDUNDANCY RULES (CRITICAL)
+
+Before returning each insight, verify:
+- No sentence appears in more than one field.
+- title and why_it_matters share < 40% content words. If they overlap, rewrite why_it_matters with stronger causal framing.
+- strategic_implication and why_it_matters are distinct: one is the consequence, the other is the cost of inaction.
+- recommended_response contains NO explanatory text — only actions.
+- Each insight across the batch covers a DIFFERENT signal. If two insights describe the same competitor doing the same thing, merge them into one.
+
+# TONE
+
+Analyst-grade, calm, factual. No preambles, no disclaimers, no AI jargon. Match the locale above.`,
         },
         {
           role: "user",
@@ -1515,19 +1541,55 @@ STRICT FIELD DIFFERENTIATION RULES — these override any default tendencies:
       ],
     });
 
-    if (completion.ok) {
-      usedModel = completion.model;
-      const content = completion.data?.choices?.[0]?.message?.content ?? "";
+    const parseInsightsFromCompletion = (comp: typeof completion) => {
+      const content = comp.data?.choices?.[0]?.message?.content ?? "";
       const parsed = parseJsonObjectFromContent(typeof content === "string" ? content : "");
       const rawInsights = Array.isArray(parsed?.insights)
         ? parsed.insights
         : Array.isArray(parsed)
           ? parsed
           : [];
-
-      generatedInsights = rawInsights
+      return rawInsights
         .map((item) => normalizeInsight(item, category ?? "messaging_positioning"))
         .filter((item): item is GeneratedInsight => Boolean(item));
+    };
+
+    if (completion.ok) {
+      usedModel = completion.model;
+      generatedInsights = parseInsightsFromCompletion(completion);
+
+      // Retry once with feedback if too many insights were rejected by validation
+      const minimumAcceptable = category ? 3 : 5;
+      if (generatedInsights.length < minimumAcceptable) {
+        log("quality_retry", { accepted: generatedInsights.length, minimum: minimumAcceptable });
+        const retryCompletion = await createOpenAiChatCompletion({
+          modelCandidates,
+          temperature: 0.35,
+          responseFormat: { type: "json_object" },
+          maxCompletionTokens: 6500,
+          messages: [
+            ...completion.data?.choices?.[0]?.message
+              ? [{ role: "system" as const, content: completion.data.choices[0].message.content ?? "" }]
+              : [],
+            {
+              role: "user" as const,
+              content: [
+                `Previous attempt produced only ${generatedInsights.length} valid insights (need ${minimumAcceptable}+). Most were rejected because fields were too similar to each other.`,
+                "CRITICAL: ensure title (fact), why_it_matters (consequence starting with 'Because'), strategic_implication (risk starting with 'If you don\\'t act'), and recommended_response (3-line action plan) are COMPLETELY DIFFERENT from each other. No sentence should appear in more than one field.",
+                `Generate ${category ? "5 to 7" : "8 to 12"} insights. Return only {\"insights\":[...]}.`,
+                JSON.stringify(promptPayload),
+              ].join("\n"),
+            },
+          ],
+        });
+        if (retryCompletion.ok) {
+          const retryInsights = parseInsightsFromCompletion(retryCompletion);
+          if (retryInsights.length > generatedInsights.length) {
+            generatedInsights = retryInsights;
+            usedModel = retryCompletion.model;
+          }
+        }
+      }
     } else {
       usedFallback = true;
       log("openai_failed", {

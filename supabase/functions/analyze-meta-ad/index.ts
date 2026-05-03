@@ -113,7 +113,26 @@ Return ONLY valid JSON, no markdown.`;
         "gpt-4.1-mini",
       ],
       messages: [
-        { role: "system", content: `You are an expert paid media analyst. Analyze ads and return structured JSON. Write all text values (message_angle, offer_angle, promo_language, urgency_style, funnel_intent, creative_pattern, product_category, and strategy_takeaways entries) in ${languageName}. JSON keys and brand/product names must remain in English.` },
+        { role: "system", content: `You are an expert paid media analyst extracting competitive intelligence from Meta ads. Write all text values in ${languageName}. JSON keys and brand/product names stay in English. Return ONLY a JSON object.
+
+# FIELD ROLES — each field has ONE distinct job. NEVER repeat the same idea.
+
+1. message_angle — THE POSITIONING. What underlying value proposition does this ad communicate? Not a description of the ad. Good: "Positions product as time-saver for solo founders". Bad: "The ad promotes a product".
+2. offer_angle — THE COMMERCIAL HOOK. What specific offer, incentive, or deal is presented? Include exact numbers/terms. null if no offer.
+3. promo_language — KEY PHRASES. List the exact promotional phrases/power words used in the copy. Quote directly, don't paraphrase.
+4. urgency_style — SCARCITY TACTICS. How urgency is manufactured (countdown, limited stock, deadline, FOMO). "None detected" if absent. Don't repeat offer_angle.
+5. audience_clues — TARGET SIGNALS. Array of inferred audience attributes from copy, imagery hints, and platform targeting signals. Be specific: "remote workers aged 25-40" not "professionals".
+6. funnel_intent — BUYER STAGE. Where in the funnel: awareness, consideration, conversion, retention, or win-back. One word + brief justification.
+7. creative_pattern — COPY FORMULA. Classify the ad copy pattern: problem-agitate-solve, social proof, testimonial, before-after, listicle, comparison, curiosity gap, etc.
+8. product_category — CATEGORY. Product/service category in 2-3 words.
+9. strategy_takeaways — COMPETITIVE INSIGHTS. 2-4 DISTINCT strategic observations about what this ad reveals about the competitor's priorities, audience, or go-to-market. Each takeaway must cover a different angle. Never repeat message_angle or offer_angle.
+10. confidence — Float 0-1. How much ad content supports the analysis.
+
+# ANTI-REDUNDANCY
+
+- message_angle and strategy_takeaways must not repeat each other.
+- offer_angle and promo_language must not repeat each other (one is the deal, the other is the language used).
+- Each strategy_takeaway must start with a different verb.` },
         { role: "user", content: prompt },
       ],
       responseFormat: { type: "json_object" },

@@ -442,41 +442,46 @@ export async function processNewsletterAnalysisJob(
       }
     }
 
-    const systemPrompt = `You are a competitive intelligence analyst specializing in B2B SaaS. Analyze the following newsletter content and extract structured competitive intelligence. Write all text values (summary, observations, themes, examples, descriptions, significance, signals, details, moves, impacts, and recommendations) in ${languageName}. JSON keys, competitor names, brand names, product names, and URLs must remain in English.
+    const systemPrompt = `You are a competitive intelligence analyst specializing in B2B SaaS. Extract structured competitive intelligence from the newsletter content. Write all text values in ${languageName}. JSON keys, competitor names, brand names, product names, and URLs stay in English.
 
-Your analysis MUST be thorough, actionable, and clearly labeled with confidence levels.
+# RULES
+- Only report what you can directly observe or reasonably infer
+- Label each finding with confidence: "high" (directly stated), "medium" (reasonably inferred), "low" (speculative)
+- If the content is too short or vague, say so in the summary
+- Never fabricate metrics, numbers, or claims not in the source
 
-IMPORTANT RULES:
-- Only report what you can directly observe or reasonably infer from the content
-- Label each finding with confidence: "high" (directly stated), "medium" (reasonably inferred), or "low" (speculative)
-- If the content is too short or vague for meaningful analysis, say so explicitly
-- Never fabricate metrics, numbers, or claims not present in the source material
+# OUTPUT SCHEMA — each section has a DISTINCT role
 
-Return a JSON object with the following structure:
 {
-  "summary": "2-3 sentence executive summary of the newsletter",
+  "summary": "2-3 sentence executive summary — the WHAT and SO WHAT. Not a list of findings.",
   "positioning": [
-    { "observation": "what they're positioning as", "confidence": "high|medium|low", "evidence": "quote or reference from content" }
+    { "observation": "how they position themselves vs alternatives", "confidence": "high|medium|low", "evidence": "exact quote or close paraphrase from the email" }
   ],
   "messaging": [
-    { "theme": "key messaging theme", "examples": ["exact phrases or close paraphrases"], "observation": "analysis of the messaging approach" }
+    { "theme": "key messaging theme (e.g. 'trust', 'speed', 'ROI')", "examples": ["exact phrases from the email"], "observation": "what this messaging approach reveals about their strategy" }
   ],
   "product_launches": [
-    { "product": "name or description", "description": "what it does", "significance": "why this matters competitively" }
+    { "product": "name", "description": "what it does (1 sentence)", "significance": "competitive implication — why this matters to YOU, not to them" }
   ],
   "pricing_signals": [
-    { "signal": "what pricing signal was detected", "detail": "specifics", "confidence": "high|medium|low" }
+    { "signal": "specific pricing move detected", "detail": "exact numbers, terms, or conditions", "confidence": "high|medium|low" }
   ],
   "competitive_moves": [
-    { "move": "what competitive action was taken", "impact": "potential impact", "urgency": "high|medium|low" }
+    { "move": "specific action taken (not a restatement of positioning or messaging)", "impact": "downstream effect on market or your business", "urgency": "high|medium|low" }
   ],
   "recommendations": [
-    "Actionable recommendation 1",
-    "Actionable recommendation 2"
+    "Imperative action sentence (verb-first, time-bound, specific). Max 3 items. Each must suggest a DIFFERENT action."
   ]
 }
 
-Only include sections that have actual findings. If a category has no relevant findings, return an empty array for it.`;
+# ANTI-OVERLAP RULES
+- summary must NOT list individual findings — it synthesizes the overall signal
+- positioning describes HOW they frame themselves; messaging describes WHAT words they use — don't conflate
+- competitive_moves must be ACTIONS (things they DID), not observations about their positioning/messaging
+- recommendations must be about what YOUR TEAM should do, not what the competitor is doing
+- If you can't fill a section with distinct content, return an empty array — don't pad with restatements
+
+Only include sections with actual findings.`;
 
     const userPrompt = `Analyze this competitor newsletter:
 
