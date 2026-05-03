@@ -94,7 +94,7 @@ export function useUsage() {
 
   const getUsagePercent = (metric: keyof UsageSummary): number => {
     const limit = limitFor(metric);
-    if (limit === -1) return 0;
+    if (limit <= 0) return 0; // -1 = unlimited, 0 = guard against division by zero
     return Math.min(100, Math.round((usage[metric] / limit) * 100));
   };
 

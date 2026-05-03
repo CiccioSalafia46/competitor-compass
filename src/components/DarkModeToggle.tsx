@@ -1,6 +1,6 @@
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function DarkModeToggle() {
@@ -10,6 +10,7 @@ export function DarkModeToggle() {
       (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
   });
   const [animate, setAnimate] = useState(false);
+  const animateTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -22,10 +23,13 @@ export function DarkModeToggle() {
     }
   }, [dark]);
 
+  useEffect(() => () => clearTimeout(animateTimer.current), []);
+
   const toggle = () => {
     setAnimate(true);
     setDark(!dark);
-    setTimeout(() => setAnimate(false), 300);
+    clearTimeout(animateTimer.current);
+    animateTimer.current = setTimeout(() => setAnimate(false), 300);
   };
 
   return (

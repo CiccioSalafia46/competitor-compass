@@ -189,21 +189,26 @@ async function refreshToken(
 
   const data = await resp.json();
 
-  const { error: updateError } = await supabase
-    .from("gmail_tokens")
-    .update({
-      access_token: data.access_token,
-      token_expires_at: new Date(Date.now() + (data.expires_in || 3600) * 1000).toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("gmail_connection_id", connectionId);
-
-  if (updateError) {
-    // The refresh succeeded with Google but failed to persist. Log it so the
-    // issue is visible in Supabase function logs. The current request can still
-    // proceed with the in-memory token, but the next cold start will load the
-    // old expired token from DB and fail — surface this loudly.
-    console.error("[gmail-sync] Failed to persist refreshed access token:", updateError);
+  // Persist the refreshed token — retry up to 3 times because a transient DB
+  // failure here causes the *next* sync to load the stale expired token and
+  // present a misleading "Gmail disconnected" error to the user.
+  const tokenPayload = {
+    access_token: data.access_token,
+    token_expires_at: new Date(Date.now() + (data.expires_in || 3600) * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  let persisted = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { error: updateError } = await supabase
+      .from("gmail_tokens")
+      .update(tokenPayload)
+      .eq("gmail_connection_id", connectionId);
+    if (!updateError) { persisted = true; break; }
+    console.error(`[gmail-sync] Token persist attempt ${attempt}/3 failed:`, updateError);
+    if (attempt < 3) await new Promise((r) => setTimeout(r, 500 * attempt));
+  }
+  if (!persisted) {
+    throw new Error("Refreshed token with Google but failed to persist to DB after 3 attempts");
   }
 
   return data.access_token;

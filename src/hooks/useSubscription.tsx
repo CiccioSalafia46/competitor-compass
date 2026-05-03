@@ -127,17 +127,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const openPortal = async () => {
     if (!workspaceId) throw new Error("No workspace selected.");
     const pendingWindow = window.open("about:blank", "_blank");
-    const data = await invokeEdgeFunction<{ url?: string }>("customer-portal", {
-      body: { workspaceId },
-    });
-    if (data?.url) {
-      if (pendingWindow) {
-        pendingWindow.location.href = data.url;
-      } else {
-        window.location.assign(data.url);
+    try {
+      const data = await invokeEdgeFunction<{ url?: string }>("customer-portal", {
+        body: { workspaceId },
+      });
+      if (data?.url) {
+        if (pendingWindow) {
+          pendingWindow.location.href = data.url;
+        } else {
+          window.location.assign(data.url);
+        }
+      } else if (pendingWindow) {
+        pendingWindow.close();
       }
-    } else if (pendingWindow) {
-      pendingWindow.close();
+    } catch (err) {
+      pendingWindow?.close();
+      throw err;
     }
   };
 

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import type { GmailConnection, GmailSyncResult } from "@/types/gmail";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { handleApiError } from "@/lib/handleApiError";
 
 export function useGmailConnection() {
   const { currentWorkspace } = useWorkspace();
@@ -93,6 +94,9 @@ export function useGmailConnection() {
       });
       await fetchConnection();
       return data;
+    } catch (err) {
+      handleApiError(err, { title: "Gmail sync failed" });
+      return undefined;
     } finally {
       setSyncing(false);
     }

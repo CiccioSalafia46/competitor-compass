@@ -13,6 +13,7 @@ import AppLayout from "./components/AppLayout";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { RouteGuard } from "@/components/RouteGuard";
 import { RadarLoader } from "@/components/RadarLoader";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function AdminGuardWrapper({ children }: { children: React.ReactNode }) {
   return <AdminGuard>{children}</AdminGuard>;
@@ -90,6 +91,7 @@ const App = () => (
           <LanguageProvider>
           <WorkspaceProvider>
             <SubscriptionProvider>
+              <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -137,6 +139,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              </ErrorBoundary>
             </SubscriptionProvider>
           </WorkspaceProvider>
           </LanguageProvider>

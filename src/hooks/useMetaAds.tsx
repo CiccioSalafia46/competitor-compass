@@ -138,6 +138,7 @@ export function useMetaAdAnalysis(metaAdId: string | null) {
       .then(({ data, error }) => {
         if (error) {
           console.error("Meta ad analysis fetch error:", error);
+          toast.error("Couldn't load ad analysis", { description: error.message });
           setAnalysis(null);
         } else {
           setAnalysis(data as MetaAdAnalysis | null);
@@ -145,6 +146,7 @@ export function useMetaAdAnalysis(metaAdId: string | null) {
       })
       .catch((err) => {
         console.error("Meta ad analysis fetch failed:", err);
+        toast.error("Couldn't load ad analysis", { description: getErrorMessage(err) });
         setAnalysis(null);
       })
       .finally(() => setLoading(false));

@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * After auth, routes user to onboarding (if no workspace) or dashboard.
@@ -25,9 +26,14 @@ export default function AuthRedirect() {
         <div className="max-w-md text-center">
           <h1 className="text-sm font-semibold text-foreground">Workspace bootstrap failed</h1>
           <p className="mt-2 text-xs text-muted-foreground">{error}</p>
-          <Button className="mt-4" size="sm" onClick={() => void refetch()}>
-            Retry
-          </Button>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Button size="sm" onClick={() => void refetch()}>
+              Retry
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { void supabase.auth.signOut(); window.location.href = "/auth"; }}>
+              Sign out
+            </Button>
+          </div>
         </div>
       </div>
     );
