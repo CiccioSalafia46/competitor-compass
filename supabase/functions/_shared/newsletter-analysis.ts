@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { createOpenAiChatCompletion } from "./openai.ts";
 import { getErrorMessage } from "./http.ts";
+import { checkAiQuota, logAiUsage, extractUsage } from "./ai-usage.ts";
 
 type ConfidenceLevel = "high" | "medium" | "low";
 
@@ -492,6 +493,16 @@ ${competitorContext}
 Newsletter Content:
 ${entry.content.substring(0, 10000)}`;
 
+    // Rate limit check
+    const quota = await checkAiQuota(supabase, analysis.workspace_id, "analyze-newsletter");
+    if (!quota.allowed) {
+      await supabase.from("analyses").update({
+        status: "failed",
+        error_message: `Daily AI limit reached (${quota.used}/${quota.limit}). Upgrade your plan or try again tomorrow.`,
+      }).eq("id", analysisId);
+      return;
+    }
+
     const completion = await createOpenAiChatCompletion({
       modelCandidates: [
         Deno.env.get("OPENAI_MODEL_NEWSLETTER_ANALYSIS") || "gpt-4.1",
@@ -608,6 +619,18 @@ ${entry.content.substring(0, 10000)}`;
         language,
       })
       .eq("id", analysisId);
+
+    // Log AI usage
+    const usage = extractUsage(completion.data);
+    void logAiUsage(supabase, {
+      workspaceId: analysis.workspace_id,
+      userId: analysis.requested_by ?? undefined,
+      functionName: "analyze-newsletter",
+      model: completion.model,
+      tokensIn: usage.tokensIn,
+      tokensOut: usage.tokensOut,
+      success: true,
+    });
   } catch (error) {
     const errorMessage = getErrorMessage(error, "An internal error occurred.");
     const validationErrors = error instanceof AnalysisValidationError ? error.validationErrors : null;

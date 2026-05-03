@@ -9,6 +9,7 @@ import {
 import { assertActiveSubscription } from "../_shared/billing.ts";
 import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 import { createOpenAiChatCompletion } from "../_shared/openai.ts";
+import { checkAiQuota, logAiUsage, extractUsage, estimateCost } from "../_shared/ai-usage.ts";
 
 const INSIGHT_CATEGORIES = [
   "pricing",
@@ -1447,6 +1448,17 @@ Deno.serve(async (req) => {
     let usedModel: string | null = null;
     let usedFallback = false;
 
+    // Rate limit check
+    const quota = await checkAiQuota(supabaseAdmin, workspaceId, "generate-insights");
+    if (!quota.allowed) {
+      return jsonResponse({
+        error: "quota_exceeded",
+        message: `Daily AI limit reached (${quota.used}/${quota.limit}). Upgrade your plan or try again tomorrow.`,
+        used: quota.used,
+        limit: quota.limit,
+      }, 429);
+    }
+
     const modelCandidates = dedupeStrings([
       Deno.env.get("OPENAI_MODEL_INSIGHTS") || "gpt-4.1",
       "gpt-4.1-mini",
@@ -1599,6 +1611,19 @@ Analyst-grade, calm, factual. No preambles, no disclaimers, no AI jargon. Match 
         error: abbreviate(completion.errorText, 220),
       });
     }
+
+    // Log AI usage (non-blocking)
+    const usage = completion.ok ? extractUsage(completion.data) : { tokensIn: 0, tokensOut: 0 };
+    void logAiUsage(supabaseAdmin, {
+      workspaceId,
+      userId: user.id,
+      functionName: "generate-insights",
+      model: usedModel ?? modelCandidates[0],
+      tokensIn: usage.tokensIn,
+      tokensOut: usage.tokensOut,
+      success: completion.ok && generatedInsights.length > 0,
+      errorMessage: completion.ok ? undefined : (completion as { errorText?: string }).errorText,
+    });
 
     if (generatedInsights.length > 0) {
       const averageEvidenceCount =

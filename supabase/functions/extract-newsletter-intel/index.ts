@@ -13,6 +13,7 @@ import {
 } from "../_shared/alerts.ts";
 import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 import { createOpenAiChatCompletion } from "../_shared/openai.ts";
+import { checkAiQuota, logAiUsage, extractUsage } from "../_shared/ai-usage.ts";
 
 type ToolCallFunction = {
   arguments?: string;
@@ -545,6 +546,16 @@ Date: ${newsletter.received_at || "unknown"}${competitorContext}
 Content:
 ${content.substring(0, 8000)}`;
 
+    // Rate limit check
+    const quota = await checkAiQuota(supabaseAdmin, newsletter.workspace_id, "extract-newsletter-intel");
+    if (!quota.allowed) {
+      return jsonResponse({
+        error: "quota_exceeded",
+        message: `Daily AI limit reached (${quota.used}/${quota.limit}). Upgrade your plan or try again tomorrow.`,
+        used: quota.used, limit: quota.limit,
+      }, 429);
+    }
+
     const completion = await createOpenAiChatCompletion({
       modelCandidates: [
         Deno.env.get("OPENAI_MODEL_NEWSLETTER_EXTRACTION") || "gpt-4.1",
@@ -692,6 +703,20 @@ ${content.substring(0, 8000)}`;
         model_used: modelUsed,
       },
     });
+
+    // Log AI usage (only when LLM was used, not heuristic)
+    if (extractionMethod === "ai" && modelUsed) {
+      const usage = completion ? extractUsage(completion.data) : { tokensIn: 0, tokensOut: 0 };
+      void logAiUsage(supabaseAdmin, {
+        workspaceId: newsletter.workspace_id,
+        userId: user.id,
+        functionName: "extract-newsletter-intel",
+        model: modelUsed,
+        tokensIn: usage.tokensIn,
+        tokensOut: usage.tokensOut,
+        success: true,
+      });
+    }
 
     scheduleBackgroundAlertEvaluation(
       evaluateAlertRules(supabase, {

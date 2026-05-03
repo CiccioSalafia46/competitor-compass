@@ -50,7 +50,7 @@ export function useInsights(categoryFilter?: string, options: UseInsightsOptions
 
     let query = supabase
       .from("insights")
-      .select("id, workspace_id, category, title, campaign_type, main_message, what_is_happening, why_it_matters, strategic_implication, strategic_takeaway, recommended_response, confidence, offer_discount_percentage, offer_coupon_code, offer_urgency, cta_primary, cta_analysis, product_categories, positioning_angle, supporting_evidence, affected_competitors, source_type, priority_level, impact_area, created_at")
+      .select("id, workspace_id, category, title, campaign_type, main_message, what_is_happening, why_it_matters, strategic_implication, strategic_takeaway, recommended_response, confidence, offer_discount_percentage, offer_coupon_code, offer_urgency, cta_primary, cta_analysis, product_categories, positioning_angle, supporting_evidence, affected_competitors, source_type, priority_level, impact_area, created_at, actioned_at, actioned_by")
       .eq("workspace_id", currentWorkspace.id)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -114,5 +114,34 @@ export function useInsights(categoryFilter?: string, options: UseInsightsOptions
     }
   };
 
-  return { insights, loading, generating, generateInsights, refetch: fetchInsights };
+  const toggleActioned = useCallback(async (insightId: string) => {
+    const insight = insights.find((i) => i.id === insightId);
+    if (!insight) return;
+
+    const isActioned = !!insight.actioned_at;
+    const { error } = await supabase
+      .from("insights")
+      .update(isActioned
+        ? { actioned_at: null, actioned_by: null }
+        : { actioned_at: new Date().toISOString(), actioned_by: (await supabase.auth.getUser()).data.user?.id ?? null },
+      )
+      .eq("id", insightId);
+
+    if (error) {
+      toast.error("Failed to update insight");
+      return;
+    }
+
+    // Optimistic local update
+    setInsights((prev) =>
+      prev.map((i) =>
+        i.id === insightId
+          ? { ...i, actioned_at: isActioned ? null : new Date().toISOString(), actioned_by: isActioned ? null : "self" }
+          : i,
+      ),
+    );
+    toast.success(isActioned ? "Unmarked as actioned" : "Marked as actioned");
+  }, [insights]);
+
+  return { insights, loading, generating, generateInsights, toggleActioned, refetch: fetchInsights };
 }

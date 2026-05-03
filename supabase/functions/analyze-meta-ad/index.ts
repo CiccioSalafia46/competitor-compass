@@ -9,6 +9,7 @@ import {
 import { assertActiveSubscription } from "../_shared/billing.ts";
 import { corsHeaders, getErrorMessage, jsonResponse } from "../_shared/http.ts";
 import { createOpenAiChatCompletion } from "../_shared/openai.ts";
+import { checkAiQuota, logAiUsage, extractUsage } from "../_shared/ai-usage.ts";
 
 type AnalysisPayload = Record<string, unknown>;
 
@@ -107,6 +108,16 @@ Still running: ${ad.is_active ? "Yes" : "No"}
 
 Return ONLY valid JSON, no markdown.`;
 
+    // Rate limit check
+    const quota = await checkAiQuota(supabase, ad.workspace_id, "analyze-meta-ad");
+    if (!quota.allowed) {
+      return jsonResponse({
+        error: "quota_exceeded",
+        message: `Daily AI limit reached (${quota.used}/${quota.limit}). Upgrade your plan or try again tomorrow.`,
+        used: quota.used, limit: quota.limit,
+      }, 429);
+    }
+
     const completion = await createOpenAiChatCompletion({
       modelCandidates: [
         Deno.env.get("OPENAI_MODEL_META_AD_ANALYSIS") || "gpt-4.1",
@@ -185,6 +196,17 @@ Return ONLY valid JSON, no markdown.`;
       workspace_id: ad.workspace_id,
       event_type: "meta_ad_analyzed",
       quantity: 1,
+    });
+
+    // Log AI usage
+    const usage = extractUsage(completion.data);
+    void logAiUsage(supabase, {
+      workspaceId: ad.workspace_id,
+      functionName: "analyze-meta-ad",
+      model: completion.model,
+      tokensIn: usage.tokensIn,
+      tokensOut: usage.tokensOut,
+      success: true,
     });
 
     logStep("Analysis complete", { analysisId: stored.id });

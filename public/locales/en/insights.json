@@ -48,6 +48,7 @@
   "savePlaybook": "Save",
   "share": "Share",
   "markActioned": "Mark actioned",
+  "actioned": "Actioned",
   "copiedToClipboard": "Insight copied to clipboard",
   "comingSoon": "Coming soon",
   "generateTooltip": "Generate fresh insights from your latest signals. Uses AI credits.",

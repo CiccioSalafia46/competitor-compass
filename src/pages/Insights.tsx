@@ -173,7 +173,7 @@ const InsightCompactRow = memo(function InsightCompactRow({
 // overlap, regenerate strategic_implication with a market/macro framing.
 // FIXME: 'why_it_matters' should start with "Because..." for causal framing.
 
-function InsightExpanded({ insight }: { insight: Insight }) {
+function InsightExpanded({ insight, onToggleActioned }: { insight: Insight; onToggleActioned?: (id: string) => void }) {
   const { t } = useTranslation("insights");
   const CATEGORY_META = useCategoryMeta(t);
   const formatSourceLabel = useFormatSourceLabel(t);
@@ -355,9 +355,14 @@ function InsightExpanded({ insight }: { insight: Insight }) {
           <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => toast.info(t("comingSoon"))}>
             <Share2 className="h-3 w-3" /> {t("share")}
           </Button>
-          {/* FIXME: needs backend — mark as actioned */}
-          <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => toast.info(t("comingSoon"))}>
-            <Check className="h-3 w-3" /> {t("markActioned")}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn("h-7 gap-1 px-2 text-[11px]", insight.actioned_at && "text-emerald-600 dark:text-emerald-400")}
+            onClick={() => onToggleActioned?.(insight.id)}
+          >
+            <Check className={cn("h-3 w-3", insight.actioned_at && "fill-current")} />
+            {insight.actioned_at ? t("actioned") : t("markActioned")}
           </Button>
         </div>
       </div>
@@ -371,7 +376,7 @@ export default function Insights() {
   const { t } = useTranslation("insights");
   const [activeTab, setActiveTab] = useState<string>("all");
   const categoryFilter = activeTab === "all" ? undefined : activeTab;
-  const { insights, loading, generating, generateInsights } = useInsights(categoryFilter, { limit: 36 });
+  const { insights, loading, generating, generateInsights, toggleActioned } = useInsights(categoryFilter, { limit: 36 });
   const CATEGORY_META = useCategoryMeta(t);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -504,7 +509,7 @@ export default function Insights() {
                   />
                   {expandedId === insight.id && (
                     <div className="border-t bg-muted/5 px-4 py-5 sm:px-6">
-                      <InsightExpanded insight={insight} />
+                      <InsightExpanded insight={insight} onToggleActioned={toggleActioned} />
                     </div>
                   )}
                 </div>

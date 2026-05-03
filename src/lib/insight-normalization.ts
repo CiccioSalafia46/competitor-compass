@@ -40,6 +40,8 @@ export interface NormalizedInsight {
   priority_level: InsightPriorityLevel;
   impact_area: InsightImpactArea;
   created_at: string;
+  actioned_at: string | null;
+  actioned_by: string | null;
 }
 
 type InsightLike = Omit<
@@ -175,6 +177,8 @@ export function normalizeInsightRecord(row: InsightLike): NormalizedInsight {
     }),
     impact_area: impactArea,
     created_at: row.created_at,
+    actioned_at: (row as Record<string, unknown>).actioned_at as string | null ?? null,
+    actioned_by: (row as Record<string, unknown>).actioned_by as string | null ?? null,
   };
 }
 
